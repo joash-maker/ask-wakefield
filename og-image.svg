@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&amp;family=DM+Mono:wght@400&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#ffffff"/>
+
+  <!-- Subtle grid lines for depth -->
+  <line x1="0" y1="1" x2="1200" y2="1" stroke="#111111" stroke-width="0.5" opacity="0.08"/>
+  <line x1="0" y1="629" x2="1200" y2="629" stroke="#111111" stroke-width="0.5" opacity="0.08"/>
+
+  <!-- Red accent top bar -->
+  <rect x="80" y="72" width="48" height="3" fill="#e61c5d"/>
+
+  <!-- Eyebrow -->
+  <text x="80" y="118" font-family="'Courier New', monospace" font-size="18" font-weight="400" letter-spacing="6" fill="#e61c5d" text-transform="uppercase">WAKEFIELD DISTRICT · INDEPENDENT AI ASSISTANT</text>
+
+  <!-- "Ask" — light serif -->
+  <text x="76" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="210" font-weight="300" fill="#111111" opacity="0.92">Ask</text>
+
+  <!-- "Wakefield" — italic red -->
+  <text x="76" y="490" font-family="Georgia, 'Times New Roman', serif" font-size="210" font-style="italic" font-weight="300" fill="#e61c5d">Wakefield</text>
+
+  <!-- Right side — descriptor -->
+  <text x="920" y="260" font-family="'Courier New', monospace" font-size="15" fill="#888888" letter-spacing="2">YOUR LOCAL</text>
+  <text x="920" y="285" font-family="'Courier New', monospace" font-size="15" fill="#888888" letter-spacing="2">AI ASSISTANT</text>
+
+  <line x1="920" y1="308" x2="1120" y2="308" stroke="#111111" stroke-width="0.5" opacity="0.15"/>
+
+  <text x="920" y="340" font-family="'Courier New', monospace" font-size="13" fill="#aaaaaa" letter-spacing="1">Events · Culture · Council</text>
+  <text x="920" y="362" font-family="'Courier New', monospace" font-size="13" fill="#aaaaaa" letter-spacing="1">Services · Family · Schools</text>
+
+  <!-- Domain -->
+  <text x="920" y="430" font-family="'Courier New', monospace" font-size="20" font-weight="400" fill="#111111" letter-spacing="1">askwakefield.co.uk</text>
+
+  <!-- Built by -->
+  <text x="80" y="580" font-family="'Courier New', monospace" font-size="13" fill="#cccccc" letter-spacing="2">BUILT BY MEDIAHUBINK.COM</text>
+
+  <!-- Bottom right decorative dot -->
+  <circle cx="1140" cy="580" r="6" fill="#e61c5d"/>
+</svg>

@@ -37,8 +37,8 @@
       --red-lt:    #ff4d7a;
       --dim:       #777777;
       --line:      rgba(17,17,17,0.10);
-      --chat-bg:   #111111;
-      --chat-line: rgba(255,255,255,0.08);
+      --chat-bg:   #1c1c1e;
+      --chat-line: rgba(255,255,255,0.07);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -143,7 +143,12 @@
     .left-panel { display: none; }
 
     /* ─── RIGHT PANEL — CHAT (full width) ─── */
-    .right-panel { background: var(--chat-bg); display: flex; flex-direction: column; height: 520px; overflow: hidden; }
+    .right-panel {
+      background: var(--chat-bg);
+      display: flex; flex-direction: column;
+      height: 420px; overflow: hidden;
+      border-top: 2px solid var(--red);
+    }
 
     .chat-header {
       padding: 16px 20px; border-bottom: 1px solid var(--chat-line);
@@ -387,7 +392,7 @@
       .topics { padding: 16px 24px; gap: 6px; }
       .topic { font-size: 11px; padding: 7px 13px; }
       .main-grid { margin: 0 24px; }
-      .right-panel { height: 480px; }
+      .right-panel { height: 420px; }
       .messages { padding: 16px 20px; }
       .input-area { padding: 10px 20px 12px; }
       .chips { padding: 8px 20px 6px; }
@@ -411,7 +416,7 @@
       #cursor, #cursor-ring { display: none; }
       .topics { padding: 12px 16px; }
       .main-grid { margin: 0 16px; }
-      .right-panel { height: 460px; }
+      .right-panel { height: 400px; }
       .embed-section, .faq-section, .contact-section, footer { margin-left: 16px; margin-right: 16px; }
     }
   </style>
@@ -680,6 +685,9 @@ const bttBtn = document.getElementById('backToTop');
 window.addEventListener('scroll', () => {
   bttBtn.classList.toggle('visible', window.scrollY > 400);
 }, { passive: true });
+
+// Ensure chat starts scrolled to top
+msgsEl.scrollTop = 0;
 
 /* ─── CURSOR ─── */
 const cur = document.getElementById('cursor');

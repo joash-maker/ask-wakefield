@@ -837,8 +837,9 @@ async function sendMessage(override) {
   history.push({ role: 'user', content: text });
 
   const { wrap, bubble } = createBotMsg();
-  let fullText = '';
-  let isSearching = false;
+
+  // Show searching indicator
+  bubble.innerHTML = '<div class="searching-indicator"><div class="search-spinner"></div>Searching...</div>';
 
   try {
     const res = await fetch('/api/chat', {
@@ -847,82 +848,17 @@ async function sendMessage(override) {
       body: JSON.stringify({ messages: history })
     });
 
-    if (!res.ok || !res.body) throw new Error('Stream unavailable');
+    const data = await res.json();
+    const reply = data.reply || "I'm sorry, I couldn't generate a response. Please try again.";
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (!raw) continue;
-
-        try {
-          const event = JSON.parse(raw);
-
-          if (event.type === 'searching' && !isSearching) {
-            isSearching = true;
-            showSearching(bubble);
-          }
-
-          if (event.type === 'text') {
-            isSearching = false;
-            fullText += event.text;
-            bubble.innerHTML = rawFmt(fullText) + '<span class="stream-cursor"></span>';
-            if (isNearBottom()) msgsEl.scrollTop = msgsEl.scrollHeight;
-          }
-
-          if (event.type === 'done') {
-            bubble.innerHTML = fmt(fullText);
-            history.push({ role: 'assistant', content: fullText });
-            addCopyBtn(wrap, fullText);
-            generateFollowups(text, fullText).then(f => showFollowupChips(f, wrap));
-          }
-
-          if (event.type === 'error') {
-            bubble.innerHTML = fmt(event.message || 'Something went wrong. Please try again.');
-          }
-
-        } catch { /* skip malformed events */ }
-      }
-    }
-
-    // Safety: if stream ended without 'done' event
-    if (fullText && !history.find(m => m.role === 'assistant' && m.content === fullText)) {
-      bubble.innerHTML = fmt(fullText);
-      history.push({ role: 'assistant', content: fullText });
-      addCopyBtn(wrap, fullText);
-      generateFollowups(text, fullText).then(f => showFollowupChips(f, wrap));
-    }
+    bubble.innerHTML = fmt(reply);
+    history.push({ role: 'assistant', content: reply });
+    addCopyBtn(wrap, reply);
+    generateFollowups(text, reply).then(f => showFollowupChips(f, wrap));
 
   } catch (err) {
-    console.error('Stream error:', err);
-    // Fallback to non-streaming
-    try {
-      bubble.innerHTML = '<div class="searching-indicator"><div class="search-spinner"></div>Connecting...</div>';
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history })
-      });
-      const data = await res.json();
-      const reply = data.reply || 'Sorry, I couldn\'t get a response. Please try again.';
-      bubble.innerHTML = fmt(reply);
-      history.push({ role: 'assistant', content: reply });
-      addCopyBtn(wrap, reply);
-      generateFollowups(text, reply).then(f => showFollowupChips(f, wrap));
-    } catch {
-      bubble.innerHTML = fmt('Connection error — please check your connection and try again.');
-    }
+    console.error('Chat error:', err);
+    bubble.innerHTML = fmt('Connection error — please check your connection and try again.');
   }
 
   isSending = false;

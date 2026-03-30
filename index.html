@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask Wakefield</title>
+  <meta name="description" content="An independent AI assistant for Wakefield — events, culture, council services, family activities and everything the district has to offer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── TOKENS — Awwwards palette ─── */
+    :root {
+      --ink:       #111111;
+      --paper:     #ffffff;
+      --gold:      #e61c5d;
+      --gold-lt:   #ff4d7a;
+      --dim:       #888888;
+      --line:      rgba(17,17,17,0.10);
+      --chat-bg:   #111111;
+      --chat-line: rgba(255,255,255,0.07);
+      --user-col:  #e61c5d;
+      --bot-col:   #ffffff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: #ffffff;
+      color: var(--ink);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ─── CUSTOM CURSOR ─── */
+    #cursor {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s ease, width 0.2s ease, height 0.2s ease;
+      transform: translate(-50%, -50%);
+    }
+    #cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transition: transform 0.35s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
+      transform: translate(-50%, -50%);
+      opacity: 0.4;
+    }
+
+    /* ─── GRAIN OVERLAY ─── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.018;
+      pointer-events: none;
+      z-index: 9000;
+    }
+
+    /* ─── MARQUEE ─── */
+    .marquee-wrap {
+      background: #ffffff;
+      color: var(--ink);
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .marquee-track {
+      display: inline-flex;
+      animation: marquee 28s linear infinite;
+      gap: 0;
+    }
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 32px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(17,17,17,0.4);
+    }
+    .marquee-item .dot {
+      width: 4px; height: 4px;
+      background: var(--gold);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ─── HERO HEADER ─── */
+    header {
+      position: relative;
+      padding: 48px 48px 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 24px;
+      overflow: hidden;
+    }
+
+    .header-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.1s ease forwards;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(68px, 10vw, 140px);
+      font-weight: 300;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s ease forwards;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .header-right {
+      padding-top: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 16px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.35s ease forwards;
+    }
+
+    .badge-independent {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--dim);
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 2px;
+    }
+
+    .header-desc {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--dim);
+      text-align: right;
+      max-width: 220px;
+      line-height: 1.7;
+    }
+
+    /* ─── RULE LINE ─── */
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 32px 48px 0;
+      opacity: 0;
+      animation: fadeIn 0.6s 0.5s ease forwards;
+    }
+
+    /* ─── TOPIC PILLS ROW ─── */
+    .topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 24px 48px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.55s ease forwards;
+    }
+
+    .topic {
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      padding: 7px 16px;
+      border-radius: 2px;
+      cursor: none;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      background: transparent;
+    }
+
+    .topic:hover {
+      background: var(--gold);
+      color: #ffffff;
+      border-color: var(--gold);
+    }
+
+    /* ─── MAIN GRID ─── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      gap: 0;
+      margin: 0 48px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.7s ease forwards;
+      min-height: 560px;
+    }
+
+    /* ─── LEFT PANEL — CONTEXT ─── */
+    .left-panel {
+      background: #ffffff;
+      color: var(--ink);
+      padding: 36px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      border-right: 1px solid var(--line);
+    }
+
+    .panel-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(17,17,17,0.35);
+    }
+
+    .source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .source-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      cursor: none;
+      transition: padding-left 0.2s ease;
+    }
+    .source-item:last-child { border-bottom: none; }
+    .source-item:hover { padding-left: 6px; }
+
+    .source-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .source-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+      margin-bottom: 3px;
+    }
+
+    .source-desc {
+      font-family: 'Syne', sans-serif;
+      font-size: 11.5px;
+      font-weight: 400;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    .live-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 8.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--gold);
+      color: #ffffff;
+      padding: 2px 7px;
+      border-radius: 2px;
+      margin-left: 6px;
+      vertical-align: middle;
+      font-weight: 500;
+    }
+
+    .panel-footer {
+      margin-top: auto;
+    }
+
+    .panel-footer p {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: rgba(17,17,17,0.3);
+      line-height: 1.7;
+      letter-spacing: 0.03em;
+    }
+
+    /* ─── RIGHT PANEL — CHAT ─── */
+    .right-panel {
+      background: var(--chat-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .chat-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--chat-line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .chat-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(240,237,230,0.4);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scroll-behavior: smooth;
+      min-height: 300px;
+      max-height: 400px;
+    }
+
+    .messages::-webkit-scrollbar { width: 3px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      animation: msgSlide 0.25s ease-out;
+    }
+
+    @keyframes msgSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .msg.bot .msg-meta { color: var(--gold); }
+    .msg.user .msg-meta { color: rgba(240,237,230,0.3); text-align: right; }
+
+    .msg-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 13.5px;
+      font-weight: 400;
+      line-height: 1.7;
+      max-width: 88%;
+    }
+
+    .msg.bot .msg-text {
+      color: rgba(240,237,230,0.88);
+      border-left: 2px solid var(--gold);
+      padding-left: 14px;
+    }
+
+    .msg.user .msg-text {
+      color: rgba(240,237,230,0.55);
+      align-self: flex-end;
+      text-align: right;
+      border-right: 2px solid rgba(255,255,255,0.12);
+      padding-right: 14px;
+    }
+
+    .msg-text a {
+      color: var(--gold-lt);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* typing */
+    .typing-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding-left: 16px;
+    }
+    .typing-row span {
+      width: 5px; height: 5px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: tdot 1.3s infinite;
+      opacity: 0.5;
+    }
+    .typing-row span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-row span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tdot {
+      0%,60%,100% { transform: translateY(0); opacity: 0.3; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* ─── CHIPS ─── */
+    .chips {
+      padding: 0 24px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      border-top: 1px solid var(--chat-line);
+      padding-top: 12px;
+    }
+
+    .chip {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: rgba(240,237,230,0.45);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 5px 12px;
+      border-radius: 2px;
+      cursor: none;
+      transition: all 0.15s;
+      background: transparent;
+    }
+
+    .chip:hover {
+      color: var(--paper);
+      border-color: var(--gold);
+      background: rgba(230,28,93,0.12);
+    }
+
+    /* ─── INPUT ─── */
+    .input-area {
+      padding: 16px 24px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-top: 1px solid var(--chat-line);
+      flex-shrink: 0;
+    }
+
+    #userInput {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 2px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-family: 'Syne', sans-serif;
+      color: var(--paper);
+      outline: none;
+      transition: border-color 0.2s;
+      cursor: text;
+    }
+
+    #userInput::placeholder {
+      color: rgba(240,237,230,0.2);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+
+    #userInput:focus {
+      border-color: var(--gold);
+      background: rgba(230,28,93,0.04);
+    }
+
+    #sendBtn {
+      width: 42px; height: 42px;
+      background: var(--gold);
+      border: none;
+      border-radius: 2px;
+      cursor: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    #sendBtn:hover { background: var(--gold-lt); }
+    #sendBtn:active { transform: scale(0.94); }
+    #sendBtn:disabled { background: rgba(255,255,255,0.08); cursor: none; }
+
+    /* ─── EMBED SECTION ─── */
+    .embed-section {
+      margin: 32px 48px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.9s ease forwards;
+    }
+
+    .embed-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .embed-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .embed-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .embed-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .embed-info {
+      padding: 24px 28px;
+      border-right: 1px solid var(--line);
+    }
+
+    .embed-info p {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .step-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12.5px;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    .step-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      width: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .embed-code-wrap {
+      padding: 24px 28px;
+      background: var(--ink);
+    }
+
+    .embed-code-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 12px;
+    }
+
+    .code-block {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 3px;
+      padding: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11.5px;
+      color: var(--gold-lt);
+      line-height: 1.6;
+      word-break: break-all;
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold);
+      border: none;
+      padding: 9px 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #ffffff;
+      border-radius: 2px;
+      cursor: none;
+      transition: background 0.15s;
+      font-weight: 500;
+    }
+    .copy-btn:hover { background: var(--gold-lt); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      margin: 32px 48px 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      opacity: 0;
+      animation: fadeIn 0.6s 1.1s ease forwards;
+    }
+
+    .footer-left {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+      line-height: 1.7;
+    }
+
+    .footer-left a { color: var(--ink); text-decoration: none; font-weight: 500; }
+    .footer-left a:hover { color: var(--gold); }
+
+    .footer-right {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--dim);
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      header { padding: 32px 24px 0; }
+      .divider { margin: 24px 24px 0; }
+      .topics { padding: 16px 24px; }
+      .main-grid {
+        grid-template-columns: 1fr;
+        margin: 0 24px;
+      }
+      .left-panel { display: none; }
+      .messages { max-height: 340px; }
+      .embed-section { margin: 24px 24px; }
+      .embed-body { grid-template-columns: 1fr; }
+      .embed-info { border-right: none; border-bottom: 1px solid var(--line); }
+      footer { margin: 24px 24px 32px; flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 52px; }
+      header { grid-template-columns: 1fr; }
+      .header-right { align-items: flex-start; }
+      .header-desc { text-align: left; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Marquee -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item"><span class="dot"></span>Bins &amp; Waste</span>
+    <span class="marquee-item"><span class="dot"></span>Road Closures</span>
+    <span class="marquee-item"><span class="dot"></span>The Hepworth Wakefield</span>
+    <span class="marquee-item"><span class="dot"></span>Yorkshire Sculpture Park</span>
+    <span class="marquee-item"><span class="dot"></span>WX Exchange</span>
+    <span class="marquee-item"><span class="dot"></span>Family Days Out</span>
+    <span class="marquee-item"><span class="dot"></span>Council Tax</span>
+    <span class="marquee-item"><span class="dot"></span>Schools &amp; Term Dates</span>
+    <span class="marquee-item"><span class="dot"></span>Experience Wakefield</span>
+    <span class="marquee-item"><span class="dot"></span>Wakefield Mumbler</span>
+    <!-- duplicate for seamless loop -->
+    <span class="marquee-item"><span class="dot"></span>Bins &amp; Waste</span>
+    <span class="marquee-item"><span class="dot"></span>Road Closures</span>
+    <span class="marquee-item"><span class="dot"></span>The Hepworth Wakefield</span>
+    <span class="marquee-item"><span class="dot"></span>Yorkshire Sculpture Park</span>
+    <span class="marquee-item"><span class="dot"></span>WX Exchange</span>
+    <span class="marquee-item"><span class="dot"></span>Family Days Out</span>
+    <span class="marquee-item"><span class="dot"></span>Council Tax</span>
+    <span class="marquee-item"><span class="dot"></span>Schools &amp; Term Dates</span>
+    <span class="marquee-item"><span class="dot"></span>Experience Wakefield</span>
+    <span class="marquee-item"><span class="dot"></span>Wakefield Mumbler</span>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div>
+    <div class="header-eyebrow">Wakefield District · Independent AI Assistant</div>
+    <h1>Ask<br/><em>Wake&shy;field</em></h1>
+  </div>
+  <div class="header-right">
+    <div class="badge-independent">Not an official council service</div>
+    <p class="header-desc">Your local AI assistant for everything the Wakefield district has to offer — culture, services, events and more.</p>
+  </div>
+</header>
+
+<div class="divider"></div>
+
+<!-- Topic pills -->
+<div class="topics">
+  <button class="topic" onclick="sendMsg('What is on at The Hepworth Wakefield this month?')">The Hepworth</button>
+  <button class="topic" onclick="sendMsg('What is happening at Yorkshire Sculpture Park this month?')">YSP</button>
+  <button class="topic" onclick="sendMsg('What events are on at WX Exchange soon?')">WX Exchange</button>
+  <button class="topic" onclick="sendMsg('What are the best family days out in Wakefield?')">Family days out</button>
+  <button class="topic" onclick="sendMsg('What type of bins does Wakefield collect and how often?')">Bins &amp; waste</button>
+  <button class="topic" onclick="sendMsg('How do I find live road closures in Wakefield?')">Road closures</button>
+  <button class="topic" onclick="sendMsg('How does Council Tax work in Wakefield?')">Council Tax</button>
+  <button class="topic" onclick="sendMsg('When are the school holidays in Wakefield?')">School terms</button>
+  <button class="topic" onclick="sendMsg('What are the best things to see and do in Wakefield for visitors?')">Visitor guide</button>
+  <button class="topic" onclick="sendMsg('What classes and activities are there in Wakefield for babies and toddlers?')">Baby &amp; toddler groups</button>
+</div>
+
+<!-- Main grid -->
+<div class="main-grid">
+
+  <!-- Left: sources panel -->
+  <div class="left-panel">
+    <div class="panel-label">Knowledge sources</div>
+
+    <div class="source-list">
+      <div class="source-item" onclick="sendMsg('What is on at The Hepworth Wakefield this month?')">
+        <div class="source-num">01</div>
+        <div>
+          <div class="source-name">The Hepworth Wakefield <span class="live-badge">Live</span></div>
+          <div class="source-desc">World-class art gallery · Free for Wakefield residents &amp; under 18s · Tue–Sun 10am–5pm</div>
+        </div>
+      </div>
+      <div class="source-item" onclick="sendMsg('What is happening at Yorkshire Sculpture Park this month?')">
+        <div class="source-num">02</div>
+        <div>
+          <div class="source-name">Yorkshire Sculpture Park <span class="live-badge">Live</span></div>
+          <div class="source-desc">500 acres · 90+ sculptures · Henry Moore &amp; Barbara Hepworth · West Bretton</div>
+        </div>
+      </div>
+      <div class="source-item" onclick="sendMsg('What is on at WX Wakefield Exchange this week?')">
+        <div class="source-num">03</div>
+        <div>
+          <div class="source-name">WX Wakefield Exchange <span class="live-badge">Live</span></div>
+          <div class="source-desc">Culture, food &amp; drink, live music, comedy, art — city centre hub</div>
+        </div>
+      </div>
+      <div class="source-item" onclick="sendMsg('What are the best things to see and do in Wakefield according to Experience Wakefield?')">
+        <div class="source-num">04</div>
+        <div>
+          <div class="source-name">Experience Wakefield <span class="live-badge">Live</span></div>
+          <div class="source-desc">Official tourism guide · Attractions, events, food, hotels across the district</div>
+        </div>
+      </div>
+      <div class="source-item" onclick="sendMsg('What family activities and toddler groups are available in Wakefield?')">
+        <div class="source-num">05</div>
+        <div>
+          <div class="source-name">Wakefield Mumbler</div>
+          <div class="source-desc">Family &amp; parenting resource · Classes, groups, days out for 0–5s &amp; school-age children</div>
+        </div>
+      </div>
+      <div class="source-item" onclick="sendMsg('What council services can you help me with?')">
+        <div class="source-num">06</div>
+        <div>
+          <div class="source-name">Wakefield Council Services</div>
+          <div class="source-desc">Bins, roads, leisure centres, Council Tax, schools — 0345 8 506 506</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <p>Independent demonstration tool.<br />Not affiliated with Wakefield Council<br />or any listed organisation.</p>
+    </div>
+  </div>
+
+  <!-- Right: chat -->
+  <div class="right-panel">
+    <div class="chat-header">
+      <span class="chat-title">Ask Wakefield · AI Chat</span>
+      <div class="status-dot"></div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="msg bot">
+        <div class="msg-meta">Ask Wakefield</div>
+        <div class="msg-text">Hello. I'm Ask Wakefield — an independent AI assistant for the district. Ask me about what's on at The Hepworth or YSP, events at WX Exchange, family days out, council services, bins, schools or roads. I can search live for current events too.</div>
+      </div>
+    </div>
+
+    <div class="chips" id="chips">
+      <button class="chip" onclick="sendMsg('What is on at The Hepworth this month?')">Hepworth — what's on</button>
+      <button class="chip" onclick="sendMsg('Best family days out in Wakefield?')">Family days out</button>
+      <button class="chip" onclick="sendMsg('When is my bin collected?')">Bin collection</button>
+      <button class="chip" onclick="sendMsg('What events are on at WX Exchange?')">WX events</button>
+    </div>
+
+    <div class="input-area">
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Ask anything about Wakefield..."
+        autocomplete="off"
+      />
+      <button id="sendBtn" onclick="sendMessage()" title="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Embed section -->
+<div class="embed-section">
+  <div class="embed-header">
+    <div>
+      <div class="embed-title">Embed this assistant</div>
+    </div>
+    <div class="embed-sub">One line of code</div>
+  </div>
+  <div class="embed-body">
+    <div class="embed-info">
+      <p>Add Ask Wakefield to any website with a single script tag. The widget loads asynchronously — no performance impact on your page.</p>
+      <ul class="step-list">
+        <li><span class="step-num">01</span><span>Copy the script tag opposite</span></li>
+        <li><span class="step-num">02</span><span>Paste before the closing <code>&lt;/body&gt;</code> tag of any webpage</span></li>
+        <li><span class="step-num">03</span><span>A floating chat button appears automatically in the bottom right corner</span></li>
+      </ul>
+    </div>
+    <div class="embed-code-wrap">
+      <div class="embed-code-label">Embed code</div>
+      <div class="code-block" id="embedCode">&lt;script src="https://wakefield-demo.mediahubink.com/widget.js"&gt;&lt;/script&gt;</div>
+      <button class="copy-btn" onclick="copyEmbed()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
+        <span id="copyLabel">Copy embed code</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-left">
+    Independent tool — not affiliated with Wakefield Council or any organisation listed.<br />
+    Official council: <a href="https://www.wakefield.gov.uk" target="_blank">wakefield.gov.uk</a> · 0345 8 506 506
+    &nbsp;·&nbsp; Built by <a href="https://mediahubink.com" target="_blank">Mediahubink</a>
+  </div>
+  <div class="footer-right">AI agents for local businesses &amp; public services.</div>
+</footer>
+
+<script>
+  /* ─── CURSOR ─── */
+  const cur  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px';
+    cur.style.top  = my + 'px';
+  });
+
+  (function animRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animRing);
+  })();
+
+  document.querySelectorAll('button, a, input, .source-item, .topic, .chip').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cur.style.transform = 'translate(-50%,-50%) scale(2.5)';
+      ring.style.width  = '56px';
+      ring.style.height = '56px';
+      ring.style.opacity = '0.3';
+    });
+    el.addEventListener('mouseleave', () => {
+      cur.style.transform = 'translate(-50%,-50%) scale(1)';
+      ring.style.width  = '36px';
+      ring.style.height = '36px';
+      ring.style.opacity = '0.5';
+    });
+  });
+
+  /* ─── CHAT ─── */
+  const msgsEl  = document.getElementById('messages');
+  const inputEl = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const chipsEl = document.getElementById('chips');
+
+  let history = [];
+  let chipsGone = false;
+
+  function hideChips() {
+    if (!chipsGone) { chipsEl.style.display = 'none'; chipsGone = true; }
+  }
+
+  function addMsg(role, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + role;
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = role === 'bot' ? 'Ask Wakefield' : 'You';
+
+    const body = document.createElement('div');
+    body.className = 'msg-text';
+    body.innerHTML = fmt(text);
+
+    wrap.appendChild(meta);
+    wrap.appendChild(body);
+    msgsEl.appendChild(wrap);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+    return body;
+  }
+
+  function fmt(t) {
+    return t
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n/g,'<br/>');
+  }
+
+  function showTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg bot'; wrap.id = 'typing';
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta'; meta.textContent = 'Ask Wakefield';
+    const dots = document.createElement('div');
+    dots.className = 'typing-row';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    wrap.appendChild(meta); wrap.appendChild(dots);
+    msgsEl.appendChild(wrap);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  async function sendMessage(override) {
+    const text = (override || inputEl.value).trim();
+    if (!text) return;
+    hideChips();
+    inputEl.value = '';
+    sendBtn.disabled = true;
+
+    addMsg('user', text);
+    history.push({ role: 'user', content: text });
+    showTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history })
+      });
+      const data = await res.json();
+      removeTyping();
+      const reply = data.reply || 'Sorry, I couldn\'t generate a response. Please try again.';
+      addMsg('bot', reply);
+      history.push({ role: 'assistant', content: reply });
+    } catch {
+      removeTyping();
+      addMsg('bot', 'Connection error — please try again.');
+    }
+
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
+
+  function sendMsg(text) { sendMessage(text); }
+
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+  });
+
+  /* ─── COPY EMBED ─── */
+  function copyEmbed() {
+    const code = `<script src="https://wakefield-demo.mediahubink.com/widget.js"><\/script>`;
+    navigator.clipboard.writeText(code).then(() => {
+      const label = document.getElementById('copyLabel');
+      label.textContent = 'Copied!';
+      setTimeout(() => label.textContent = 'Copy embed code', 2000);
+    });
+  }
+</script>
+
+</body>
+</html>

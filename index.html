@@ -50,23 +50,6 @@
       color: var(--ink);
       min-height: 100dvh;
       overflow-x: hidden;
-      cursor: none;
-    }
-
-    /* ─── CURSOR ─── */
-    #cursor {
-      position: fixed; width: 14px; height: 14px;
-      background: var(--red); border-radius: 50%;
-      pointer-events: none; z-index: 9999;
-      transition: transform 0.15s ease, opacity 0.15s ease;
-      transform: translate(-50%, -50%);
-    }
-    #cursor-ring {
-      position: fixed; width: 40px; height: 40px;
-      border: 1.5px solid var(--red); border-radius: 50%;
-      pointer-events: none; z-index: 9998;
-      transition: width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
-      transform: translate(-50%, -50%); opacity: 0.5;
     }
 
     /* ─── GRAIN ─── */
@@ -127,7 +110,7 @@
     .topic {
       font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.07em;
       text-transform: uppercase; color: var(--ink); border: 1px solid var(--line);
-      padding: 9px 18px; border-radius: 2px; cursor: none;
+      padding: 9px 18px; border-radius: 2px; cursor: pointer;
       transition: background 0.18s, color 0.18s, border-color 0.18s; background: transparent;
     }
     .topic:hover { background: var(--red); color: #fff; border-color: var(--red); }
@@ -164,7 +147,7 @@
       font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
       text-transform: uppercase; color: rgba(255,255,255,0.35);
       background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-      padding: 5px 11px; border-radius: 2px; cursor: none; transition: all 0.15s;
+      padding: 5px 11px; border-radius: 2px; cursor: pointer; transition: all 0.15s;
     }
     .reset-btn:hover { color: #fff; border-color: var(--red); background: rgba(230,28,93,0.15); }
 
@@ -234,7 +217,7 @@
       font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em;
       text-transform: uppercase; color: rgba(255,255,255,0.25);
       background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-      padding: 4px 10px; border-radius: 2px; cursor: none; transition: all 0.15s;
+      padding: 4px 10px; border-radius: 2px; cursor: pointer; transition: all 0.15s;
     }
     .copy-msg-btn:hover { color: #fff; border-color: var(--red); background: rgba(230,28,93,0.1); }
     .copy-msg-btn.copied { color: #4ade80; border-color: #4ade80; }
@@ -249,7 +232,7 @@
       font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.04em;
       color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 2px;
-      cursor: none; transition: all 0.15s; text-align: left;
+      cursor: pointer; transition: all 0.15s; text-align: left;
     }
     .followup-chip:hover { color: #fff; border-color: var(--red); background: rgba(230,28,93,0.1); }
 
@@ -258,7 +241,7 @@
     .chip {
       font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.05em;
       color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.09);
-      padding: 6px 14px; border-radius: 2px; cursor: none; transition: all 0.15s; background: transparent;
+      padding: 6px 14px; border-radius: 2px; cursor: pointer; transition: all 0.15s; background: transparent;
     }
     .chip:hover { color: #fff; border-color: var(--red); background: rgba(230,28,93,0.12); }
 
@@ -276,7 +259,7 @@
     /* Voice button */
     #voiceBtn {
       width: 42px; height: 42px; background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; cursor: none;
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       transition: all 0.15s; color: rgba(255,255,255,0.4);
     }
@@ -286,7 +269,7 @@
 
     #sendBtn {
       width: 42px; height: 42px; background: var(--red); border: none; border-radius: 2px;
-      cursor: none; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: background 0.15s, transform 0.1s; flex-shrink: 0;
     }
     #sendBtn:hover { background: var(--red-lt); }
@@ -319,7 +302,7 @@
     .embed-code-wrap { padding: 28px 30px; background: var(--ink); }
     .embed-code-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 14px; }
     .code-block { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 3px; padding: 16px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--red-lt); line-height: 1.6; word-break: break-all; margin-bottom: 14px; }
-    .copy-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--red); border: none; padding: 11px 20px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; border-radius: 2px; cursor: none; transition: background 0.15s; font-weight: 500; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--red); border: none; padding: 11px 20px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; border-radius: 2px; cursor: pointer; transition: background 0.15s; font-weight: 500; }
     .copy-btn:hover { background: var(--red-lt); }
 
     /* ─── FAQ ─── */
@@ -334,7 +317,7 @@
     .faq-item { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
     .faq-item:nth-child(even) { border-right: none; }
     .faq-item:nth-last-child(-n+2) { border-bottom: none; }
-    .faq-q { width: 100%; background: none; border: none; text-align: left; padding: 24px 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; cursor: none; }
+    .faq-q { width: 100%; background: none; border: none; text-align: left; padding: 24px 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; cursor: pointer; }
     .faq-q-text { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.4; }
     .faq-icon { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--red); flex-shrink: 0; transition: transform 0.25s ease; line-height: 1; margin-top: 2px; }
     .faq-item.open .faq-icon { transform: rotate(45deg); }
@@ -375,7 +358,7 @@
       text-transform: uppercase; color: var(--ink);
       background: #fff; border: 1px solid var(--line);
       padding: 9px 16px; border-radius: 2px;
-      cursor: none; z-index: 8000;
+      cursor: pointer; z-index: 8000;
       opacity: 0; transform: translateY(8px);
       transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.15s, color 0.15s;
       pointer-events: none;
@@ -414,8 +397,8 @@
       header { grid-template-columns: 1fr; }
       .header-right { align-items: flex-start; }
       .header-desc { text-align: left; }
-      body { cursor: auto; }
-      #cursor, #cursor-ring { display: none; }
+      body {  }
+      
       .topics { padding: 12px 16px; }
       .main-grid { margin: 0 16px; max-width: none; }
       .right-panel { height: 400px; }
@@ -424,9 +407,6 @@
   </style>
 </head>
 <body>
-
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
 
 <!-- Marquee -->
 <div class="marquee-wrap">
@@ -703,39 +683,6 @@ window.addEventListener('scroll', () => {
 // Ensure chat starts scrolled to top
 msgsEl.scrollTop = 0;
 
-/* ─── CURSOR ─── */
-const cur = document.getElementById('cursor');
-const ring = document.getElementById('cursor-ring');
-let mx = -200, my = -200, rx = -200, ry = -200;
-cur.style.opacity = '0';
-ring.style.opacity = '0';
-
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
-  cur.style.opacity = '1';
-}, { once: false });
-
-// First move reveals cursor
-document.addEventListener('mousemove', () => {
-  ring.style.opacity = '0.5';
-}, { once: true });
-(function animRing() {
-  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
-  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-  requestAnimationFrame(animRing);
-})();
-document.querySelectorAll('button, a, input, .source-item').forEach(el => {
-  el.addEventListener('mouseenter', () => {
-    cur.style.transform = 'translate(-50%,-50%) scale(2.2)';
-    ring.style.width = '54px'; ring.style.height = '54px'; ring.style.opacity = '0.3';
-  });
-  el.addEventListener('mouseleave', () => {
-    cur.style.transform = 'translate(-50%,-50%) scale(1)';
-    ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '0.4';
-  });
-});
-
 /* ─── CHAT STATE ─── */
 const msgsEl  = document.getElementById('messages');
 const inputEl = document.getElementById('userInput');
@@ -985,15 +932,6 @@ async function sendMessage(override) {
 }
 
 function sendMsg(text) { sendMessage(text); }
-
-inputEl.addEventListener('focus', () => {
-  cur.style.transform = 'translate(-50%,-50%) scale(0.4)';
-  ring.style.opacity = '0';
-});
-inputEl.addEventListener('blur', () => {
-  cur.style.transform = 'translate(-50%,-50%) scale(1)';
-  ring.style.opacity = '0.5';
-});
 
 inputEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }

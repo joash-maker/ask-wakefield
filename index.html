@@ -381,7 +381,23 @@
     .footer-left a:hover { color: var(--red); }
     .footer-right { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: var(--dim); white-space: nowrap; }
 
-    /* ─── ANIMATIONS ─── */
+    /* ─── BACK TO TOP ─── */
+    #backToTop {
+      position: fixed; bottom: 28px; left: 28px;
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--ink);
+      background: #fff; border: 1px solid var(--line);
+      padding: 9px 16px; border-radius: 2px;
+      cursor: none; z-index: 8000;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.15s, color 0.15s;
+      pointer-events: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    #backToTop.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+    #backToTop:hover { border-color: var(--red); color: var(--red); }
+
     @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -676,7 +692,19 @@
   <div class="footer-right">AI agents for local businesses &amp; public services.</div>
 </footer>
 
+<!-- Back to top -->
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Back to top
+</button>
+
 <script>
+/* ─── BACK TO TOP ─── */
+const bttBtn = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  bttBtn.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
 /* ─── CURSOR ─── */
 const cur = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
@@ -723,8 +751,15 @@ function isNearBottom() {
 
 function smartScroll(el) {
   if (isNearBottom()) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    msgsEl.scrollTop = msgsEl.scrollHeight;
   }
+}
+
+function scrollToMsg() {
+  // Small delay to allow DOM to paint the new message first
+  setTimeout(() => {
+    msgsEl.scrollTop = msgsEl.scrollHeight - msgsEl.clientHeight - 20;
+  }, 30);
 }
 
 function rawFmt(t) {
@@ -758,7 +793,7 @@ function createBotMsg() {
   wrap.appendChild(meta);
   wrap.appendChild(bubble);
   msgsEl.appendChild(wrap);
-  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  scrollToMsg();
   return { wrap, bubble };
 }
 
@@ -772,7 +807,7 @@ function addUserMsg(text) {
   bubble.className = 'msg-text'; bubble.innerHTML = rawFmt(text);
   wrap.appendChild(meta); wrap.appendChild(bubble);
   msgsEl.appendChild(wrap);
-  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  scrollToMsg();
 }
 
 /* ─── SEARCHING STATE ─── */
@@ -943,6 +978,15 @@ async function sendMessage(override) {
 }
 
 function sendMsg(text) { sendMessage(text); }
+
+inputEl.addEventListener('focus', () => {
+  cur.style.opacity = '0';
+  ring.style.opacity = '0';
+});
+inputEl.addEventListener('blur', () => {
+  cur.style.opacity = '1';
+  ring.style.opacity = '0.4';
+});
 
 inputEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }

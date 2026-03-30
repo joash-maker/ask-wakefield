@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "functions": {
+    "api/chat.js": { "maxDuration": 30 },
+    "api/followups.js": { "maxDuration": 15 }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/$1" }

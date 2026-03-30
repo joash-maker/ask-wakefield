@@ -138,6 +138,7 @@ GENERAL COUNCIL CONTACTS:
 - Pontefract Castle: ruins of one of England's most important medieval castles, free entry
 - Pugneys Country Park: water sports, lakeside walks, café, playground — popular local spot
 - Wakefield Museum: Wakefield One, 159 Mulberry Way, WF1 2UP — free entry, family crafts every Saturday 11am–3pm
+- Newmillerdam Country Park: Barnsley Road (A61), WF2 6QP — 95-hectare designated local nature reserve, 3.5 miles south of Wakefield city centre. Central lake with flat circular lakeside path (2.9km, approx 45–60 mins), suitable for pushchairs and wheelchairs. Ancient broadleaf and coniferous woodland. Wildlife includes great crested grebe, mute swans, mallard, grey heron and bats at dusk. The Gnome Roam trail is perfect for children — follow clues to find carved gnome and wildlife sculptures. The Grade II listed Georgian Boathouse café (built 1820s) serves barista coffee, locally sourced food and cakes — dogs welcome. Parking on site (WF2 6QP), pay and display £1 for 2 hours, cash or MiPermit app, 8am–6pm daily. Open every day, free entry. More info: experiencewakefield.co.uk/venue/newmillerdam-country-park-boathouse
 
 ---
 

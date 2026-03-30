@@ -55,18 +55,18 @@
 
     /* ─── CURSOR ─── */
     #cursor {
-      position: fixed; width: 10px; height: 10px;
+      position: fixed; width: 14px; height: 14px;
       background: var(--red); border-radius: 50%;
       pointer-events: none; z-index: 9999;
-      transition: transform 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease;
       transform: translate(-50%, -50%);
     }
     #cursor-ring {
-      position: fixed; width: 36px; height: 36px;
-      border: 1px solid var(--red); border-radius: 50%;
+      position: fixed; width: 40px; height: 40px;
+      border: 1.5px solid var(--red); border-radius: 50%;
       pointer-events: none; z-index: 9998;
       transition: width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
-      transform: translate(-50%, -50%); opacity: 0.4;
+      transform: translate(-50%, -50%); opacity: 0.5;
     }
 
     /* ─── GRAIN ─── */
@@ -134,7 +134,9 @@
 
     /* ─── MAIN GRID ─── */
     .main-grid {
-      display: block; margin: 0 48px;
+      display: block;
+      max-width: 860px;
+      margin: 0 auto;
       border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
       opacity: 0; animation: fadeUp 0.7s 0.7s ease forwards;
     }
@@ -391,7 +393,7 @@
       .divider { margin-left: 24px; margin-right: 24px; }
       .topics { padding: 16px 24px; gap: 6px; }
       .topic { font-size: 11px; padding: 7px 13px; }
-      .main-grid { margin: 0 24px; }
+      .main-grid { margin: 0 24px; max-width: none; }
       .right-panel { height: 420px; }
       .messages { padding: 16px 20px; }
       .input-area { padding: 10px 20px 12px; }
@@ -415,7 +417,7 @@
       body { cursor: auto; }
       #cursor, #cursor-ring { display: none; }
       .topics { padding: 12px 16px; }
-      .main-grid { margin: 0 16px; }
+      .main-grid { margin: 0 16px; max-width: none; }
       .right-panel { height: 400px; }
       .embed-section, .faq-section, .contact-section, footer { margin-left: 16px; margin-right: 16px; }
     }
@@ -535,7 +537,7 @@
     <div class="messages" id="messages">
       <div class="msg bot">
         <div class="msg-meta">Ask Wakefield</div>
-        <div class="msg-text">Good day. I'm your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.</div>
+        <div class="msg-text" id="welcomeMsg"></div>
       </div>
     </div>
 
@@ -680,6 +682,18 @@
 </button>
 
 <script>
+/* ─── TIME-BASED GREETING ─── */
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+function welcomeText() {
+  return `${getGreeting()}. I'm your local concierge for the Wakefield district 2014 here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.`;
+}
+document.getElementById('welcomeMsg').textContent = welcomeText();
+
 /* ─── BACK TO TOP ─── */
 const bttBtn = document.getElementById('backToTop');
 window.addEventListener('scroll', () => {
@@ -964,12 +978,12 @@ async function sendMessage(override) {
 function sendMsg(text) { sendMessage(text); }
 
 inputEl.addEventListener('focus', () => {
-  cur.style.opacity = '0';
+  cur.style.transform = 'translate(-50%,-50%) scale(0.4)';
   ring.style.opacity = '0';
 });
 inputEl.addEventListener('blur', () => {
-  cur.style.opacity = '1';
-  ring.style.opacity = '0.4';
+  cur.style.transform = 'translate(-50%,-50%) scale(1)';
+  ring.style.opacity = '0.5';
 });
 
 inputEl.addEventListener('keydown', e => {
@@ -988,7 +1002,7 @@ function resetChat() {
   const wrap = document.createElement('div'); wrap.className = 'msg bot';
   const meta = document.createElement('div'); meta.className = 'msg-meta'; meta.textContent = 'Ask Wakefield';
   const bubble = document.createElement('div'); bubble.className = 'msg-text';
-  bubble.textContent = 'Good day. I\'m your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what\'s on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.';
+  bubble.textContent = welcomeText();
   wrap.appendChild(meta); wrap.appendChild(bubble);
   msgsEl.appendChild(wrap);
   inputEl.focus();

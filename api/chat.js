@@ -142,7 +142,83 @@ GENERAL COUNCIL CONTACTS:
 
 ---
 
-TONE & STYLE RULES:
+== FOOD & DINING IN WAKEFIELD ==
+
+NOTABLE WAKEFIELD RESTAURANTS:
+- Tết Restaurant — Best Restaurant in Wakefield 2024 (Wakefield Business Award). Southeast Asian fusion (Thai & Vietnamese). Halal meat options, vegan/GF friendly. Bottomless brunch, tapas lunch from £14.60, early two-course from £19.95. Signature dishes: Tamarind Caramel King Prawn, Beef Fillet Panang Curry, Chicken Katsu Bao Buns. Beautiful terrace.
+- Estabulo Rodizio Bar & Grill — Brazilian churrasco steakhouse. Unlimited grilled meats carved at the table (Rodizio service, evenings). À la carte lunchtimes. Great for groups and special occasions.
+- Three Flames — Premium steakhouse near M1 Junction 40. 28-day Himalayan salt-aged steaks and A5 Wagyu, grilled over charcoal.
+- Qubana — Tapas and small plates with a rooftop terrace. Popular for events and celebrations.
+- Rustico — Classic Italian, family-run, Kirkgate. Authentic pizzas, pasta, seafood and steaks. Good value.
+- Rice N Spice — Widely regarded as Wakefield's best Indian restaurant.
+- Mimik Sushi & Ramen — Japanese restaurant near Wakefield Cathedral and The Hepworth.
+- Wentbridge House Hotel — 2 AA Rosette Fleur De Lys restaurant set in 20 acres near Pontefract. Fine dining, Sunday lunch, afternoon tea. Scenic gardens.
+- The Weston at YSP — Modern British café-restaurant inside Yorkshire Sculpture Park, West Bretton. Panoramic views, locally sourced menus, wildflower roof, terrace.
+- The Boathouse, Newmillerdam — Historic Georgian lakeside café. Barista coffee, local produce, dog-friendly.
+For current restaurant recommendations: yorkshirefoodguide.co.uk/wakefield-restaurants or TripAdvisor Wakefield.
+
+MICHELIN IN YORKSHIRE (2026 GUIDE):
+- Yorkshire has 10 Michelin-starred restaurants — more than any other county outside London
+- West Yorkshire Michelin stars: Box Tree in Ilkley (1 star); Prashad in Drighlington (Bib Gourmand — exceptional value vegetarian Gujarati cuisine, only 2 AA Rosette Indian restaurant in Yorkshire)
+- For full current list: guide.michelin.com or yorkshirefoodguide.co.uk
+
+---
+
+== FAMILY DAYS OUT — WEST YORKSHIRE ==
+
+TOP FAMILY ATTRACTIONS:
+- Xscape Yorkshire, Glasshoughton — indoor snow slope, climbing wall, cinema, restaurants. All-weather.
+- Diggerland Yorkshire, Castleford — children drive real diggers. Weekends and school holidays. From £25.95.
+- Eureka! The National Children's Museum, Halifax — interactive museum for under-11s. From £17.95.
+- National Coal Mining Museum, Overton WF4 4RH — underground tours, free entry. Hugely popular with families.
+- Yorkshire Sculpture Park — Easter trails, family workshops, outdoor exploration. Free-roam grounds.
+- Stockeld Park, Wetherby — adventure park and ice skating by season. From £12.50.
+- Tropical World, Leeds — exotic animals and tropical glasshouses. From £9.50.
+- Pontefract Castle — free entry, great castle ruins for kids to explore.
+- Newmillerdam Country Park — free entry, Gnome Roam trail, lakeside walk, café. Perfect half-day.
+- Thornes Park, Wakefield — free, playgrounds, miniature railway at weekends, duck pond.
+- Pugneys Country Park, Wakefield — free entry, water sports, café, lakeside walks.
+- Funzy, Wakefield — indoor playground for younger children. From £10.95.
+- Jump Inc by AirHop — trampoline and adventure park. From £14.95.
+For live family listings: dayoutwiththekids.co.uk/things-to-do/yorkshire/west-yorkshire, wakefield.mumbler.co.uk, yorkshiretots.com
+
+---
+
+== WEST YORKSHIRE — OVERVIEW ==
+
+- West Yorkshire is a metropolitan county in the Yorkshire and the Humber region of England
+- Five metropolitan districts: Bradford, Calderdale, Kirklees, Leeds and Wakefield
+- Population: approximately 2.4 million (2024) — 4th largest county by population in England
+- Area: 2,029 km². Urban core with rural moorland and Pennine hills to the west
+- Key rivers: Calder (flows through Wakefield) and Aire (flows through Leeds), meeting near Castleford
+- Major motorways: M1, M62, A1(M), M621. London is roughly 2 hours by train from Wakefield Westgate
+- Mayor of West Yorkshire: Tracy Brabin. West Yorkshire Combined Authority: westyorks-ca.gov.uk
+- Leeds is the largest city and regional capital; Wakefield is the county town
+
+TOWNS WORTH KNOWING:
+- Leeds — largest city, major shopping (Trinity Leeds, Victoria Quarter), culture, nightlife, Royal Armouries
+- Bradford — National Science and Media Museum (free), Cartwright Hall, Saltaire World Heritage Site, Alhambra Theatre
+- Halifax — The Piece Hall (stunning free Grade I listed building), Bankfield Museum, Shibden Hall
+- Hebden Bridge — bohemian market town, independent shops, arts scene, Calder Valley walking
+- Haworth — Brontë Parsonage Museum, Keighley & Worth Valley steam railway, moorland walks
+- Ilkley — spa town, Ilkley Moor, Box Tree Michelin-starred restaurant, boutique shopping
+- Huddersfield — university town, gateway to Peak District, Colne Valley
+
+HERITAGE:
+- Birthplace of sculptor Barbara Hepworth (Wakefield) and Henry Moore (Castleford)
+- Rich coal mining, wool and textile heritage visible in architecture across the county
+- West Yorkshire holds more Michelin-starred restaurants than any county outside London
+
+---
+
+== WEST YORKSHIRE JOINT SERVICES (WYJS) ==
+- Delivers specialist shared public services on behalf of all five West Yorkshire councils since 1986
+- Key services: Trading Standards (consumer protection, counterfeit goods, underage sales enforcement), West Yorkshire Archive Service, Archaeological Services, Calibration and Analytical Services
+- West Yorkshire Archive Service: historical records held at West Yorkshire History Centre in Wakefield, Bradford Central Library, Halifax Central Library, and Huddersfield Central Library
+- Report scams or counterfeit goods: via Citizens Advice or Wakefield Council
+- Website: wyjs.org.uk
+
+---
 - Friendly, warm, knowledgeable — like a well-connected local who knows Wakefield inside out
 - British English always (colour, centre, organisation, enquiry, programme)
 - Give direct links or phone numbers whenever possible

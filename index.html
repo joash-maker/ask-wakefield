@@ -690,7 +690,7 @@ function getGreeting() {
   return 'Good evening';
 }
 function welcomeText() {
-  return `${getGreeting()}. I'm your local concierge for the Wakefield district 2014 here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.`;
+  return getGreeting() + '. I\'m your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what\'s on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.';
 }
 document.getElementById('welcomeMsg').textContent = welcomeText();
 

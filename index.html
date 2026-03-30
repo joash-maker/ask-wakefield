@@ -134,37 +134,16 @@
 
     /* ─── MAIN GRID ─── */
     .main-grid {
-      display: grid; grid-template-columns: 1fr 500px; margin: 0 48px;
+      display: block; margin: 0 48px;
       border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
-      opacity: 0; animation: fadeUp 0.7s 0.7s ease forwards; height: 720px;
+      opacity: 0; animation: fadeUp 0.7s 0.7s ease forwards;
     }
 
-    /* ─── LEFT PANEL ─── */
-    .left-panel {
-      background: #fff; padding: 36px 40px; display: flex; flex-direction: column;
-      gap: 28px; border-right: 1px solid var(--line); overflow-y: auto;
-    }
-    .panel-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(17,17,17,0.35); }
-    .source-list { display: flex; flex-direction: column; }
-    .source-item {
-      display: flex; align-items: flex-start; gap: 16px; padding: 18px 0;
-      border-bottom: 1px solid var(--line); cursor: none; transition: padding-left 0.2s ease;
-    }
-    .source-item:last-child { border-bottom: none; }
-    .source-item:hover { padding-left: 6px; }
-    .source-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--red); flex-shrink: 0; margin-top: 2px; }
-    .source-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 4px; }
-    .source-desc { font-family: 'Syne', sans-serif; font-size: 13px; color: var(--dim); line-height: 1.55; }
-    .live-badge {
-      font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em;
-      text-transform: uppercase; background: var(--red); color: #fff;
-      padding: 2px 8px; border-radius: 2px; margin-left: 7px; vertical-align: middle;
-    }
-    .panel-footer { margin-top: auto; padding-top: 8px; }
-    .panel-footer p { font-family: 'DM Mono', monospace; font-size: 12px; color: rgba(17,17,17,0.3); line-height: 1.8; }
+    /* ─── LEFT PANEL — hidden in full-width layout ─── */
+    .left-panel { display: none; }
 
-    /* ─── RIGHT PANEL — CHAT ─── */
-    .right-panel { background: var(--chat-bg); display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    /* ─── RIGHT PANEL — CHAT (full width) ─── */
+    .right-panel { background: var(--chat-bg); display: flex; flex-direction: column; height: 520px; overflow: hidden; }
 
     .chat-header {
       padding: 16px 20px; border-bottom: 1px solid var(--chat-line);
@@ -187,7 +166,7 @@
 
     /* ─── MESSAGES ─── */
     .messages {
-      flex: 1; min-height: 0; overflow-y: auto; padding: 20px; display: flex;
+      flex: 1; min-height: 0; overflow-y: auto; padding: 24px 32px; display: flex;
       flex-direction: column; gap: 18px; scroll-behavior: smooth;
     }
     .messages::-webkit-scrollbar { width: 6px; }
@@ -202,7 +181,7 @@
     .msg.bot .msg-meta { color: var(--red); }
     .msg.user .msg-meta { color: rgba(255,255,255,0.28); text-align: right; }
 
-    .msg-text { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 400; line-height: 1.75; max-width: 90%; }
+    .msg-text { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 400; line-height: 1.75; max-width: 72ch; }
     .msg.bot .msg-text { color: rgba(255,255,255,0.88); border-left: 2px solid var(--red); padding-left: 14px; }
     .msg.user .msg-text { color: rgba(255,255,255,0.55); align-self: flex-end; text-align: right; border-right: 2px solid rgba(255,255,255,0.12); padding-right: 14px; }
     .msg-text a { color: var(--red-lt); text-decoration: underline; text-underline-offset: 3px; }
@@ -268,7 +247,7 @@
     .followup-chip:hover { color: #fff; border-color: var(--red); background: rgba(230,28,93,0.1); }
 
     /* ─── CHIPS (initial) ─── */
-    .chips { border-top: 1px solid var(--chat-line); padding: 10px 16px 8px; display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+    .chips { border-top: 1px solid var(--chat-line); padding: 10px 28px 8px; display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
     .chip {
       font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.05em;
       color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.09);
@@ -277,7 +256,7 @@
     .chip:hover { color: #fff; border-color: var(--red); background: rgba(230,28,93,0.12); }
 
     /* ─── INPUT AREA ─── */
-    .input-area { border-top: 1px solid var(--chat-line); padding: 12px 16px 14px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .input-area { border-top: 1px solid var(--chat-line); padding: 12px 28px 14px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
     #userInput {
       flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
@@ -407,9 +386,11 @@
       .divider { margin-left: 24px; margin-right: 24px; }
       .topics { padding: 16px 24px; gap: 6px; }
       .topic { font-size: 11px; padding: 7px 13px; }
-      .main-grid { grid-template-columns: 1fr; margin: 0 24px; height: auto; }
-      .left-panel { display: none; }
-      .right-panel { height: 620px; }
+      .main-grid { margin: 0 24px; }
+      .right-panel { height: 480px; }
+      .messages { padding: 16px 20px; }
+      .input-area { padding: 10px 20px 12px; }
+      .chips { padding: 8px 20px 6px; }
       .embed-section, .faq-section, .contact-section { margin-left: 24px; margin-right: 24px; }
       .embed-body, .contact-inner { grid-template-columns: 1fr; }
       .embed-info { border-right: none; border-bottom: 1px solid var(--line); }
@@ -430,6 +411,7 @@
       #cursor, #cursor-ring { display: none; }
       .topics { padding: 12px 16px; }
       .main-grid { margin: 0 16px; }
+      .right-panel { height: 460px; }
       .embed-section, .faq-section, .contact-section, footer { margin-left: 16px; margin-right: 16px; }
     }
   </style>
@@ -481,20 +463,14 @@
 
 <!-- Topic pills -->
 <div class="topics">
-  <button class="topic" onclick="sendMsg('What is on at The Hepworth Wakefield this month?')">The Hepworth</button>
-  <button class="topic" onclick="sendMsg('What is happening at Yorkshire Sculpture Park this month?')">YSP</button>
-  <button class="topic" onclick="sendMsg('What events are on at WX Exchange soon?')">WX Exchange</button>
-  <button class="topic" onclick="sendMsg('What are the best family days out in Wakefield?')">Family days out</button>
+  <button class="topic" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music, anything worth knowing about?')">What's on this week</button>
+  <button class="topic" onclick="sendMsg('What is happening at The Hepworth Wakefield right now?')">The Hepworth</button>
+  <button class="topic" onclick="sendMsg('What is happening at Yorkshire Sculpture Park right now?')">YSP</button>
+  <button class="topic" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">Restaurants</button>
+  <button class="topic" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">Family days out</button>
+  <button class="topic" onclick="sendMsg('I\'m visiting Wakefield for the first time — what should I see and do?')">Visitor guide</button>
   <button class="topic" onclick="sendMsg('What type of bins does Wakefield collect and how often?')">Bins &amp; waste</button>
-  <button class="topic" onclick="sendMsg('How do I find live road closures in Wakefield?')">Road closures</button>
-  <button class="topic" onclick="sendMsg('How does Council Tax work in Wakefield?')">Council Tax</button>
-  <button class="topic" onclick="sendMsg('When are the school holidays in Wakefield?')">School terms</button>
-  <button class="topic" onclick="sendMsg('What are the best things to see and do in Wakefield for visitors?')">Visitor guide</button>
-  <button class="topic" onclick="sendMsg('What classes and activities are there in Wakefield for babies and toddlers?')">Baby &amp; toddler groups</button>
-  <button class="topic" onclick="sendMsg('Tell me about Newmillerdam Country Park — what can I do there?')">Newmillerdam</button>
-  <button class="topic" onclick="sendMsg('What are the best restaurants in Wakefield?')">Restaurants</button>
-  <button class="topic" onclick="sendMsg('Are there any Michelin starred restaurants in West Yorkshire?')">Michelin dining</button>
-  <button class="topic" onclick="sendMsg('Tell me about West Yorkshire — what are the main towns and things to see?')">About West Yorkshire</button>
+  <button class="topic" onclick="sendMsg('How do I find live road closures and traffic issues in Wakefield?')">Road closures</button>
 </div>
 
 <!-- Main grid -->
@@ -554,15 +530,15 @@
     <div class="messages" id="messages">
       <div class="msg bot">
         <div class="msg-meta">Ask Wakefield</div>
-        <div class="msg-text">Hello! I'm Ask Wakefield — an independent AI assistant for the district. Ask me about what's on at The Hepworth or YSP, events at WX Exchange, family days out, restaurants, council services, bins, schools or roads. I can search live for current events too.</div>
+        <div class="msg-text">Good day. I'm your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.</div>
       </div>
     </div>
 
     <div class="chips" id="chips">
-      <button class="chip" onclick="sendMsg('What is on at The Hepworth this month?')">Hepworth — what's on</button>
-      <button class="chip" onclick="sendMsg('Best family days out in Wakefield?')">Family days out</button>
-      <button class="chip" onclick="sendMsg('When is my bin collected?')">Bin collection</button>
-      <button class="chip" onclick="sendMsg('What events are on at WX Exchange?')">WX events</button>
+      <button class="chip" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music, anything worth knowing about?')">What's on this week</button>
+      <button class="chip" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">Restaurants</button>
+      <button class="chip" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">Family days out</button>
+      <button class="chip" onclick="sendMsg('What type of bins does Wakefield collect and how often?')">Bin collection</button>
     </div>
 
     <div class="input-area">
@@ -1004,7 +980,7 @@ function resetChat() {
   const wrap = document.createElement('div'); wrap.className = 'msg bot';
   const meta = document.createElement('div'); meta.className = 'msg-meta'; meta.textContent = 'Ask Wakefield';
   const bubble = document.createElement('div'); bubble.className = 'msg-text';
-  bubble.textContent = 'Hello! I\'m Ask Wakefield — an independent AI assistant for the district. Ask me about what\'s on at The Hepworth or YSP, events at WX Exchange, family days out, restaurants, council services, bins, schools or roads. I can search live for current events too.';
+  bubble.textContent = 'Good day. I\'m your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what\'s on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.';
   wrap.appendChild(meta); wrap.appendChild(bubble);
   msgsEl.appendChild(wrap);
   inputEl.focus();

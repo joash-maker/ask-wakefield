@@ -406,7 +406,7 @@ var inputEl = document.getElementById('userInput');
 var sendBtn = document.getElementById('sendBtn');
 var voiceBtn = document.getElementById('voiceBtn');
 var chipsEl = document.getElementById('chips');
-var history = [];
+var chatHistory = [];
 var chipsGone = false;
 var isSending = false;
 
@@ -445,7 +445,7 @@ function sendMessage(override) {
   msgsEl.appendChild(uWrap);
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
-  history.push({ role: 'user', content: text });
+  chatHistory.push({ role: 'user', content: text });
 
   // Bot bubble
   var bWrap = document.createElement('div');
@@ -472,7 +472,7 @@ function sendMessage(override) {
       var data = JSON.parse(xhr.responseText);
       var reply = (data && data.reply) ? data.reply : "I'm sorry, I couldn't generate a response. Please try again.";
       bBody.innerHTML = fmt(reply);
-      history.push({ role: 'assistant', content: reply });
+      chatHistory.push({ role: 'assistant', content: reply });
 
       // Copy button
       var acts = document.createElement('div');
@@ -513,7 +513,7 @@ function sendMessage(override) {
   };
 
   try {
-    xhr.send(JSON.stringify({ messages: history }));
+    xhr.send(JSON.stringify({ messages: chatHistory }));
   } catch(e) {
     bBody.innerHTML = fmt('Failed to send request. Please try again.');
     isSending = false;
@@ -562,7 +562,7 @@ function getFollowups(question, answer, afterEl) {
 
 // RESET CHAT
 function resetChat() {
-  history = [];
+  chatHistory = [];
   chipsGone = false;
   isSending = false;
   sendBtn.disabled = false;

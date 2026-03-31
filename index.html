@@ -382,7 +382,7 @@
 </button>
 
 <script>
-// ── GREETING ──
+// GREETING
 function greeting() {
   var h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -390,17 +390,17 @@ function greeting() {
   return 'Good evening';
 }
 function welcomeText() {
-  return greeting() + ". I'm your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services. I search live, so my answers are always current.";
+  return greeting() + ". I'm your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services.";
 }
 document.getElementById('welcomeMsg').textContent = welcomeText();
 
-// ── BACK TO TOP ──
+// BACK TO TOP
 var bttBtn = document.getElementById('backToTop');
 window.addEventListener('scroll', function() {
   bttBtn.classList.toggle('visible', window.scrollY > 400);
 }, { passive: true });
 
-// ── CHAT STATE ──
+// ELEMENTS
 var msgsEl = document.getElementById('messages');
 var inputEl = document.getElementById('userInput');
 var sendBtn = document.getElementById('sendBtn');
@@ -410,164 +410,115 @@ var history = [];
 var chipsGone = false;
 var isSending = false;
 
-function hideChips() {
-  if (!chipsGone) { chipsEl.style.display = 'none'; chipsGone = true; }
-}
-
+// FORMAT
 function fmt(t) {
-  return t
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
+  if (!t) return '';
+  return String(t)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
     .replace(/^- (.+)$/gm,'<span class="bul">$1</span>')
+    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
     .replace(/\n/g,'<br/>');
 }
 
-function addMsg(role, text) {
-  var wrap = document.createElement('div');
-  wrap.className = 'msg ' + role;
-  var label = document.createElement('div');
-  label.className = 'msg-label';
-  label.textContent = role === 'bot' ? 'Ask Wakefield' : 'You';
-  var body = document.createElement('div');
-  body.className = 'msg-text';
-  body.innerHTML = fmt(text);
-  wrap.appendChild(label);
-  wrap.appendChild(body);
-  msgsEl.appendChild(wrap);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
-  return { wrap: wrap, body: body };
-}
-
-function addUserMsg(text) {
-  var wrap = document.createElement('div');
-  wrap.className = 'msg user';
-  var label = document.createElement('div');
-  label.className = 'msg-label';
-  label.textContent = 'You';
-  var body = document.createElement('div');
-  body.className = 'msg-text';
-  body.textContent = text;
-  wrap.appendChild(label);
-  wrap.appendChild(body);
-  msgsEl.appendChild(wrap);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
-}
-
-function createBotMsg() {
-  var wrap = document.createElement('div');
-  wrap.className = 'msg bot';
-  var label = document.createElement('div');
-  label.className = 'msg-label';
-  label.textContent = 'Ask Wakefield';
-  var body = document.createElement('div');
-  body.className = 'msg-text';
-  body.innerHTML = '<div class="searching"><div class="spin"></div>Searching...</div>';
-  wrap.appendChild(label);
-  wrap.appendChild(body);
-  msgsEl.appendChild(wrap);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
-  return { wrap: wrap, bubble: body };
-}
-
-function addCopyBtn(wrap, text) {
-  var actions = document.createElement('div');
-  actions.className = 'msg-actions';
-  var btn = document.createElement('button');
-  btn.className = 'copy-msg';
-  btn.textContent = 'Copy';
-  btn.onclick = function() {
-    navigator.clipboard.writeText(text).then(function() {
-      btn.textContent = 'Copied!';
-      btn.classList.add('ok');
-      setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 2000);
-    });
-  };
-  actions.appendChild(btn);
-  wrap.appendChild(actions);
-}
-
-function showFollowupChips(followups, afterEl) {
-  if (!followups || !followups.length) return;
-  var container = document.createElement('div');
-  container.className = 'followup-chips';
-  var label = document.createElement('div');
-  label.className = 'fu-label';
-  label.textContent = 'Follow up:';
-  container.appendChild(label);
-  followups.forEach(function(q) {
-    var btn = document.createElement('button');
-    btn.className = 'fu-chip';
-    btn.textContent = q;
-    btn.onclick = function() { container.remove(); sendMessage(q); };
-    container.appendChild(btn);
-  });
-  afterEl.after(container);
-}
-
-function getFollowups(question, answer) {
-  fetch('/api/followups', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question: question, answer: answer.substring(0, 300) })
-  }).then(function(r) { return r.json(); }).then(function(d) {
-    // handled in sendMessage via .then
-  }).catch(function() {});
-}
-
-async function sendMessage(override) {
-  var text = (typeof override === 'string' ? override : inputEl.value).trim();
+// SEND MESSAGE
+function sendMessage(override) {
+  var text = typeof override === 'string' ? override.trim() : inputEl.value.trim();
   if (!text || isSending) return;
 
   isSending = true;
-  hideChips();
-  inputEl.value = '';
   sendBtn.disabled = true;
+  inputEl.value = '';
 
-  addUserMsg(text);
-  history.push({ role: 'user', content: text });
-
-  var result = createBotMsg();
-  var wrap = result.wrap;
-  var bubble = result.bubble;
-
-  try {
-    var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 25000);
-
-    var res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history }),
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-
-    var data = await res.json();
-    var reply = data.reply || "I'm sorry, I couldn't generate a response. Please try again.";
-    bubble.innerHTML = fmt(reply);
-    history.push({ role: 'assistant', content: reply });
-    addCopyBtn(wrap, reply);
-
-    // Get follow-up suggestions
-    fetch('/api/followups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: text, answer: reply.substring(0, 300) })
-    }).then(function(r) { return r.json(); }).then(function(d) {
-      if (d.followups && d.followups.length) showFollowupChips(d.followups, wrap);
-    }).catch(function() {});
-
-  } catch (err) {
-    var msg = err.name === 'AbortError'
-      ? "I'm taking a little longer than expected. Please try again in a moment."
-      : 'Connection error — please check your connection and try again.';
-    bubble.innerHTML = fmt(msg);
+  // Hide chips
+  if (!chipsGone) {
+    chipsEl.style.display = 'none';
+    chipsGone = true;
   }
 
-  isSending = false;
-  sendBtn.disabled = false;
-  inputEl.focus();
+  // User bubble
+  var uWrap = document.createElement('div');
+  uWrap.className = 'msg user';
+  uWrap.innerHTML = '<div class="msg-label">You</div><div class="msg-text" style="align-self:flex-end;text-align:right;border-right:2px solid rgba(255,255,255,0.12);padding-right:14px;color:rgba(255,255,255,0.55);">' + text.replace(/</g,'&lt;') + '</div>';
+  msgsEl.appendChild(uWrap);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  history.push({ role: 'user', content: text });
+
+  // Bot bubble
+  var bWrap = document.createElement('div');
+  bWrap.className = 'msg bot';
+  var bLabel = document.createElement('div');
+  bLabel.className = 'msg-label';
+  bLabel.textContent = 'Ask Wakefield';
+  var bBody = document.createElement('div');
+  bBody.className = 'msg-text';
+  bBody.innerHTML = '<div class="searching"><div class="spin"></div>Thinking...</div>';
+  bWrap.appendChild(bLabel);
+  bWrap.appendChild(bBody);
+  msgsEl.appendChild(bWrap);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  // XHR request
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/chat', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 25000;
+
+  xhr.onload = function() {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      var reply = (data && data.reply) ? data.reply : "I'm sorry, I couldn't generate a response. Please try again.";
+      bBody.innerHTML = fmt(reply);
+      history.push({ role: 'assistant', content: reply });
+
+      // Copy button
+      var acts = document.createElement('div');
+      acts.className = 'msg-actions';
+      var copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-msg';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = function() {
+        navigator.clipboard.writeText(reply).then(function() {
+          copyBtn.textContent = 'Copied!';
+          copyBtn.classList.add('ok');
+          setTimeout(function() { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('ok'); }, 2000);
+        });
+      };
+      acts.appendChild(copyBtn);
+      bWrap.appendChild(acts);
+
+      // Follow-ups
+      getFollowups(text, reply, bWrap);
+    } catch(e) {
+      bBody.innerHTML = fmt('Something went wrong parsing the response. Please try again.');
+    }
+    isSending = false;
+    sendBtn.disabled = false;
+    inputEl.focus();
+  };
+
+  xhr.onerror = function() {
+    bBody.innerHTML = fmt('Connection error — please check your connection and try again.');
+    isSending = false;
+    sendBtn.disabled = false;
+  };
+
+  xhr.ontimeout = function() {
+    bBody.innerHTML = fmt("I'm taking a little longer than expected. Please try again in a moment.");
+    isSending = false;
+    sendBtn.disabled = false;
+  };
+
+  try {
+    xhr.send(JSON.stringify({ messages: history }));
+  } catch(e) {
+    bBody.innerHTML = fmt('Failed to send request. Please try again.');
+    isSending = false;
+    sendBtn.disabled = false;
+  }
 }
 
 function sendMsg(text) { sendMessage(text); }
@@ -575,8 +526,41 @@ function sendMsg(text) { sendMessage(text); }
 inputEl.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+sendBtn.onclick = function() { sendMessage(); };
 
-// ── RESET CHAT ──
+// FOLLOW-UPS
+function getFollowups(question, answer, afterEl) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/followups', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      if (data.followups && data.followups.length) {
+        var container = document.createElement('div');
+        container.className = 'followup-chips';
+        var lbl = document.createElement('div');
+        lbl.className = 'fu-label';
+        lbl.textContent = 'Follow up:';
+        container.appendChild(lbl);
+        data.followups.forEach(function(q) {
+          var btn = document.createElement('button');
+          btn.className = 'fu-chip';
+          btn.textContent = q;
+          btn.onclick = function() { container.remove(); sendMessage(q); };
+          container.appendChild(btn);
+        });
+        afterEl.after(container);
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+      }
+    } catch(e) {}
+  };
+  xhr.onerror = xhr.ontimeout = function() {};
+  xhr.send(JSON.stringify({ question: question, answer: answer.substring(0, 300) }));
+}
+
+// RESET CHAT
 function resetChat() {
   history = [];
   chipsGone = false;
@@ -586,19 +570,13 @@ function resetChat() {
   chipsEl.style.display = 'flex';
   var wrap = document.createElement('div');
   wrap.className = 'msg bot';
-  var label = document.createElement('div');
-  label.className = 'msg-label';
-  label.textContent = 'Ask Wakefield';
-  var body = document.createElement('div');
-  body.className = 'msg-text';
-  body.textContent = welcomeText();
-  wrap.appendChild(label);
-  wrap.appendChild(body);
+  wrap.innerHTML = '<div class="msg-label">Ask Wakefield</div><div class="msg-text" id="welcomeReset"></div>';
   msgsEl.appendChild(wrap);
+  wrap.querySelector('#welcomeReset').textContent = welcomeText();
   inputEl.focus();
 }
 
-// ── VOICE INPUT ──
+// VOICE INPUT
 (function() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return;
@@ -607,14 +585,14 @@ function resetChat() {
   rec.lang = 'en-GB';
   rec.continuous = false;
   rec.interimResults = false;
-  voiceBtn.addEventListener('click', function() {
+  voiceBtn.onclick = function() {
     if (voiceBtn.classList.contains('listening')) {
       rec.stop();
       voiceBtn.classList.remove('listening');
     } else {
       try { rec.start(); voiceBtn.classList.add('listening'); } catch(e) {}
     }
-  });
+  };
   rec.onresult = function(e) {
     inputEl.value = e.results[0][0].transcript;
     voiceBtn.classList.remove('listening');
@@ -623,7 +601,7 @@ function resetChat() {
   rec.onerror = rec.onend = function() { voiceBtn.classList.remove('listening'); };
 })();
 
-// ── FAQ ──
+// FAQ
 function toggleFaq(btn) {
   var item = btn.closest('.faq-item');
   var isOpen = item.classList.contains('open');
@@ -631,7 +609,7 @@ function toggleFaq(btn) {
   if (!isOpen) item.classList.add('open');
 }
 
-// ── COPY EMBED ──
+// COPY EMBED
 function copyEmbed() {
   navigator.clipboard.writeText('<script src="https://askwakefield.co.uk/widget.js"><\/script>').then(function() {
     var label = document.getElementById('copyLabel');
@@ -640,6 +618,7 @@ function copyEmbed() {
   });
 }
 </script>
+
 
 </body>
 </html>

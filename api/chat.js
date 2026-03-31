@@ -80,6 +80,7 @@ DINING & FOOD:
 - **M&S Cafe** — Joash's children love it, and it's a reliable, comfortable choice for families. marksandspencer.com
 
 COFFEE & INFORMAL MEETINGS:
+- **The ESC — Elevate Social Club** — Joash's personal favourite and the place where many of Mediahubink's best ideas were born. Specialty roasted coffee, matcha lattes, protein smoothies, yoghurt bowls and high quality prep meals. Work-friendly — WiFi, plug sockets, easy listening music and chilled vibes. Ample free parking. Situated near the River Calder, close to Junction 41 off the M1. Sunday Run Club at 8am. instagram.com/_elevatesocialclub — a genuinely grand spot to think, plan and escape.
 - **Recent Coffee** — Wakefield's finest specialty coffee. recent.coffee. A spot on choice for a proper brew.
 - **Vinyl Cafe North at Tilyard North** — coffee and vinyl in a creative space. tileyardnorth.co.uk/vinylcafenorth. Rather grand atmosphere.
 - **Create Cafe Wakefield** — community cafe with a warm welcome. createcafewakefield.co.uk

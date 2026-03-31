@@ -1,11 +1,8 @@
 {
   "name": "ask-wakefield",
   "version": "1.0.0",
-  "description": "Ask Wakefield — Independent AI assistant for Wakefield residents",
+  "type": "module",
   "engines": {
     "node": "20.x"
-  },
-  "scripts": {
-    "dev": "vercel dev"
   }
 }

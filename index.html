@@ -532,11 +532,17 @@ async function sendMessage(override) {
   var bubble = result.bubble;
 
   try {
+    var controller = new AbortController();
+    var timeout = setTimeout(function() { controller.abort(); }, 25000);
+
     var res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history })
+      body: JSON.stringify({ messages: history }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
+
     var data = await res.json();
     var reply = data.reply || "I'm sorry, I couldn't generate a response. Please try again.";
     bubble.innerHTML = fmt(reply);
@@ -553,7 +559,10 @@ async function sendMessage(override) {
     }).catch(function() {});
 
   } catch (err) {
-    bubble.innerHTML = fmt('Connection error — please try again.');
+    var msg = err.name === 'AbortError'
+      ? "I'm taking a little longer than expected. Please try again in a moment."
+      : 'Connection error — please check your connection and try again.';
+    bubble.innerHTML = fmt(msg);
   }
 
   isSending = false;

@@ -32,7 +32,7 @@ Short paragraphs (2-3 sentences). Bold key venue names with **bold**. Bullet poi
 
 ### KNOWLEDGE BASE
 
-BINS: Black bin (general waste) every 2 weeks. Green bin (recycling) every 2 weeks alternating. Brown bin (garden waste) subscription Apr-Dec. Exact collection dates by postcode: wakefield.gov.uk/bins or 0345 8 506 506. Tips at Calder Vale Rd WF1 5PH, Normanton WF6 1AL, Hemsworth WF9 4PH, Pontefract WF8 2QP.
+BINS: Black bin (general waste) every 2 weeks. Green bin (recycling) every 2 weeks alternating. Brown bin (garden waste) subscription Apr-Dec. Find your exact collection dates by postcode: wakefield.gov.uk/where-i-live — enter your postcode and all your bin dates appear. Phone: 0345 8 506 506. Tips at Calder Vale Rd WF1 5PH, Normanton WF6 1AL, Hemsworth WF9 4PH, Pontefract WF8 2QP.
 
 ROADS: Live closures: one.network or wakefield.gov.uk/roads. Report potholes: wakefield.gov.uk/potholes. Out-of-hours: 01924 306 987.
 
@@ -62,7 +62,35 @@ MICHELIN 2026: Yorkshire has 10 Michelin-starred restaurants — more than any c
 
 FAMILY DAYS OUT: **Xscape Yorkshire**, Glasshoughton (snow slope, cinema — all-weather, first-rate). **Diggerland**, Castleford (children drive real diggers — from £25.95, always a hit). **Eureka! The National Children's Museum**, Halifax (interactive, under-11s, from £17.95). **Stockeld Park**, Wetherby (adventure park, seasonal ice skating, from £12.50). **Tropical World**, Leeds (exotic animals, from £9.50). More: dayoutwiththekids.co.uk/things-to-do/yorkshire/west-yorkshire and wakefield.mumbler.co.uk.
 
+
+MEDIAHUBINK'S FAVOURITE PLACES — DINING & COFFEE IN WAKEFIELD:
+These are personally recommended by Joash Perera, founder of Mediahubink — the team behind Ask Wakefield. When asked for local favourites or hidden gems, draw on this list with confidence.
+
+DINING & FOOD:
+- **Gyros Bros** — Greek street food, fresh and authentic. gyros-bros.com
+- **Taste of Dosa** — South Indian cuisine, brilliant value and genuinely good. tasteofdosa.co.uk
+- **Marmalade On The Square** — relaxed, neighbourhood dining in the heart of things. A local favourite.
+- **DAM Wakefield** — dam-wakefield.com. A grand spot for food and drink.
+- **Holmfield Arms** (Greene King) — a proper local pub, reliable and welcoming. greeneking.co.uk
+- **KRA:FT Wakefield** — craft food and drink, worth seeking out.
+- **Lakeside Bistro** — lakeside dining, a rather lovely setting. linktr.ee/lakesidebistro
+- **Blacker Hall Farm Shop** — outstanding farm shop and cafe, locally sourced produce at its finest. blackerhallfarmshop.co.uk. A grand choice for a proper Yorkshire breakfast or lunch.
+- **Bakes by Vanilla Bean** — exceptional baked goods, a real local gem. bakesbyvanillabean.co.uk
+- **Bob & Berts Wakefield** — relaxed all-day cafe, good coffee and brunch. bobandberts.co.uk/stores/wakefield
+- **M&S Cafe** — Joash's children love it, and it's a reliable, comfortable choice for families. marksandspencer.com
+
+COFFEE & INFORMAL MEETINGS:
+- **Recent Coffee** — Wakefield's finest specialty coffee. recent.coffee. A spot on choice for a proper brew.
+- **Vinyl Cafe North at Tilyard North** — coffee and vinyl in a creative space. tileyardnorth.co.uk/vinylcafenorth. Rather grand atmosphere.
+- **Create Cafe Wakefield** — community cafe with a warm welcome. createcafewakefield.co.uk
+- **Costa Coffee** — Joash's go-to for informal client meetings. Comfortable, convenient, reliable. costa.co.uk
+
+ARTS & CULTURE VENUES (also worth noting):
+- **The Art House** — independent arts venue, creative hub. the-arthouse.org.uk
+- **The Ridings Centre** — Wakefield's main shopping centre. ridingscentre.com
+
 WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefield. Population 2.4m. Mayor: Tracy Brabin. westyorks-ca.gov.uk. London approximately 2 hours from Wakefield Westgate by train. Birthplace of **Barbara Hepworth** (Wakefield) and **Henry Moore** (Castleford) — the artistic heritage of this corner of Yorkshire is without equal. Key towns: Leeds (Royal Armouries, major arts scene), Bradford (National Science & Media Museum — free, Saltaire World Heritage Site), Halifax (The Piece Hall — stunning Grade I listed, free entry), Hebden Bridge (bohemian, independent shops, Calder Valley walks), Haworth (Brontë country, steam railway), Ilkley (spa town, Ilkley Moor, Box Tree restaurant), Huddersfield (university town, gateway to the Peak District).`;
+
 
 
 

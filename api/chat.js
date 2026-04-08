@@ -108,6 +108,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
+  const hour = new Date().getUTCHours() + 1; // UTC+1 approximate UK time
+  const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  const systemWithTime = SYSTEM_PROMPT + `\n\nCURRENT TIME CONTEXT: It is currently ${timeOfDay} in the UK. Use "Good ${timeOfDay}" if greeting the user.`;
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -120,7 +124,7 @@ export default async function handler(req, res) {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         temperature: 0.7,
-        system: SYSTEM_PROMPT,
+        system: systemWithTime,
         messages
       })
     });

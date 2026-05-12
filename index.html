@@ -29,7 +29,7 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Syne', sans-serif; background: #fff; color: var(--ink); min-height: 100dvh; overflow-x: hidden; }
+    body { font-family: 'Syne', sans-serif; background: #faf9f7; color: var(--ink); min-height: 100dvh; overflow-x: hidden; }
 
     /* GRAIN */
     body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.018; pointer-events: none; z-index: 9000; }
@@ -41,17 +41,44 @@
     .marquee-item .dot { width: 5px; height: 5px; background: var(--red); border-radius: 50%; flex-shrink: 0; }
     @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-    /* HEADER */
-    header { padding: 48px 48px 0; display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 24px; }
-    .header-eyebrow { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; opacity: 0; animation: fadeUp 0.7s 0.1s ease forwards; }
-    h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(68px, 10vw, 140px); font-weight: 300; line-height: 0.92; letter-spacing: -0.02em; opacity: 0; animation: fadeUp 0.8s 0.2s ease forwards; }
-    h1 em { font-style: italic; color: var(--red); }
-    .header-right { padding-top: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; opacity: 0; animation: fadeUp 0.7s 0.35s ease forwards; }
-    .badge { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--line); padding: 7px 14px; border-radius: 2px; }
-    .header-desc { font-size: 15px; color: var(--dim); text-align: right; max-width: 240px; line-height: 1.7; }
+    /* HERO */
+    .hero { position: relative; height: 88vh; min-height: 520px; overflow: hidden; display: flex; align-items: flex-end; }
+    .hero-bg { position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1510797215324-95aa89f43c33?auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center 40%; transform: scale(1.06); animation: heroZoom 10s ease-out forwards; }
+    @keyframes heroZoom { from { transform: scale(1.06); } to { transform: scale(1.0); } }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.15) 100%); }
+    .hero-badge { position: absolute; top: 28px; right: 48px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.18); padding: 6px 13px; border-radius: 2px; }
+    .hero-content { position: relative; z-index: 1; padding: 0 48px 56px; width: 100%; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; }
+    .hero-left { max-width: 680px; }
+    .hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 14px; opacity: 0; animation: fadeUp 0.7s 0.2s ease forwards; }
+    .hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(64px, 10vw, 130px); font-weight: 300; line-height: 0.9; letter-spacing: -0.02em; color: #fff; opacity: 0; animation: fadeUp 0.9s 0.3s ease forwards; }
+    .hero-title em { font-style: italic; color: var(--red); }
+    .hero-desc { font-size: 16px; color: rgba(255,255,255,0.62); line-height: 1.75; margin-top: 20px; max-width: 440px; opacity: 0; animation: fadeUp 0.7s 0.5s ease forwards; }
+    .hero-right { flex-shrink: 0; opacity: 0; animation: fadeUp 0.6s 0.7s ease forwards; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+    .hero-stat { text-align: right; }
+    .hero-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 300; color: #fff; line-height: 1; }
+    .hero-stat-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.38); margin-top: 3px; }
+    .hero-divider { width: 1px; height: 32px; background: rgba(255,255,255,0.15); margin: 4px 0; align-self: flex-end; }
+
+    /* DESTINATION CARDS */
+    .cards-section { padding: 48px 48px 0; background: #faf9f7; opacity: 0; animation: fadeUp 0.7s 0.4s ease forwards; }
+    .cards-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; }
+    .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .dest-card { position: relative; aspect-ratio: 2/3; border-radius: 3px; overflow: hidden; cursor: pointer; }
+    .dest-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+    .dest-card:hover .dest-card-img { transform: scale(1.07); }
+    .dest-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.08) 55%); transition: background 0.3s ease; }
+    .dest-card:hover .dest-card-overlay { background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.15) 55%); }
+    .dest-card-body { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 18px; }
+    .dest-card-cat { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 5px; }
+    .dest-card-name { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 300; color: #fff; line-height: 1.15; }
+    .dest-card-cta { display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
+    .dest-card:hover .dest-card-cta { opacity: 1; }
+
+    /* HEADER (kept for accessibility, visually hidden) */
+    header { display: none; }
 
     /* DIVIDER */
-    .divider { height: 1px; background: var(--line); margin: 32px 48px 0; opacity: 0; animation: fadeIn 0.6s 0.5s ease forwards; }
+    .divider { height: 1px; background: var(--line); margin: 32px 48px 0; opacity: 0; animation: fadeIn 0.6s 0.6s ease forwards; }
 
     /* PILLS */
     .topics { display: flex; flex-wrap: wrap; gap: 8px; padding: 24px 48px; opacity: 0; animation: fadeUp 0.6s 0.55s ease forwards; }
@@ -197,9 +224,12 @@
 
     /* RESPONSIVE */
     @media (max-width: 960px) {
-      header { padding: 28px 24px 0; grid-template-columns: 1fr; }
-      .header-right { align-items: flex-start; }
-      .header-desc { text-align: left; }
+      .hero-content { padding: 0 24px 40px; flex-direction: column; align-items: flex-start; gap: 20px; }
+      .hero-badge { right: 24px; }
+      .hero-right { align-items: flex-start; flex-direction: row; gap: 24px; }
+      .hero-divider { display: none; }
+      .cards-section { padding: 32px 24px 0; }
+      .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .divider { margin: 24px 24px 0; }
       .topics { padding: 16px 24px; gap: 6px; }
       .topic { font-size: 11px; padding: 7px 13px; }
@@ -217,7 +247,9 @@
       footer { margin: 32px 24px 40px; flex-direction: column; align-items: flex-start; }
     }
     @media (max-width: 600px) {
-      h1 { font-size: 52px; }
+      .hero { height: 75vh; min-height: 460px; }
+      .hero-title { font-size: 56px; }
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
       .topics { padding: 12px 16px; }
       .chat-wrap { margin: 0 16px; height: 460px; }
       .embed-section, .faq-section, .contact-section, footer { margin-left: 16px; margin-right: 16px; }
@@ -247,16 +279,73 @@
   </div>
 </div>
 
-<header>
-  <div>
-    <div class="header-eyebrow">Wakefield District · Independent AI Assistant</div>
-    <h1>Ask<br/><em>Wake&shy;field</em></h1>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-badge">Not an official council service</div>
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Wakefield District · Independent AI Assistant</div>
+      <h1 class="hero-title">Ask<br/><em>Wake&shy;field</em></h1>
+      <p class="hero-desc">Your local concierge for the Wakefield district — culture, services, restaurants, events and everything in between.</p>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stat">
+        <div class="hero-stat-num">2</div>
+        <div class="hero-stat-label">Art Fund Museums<br/>of the Year</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">10</div>
+        <div class="hero-stat-label">Michelin Stars<br/>in Yorkshire</div>
+      </div>
+    </div>
   </div>
-  <div class="header-right">
-    <div class="badge">Not an official council service</div>
-    <p class="header-desc">Your local AI assistant for everything the Wakefield district has to offer — culture, services, events and more.</p>
+</section>
+
+<!-- DESTINATION CARDS -->
+<div class="cards-section">
+  <div class="cards-label">Explore the district</div>
+  <div class="cards-grid">
+    <div class="dest-card" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music?')">
+      <img class="dest-card-img" src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=600&q=80" alt="What's on in Wakefield" loading="lazy"/>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-body">
+        <div class="dest-card-cat">Live & upcoming</div>
+        <div class="dest-card-name">What's on this week</div>
+        <div class="dest-card-cta">Ask now →</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="sendMsg('Tell me about The Hepworth Wakefield — what\'s on and what should I know before visiting?')">
+      <img class="dest-card-img" src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=600&q=80" alt="The Hepworth Wakefield" loading="lazy"/>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-body">
+        <div class="dest-card-cat">World-class art · Free entry</div>
+        <div class="dest-card-name">The Hepworth Wakefield</div>
+        <div class="dest-card-cta">Ask now →</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">
+      <img class="dest-card-img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80" alt="Restaurants in Wakefield" loading="lazy"/>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-body">
+        <div class="dest-card-cat">Dining & food</div>
+        <div class="dest-card-name">Restaurants & dining</div>
+        <div class="dest-card-cta">Ask now →</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">
+      <img class="dest-card-img" src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=600&q=80" alt="Family days out in West Yorkshire" loading="lazy"/>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-body">
+        <div class="dest-card-cat">Outdoors & activities</div>
+        <div class="dest-card-name">Family days out</div>
+        <div class="dest-card-cta">Ask now →</div>
+      </div>
+    </div>
   </div>
-</header>
+</div>
 
 <div class="divider"></div>
 
@@ -383,6 +472,9 @@
   </div>
   <div class="footer-right">AI agents for local businesses &amp; public services.</div>
 </footer>
+<div style="max-width:860px;margin:-24px auto 0;padding:0 0 40px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(17,17,17,0.28);letter-spacing:0.06em;">
+  Photos: <a href="https://unsplash.com/@vjestica" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Illiya Vjestica</a>, <a href="https://unsplash.com" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Unsplash</a> (free licence)
+</div>
 
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>

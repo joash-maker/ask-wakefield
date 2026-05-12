@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submit an Event — Ask Wakefield</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --red:#e61c5d; --ink:#111; --dim:#777; --line:rgba(17,17,17,0.10); }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Syne',sans-serif; background:#fff; color:var(--ink); min-height:100dvh; }
+
+    header { padding:40px 48px 0; border-bottom:1px solid var(--line); padding-bottom:32px; display:flex; align-items:flex-end; justify-content:space-between; }
+    .logo-link { text-decoration:none; }
+    .logo { font-family:'Cormorant Garamond',serif; font-size:clamp(32px,5vw,52px); font-weight:300; line-height:1; }
+    .logo em { font-style:italic; color:var(--red); }
+    .back-link { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--dim); text-decoration:none; border:1px solid var(--line); padding:8px 16px; border-radius:2px; transition:all 0.15s; }
+    .back-link:hover { border-color:var(--red); color:var(--red); }
+
+    .page-wrap { max-width:680px; margin:0 auto; padding:48px 24px 80px; }
+
+    .page-title { font-family:'Cormorant Garamond',serif; font-size:clamp(28px,4vw,42px); font-weight:300; margin-bottom:8px; }
+    .page-sub { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:12px; }
+    .page-desc { font-size:15px; color:var(--dim); line-height:1.75; margin-bottom:40px; border-bottom:1px solid var(--line); padding-bottom:32px; }
+
+    .form-section { margin-bottom:32px; }
+    .section-label { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--red); margin-bottom:20px; }
+
+    .field { margin-bottom:20px; }
+    label { display:block; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--dim); margin-bottom:7px; }
+    label .req { color:var(--red); margin-left:2px; }
+    input, textarea, select {
+      width:100%; background:#fff; border:1px solid var(--line); border-radius:2px;
+      padding:11px 14px; font-size:15px; font-family:'Syne',sans-serif; color:var(--ink);
+      outline:none; transition:border-color 0.2s; appearance:none;
+    }
+    input:focus, textarea:focus, select:focus { border-color:var(--red); }
+    textarea { resize:vertical; min-height:100px; line-height:1.6; }
+    select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23777' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; cursor:pointer; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .hint { font-size:13px; color:var(--dim); margin-top:5px; line-height:1.5; }
+
+    .submit-btn { width:100%; background:var(--red); border:none; padding:14px 24px; font-family:'DM Mono',monospace; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#fff; border-radius:2px; cursor:pointer; transition:background 0.15s; margin-top:8px; }
+    .submit-btn:hover { background:#ff4d7a; }
+    .submit-btn:disabled { background:rgba(17,17,17,0.15); cursor:not-allowed; }
+
+    .success-state { display:none; text-align:center; padding:48px 24px; }
+    .success-icon { font-size:48px; margin-bottom:16px; }
+    .success-title { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:300; margin-bottom:8px; }
+    .success-msg { font-size:15px; color:var(--dim); line-height:1.75; margin-bottom:24px; }
+    .success-back { display:inline-flex; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); text-decoration:none; border:1px solid var(--line); padding:9px 20px; border-radius:2px; transition:all 0.15s; }
+    .success-back:hover { border-color:var(--red); color:var(--red); }
+
+    .error-msg { display:none; background:rgba(230,28,93,0.06); border:1px solid rgba(230,28,93,0.3); border-radius:2px; padding:12px 16px; font-size:14px; color:#c0143f; margin-top:12px; line-height:1.6; }
+
+    footer { border-top:1px solid var(--line); padding:24px 48px; font-family:'DM Mono',monospace; font-size:11px; color:var(--dim); display:flex; justify-content:space-between; align-items:center; }
+    footer a { color:var(--ink); text-decoration:none; }
+    footer a:hover { color:var(--red); }
+
+    @media (max-width:600px) {
+      header { padding:24px 20px; flex-direction:column; align-items:flex-start; gap:16px; }
+      .page-wrap { padding:32px 20px 60px; }
+      .field-row { grid-template-columns:1fr; }
+      footer { flex-direction:column; gap:8px; padding:20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo-link" href="/">
+    <div class="logo">Ask <em>Wakefield</em></div>
+  </a>
+  <a class="back-link" href="/">← Back to Ask Wakefield</a>
+</header>
+
+<div class="page-wrap">
+
+  <div id="formState">
+    <div class="page-sub">Community submissions</div>
+    <h1 class="page-title">Submit an event</h1>
+    <p class="page-desc">Know of something happening in Wakefield that should be on our radar? Submit it below and we'll review it for inclusion in the Ask Wakefield knowledge base. We aim to review submissions within 48 hours.</p>
+
+    <form id="eventForm" novalidate>
+
+      <div class="form-section">
+        <div class="section-label">Event details</div>
+
+        <div class="field">
+          <label>Event name <span class="req">*</span></label>
+          <input type="text" name="eventName" placeholder="e.g. Wakefield Food Festival 2026" required/>
+        </div>
+
+        <div class="field">
+          <label>Event type <span class="req">*</span></label>
+          <select name="eventType" required>
+            <option value="">Select a category</option>
+            <option>Arts & Culture</option>
+            <option>Music & Live Performance</option>
+            <option>Food & Drink</option>
+            <option>Family & Children</option>
+            <option>Sports & Fitness</option>
+            <option>Community & Charity</option>
+            <option>Markets & Shopping</option>
+            <option>Business & Networking</option>
+            <option>Festivals & Celebrations</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Start date <span class="req">*</span></label>
+            <input type="date" name="startDate" required/>
+          </div>
+          <div class="field">
+            <label>End date</label>
+            <input type="date" name="endDate"/>
+            <p class="hint">Leave blank if single-day event</p>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Start time</label>
+            <input type="time" name="startTime"/>
+          </div>
+          <div class="field">
+            <label>End time</label>
+            <input type="time" name="endTime"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Venue / location <span class="req">*</span></label>
+          <input type="text" name="venue" placeholder="e.g. The Hepworth Wakefield, Gallery Walk, WF1 5AW" required/>
+        </div>
+
+        <div class="field">
+          <label>Description <span class="req">*</span></label>
+          <textarea name="description" placeholder="Tell us about the event — what it is, who it's for, what to expect. 2–4 sentences is ideal." required></textarea>
+        </div>
+
+        <div class="field">
+          <label>Ticket price / cost</label>
+          <input type="text" name="ticketPrice" placeholder="e.g. Free, £10, From £5, Pay what you can"/>
+        </div>
+
+        <div class="field">
+          <label>Booking / more info URL</label>
+          <input type="url" name="eventUrl" placeholder="https://"/>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-label">Your details</div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Your name <span class="req">*</span></label>
+            <input type="text" name="submitterName" placeholder="First and last name" required/>
+          </div>
+          <div class="field">
+            <label>Your email <span class="req">*</span></label>
+            <input type="email" name="submitterEmail" placeholder="your@email.com" required/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Organisation / venue name</label>
+          <input type="text" name="organisation" placeholder="e.g. WX Wakefield, Wakefield BID, independent"/>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Submit event</button>
+      <div class="error-msg" id="errorMsg">Something went wrong submitting your event. Please try again or email <a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a>.</div>
+
+    </form>
+  </div>
+
+  <div class="success-state" id="successState">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Grand — submitted.</div>
+    <p class="success-msg">Thank you for submitting your event. We'll review it within 48 hours and add it to Ask Wakefield if it's a good fit for the district. You'll hear from us at the email address you provided.</p>
+    <a class="success-back" href="/">← Back to Ask Wakefield</a>
+  </div>
+
+</div>
+
+<footer>
+  <span>Ask Wakefield — Independent AI assistant for the Wakefield district. Built by <a href="https://mediahubink.com" target="_blank">Mediahubink</a>.</span>
+  <a href="/">askwakefield.co.uk</a>
+</footer>
+
+<script>
+// Posts to local serverless function → Google Sheets
+
+document.getElementById('eventForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  var form = e.target;
+  var btn = document.getElementById('submitBtn');
+  var errMsg = document.getElementById('errorMsg');
+  errMsg.style.display = 'none';
+
+  // Basic validation
+  var required = form.querySelectorAll('[required]');
+  var valid = true;
+  required.forEach(function(field) {
+    if (!field.value.trim()) {
+      field.style.borderColor = 'var(--red)';
+      valid = false;
+    } else {
+      field.style.borderColor = '';
+    }
+  });
+  if (!valid) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  var data = {
+    eventName: form.eventName.value.trim(),
+    eventType: form.eventType.value,
+    startDate: form.startDate.value,
+    endDate: form.endDate.value || 'Single day',
+    startTime: form.startTime.value || 'TBC',
+    endTime: form.endTime.value || 'TBC',
+    venue: form.venue.value.trim(),
+    description: form.description.value.trim(),
+    ticketPrice: form.ticketPrice.value.trim() || 'Not specified',
+    eventUrl: form.eventUrl.value.trim() || 'Not provided',
+    submitterName: form.submitterName.value.trim(),
+    submitterEmail: form.submitterEmail.value.trim(),
+    organisation: form.organisation.value.trim() || 'Not specified',
+    timestamp: new Date().toISOString(),
+    source: 'askwakefield.co.uk/submit-event'
+  };
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/submit-event', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 15000;
+
+  xhr.onload = function() {
+    document.getElementById('formState').style.display = 'none';
+    document.getElementById('successState').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  xhr.onerror = xhr.ontimeout = function() {
+    btn.disabled = false;
+    btn.textContent = 'Submit event';
+    errMsg.style.display = 'block';
+  };
+
+  xhr.send(JSON.stringify(data));
+});
+</script>
+
+</body>
+</html>

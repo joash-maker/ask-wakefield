@@ -574,8 +574,12 @@ function sendMessage(override) {
       bBody.innerHTML = fmt(reply);
       chatHistory.push({ role: 'assistant', content: reply });
 
-      // Scroll to top of the bot message so user reads from the start
-      setTimeout(function() { bWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
+      // Scroll the messages container so bot message starts at top
+      setTimeout(function() {
+        var msgTop = bWrap.getBoundingClientRect().top;
+        var containerTop = msgsEl.getBoundingClientRect().top;
+        msgsEl.scrollTop += (msgTop - containerTop) - 12;
+      }, 60);
 
       // Copy button
       var acts = document.createElement('div');

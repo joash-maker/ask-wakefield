@@ -275,6 +275,10 @@
   <div class="chat-header">
     <span class="chat-title">Ask Wakefield · AI Chat</span>
     <div class="chat-header-right">
+      <button class="new-chat-btn" id="copyChatBtn" onclick="copyChatHistory()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
+        Copy chat
+      </button>
       <button class="new-chat-btn" onclick="resetChat()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         New chat
@@ -309,7 +313,11 @@
   <div class="chat-credit">Powered by <a href="https://mediahubink.com" target="_blank" rel="noopener">Mediahubink</a></div>
 </div>
 
-<div class="embed-section">
+<div style="max-width:860px;margin:10px auto 0;text-align:right;padding:0 4px;">
+  <a href="/submit-event" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">
+    + Submit an event
+  </a>
+</div>
   <div class="embed-header">
     <div class="embed-title">Embed this assistant</div>
     <div class="embed-sub">One line of code</div>
@@ -607,6 +615,30 @@ function toggleFaq(btn) {
   var isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(function(el) { el.classList.remove('open'); });
   if (!isOpen) item.classList.add('open');
+}
+
+// COPY CHAT
+function copyChatHistory() {
+  var msgs = msgsEl.querySelectorAll('.msg');
+  var lines = [];
+  msgs.forEach(function(msg) {
+    var label = msg.querySelector('.msg-label');
+    var body = msg.querySelector('.msg-text');
+    if (label && body) {
+      lines.push(label.textContent.trim() + ':');
+      lines.push(body.innerText.trim());
+      lines.push('');
+    }
+  });
+  var text = lines.join('\n').trim();
+  if (!text) return;
+  var btn = document.getElementById('copyChatBtn');
+  navigator.clipboard.writeText(text).then(function() {
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied!';
+    setTimeout(function() {
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg> Copy chat';
+    }, 2000);
+  });
 }
 
 // COPY EMBED

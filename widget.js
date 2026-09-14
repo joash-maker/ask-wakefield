@@ -1,14 +1,18 @@
 /**
  * Ask Wakefield — Embeddable Widget
  * Drop one <script> tag on any page to add the Ask Wakefield chat assistant.
- * https://wakefield-demo.mediahubink.com/widget.js
+ * https://www.askwakefield.co.uk/widget.js
  */
 (function () {
   'use strict';
 
-  const API_URL = 'https://wakefield-demo.mediahubink.com/api/chat';
-  const ACCENT  = '#c8991e';
-  const PRIMARY = '#1c3a28';
+  const SCRIPT_ORIGIN = (() => {
+    try { return new URL(document.currentScript?.src || 'https://www.askwakefield.co.uk/widget.js').origin; }
+    catch { return 'https://www.askwakefield.co.uk'; }
+  })();
+  const API_URL = `${SCRIPT_ORIGIN}/api/chat`;
+  const ACCENT  = '#e61c5d';
+  const PRIMARY = '#1c1c1e';
   const RADIUS  = '14px';
 
   const CSS = `
@@ -22,7 +26,7 @@
       border-radius: 50%;
       border: none;
       cursor: pointer;
-      box-shadow: 0 4px 20px rgba(28,58,40,0.35);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.28);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -35,7 +39,7 @@
     }
     #aw-widget-btn:hover {
       transform: scale(1.07);
-      box-shadow: 0 6px 28px rgba(28,58,40,0.45);
+      box-shadow: 0 6px 28px rgba(0,0,0,0.38);
     }
     #aw-widget-panel {
       position: fixed;
@@ -195,8 +199,8 @@
       border-top: 1px solid #e2ddd5;
     }
     .aw-chip {
-      background: #eef3ec;
-      border: 1px solid #c8ddc1;
+      background: #faf4f6;
+      border: 1px solid #f1c6d4;
       color: ${PRIMARY};
       font-size: 11.5px;
       font-weight: 500;
@@ -243,10 +247,10 @@
       flex-shrink: 0;
       transition: background 0.15s;
     }
-    #aw-send:hover { background: #2a5239; }
+    #aw-send:hover { background: #ff4d7a; }
     #aw-send:disabled { background: #9ca3af; cursor: not-allowed; }
     .aw-sources { margin: 2px 0 0 34px; display: grid; gap: 5px; }
-    .aw-source { font-size: 11px; color: #55715d; text-decoration: none; padding: 5px 7px; border: 1px solid #dbe5d8; border-radius: 6px; background: #f7faf6; }
+    .aw-source { font-size: 11px; color: #7b3b50; text-decoration: none; padding: 5px 7px; border: 1px solid #f0d3dc; border-radius: 6px; background: #fff8fa; }
     .aw-source:hover { border-color: ${PRIMARY}; color: ${PRIMARY}; }
     #aw-disclaimer {
       text-align: center;
@@ -289,7 +293,7 @@
       <div id="aw-messages">
         <div class="aw-msg aw-bot">
           <div class="aw-msg-av">A</div>
-          <div class="aw-bubble">Hi! I can help with bins, road closures, leisure centres, Council Tax and schools. What do you need?</div>
+          <div class="aw-bubble">Ask me about what's on, restaurants, family days out, attractions, transport or council-service links across the Wakefield district.</div>
         </div>
       </div>
       <div id="aw-chips">
@@ -383,8 +387,8 @@
 
     function fmt(t) {
       return t
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')
+        .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
         .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
         .replace(/\n/g,'<br />');
     }

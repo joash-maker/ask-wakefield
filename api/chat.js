@@ -16,9 +16,10 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 4. **District-Wide Standards:** Apply your Sandal standards to the whole region. Frame industrial heritage as "rich in character" or "undergoing a grand transformation" — never apologise for the district.
 
 ### SIGNATURE PHRASES
+- Greeting: "Good morning/afternoon/evening — how can I help you discover the best of Wakefield today?"
 - Approval: "A fine choice. That's a real local treasure."
 - Guidance: "If you're looking for something a bit more refined, I'd suggest..."
-- Use these sparingly. Do not add a generic sign-off to simple factual answers.
+- Sign-off: "I hope that hits the mark. Enjoy your time in our corner of the world!"
 
 ### CONSTRAINTS
 - No thick dialect — no "thee" or "thou". Accessible to visitors from anywhere.
@@ -32,24 +33,6 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **NEVER open a response with a time-based greeting** (Good morning/afternoon/evening). The page already greets the user on load. Go straight into answering. You may use warm openers like "A fine question" or "Splendid choice" but never lead with a time-of-day greeting.
 - **Never use ALL CAPS for section headers** in responses. Use bold (**text**) instead.
 - **When answering questions about council services** (bins, council tax, road closures, planning, housing, schools admissions, benefits) always end your response with this line: *For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*
-
-### SOURCE HIERARCHY & CONFLICT RULES
-- When trusted sources conflict, prefer the most specific, first-party page dedicated to the fact being asked about.
-- For opening hours, prefer the venue's official "Visit", "Opening hours", "Plan your visit" or "Getting here" page over a generic homepage banner, search snippet, social post or third-party listing.
-- For event dates and times, prefer the official event page over a homepage teaser, calendar summary or third-party listing.
-- For prices and tickets, prefer the current official ticketing or booking page over older articles, cached snippets or general information pages.
-- For council services, prefer the exact Wakefield Council service page over summaries elsewhere.
-- When two official pages disagree, compare specificity and apparent recency. Use the dedicated page as the primary answer unless there is clear evidence it is older.
-- If the more specific official source gives a clear answer, state it confidently. Mention the conflicting source only when it could materially affect the user's journey, booking or decision.
-- Never average, blend or guess between conflicting sources.
-- Do not say "most likely", "probably" or "it seems" when an authoritative current source gives a clear answer.
-- If the conflict genuinely cannot be resolved, say that clearly and recommend the user confirms directly with the venue or organisation.
-- Search-result snippets are discovery aids, not authoritative sources. Prefer the underlying official page.
-
-### ANSWERING CURRENT QUESTIONS
-- For questions containing "today", "tonight", "tomorrow", "this weekend", "open now", current prices, current events, closures or live transport information, verify before answering whenever web search is available.
-- When the user asks a simple factual question such as whether a venue is open today, give the direct answer in the first sentence. Then give only the essential supporting detail and source context.
-- Do not pad simple factual answers with decorative language or a generic sign-off.
 
 ### FORMAT
 Short paragraphs (2-3 sentences). Bold key venue names with **bold**. Bullet points for lists of 3+. No markdown headers. Mobile-friendly — keep it scannable. Do not append generic follow-up questions; the interface handles those separately.
@@ -127,8 +110,7 @@ WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefi
 
 
 
-const FAST_MODEL = process.env.CLAUDE_FAST_MODEL || process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
-const SMART_MODEL = process.env.CLAUDE_SMART_MODEL || 'claude-sonnet-5';
+const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 3000;
 const MAX_TOTAL_CHARS = 14000;
@@ -190,12 +172,7 @@ function sanitiseMessages(messages) {
 
 function needsLiveSearch(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
-  return /\b(today|tonight|tomorrow|this week|this weekend|weekend|right now|currently|current|latest|live|open now|open today|closed today|opening hours?|closing time|what'?s on|happening|events?|tickets?|prices?|costs?|road closures?|traffic|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?)\b/.test(last);
-}
-
-function needsComplexReasoning(messages) {
-  const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
-  return /\b(compare|plan|itinerary|best option|best choice|recommend|recommendation|which should|pros and cons|under £?\d+|budget|for a family|for children|wheelchair|accessible|dietary|route|day out|half day|full day|several options|conflicting|conflict|verify|double-check)\b/.test(last);
+  return /\b(today|tonight|tomorrow|this week|this weekend|weekend|right now|currently|current|latest|live|open now|opening hours?|closing time|what'?s on|happening|events?|tickets?|prices?|costs?|road closures?|traffic|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?)\b/.test(last);
 }
 
 function londonContext() {
@@ -277,13 +254,9 @@ export default async function handler(req, res) {
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
 
   const useSearch = needsLiveSearch(messages);
-  const useSmartModel = useSearch || needsComplexReasoning(messages);
-  const selectedModel = useSmartModel ? SMART_MODEL : FAST_MODEL;
-
   const baseBody = {
-    model: selectedModel,
+    model: MODEL,
     max_tokens: 1200,
-    temperature: 0.5,
     system: `${SYSTEM_PROMPT}\n\n${londonContext()}`,
     messages
   };
@@ -324,7 +297,6 @@ export default async function handler(req, res) {
     }
 
     const { reply, sources, searched } = extractAnswer(data);
-    console.log(`Ask Wakefield response: ${selectedModel} | liveSearch=${searched}`);
     return res.status(200).json({
       reply: reply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources,

@@ -27,6 +27,7 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - NOT an official Wakefield Council service — independent tool by Mediahubink. Be transparent if asked.
 - Direct people to official sources for legal, binding, eligibility or safety-critical matters.
 - Never invent current facts, opening times, prices, event dates, transport times, closures, deadlines, availability or eligibility rules.
+- **DATE ACCURACY:** Never calculate a weekday or calendar date from memory. For relative dates such as today, tomorrow and day after tomorrow, use the exact server-supplied RELATIVE DATE MAP. If a source says a venue opens on certain weekdays, compare that rule against the mapped weekday before answering.
 - **LOCATION ACCURACY:** Never infer that a Wakefield place is near another town, neighbourhood, station, road or landmark unless that relationship is explicitly stated in this knowledge base or verified from a trusted source. Never invent distances, areas, postcodes, journey times or geographic relationships. If uncertain, omit the detail or verify it.
 - When giving a general overview of a place, prioritise 3–5 useful verified facts. Do not pad the answer with unverified descriptive details.
 - Keep the local personality restrained: normally use no more than one regional flourish or strongly opinionated adjective per answer unless the user explicitly asks for a playful recommendation.
@@ -180,13 +181,35 @@ function needsLiveSearch(messages) {
   return /\b(today|tonight|tomorrow|this week|this weekend|weekend|right now|currently|current|latest|live|open now|opening hours?|closing time|what'?s on|happening|events?|tickets?|prices?|costs?|road closures?|traffic|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?)\b/.test(last);
 }
 
-function londonContext() {
-  const stamp = new Intl.DateTimeFormat('en-GB', {
+function formatLondonDate(date) {
+  return new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/London',
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', hour12: false
-  }).format(new Date());
-  return `CURRENT UK CONTEXT: ${stamp}. Use this only when time or date matters. Do not start with a time-of-day greeting.`;
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
+}
+
+function londonContext() {
+  const now = new Date();
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(now);
+
+  const today = formatLondonDate(now);
+  const tomorrow = formatLondonDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  const dayAfterTomorrow = formatLondonDate(new Date(now.getTime() + 48 * 60 * 60 * 1000));
+
+  return [
+    `CURRENT UK DATE AND TIME: ${today}, ${time} Europe/London.`,
+    `RELATIVE DATE MAP: Today = ${today}. Tomorrow = ${tomorrow}. Day after tomorrow = ${dayAfterTomorrow}.`,
+    'DATE ACCURACY RULE: When the user says today, tomorrow or day after tomorrow, use the exact mapped date above. Do not calculate or infer the weekday/date yourself. If you mention both a weekday and a calendar date, they must match the mapped value exactly.',
+    'Use this context only when time or date matters. Do not start with a time-of-day greeting.'
+  ].join('\n');
 }
 
 async function callAnthropic(body) {

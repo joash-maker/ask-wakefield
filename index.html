@@ -354,7 +354,7 @@
   <div class="cards-label">Explore the district</div>
   <div class="cards-grid">
     <div class="dest-card" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music?')">
-      <img class="dest-card-img" src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=600&q=80" alt="What's on in Wakefield" loading="lazy"/>
+      <img class="dest-card-img" src="/images/card-whats-on.webp" alt="What's on in Wakefield" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
         <div class="dest-card-cat">Live & upcoming</div>
@@ -363,7 +363,7 @@
       </div>
     </div>
     <div class="dest-card" onclick="sendMsg('Tell me about The Hepworth Wakefield — what\'s on and what should I know before visiting?')">
-      <img class="dest-card-img" src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=600&q=80" alt="The Hepworth Wakefield" loading="lazy"/>
+      <img class="dest-card-img" src="/images/card-hepworth.webp" alt="The Hepworth Wakefield" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
         <div class="dest-card-cat">World-class art · Free for Wakefield residents</div>
@@ -372,7 +372,7 @@
       </div>
     </div>
     <div class="dest-card" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">
-      <img class="dest-card-img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80" alt="Restaurants in Wakefield" loading="lazy"/>
+      <img class="dest-card-img" src="/images/card-restaurants.webp" alt="Restaurants in Wakefield" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
         <div class="dest-card-cat">Dining & food</div>
@@ -381,7 +381,7 @@
       </div>
     </div>
     <div class="dest-card" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">
-      <img class="dest-card-img" src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=600&q=80" alt="Family days out in West Yorkshire" loading="lazy"/>
+      <img class="dest-card-img" src="/images/card-family.webp" alt="Family days out in West Yorkshire" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
         <div class="dest-card-cat">Outdoors & activities</div>
@@ -518,7 +518,7 @@
   <div class="footer-right">Mediahubink Limited · Company No. 17218602<br/>7 Tileyard North, Wakefield WF1 5FY</div>
 </footer>
 <div style="max-width:860px;margin:-24px auto 0;padding:0 0 40px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(17,17,17,0.28);letter-spacing:0.06em;">
-  Photos: <a href="https://unsplash.com/@vjestica" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Illiya Vjestica</a>, <a href="https://unsplash.com" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Unsplash</a> (free licence)
+  Hero & district imagery: illustrative visuals created for Ask Wakefield.
 </div>
 
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -535,7 +535,7 @@ function greeting() {
   return 'Good evening';
 }
 function welcomeText() {
-  return greeting() + ". Ask me about what's on, restaurants, family days out, attractions, transport or council-service links across the Wakefield district. For changing information, I'll use current sources when available.";
+  return greeting() + ". Ask me about what's on, restaurants, family days out, attractions, transport or council-service links across the Wakefield district. For things that change, like events, opening times and travel, I'll check current sources where available.";
 }
 document.getElementById('welcomeMsg').textContent = welcomeText();
 

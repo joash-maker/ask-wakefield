@@ -32,6 +32,9 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **ENTITY SEPARATION:** Keep facts attached to the correct named place. Never transfer an acreage, route number, opening time, price, award, address or facility from one Wakefield venue to another. In particular, YSP's 500-acre landscape is a Yorkshire Sculpture Park fact and must never be attributed to Newmillerdam.
 - **VENUE IDENTITY:** If the user names a venue or place that you cannot verify, do not silently substitute a similarly named venue. Say you cannot verify it and ask for clarification. Never infer that an outdoor space is open tonight merely because a source says it is open daily; use explicit current opening hours or say the evening access time is not confirmed.
 - **TRANSPORT ACCURACY:** Never invent a railway station, bus route, tram route, stop, connection or journey time. For route planning and exact public-transport times, verify against an official/current source. If you cannot verify it, say so and point to National Rail or West Yorkshire Metro.
+- **NO ROUTE ASSEMBLY:** Do not construct a multi-leg journey from separate facts unless a current journey-planning source explicitly supports that route. If you only know that a bus serves the destination and that a railway station is nearby, state those as separate options rather than inventing a train-plus-bus connection.
+- **NO JOURNEY-TIME GUESSING:** Never add a driving, cycling, walking or bus journey time merely because you know the distance. If the user asked only how far somewhere is, answer the verified distance and location without estimating minutes.
+- **EVENT DATE-RANGE ACCURACY:** When the user asks what is on over a range such as "this weekend", check every date in the server-supplied range. Use exact event titles, dates and times from the first-party listing. Do not replace an event title with generic category labels such as "Comedy Music Performance Talk". If you verify Saturday but not Sunday, say exactly that rather than implying Sunday has no event.
 - **PLANNING AND LEGAL ACCURACY:** Planning rules can depend on the property and current national/local rules. Verify planning-permission, permitted-development and building-regulation questions against official sources before giving specific limits. Never invent percentage-of-plot rules or other thresholds.
 - When giving a general overview of a place, prioritise 3–5 useful verified facts. Do not pad the answer with unverified descriptive details.
 - Keep the local personality restrained: normally use no more than one regional flourish or strongly opinionated adjective per answer unless the user explicitly asks for a playful recommendation.
@@ -65,6 +68,7 @@ LEISURE (Aspire): Aspire@ThePark WF2 8QZ, Sun Lane Ossett WF5 9DZ, Minsthorpe WF
 THE HEPWORTH WAKEFIELD: Gallery Walk WF1 5AW. Wakefield District residents and under 18s receive free exhibition entry. Opening days, exhibition prices and special-event arrangements can change, so verify current details when asked. Cafe, sculpture garden, shop. hepworthwakefield.org.
 
 YORKSHIRE SCULPTURE PARK (YSP): West Bretton WF4 4LG. 500 acres, 90+ sculptures including Henry Moore and Barbara Hepworth — both born in this district, which tells you everything about Wakefield's artistic pedigree. Indoor galleries, cafe, restaurant, gift shop. Tickets: ysp.org.uk.
+YSP TRANSPORT: Wakefield does not have a tram network. YSP's own visitor information says the 96 bus runs between Wakefield and Barnsley with stops at Yorkshire Sculpture Park. Wakefield Westgate is the nearest railway station, around seven miles from YSP. Treat those as separate verified facts. Do not invent a rail station called Bretton and do not suggest a train-plus-bus itinerary unless a current journey planner explicitly verifies it.
 
 WX WAKEFIELD EXCHANGE: City centre hub for culture, food, drink and live entertainment. wxwakefield.co.uk/Whats-On. Booking: wxbooking.co.uk.
 
@@ -72,7 +76,7 @@ EXPERIENCE WAKEFIELD: Official tourism guide — experiencewakefield.co.uk. Key 
 
 WAKEFIELD MUMBLER: Family and parenting community — wakefield.mumbler.co.uk. Baby/toddler groups, classes, family days out.
 
-NEWMILLERDAM COUNTRY PARK: A large woodland country park and Local Nature Reserve about 3.5 miles south of Wakefield on the A61 (Barnsley Road). It has a central lake, a 1.5-mile surfaced lakeside path and way-marked trails. The park is open every day. Pay-and-display parking applies and toilets may carry a charge. The family-friendly Gnome Roam is associated with Newmillerdam. **The Boathouse Newmillerdam** is a waterside cafe. For current parking, access, facilities and cafe details use wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/newmillerdam-country-park and Experience Wakefield. Do not state an acreage for Newmillerdam unless a trusted source in the current request verifies it.
+NEWMILLERDAM COUNTRY PARK: A large woodland country park and Local Nature Reserve about 3.5 miles south of Wakefield on the A61 (Barnsley Road). It has a central lake, a 1.5-mile surfaced lakeside path and way-marked trails. The park is open every day. Pay-and-display parking applies and toilets may carry a charge. The family-friendly Gnome Roam is associated with Newmillerdam. **The Boathouse Newmillerdam** is a waterside cafe. Do not add an estimated driving, bus, cycling or walking time unless a current route source verifies it. For current parking, access, facilities and cafe details use wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/newmillerdam-country-park and Experience Wakefield. Do not state an acreage for Newmillerdam unless a trusted source in the current request verifies it.
 
 KEY ATTRACTIONS: Thornes Park (playgrounds and large green spaces). National Coal Mining Museum, Overton WF4 4RH (underground tours and mining heritage). Nostell (National Trust estate near Pontefract). Xscape Yorkshire, Glasshoughton (indoor leisure and entertainment). Wakefield Cathedral (historic city-centre cathedral). Pontefract Castle (historic castle site). Pugneys Country Park (lake and outdoor recreation). Wakefield Museum WF1 2UP. For changing details such as opening times, prices, activities and events, verify current information before stating it.
 
@@ -199,10 +203,13 @@ function requiresVerifiedSource(messages) {
 function verificationFallback(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   if (/planning permission|permitted development|building regulations?|two[- ]storey|extension/.test(last)) {
-    return 'I could not verify the current planning rules from an official source just now, so I do not want to guess. Please check Wakefield Council Planning and the Planning Portal for the current rules for your property.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+    return 'Some two-storey rear extensions in England can fall within permitted development, but the rules depend on the property, dimensions, position, designated land and whether permitted-development rights have been removed. I could not verify the current rules for your property from an official source just now, so please check Wakefield Council Planning and the Planning Portal before relying on this. Building Regulations are separate from planning permission.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
   }
   if (/train|bus|tram|timetable|journey|route|travel|delay|cancelled/.test(last)) {
     return 'I could not verify the current transport information from an official source just now, so I do not want to give you a timetable or route that may be wrong. Please check National Rail for trains or West Yorkshire Metro for local buses and journey planning.';
+  }
+  if (/michelin|bib gourmand/.test(last)) {
+    return 'I could not verify the current Michelin Guide status from a trusted source just now, so I do not want to label any Wakefield restaurant as Michelin-starred. Please check the Michelin Guide for the current West Yorkshire listings.';
   }
   return 'I could not verify that current information from a trusted source just now, so I do not want to guess. Please check the relevant official venue or service website.';
 }
@@ -340,7 +347,7 @@ export default async function handler(req, res) {
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: 3,
+      max_uses: 5,
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',

@@ -6,6 +6,7 @@
   <title>Ask Wakefield — Your Local AI Assistant</title>
   <meta name="description" content="An independent AI assistant for Wakefield — events, culture, council services, family activities and everything the district has to offer." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preload" as="image" href="/images/wakefield-city-hero.webp" type="image/webp" />
   <meta property="og:title" content="Ask Wakefield" />
   <meta property="og:description" content="Your independent AI assistant for the Wakefield district." />
   <meta property="og:image" content="https://askwakefield.co.uk/og-image.svg" />
@@ -30,6 +31,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body { font-family: 'Syne', sans-serif; background: #faf9f7; color: var(--ink); min-height: 100dvh; overflow-x: hidden; }
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--red-lt); outline-offset: 3px; }
 
     /* GRAIN */
     body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.018; pointer-events: none; z-index: 9000; }
@@ -43,16 +45,23 @@
 
     /* HERO */
     .hero { position: relative; height: 88vh; min-height: 520px; overflow: hidden; display: flex; align-items: flex-end; }
-    .hero-bg { position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1510797215324-95aa89f43c33?auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center 40%; transform: scale(1.06); animation: heroZoom 10s ease-out forwards; }
-    @keyframes heroZoom { from { transform: scale(1.06); } to { transform: scale(1.0); } }
-    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.15) 100%); }
+    .hero-bg { position: absolute; inset: 0; background-image: url('/images/wakefield-city-hero.webp'); background-size: cover; background-position: center center; transform: scale(1.035); animation: heroZoom 10s ease-out forwards; }
+    @keyframes heroZoom { from { transform: scale(1.035); } to { transform: scale(1.0); } }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,10,12,0.82) 0%, rgba(7,10,12,0.52) 36%, rgba(7,10,12,0.18) 68%, rgba(7,10,12,0.08) 100%), linear-gradient(to top, rgba(7,10,12,0.72) 0%, rgba(7,10,12,0.10) 58%, rgba(7,10,12,0.12) 100%); }
     .hero-badge { position: absolute; top: 28px; right: 48px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.18); padding: 6px 13px; border-radius: 2px; }
     .hero-content { position: relative; z-index: 1; padding: 0 48px 56px; width: 100%; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; }
     .hero-left { max-width: 680px; }
     .hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 14px; opacity: 0; animation: fadeUp 0.7s 0.2s ease forwards; }
     .hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(64px, 10vw, 130px); font-weight: 300; line-height: 0.9; letter-spacing: -0.02em; color: #fff; opacity: 0; animation: fadeUp 0.9s 0.3s ease forwards; }
     .hero-title em { font-style: italic; color: var(--red); }
-    .hero-desc { font-size: 16px; color: rgba(255,255,255,0.62); line-height: 1.75; margin-top: 20px; max-width: 440px; opacity: 0; animation: fadeUp 0.7s 0.5s ease forwards; }
+    .hero-desc { font-size: 16px; color: rgba(255,255,255,0.62); line-height: 1.75; margin-top: 20px; max-width: 500px; opacity: 0; animation: fadeUp 0.7s 0.5s ease forwards; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; opacity: 0; animation: fadeUp 0.7s 0.6s ease forwards; }
+    .hero-cta { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 2px; background: var(--red); color: #fff; text-decoration: none; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; transition: background 0.18s, transform 0.18s; }
+    .hero-cta:hover { background: var(--red-lt); transform: translateY(-1px); }
+    .hero-cta.secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.82); }
+    .hero-quick-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; opacity:0; animation:fadeUp 0.7s 0.72s ease forwards; }
+    .hero-quick { border:0; background:transparent; color:rgba(255,255,255,0.72); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.25); }
+    .hero-quick:hover, .hero-quick:focus-visible { color:#fff; border-bottom-color:var(--red); }
     .hero-right { flex-shrink: 0; opacity: 0; animation: fadeUp 0.6s 0.7s ease forwards; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
     .hero-stat { text-align: right; }
     .hero-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 300; color: #fff; line-height: 1; }
@@ -63,7 +72,7 @@
     .cards-section { padding: 48px 48px 0; background: #faf9f7; opacity: 0; animation: fadeUp 0.7s 0.4s ease forwards; }
     .cards-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; }
     .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .dest-card { position: relative; aspect-ratio: 2/3; border-radius: 3px; overflow: hidden; cursor: pointer; }
+    .dest-card { position: relative; aspect-ratio: 2/3; border-radius: 3px; overflow: hidden; cursor: pointer; border:0; padding:0; width:100%; text-align:left; background:#111; font:inherit; }
     .dest-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
     .dest-card:hover .dest-card-img { transform: scale(1.07); }
     .dest-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.08) 55%); transition: background 0.3s ease; }
@@ -133,6 +142,13 @@
     .copy-msg { display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
     .copy-msg:hover { color: #fff; border-color: var(--red); }
     .copy-msg.ok { color: #4ade80; border-color: #4ade80; }
+
+    /* SOURCE CARDS */
+    .source-list { margin-top: 12px; padding-left: 16px; display: grid; gap: 6px; }
+    .source-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.28); }
+    .source-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.035); color: rgba(255,255,255,0.68); text-decoration: none; font-size: 12px; line-height: 1.35; border-radius: 2px; }
+    .source-link:hover { border-color: var(--red); color: #fff; }
+    .source-link span:last-child { color: var(--red-lt); font-family: 'DM Mono', monospace; font-size: 10px; white-space: nowrap; }
 
     /* FOLLOW-UP CHIPS */
     .followup-chips { margin-top: 8px; padding-left: 16px; display: flex; flex-wrap: wrap; gap: 6px; animation: msgIn 0.3s ease-out; }
@@ -206,6 +222,14 @@
     .contact-value a:hover { color: var(--red); }
     .contact-note { font-size: 14px; color: var(--dim); margin-top: 8px; line-height: 1.6; }
 
+    /* LOCAL CONTRIBUTION + ORGANISATIONS */
+    .local-actions { max-width:860px; margin:40px auto 0; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .local-card { display:block; border:1px solid var(--line); border-radius:4px; padding:26px 28px; text-decoration:none; color:var(--ink); background:#fff; transition:transform .18s,border-color .18s; }
+    .local-card:hover { transform:translateY(-2px); border-color:rgba(230,28,93,.45); }
+    .local-kicker { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--red); margin-bottom:8px; }
+    .local-title { font-family:'Cormorant Garamond',serif; font-size:27px; font-weight:300; margin-bottom:7px; }
+    .local-copy { font-size:14px; line-height:1.65; color:var(--dim); }
+
     /* FOOTER */
     footer { max-width: 860px; margin: 40px auto 48px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; opacity: 0; animation: fadeIn 0.6s 1.2s ease forwards; }
     .footer-left { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim); line-height: 1.8; }
@@ -224,6 +248,7 @@
 
     /* RESPONSIVE */
     @media (max-width: 960px) {
+      .hero-bg { background-image:url('/images/wakefield-city-hero-mobile.webp'); background-position:center 42%; }
       .hero-content { padding: 0 24px 40px; flex-direction: column; align-items: flex-start; gap: 20px; }
       .hero-badge { right: 24px; }
       .hero-right { align-items: flex-start; flex-direction: row; gap: 24px; }
@@ -234,7 +259,8 @@
       .topics { padding: 16px 24px; gap: 6px; }
       .topic { font-size: 11px; padding: 7px 13px; }
       .chat-wrap { margin: 0 24px; height: 480px; }
-      .embed-section, .faq-section, .contact-section { margin-left: 24px; margin-right: 24px; }
+      .embed-section, .faq-section, .contact-section, .local-actions { margin-left: 24px; margin-right: 24px; }
+      .local-actions { grid-template-columns:1fr; }
       .embed-body { grid-template-columns: 1fr; }
       .embed-info { border-right: none; border-bottom: 1px solid var(--line); }
       .faq-grid { grid-template-columns: 1fr; }
@@ -251,8 +277,13 @@
       .hero-title { font-size: 56px; }
       .cards-grid { grid-template-columns: repeat(2, 1fr); }
       .topics { padding: 12px 16px; }
-      .chat-wrap { margin: 0 16px; height: 460px; }
+      .chat-wrap { margin: 0 16px; height: min(620px, calc(100dvh - 32px)); }
+      .chips { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+      .chip { white-space: nowrap; flex-shrink: 0; }
       .embed-section, .faq-section, .contact-section, footer { margin-left: 16px; margin-right: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
@@ -288,7 +319,17 @@
     <div class="hero-left">
       <div class="hero-eyebrow">Wakefield District · Independent AI Assistant</div>
       <h1 class="hero-title">Ask<br/><em>Wake&shy;field</em></h1>
-      <p class="hero-desc">Your local concierge for the Wakefield district — culture, services, restaurants, events and everything in between.</p>
+      <p class="hero-desc">Local answers, current information and trusted sources across the Wakefield district — from what's on and where to eat to council services and family days out.</p>
+      <div class="hero-actions">
+        <a class="hero-cta" href="#assistant">Ask Wakefield →</a>
+        <a class="hero-cta secondary" href="/submit-event">Submit an event</a>
+      </div>
+      <div class="hero-quick-actions" aria-label="Popular questions">
+        <button class="hero-quick" type="button" onclick="sendMsg('What is on in Wakefield today?');location.hash='assistant'">What’s on today</button>
+        <button class="hero-quick" type="button" onclick="sendMsg('Where can I check my bin collection date in Wakefield?');location.hash='assistant'">Bin collections</button>
+        <button class="hero-quick" type="button" onclick="sendMsg('What are the best family days out in Wakefield?');location.hash='assistant'">Family days out</button>
+        <button class="hero-quick" type="button" onclick="sendMsg('Where should we eat in Wakefield?');location.hash='assistant'">Where should we eat?</button>
+      </div>
     </div>
     <div class="hero-right">
       <div class="hero-stat">
@@ -297,8 +338,8 @@
       </div>
       <div class="hero-divider"></div>
       <div class="hero-stat">
-        <div class="hero-stat-num">90%</div>
-        <div class="hero-stat-label">World's forced<br/>rhubarb grown here</div>
+        <div class="hero-stat-num">Rhubarb</div>
+        <div class="hero-stat-label">Home of the historic<br/>Rhubarb Triangle</div>
       </div>
     </div>
   </div>
@@ -306,9 +347,9 @@
 
 <!-- DESTINATION CARDS -->
 <div class="cards-section">
-  <div class="cards-label">Explore the district</div>
+  <h2 class="cards-label">Explore the district</h2>
   <div class="cards-grid">
-    <div class="dest-card" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music?')">
+    <button type="button" class="dest-card" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music?')">
       <img class="dest-card-img" src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=600&q=80" alt="What's on in Wakefield" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
@@ -316,17 +357,17 @@
         <div class="dest-card-name">What's on this week</div>
         <div class="dest-card-cta">Ask now →</div>
       </div>
-    </div>
-    <div class="dest-card" onclick="sendMsg('Tell me about The Hepworth Wakefield — what\'s on and what should I know before visiting?')">
+    </button>
+    <button type="button" class="dest-card" onclick="sendMsg('Tell me about The Hepworth Wakefield — what\'s on and what should I know before visiting?')">
       <img class="dest-card-img" src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=600&q=80" alt="The Hepworth Wakefield" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
-        <div class="dest-card-cat">World-class art · Free entry</div>
+        <div class="dest-card-cat">World-class art · Free for Wakefield residents</div>
         <div class="dest-card-name">The Hepworth Wakefield</div>
         <div class="dest-card-cta">Ask now →</div>
       </div>
-    </div>
-    <div class="dest-card" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">
+    </button>
+    <button type="button" class="dest-card" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">
       <img class="dest-card-img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80" alt="Restaurants in Wakefield" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
@@ -334,8 +375,8 @@
         <div class="dest-card-name">Restaurants & dining</div>
         <div class="dest-card-cta">Ask now →</div>
       </div>
-    </div>
-    <div class="dest-card" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">
+    </button>
+    <button type="button" class="dest-card" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">
       <img class="dest-card-img" src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=600&q=80" alt="Family days out in West Yorkshire" loading="lazy"/>
       <div class="dest-card-overlay"></div>
       <div class="dest-card-body">
@@ -343,7 +384,7 @@
         <div class="dest-card-name">Family days out</div>
         <div class="dest-card-cta">Ask now →</div>
       </div>
-    </div>
+    </button>
   </div>
 </div>
 
@@ -360,7 +401,7 @@
   <button class="topic" onclick="sendMsg('Tell me about Newmillerdam Country Park — what can I do there?')">Newmillerdam</button>
 </div>
 
-<div class="chat-wrap">
+<div class="chat-wrap" id="assistant">
   <div class="chat-header">
     <span class="chat-title">Ask Wakefield · AI Chat</span>
     <div class="chat-header-right">
@@ -376,7 +417,7 @@
     </div>
   </div>
 
-  <div class="messages" id="messages">
+  <div class="messages" id="messages" aria-live="polite" aria-label="Ask Wakefield conversation">
     <div class="msg bot">
       <div class="msg-label">Ask Wakefield</div>
       <div class="msg-text" id="welcomeMsg"></div>
@@ -399,7 +440,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
-  <div class="chat-credit">Powered by <a href="https://mediahubink.com" target="_blank" rel="noopener">Mediahubink Limited</a></div>
+  <div class="chat-credit">Powered by <a href="https://mediahubink.com" target="_blank" rel="noopener noreferrer">Mediahubink Limited</a></div>
 </div>
 
 <div style="max-width:860px;margin:10px auto 0;text-align:right;padding:0 4px;">
@@ -407,72 +448,41 @@
     + Submit an event
   </a>
 </div>
-  <div class="embed-header">
-    <div class="embed-title">Embed this assistant</div>
-    <div class="embed-sub">One line of code</div>
-  </div>
-  <div class="embed-body">
-    <div class="embed-info">
-      <p>Add Ask Wakefield to any website with a single script tag. The widget loads asynchronously — no performance impact on your page.</p>
-      <ul class="step-list">
-        <li><span class="step-num">01</span><span>Copy the script tag opposite</span></li>
-        <li><span class="step-num">02</span><span>Paste before the closing &lt;/body&gt; tag of any webpage</span></li>
-        <li><span class="step-num">03</span><span>A floating chat button appears automatically in the bottom right corner</span></li>
-      </ul>
-    </div>
-    <div class="embed-code-wrap">
-      <div class="embed-code-label">Embed code</div>
-      <div class="code-block">&lt;script src="https://askwakefield.co.uk/widget.js"&gt;&lt;/script&gt;</div>
-      <button class="copy-embed-btn" onclick="copyEmbed()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
-        <span id="copyLabel">Copy embed code</span>
-      </button>
-    </div>
-  </div>
+<div class="local-actions">
+  <a class="local-card" href="/submit-event">
+    <div class="local-kicker">Local organisers &amp; venues</div>
+    <div class="local-title">Submit a Wakefield event</div>
+    <div class="local-copy">Help keep the guide useful. Send us an event, exhibition, community activity or local happening for review.</div>
+  </a>
+  <a class="local-card" href="/for-organisations">
+    <div class="local-kicker">For organisations</div>
+    <div class="local-title">Want an assistant like this?</div>
+    <div class="local-copy">See how Mediahubink can adapt the same approach for councils, venues, businesses and local organisations.</div>
+  </a>
 </div>
 
 <div class="faq-section">
   <div class="faq-header">
-    <div class="faq-title">Frequently asked questions</div>
-    <div class="faq-sub">About this assistant &amp; Mediahubink</div>
+    <h2 class="faq-title">Frequently asked questions</h2>
+    <div class="faq-sub">Using Ask Wakefield</div>
   </div>
   <div class="faq-grid">
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is this an official Wakefield Council service?</span><span class="faq-icon">+</span></button><div class="faq-a">No. Ask Wakefield is an independent demonstration tool built by <a href="https://mediahubink.com" target="_blank">Mediahubink</a>. It is not affiliated with Wakefield Council. For official services visit <a href="https://www.wakefield.gov.uk" target="_blank">wakefield.gov.uk</a> or call 0345 8 506 506.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Can the AI get things wrong?</span><span class="faq-icon">+</span></button><div class="faq-a">Yes — AI assistants can make mistakes. Always verify critical information with the relevant official source before acting on it.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What data do you collect from my conversation?</span><span class="faq-icon">+</span></button><div class="faq-a">Ask Wakefield does not store your conversation. Messages are sent to a secure AI API to generate a response and are not retained by Mediahubink. Each session starts fresh.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is my conversation private?</span><span class="faq-icon">+</span></button><div class="faq-a">Your messages are processed by a secure third-party AI service. Mediahubink does not have access to stored conversation logs. Please do not share sensitive personal information in any AI chat tool.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How does Mediahubink build AI agents for businesses?</span><span class="faq-icon">+</span></button><div class="faq-a">Mediahubink builds custom AI chat and voice agents for UK businesses. Each agent is tailored with its own branding, knowledge base, and conversation flows. We handle everything from design to deployment. Agents typically go live within 48–72 hours.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What kinds of businesses do you work with?</span><span class="faq-icon">+</span></button><div class="faq-a">We work across five verticals: serviced offices, estate agents, dental practices, gyms, and schools — plus local service businesses across West Yorkshire. If you're answering the same questions repeatedly, an AI agent can handle those 24/7.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How much does it cost?</span><span class="faq-icon">+</span></button><div class="faq-a">Pricing depends on the scope and scale. Ask Wakefield is a public-facing product with its own domain and live search — a different conversation from a standard business widget. Get in touch and we'll talk through what makes sense. <a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a> or <a href="tel:07544833862">07544 833 862</a>.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is a Mediahubink agent GDPR compliant?</span><span class="faq-icon">+</span></button><div class="faq-a">Yes. All client agents are built with GDPR compliance in mind. A Data Processing Agreement is in place where personal data is captured. Data is held securely and never sold or shared with third parties.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Will an AI agent replace my staff?</span><span class="faq-icon">+</span></button><div class="faq-a">No. AI agents handle repetitive, out-of-hours, and high-volume enquiries so your team can focus on higher-value work. Complex queries get flagged for a human. Your team stays in control.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Could Wakefield Council get its own version?</span><span class="faq-icon">+</span></button><div class="faq-a">Absolutely — and Ask Wakefield exists to demonstrate exactly that. A purpose-built council assistant could handle resident enquiries around the clock, reduce call centre volume, and give people instant answers in plain English. If you work in Wakefield Council's digital or customer services team, we'd welcome a conversation. <a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a></div></div>
-  </div>
-</div>
-
-<div class="contact-section">
-  <div class="contact-inner">
-    <div class="contact-block">
-      <div class="contact-label">Email us</div>
-      <div class="contact-value"><a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a></div>
-      <div class="contact-note">We aim to respond within one business day.</div>
-    </div>
-    <div class="contact-block">
-      <div class="contact-label">Call or WhatsApp</div>
-      <div class="contact-value"><a href="tel:07544833862">07544 833 862</a></div>
-      <div class="contact-note">West Yorkshire · Mon–Fri 9am–6pm · WhatsApp welcome</div>
-    </div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is this an official Wakefield Council service?</span><span class="faq-icon">+</span></button><div class="faq-a">No. Ask Wakefield is an independent service built by <a href="https://mediahubink.com" target="_blank" rel="noopener noreferrer">Mediahubink</a>. For official council services visit <a href="https://www.wakefield.gov.uk" target="_blank" rel="noopener noreferrer">wakefield.gov.uk</a> or call 0345 8 506 506.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Where does the information come from?</span><span class="faq-icon">+</span></button><div class="faq-a">Ask Wakefield combines curated local knowledge with current web sources for questions that can change, such as events, opening times, travel and prices. Current answers may show source links beneath the response.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Can the AI get things wrong?</span><span class="faq-icon">+</span></button><div class="faq-a">Yes. AI can make mistakes. For important decisions, legal matters, eligibility, safety or council services, check the linked official source before acting.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What happens to my messages?</span><span class="faq-icon">+</span></button><div class="faq-a">Messages are sent to an AI service provider to generate a response. Please do not enter passwords, financial details, medical information or other sensitive personal data. Read our <a href="/privacy">privacy information</a> for more detail.</div></div>
   </div>
 </div>
 
 <footer>
   <div class="footer-left">
-    Ask Wakefield is an independent tool. For official council services: <a href="https://www.wakefield.gov.uk" target="_blank">wakefield.gov.uk</a> &nbsp;·&nbsp; 0345 8 506 506 &nbsp;·&nbsp; Built by <a href="https://mediahubink.com" target="_blank">Mediahubink Limited</a>
+    Ask Wakefield is independent. Official council services: <a href="https://www.wakefield.gov.uk" target="_blank" rel="noopener noreferrer">wakefield.gov.uk</a> &nbsp;·&nbsp; 0345 8 506 506<br/>
+    <a href="/privacy">Privacy</a> &nbsp;·&nbsp; <a href="/submit-event">Submit an event</a> &nbsp;·&nbsp; <a href="/for-organisations">For organisations</a> &nbsp;·&nbsp; Built by <a href="https://mediahubink.com" target="_blank" rel="noopener noreferrer">Mediahubink Limited</a>
   </div>
   <div class="footer-right">Mediahubink Limited · Company No. 17218602<br/>7 Tileyard North, Wakefield WF1 5FY</div>
 </footer>
 <div style="max-width:860px;margin:-24px auto 0;padding:0 0 40px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(17,17,17,0.28);letter-spacing:0.06em;">
-  Photos: <a href="https://unsplash.com/@vjestica" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Illiya Vjestica</a>, <a href="https://unsplash.com" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Unsplash</a> (free licence)
+  Destination-card imagery via Unsplash. Hero image supplied for this site.
 </div>
 
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -489,7 +499,7 @@ function greeting() {
   return 'Good evening';
 }
 function welcomeText() {
-  return greeting() + ". I'm your local concierge for the Wakefield district — here to help you discover the very best the city and surrounding area has to offer. Ask me what's on this week, where to eat, what to do with the family, or anything about council services.";
+  return greeting() + ". Ask me about what's on, restaurants, family days out, attractions, transport or council-service links across the Wakefield district. For changing information, I'll use current sources when available.";
 }
 document.getElementById('welcomeMsg').textContent = welcomeText();
 
@@ -516,10 +526,48 @@ function fmt(t) {
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;')
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
     .replace(/^- (.+)$/gm,'<span class="bul">$1</span>')
-    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
+    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
     .replace(/\n/g,'<br/>');
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function renderSources(sources, afterEl, isLive) {
+  if (!Array.isArray(sources) || !sources.length) return;
+  var wrap = document.createElement('div');
+  wrap.className = 'source-list';
+  var label = document.createElement('div');
+  label.className = 'source-label';
+  label.textContent = isLive ? 'Current sources' : 'Sources';
+  wrap.appendChild(label);
+  sources.slice(0, 5).forEach(function(source) {
+    if (!source || !source.url) return;
+    var a = document.createElement('a');
+    a.className = 'source-link';
+    a.href = source.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    var title = document.createElement('span');
+    title.textContent = source.title || source.url;
+    var open = document.createElement('span');
+    open.textContent = 'Open ↗';
+    a.appendChild(title);
+    a.appendChild(open);
+    wrap.appendChild(a);
+  });
+  afterEl.after(wrap);
+  return wrap;
 }
 
 // SEND MESSAGE
@@ -540,7 +588,7 @@ function sendMessage(override) {
   // User bubble
   var uWrap = document.createElement('div');
   uWrap.className = 'msg user';
-  uWrap.innerHTML = '<div class="msg-label">You</div><div class="msg-text" style="align-self:flex-end;text-align:right;border-right:2px solid rgba(255,255,255,0.12);padding-right:14px;color:rgba(255,255,255,0.55);">' + text.replace(/</g,'&lt;') + '</div>';
+  uWrap.innerHTML = '<div class="msg-label">You</div><div class="msg-text" style="align-self:flex-end;text-align:right;border-right:2px solid rgba(255,255,255,0.12);padding-right:14px;color:rgba(255,255,255,0.55);">' + escapeHtml(text) + '</div>';
   msgsEl.appendChild(uWrap);
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
@@ -571,6 +619,7 @@ function sendMessage(override) {
       var data = JSON.parse(xhr.responseText);
       var reply = (data && data.reply) ? data.reply : "I'm sorry, I couldn't generate a response. Please try again.";
       bBody.innerHTML = fmt(reply);
+      if (xhr.status < 200 || xhr.status >= 300) { throw new Error('HTTP ' + xhr.status); }
       chatHistory.push({ role: 'assistant', content: reply });
 
       // Scroll the messages container so bot message starts at top
@@ -596,10 +645,18 @@ function sendMessage(override) {
       acts.appendChild(copyBtn);
       bWrap.appendChild(acts);
 
-      // Follow-ups
-      getFollowups(text, reply, bWrap);
+      var sourceEl = renderSources(data.sources, bWrap, data.live === true);
+
+      // Follow-ups are normally returned with the main answer, avoiding a second AI request.
+      if (Array.isArray(data.followups) && data.followups.length) {
+        renderFollowups(data.followups, sourceEl || bWrap);
+      } else {
+        getFollowups(text, reply, sourceEl || bWrap);
+      }
     } catch(e) {
-      bBody.innerHTML = fmt('Something went wrong parsing the response. Please try again.');
+      if (!bBody.textContent || bBody.textContent.indexOf('Thinking') !== -1) {
+        bBody.innerHTML = fmt('Something went wrong with the response. Please try again.');
+      }
     }
     isSending = false;
     sendBtn.disabled = false;
@@ -635,6 +692,25 @@ inputEl.addEventListener('keydown', function(e) {
 sendBtn.onclick = function() { sendMessage(); };
 
 // FOLLOW-UPS
+function renderFollowups(items, afterEl) {
+  if (!Array.isArray(items) || !items.length) return;
+  var container = document.createElement('div');
+  container.className = 'followup-chips';
+  var lbl = document.createElement('div');
+  lbl.className = 'fu-label';
+  lbl.textContent = 'Follow up:';
+  container.appendChild(lbl);
+  items.slice(0, 3).forEach(function(q) {
+    var btn = document.createElement('button');
+    btn.className = 'fu-chip';
+    btn.textContent = q;
+    btn.onclick = function() { container.remove(); sendMessage(q); };
+    container.appendChild(btn);
+  });
+  afterEl.after(container);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
 function getFollowups(question, answer, afterEl) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/followups', true);
@@ -643,23 +719,7 @@ function getFollowups(question, answer, afterEl) {
   xhr.onload = function() {
     try {
       var data = JSON.parse(xhr.responseText);
-      if (data.followups && data.followups.length) {
-        var container = document.createElement('div');
-        container.className = 'followup-chips';
-        var lbl = document.createElement('div');
-        lbl.className = 'fu-label';
-        lbl.textContent = 'Follow up:';
-        container.appendChild(lbl);
-        data.followups.forEach(function(q) {
-          var btn = document.createElement('button');
-          btn.className = 'fu-chip';
-          btn.textContent = q;
-          btn.onclick = function() { container.remove(); sendMessage(q); };
-          container.appendChild(btn);
-        });
-        afterEl.after(container);
-        msgsEl.scrollTop = msgsEl.scrollHeight;
-      }
+      if (data.followups && data.followups.length) renderFollowups(data.followups, afterEl);
     } catch(e) {}
   };
   xhr.onerror = xhr.ontimeout = function() {};

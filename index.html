@@ -17,6 +17,30 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script>
+    // Pick one Wakefield city-centre hero per page load. No in-session carousel.
+    (function () {
+      var desktop = [
+        '/images/hero-wakefield-1.webp',
+        '/images/hero-wakefield-2.webp',
+        '/images/hero-wakefield-3.webp'
+      ];
+      var mobile = [
+        '/images/hero-wakefield-1-mobile.webp',
+        '/images/hero-wakefield-2-mobile.webp',
+        '/images/hero-wakefield-3-mobile.webp'
+      ];
+      var useMobile = window.matchMedia('(max-width: 600px)').matches;
+      var images = useMobile ? mobile : desktop;
+      var src = images[Math.floor(Math.random() * images.length)];
+      document.documentElement.style.setProperty('--hero-image', 'url("' + src + '")');
+      var preload = document.createElement('link');
+      preload.rel = 'preload';
+      preload.as = 'image';
+      preload.href = src;
+      document.head.appendChild(preload);
+    })();
+  </script>
   <style>
     :root {
       --red: #e61c5d;
@@ -42,10 +66,9 @@
     @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
     /* HERO */
-    .hero { position: relative; height: 88vh; min-height: 520px; overflow: hidden; display: flex; align-items: flex-end; }
-    .hero-bg { position: absolute; inset: 0; background-image: url('/images/newmillerdam-hero.jpg'); background-size: cover; background-position: center 45%; transform: scale(1.06); animation: heroZoom 10s ease-out forwards; }
-    @keyframes heroZoom { from { transform: scale(1.06); } to { transform: scale(1.0); } }
-    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.15) 100%); }
+    .hero { position: relative; height: 88vh; min-height: 520px; overflow: hidden; display: flex; align-items: flex-end; background: #16181b; }
+    .hero-bg { position: absolute; inset: 0; background-image: var(--hero-image, url('/images/hero-wakefield-1.webp')); background-size: cover; background-position: center center; }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,12,16,0.76) 0%, rgba(8,12,16,0.50) 38%, rgba(8,12,16,0.14) 68%, rgba(8,12,16,0.22) 100%), linear-gradient(to top, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.14) 52%, rgba(10,10,10,0.08) 100%); }
     .hero-badge { position: absolute; top: 28px; right: 48px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.18); padding: 6px 13px; border-radius: 2px; }
     .hero-content { position: relative; z-index: 1; padding: 0 48px 56px; width: 100%; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; }
     .hero-left { max-width: 680px; }
@@ -259,8 +282,9 @@
     }
     @media (max-width: 600px) {
       .hero { height: 75vh; min-height: 460px; }
+      .hero-bg { background-position: center center; }
+      .hero-overlay { background: linear-gradient(to top, rgba(8,12,16,0.88) 0%, rgba(8,12,16,0.50) 48%, rgba(8,12,16,0.14) 76%, rgba(8,12,16,0.10) 100%), linear-gradient(90deg, rgba(8,12,16,0.45) 0%, rgba(8,12,16,0.12) 72%); }
       .hero-title { font-size: 56px; }
-      .hero-bg { background-position: 42% center; }
       .cards-grid { grid-template-columns: repeat(2, 1fr); }
       .topics { padding: 12px 16px; }
       .chat-wrap { margin: 0 16px; height: min(620px, calc(100dvh - 32px)); }
@@ -494,7 +518,7 @@
   <div class="footer-right">Mediahubink Limited · Company No. 17218602<br/>7 Tileyard North, Wakefield WF1 5FY</div>
 </footer>
 <div style="max-width:860px;margin:-24px auto 0;padding:0 0 40px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(17,17,17,0.28);letter-spacing:0.06em;">
-  Destination card photography: <a href="https://unsplash.com" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Unsplash</a>
+  Photos: <a href="https://unsplash.com/@vjestica" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Illiya Vjestica</a>, <a href="https://unsplash.com" target="_blank" rel="noopener" style="color:rgba(17,17,17,0.38);text-decoration:none;">Unsplash</a> (free licence)
 </div>
 
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">

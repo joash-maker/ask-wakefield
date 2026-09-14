@@ -245,6 +245,9 @@
     }
     #aw-send:hover { background: #2a5239; }
     #aw-send:disabled { background: #9ca3af; cursor: not-allowed; }
+    .aw-sources { margin: 2px 0 0 34px; display: grid; gap: 5px; }
+    .aw-source { font-size: 11px; color: #55715d; text-decoration: none; padding: 5px 7px; border: 1px solid #dbe5d8; border-radius: 6px; background: #f7faf6; }
+    .aw-source:hover { border-color: ${PRIMARY}; color: ${PRIMARY}; }
     #aw-disclaimer {
       text-align: center;
       font-size: 10px;
@@ -359,6 +362,25 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+
+    function appendSources(sources) {
+      if (!Array.isArray(sources) || !sources.length) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'aw-sources';
+      sources.slice(0, 3).forEach(source => {
+        if (!source || !source.url) return;
+        const a = document.createElement('a');
+        a.className = 'aw-source';
+        a.href = source.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = `Source: ${source.title || source.url}`;
+        wrap.appendChild(a);
+      });
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
     function fmt(t) {
       return t
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -404,7 +426,8 @@
         removeTyping();
         const reply = data.reply || 'Sorry, something went wrong.';
         appendMsg('bot', reply);
-        history.push({ role: 'assistant', content: reply });
+        appendSources(data.sources);
+        if (res.ok) history.push({ role: 'assistant', content: reply });
       } catch {
         removeTyping();
         appendMsg('bot', 'Connection error. Please try again.');

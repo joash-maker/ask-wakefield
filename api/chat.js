@@ -16,7 +16,6 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 4. **District-Wide Standards:** Apply your Sandal standards to the whole region. Frame industrial heritage as "rich in character" or "undergoing a grand transformation" — never apologise for the district.
 
 ### SIGNATURE PHRASES
-- Greeting: "Good morning/afternoon/evening — how can I help you discover the best of Wakefield today?"
 - Approval: "A fine choice. That's a real local treasure."
 - Guidance: "If you're looking for something a bit more refined, I'd suggest..."
 - Sign-off: "I hope that hits the mark. Enjoy your time in our corner of the world!"
@@ -63,11 +62,11 @@ WAKEFIELD MUMBLER: Family and parenting community — wakefield.mumbler.co.uk. B
 
 KEY ATTRACTIONS: Thornes Park (60ha, playgrounds, miniature railway weekends, parkrun Saturdays 9am — grand for families). National Coal Mining Museum, Overton WF4 4RH (underground tours, FREE — rich in heritage and genuinely fascinating). Nostell (National Trust, near Pontefract — a splendid estate). Xscape Yorkshire, Glasshoughton (snow slope, cinema, all-weather — first-rate for a family day). Wakefield Cathedral (free entry, well worth a visit). Pontefract Castle (free entry, remarkable history). Pugneys Country Park (water sports, cafe). Wakefield Museum WF1 2UP (free, craft sessions Saturdays 11am-3pm). Newmillerdam Country Park WF2 6QP (95ha, free, Gnome Roam trail, Georgian Boathouse cafe, dog-friendly — one of the district's quiet gems).
 
-RESTAURANTS: **Tet Restaurant** (Best Restaurant Wakefield 2024, Thai/Vietnamese fusion — a grand choice for a special evening). **Wentbridge House Hotel** (2 AA Rosette fine dining, 20 acres near Pontefract — spot on for Sunday lunch or a proper occasion). **The Weston at YSP** (modern British inside Yorkshire Sculpture Park, panoramic views, locally sourced — rather splendid). **Three Flames** (premium steakhouse, M1 Junction 40, A5 Wagyu — first-rate for meat lovers). **Estabulo Rodizio** (Brazilian churrasco, unlimited grilled meats at the table — grand for groups). **Qubana** (tapas, rooftop terrace — a fine choice on a warm evening). **Rustico** (family Italian, Kirkgate — reliable and good value). **Rice N Spice** (widely regarded as Wakefield's finest Indian). **Mimik Sushi & Ramen** (Japanese, near The Hepworth). **The Boathouse, Newmillerdam** (Georgian lakeside cafe, dog-friendly — lovely after a walk through the park). More at yorkshirefoodguide.co.uk/wakefield-restaurants.
+RESTAURANTS: Useful local options include **Tet Restaurant** (Thai/Vietnamese fusion), **Wentbridge House Hotel** (occasion dining near Pontefract), **The Weston at YSP** (modern British inside Yorkshire Sculpture Park), **Three Flames** (steakhouse near M1 Junction 40), **Estabulo Rodizio** (Brazilian-style grilled meats), **Qubana** (tapas), **Rustico** (Italian), **Rice N Spice** (Indian), **Mimik Sushi & Ramen** (Japanese, near The Hepworth), and **The Boathouse, Newmillerdam** (lakeside cafe). Restaurants, menus, awards, prices and opening times change; verify live when those details matter. More at yorkshirefoodguide.co.uk/wakefield-restaurants.
 
-MICHELIN 2026: Yorkshire has 10 Michelin-starred restaurants — more than any county outside London, a fact worth stating with pride. West Yorkshire: **Box Tree**, Ilkley (1 star — a grand destination); **Prashad**, Drighlington (Bib Gourmand — exceptional value vegetarian Gujarati cuisine).
+MICHELIN & FINE DINING: Guide status changes annually. If asked about Michelin stars, Bib Gourmands or current awards, verify the latest guide before stating status.
 
-FAMILY DAYS OUT: **Xscape Yorkshire**, Glasshoughton (snow slope, cinema — all-weather, first-rate). **Diggerland**, Castleford (children drive real diggers — from £25.95, always a hit). **Eureka! The National Children's Museum**, Halifax (interactive, under-11s, from £17.95). **Stockeld Park**, Wetherby (adventure park, seasonal ice skating, from £12.50). **Tropical World**, Leeds (exotic animals, from £9.50). More: dayoutwiththekids.co.uk/things-to-do/yorkshire/west-yorkshire and wakefield.mumbler.co.uk.
+FAMILY DAYS OUT: **Xscape Yorkshire**, Glasshoughton (snow slope, cinema — all-weather), **Diggerland**, Castleford (children can operate construction-themed rides and machines), **Eureka! The National Children's Museum**, Halifax (interactive, aimed at younger children), **Stockeld Park**, Wetherby (adventure park with seasonal activities), and **Tropical World**, Leeds (indoor animal attraction). Prices, sessions and availability change, so verify them live before quoting. More: dayoutwiththekids.co.uk/things-to-do/yorkshire/west-yorkshire and wakefield.mumbler.co.uk.
 
 
 TRANSPORT — TRAINS: Wakefield has two stations. **Wakefield Westgate** (WF1 1RF) is the main station — direct trains to London Kings Cross (under 2 hours, LNER), Leeds (15 mins), Edinburgh. **Wakefield Kirkgate** (WF1 1XB) is the local station — Northern Rail services to Leeds, Barnsley, Doncaster, Sheffield. Always clarify which station when giving directions. Tickets and times: northernrailway.co.uk or lner.co.uk. National Rail enquiries: 03457 48 49 50.
@@ -110,7 +109,8 @@ WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefi
 
 
 
-const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
+const FAST_MODEL = process.env.CLAUDE_FAST_MODEL || process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
+const SMART_MODEL = process.env.CLAUDE_SMART_MODEL || 'claude-sonnet-5';
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 3000;
 const MAX_TOTAL_CHARS = 14000;
@@ -172,7 +172,36 @@ function sanitiseMessages(messages) {
 
 function needsLiveSearch(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
-  return /\b(today|tonight|tomorrow|this week|this weekend|weekend|right now|currently|current|latest|live|open now|opening hours?|closing time|what'?s on|happening|events?|tickets?|prices?|costs?|road closures?|traffic|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?)\b/.test(last);
+  return /\b(today|tonight|tomorrow|this week|this weekend|weekend|right now|currently|current|latest|live|open now|opening hours?|closing time|what'?s on|happening|events?|tickets?|prices?|costs?|road closures?|traffic|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|michelin|menu|booking|book a table|weather)\b/.test(last);
+}
+
+function needsComplexReasoning(messages) {
+  const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
+  return /\b(plan|itinerary|compare|best option|recommend|recommendation|under £|budget|for a group|for [0-9]+ people|accessible|wheelchair|dietary|vegan|gluten|route from|how should i spend|day out|weekend plan|pros and cons)\b/.test(last) || last.length > 450;
+}
+
+function chooseModel(messages, useSearch) {
+  return (useSearch || needsComplexReasoning(messages)) ? SMART_MODEL : FAST_MODEL;
+}
+
+function suggestFollowups(messages) {
+  const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
+  if (/bin|recycl|council tax|pothole|planning|benefit|school/.test(last)) {
+    return ['Show me the official page', 'What details will I need?', 'Who can I contact?'];
+  }
+  if (/restaurant|eat|dining|food|coffee|cafe/.test(last)) {
+    return ['Show me independent places', 'What is good for families?', 'Where is good for coffee?'];
+  }
+  if (/event|what'?s on|weekend|today|tonight|happening/.test(last)) {
+    return ['Show me free events', 'What is family-friendly?', 'What is on tomorrow?'];
+  }
+  if (/train|bus|transport|traffic|road/.test(last)) {
+    return ['Show me the official travel source', 'What are the alternatives?', 'Anything I should check before leaving?'];
+  }
+  if (/newmillerdam|hepworth|ysp|attraction|visit|day out|park/.test(last)) {
+    return ['What else is nearby?', 'Is it good for families?', 'Where should I eat nearby?'];
+  }
+  return ['What else should I know?', 'What is nearby?', 'Show me an official source'];
 }
 
 function londonContext() {
@@ -254,10 +283,11 @@ export default async function handler(req, res) {
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
 
   const useSearch = needsLiveSearch(messages);
+  const selectedModel = chooseModel(messages, useSearch);
+  console.info('Ask Wakefield route:', { model: selectedModel, liveSearch: useSearch });
   const baseBody = {
-    model: MODEL,
+    model: selectedModel,
     max_tokens: 1200,
-    temperature: 0.5,
     system: `${SYSTEM_PROMPT}\n\n${londonContext()}`,
     messages
   };
@@ -281,6 +311,13 @@ export default async function handler(req, res) {
   try {
     let { response, data } = await callAnthropic(baseBody);
 
+    // If a configured fast model is retired or unavailable, retry with Sonnet automatically.
+    if (response.status === 404 && baseBody.model !== SMART_MODEL) {
+      console.warn('Configured model unavailable, retrying with smart model:', baseBody.model);
+      baseBody.model = SMART_MODEL;
+      ({ response, data } = await callAnthropic(baseBody));
+    }
+
     // If web search is disabled on the Anthropic account, retry safely without it.
     if (useSearch && response.status === 400 && /web.?search|tool/i.test(JSON.stringify(data))) {
       const fallbackBody = { ...baseBody };
@@ -301,7 +338,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       reply: reply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources,
-      live: searched
+      live: searched,
+      followups: suggestFollowups(messages)
     });
   } catch (error) {
     console.error('Handler error:', error);

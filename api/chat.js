@@ -35,6 +35,9 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **NO ROUTE ASSEMBLY:** Do not construct a multi-leg journey from separate facts unless a current journey-planning source explicitly supports that route. If you only know that a bus serves the destination and that a railway station is nearby, state those as separate options rather than inventing a train-plus-bus connection.
 - **NO JOURNEY-TIME GUESSING:** Never add a driving, cycling, walking or bus journey time merely because you know the distance. If the user asked only how far somewhere is, answer the verified distance and location without estimating minutes.
 - **EVENT DATE-RANGE ACCURACY:** When the user asks what is on over a range such as "this weekend", check every date in the server-supplied range. Use exact event titles, dates and times from the first-party listing. Do not replace an event title with generic category labels such as "Comedy Music Performance Talk". If you verify Saturday but not Sunday, say exactly that rather than implying Sunday has no event.
+- **DATE-RANGE SEARCH COMPLETION:** For a two-day range such as this weekend, do not stop searching after finding an event on only one date. Search or inspect the first-party listing for BOTH mapped dates before you answer. If one date has no verified event, say that explicitly. For WX, prefer wxwakefield.co.uk/whats-on and use the exact event title shown on the listing/detail page.
+- **SEARCH OUTPUT DISCIPLINE:** Tool-use progress is never user-facing. Do not write phrases such as "I'll check", "I need to search", "let me search", "the search returned", or "I found it". Search silently and begin the final answer with the useful result.
+- **ORIGIN-AWARE ROUTING:** Consider where the user is starting. Do not recommend travelling by train to a station in the same origin city merely because that station is the nearest railway station to the destination. For Wakefield Cathedral/city centre to Yorkshire Sculpture Park, the useful verified public-transport option is the 96 bus; otherwise suggest taxi/car and direct the user to West Yorkshire Metro for exact live journey planning. Do not invent a train-plus-bus route.
 - **PLANNING AND LEGAL ACCURACY:** Planning rules can depend on the property and current national/local rules. Verify planning-permission, permitted-development and building-regulation questions against official sources before giving specific limits. Never invent percentage-of-plot rules or other thresholds.
 - When giving a general overview of a place, prioritise 3–5 useful verified facts. Do not pad the answer with unverified descriptive details.
 - Keep the local personality restrained: normally use no more than one regional flourish or strongly opinionated adjective per answer unless the user explicitly asks for a playful recommendation.
@@ -289,14 +292,29 @@ async function callAnthropic(body) {
 }
 
 function extractAnswer(data) {
-  const replyParts = [];
+  const content = Array.isArray(data?.content) ? data.content : [];
   const sources = new Map();
   let searched = false;
+  let lastSearchResultIndex = -1;
 
-  for (const block of data?.content || []) {
-    if (block.type === 'web_search_tool_result') searched = true;
-    if (block.type !== 'text') continue;
-    if (block.text) replyParts.push(block.text);
+  // Anthropic can emit short text blocks while deciding to make another
+  // server-side web search. Those are internal progress messages, not the
+  // final response we want to show in the chat UI.
+  content.forEach((block, index) => {
+    if (block?.type === 'web_search_tool_result') {
+      searched = true;
+      lastSearchResultIndex = index;
+    }
+  });
+
+  const finalTextBlocks = content.filter((block, index) => {
+    if (block?.type !== 'text') return false;
+    // If a search occurred, only render text produced after the final search
+    // result. Without a search, render the normal text response.
+    return lastSearchResultIndex === -1 || index > lastSearchResultIndex;
+  });
+
+  for (const block of finalTextBlocks) {
     for (const citation of block.citations || []) {
       if (!citation?.url) continue;
       sources.set(citation.url, {
@@ -306,8 +324,15 @@ function extractAnswer(data) {
     }
   }
 
+  // Fallback defensively if an unusual API response has no text after the
+  // final search result. Use the last text block rather than exposing every
+  // intermediate progress block.
+  const blocksToRender = finalTextBlocks.length
+    ? finalTextBlocks
+    : content.filter(block => block?.type === 'text').slice(-1);
+
   return {
-    reply: replyParts.join('\n').trim(),
+    reply: blocksToRender.map(block => block.text || '').join('\n').trim(),
     sources: Array.from(sources.values()).slice(0, 5),
     searched
   };
@@ -347,7 +372,7 @@ export default async function handler(req, res) {
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: 5,
+      max_uses: 7,
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',

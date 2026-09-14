@@ -37,7 +37,7 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **EVENT DATE-RANGE ACCURACY:** When the user asks what is on over a range such as "this weekend", check every date in the server-supplied range. Use exact event titles, dates and times from the first-party listing. Do not replace an event title with generic category labels such as "Comedy Music Performance Talk". If you verify Saturday but not Sunday, say exactly that rather than implying Sunday has no event.
 - **DATE-RANGE SEARCH COMPLETION:** For a two-day range such as this weekend, do not stop searching after finding an event on only one date. Search or inspect the first-party listing for BOTH mapped dates before you answer. If one date has no verified event, say that explicitly. For WX, prefer wxwakefield.co.uk/whats-on and use the exact event title shown on the listing/detail page.
 - **SEARCH OUTPUT DISCIPLINE:** Tool-use progress is never user-facing. Do not write phrases such as "I'll check", "I need to search", "let me search", "the search returned", or "I found it". Search silently and begin the final answer with the useful result.
-- **ORIGIN-AWARE ROUTING:** Consider where the user is starting. Do not recommend travelling by train to a station in the same origin city merely because that station is the nearest railway station to the destination. For Wakefield Cathedral/city centre to Yorkshire Sculpture Park, the useful verified public-transport option is the 96 bus; otherwise suggest taxi/car and direct the user to West Yorkshire Metro for exact live journey planning. Do not invent a train-plus-bus route.
+- **ORIGIN-AWARE ROUTING:** Consider where the user is starting. Do not recommend travelling by train to a station in the same origin city merely because that station is the nearest railway station to the destination. For Wakefield Cathedral/city centre to Yorkshire Sculpture Park, the useful verified public-transport option is the 96 bus; otherwise suggest taxi/car and direct the user to West Yorkshire Metro for exact live journey planning. Do not mention rail for that specific origin-to-destination question unless the user explicitly asks about train or rail. Do not invent a train-plus-bus route.
 - **PLANNING AND LEGAL ACCURACY:** Planning rules can depend on the property and current national/local rules. Verify planning-permission, permitted-development and building-regulation questions against official sources before giving specific limits. Never invent percentage-of-plot rules or other thresholds.
 - When giving a general overview of a place, prioritise 3–5 useful verified facts. Do not pad the answer with unverified descriptive details.
 - Keep the local personality restrained: normally use no more than one regional flourish or strongly opinionated adjective per answer unless the user explicitly asks for a playful recommendation.
@@ -217,6 +217,123 @@ function verificationFallback(messages) {
   return 'I could not verify that current information from a trusted source just now, so I do not want to guess. Please check the relevant official venue or service website.';
 }
 
+function lastUserText(messages) {
+  return messages?.[messages.length - 1]?.content?.toLowerCase() || '';
+}
+
+function isWxCurrentEventsQuery(messages) {
+  const last = lastUserText(messages);
+  return /\b(wx|wakefield exchange)\b/.test(last) && /\b(what'?s on|happening|events?|weekend|today|tonight|tomorrow|this week)\b/.test(last);
+}
+
+function decodeBasicEntities(value) {
+  return String(value || '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>');
+}
+
+function htmlToPlainText(html) {
+  return decodeBasicEntities(String(html || ''))
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function weekendDateState() {
+  const now = new Date();
+  const weekday = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    weekday: 'short'
+  }).format(now);
+  const dayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[weekday];
+
+  let saturdayOffset;
+  let sundayOffset;
+  if (dayIndex === 6) {
+    saturdayOffset = 0;
+    sundayOffset = 1;
+  } else if (dayIndex === 0) {
+    saturdayOffset = -1;
+    sundayOffset = 0;
+  } else {
+    saturdayOffset = 6 - dayIndex;
+    sundayOffset = saturdayOffset + 1;
+  }
+
+  return {
+    saturday: formatLondonDate(new Date(now.getTime() + saturdayOffset * 24 * 60 * 60 * 1000)),
+    sunday: formatLondonDate(new Date(now.getTime() + sundayOffset * 24 * 60 * 60 * 1000))
+  };
+}
+
+function extractRelevantDateSegments(text, dates) {
+  const chunks = [];
+  const needles = [
+    dates.saturday,
+    dates.sunday,
+    dates.saturday.replace(/^Saturday\s+/, ''),
+    dates.sunday.replace(/^Sunday\s+/, '')
+  ];
+
+  for (const needle of needles) {
+    const lowerText = text.toLowerCase();
+    const lowerNeedle = needle.toLowerCase();
+    let from = 0;
+    let hits = 0;
+    while (hits < 3) {
+      const index = lowerText.indexOf(lowerNeedle, from);
+      if (index === -1) break;
+      const start = Math.max(0, index - 900);
+      const end = Math.min(text.length, index + 1800);
+      chunks.push(text.slice(start, end));
+      from = index + lowerNeedle.length;
+      hits += 1;
+    }
+  }
+
+  const unique = [...new Set(chunks.map(chunk => chunk.trim()).filter(Boolean))];
+  return (unique.length ? unique.join('\n---\n') : text.slice(0, 14000)).slice(0, 16000);
+}
+
+async function fetchWxWhatsOnContext() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const response = await fetch('https://wxwakefield.co.uk/whats-on', {
+      headers: {
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const text = htmlToPlainText(html);
+    if (!text) return null;
+    const dates = weekendDateState();
+    return {
+      text: extractRelevantDateSegments(text, dates),
+      dates,
+      source: {
+        title: "Wakefield Exchange — What's On",
+        url: 'https://wxwakefield.co.uk/whats-on'
+      }
+    };
+  } catch (error) {
+    console.error('WX first-party fetch failed:', error?.message || error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+
 function formatLondonDate(date) {
   return new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/London',
@@ -331,8 +448,19 @@ function extractAnswer(data) {
     ? finalTextBlocks
     : content.filter(block => block?.type === 'text').slice(-1);
 
+  let renderedReply = blocksToRender.map(block => block.text || '').join('\n').trim();
+
+  // For live/current lookups we ask Claude to mark the actual user-facing
+  // answer. Anything before this marker is tool/search deliberation and must
+  // never leak into the chat UI.
+  const marker = 'FINAL_RESPONSE:';
+  const markerIndex = renderedReply.lastIndexOf(marker);
+  if (markerIndex !== -1) {
+    renderedReply = renderedReply.slice(markerIndex + marker.length).trim();
+  }
+
   return {
-    reply: blocksToRender.map(block => block.text || '').join('\n').trim(),
+    reply: renderedReply,
     sources: Array.from(sources.values()).slice(0, 5),
     searched
   };
@@ -360,11 +488,28 @@ export default async function handler(req, res) {
   if (!messages) return res.status(400).json({ error: 'invalid_request', reply: 'Please enter a valid question.' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
 
-  const useSearch = needsLiveSearch(messages);
+  let wxContext = null;
+  if (isWxCurrentEventsQuery(messages)) {
+    wxContext = await fetchWxWhatsOnContext();
+  }
+
+  // WX event questions use the venue's first-party What's On page directly
+  // when available. This is more reliable than asking a general search engine
+  // to discover both days of a weekend listing.
+  const useSearch = needsLiveSearch(messages) && !wxContext;
+
+  const directContext = wxContext
+    ? `\n\nFIRST-PARTY WX CURRENT LISTING SNAPSHOT:\nSource: https://wxwakefield.co.uk/whats-on\nThis weekend is ${wxContext.dates.saturday} and ${wxContext.dates.sunday}.\nUse only the listing text below for WX event titles, dates, times and prices. Check BOTH weekend dates and list every matching event you can verify. Do not replace exact event titles with category labels.\n\n${wxContext.text}`
+    : '';
+
+  const liveOutputContract = (useSearch || wxContext)
+    ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
+    : '';
+
   const baseBody = {
     model: MODEL,
     max_tokens: 1200,
-    system: `${SYSTEM_PROMPT}\n\n${londonContext()}`,
+    system: `${SYSTEM_PROMPT}\n\n${londonContext()}${directContext}${liveOutputContract}`,
     messages
   };
 
@@ -405,7 +550,14 @@ export default async function handler(req, res) {
 
     const { reply, sources, searched } = extractAnswer(data);
 
-    if (requiresVerifiedSource(messages) && sources.length === 0) {
+    const mergedSourceMap = new Map();
+    if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);
+    for (const source of sources) {
+      if (source?.url) mergedSourceMap.set(source.url, source);
+    }
+    const mergedSources = Array.from(mergedSourceMap.values()).slice(0, 5);
+
+    if (requiresVerifiedSource(messages) && mergedSources.length === 0) {
       return res.status(200).json({
         reply: verificationFallback(messages),
         sources: [],
@@ -415,8 +567,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       reply: reply || "I'm sorry, I couldn't generate a response. Please try again.",
-      sources,
-      live: searched
+      sources: mergedSources,
+      live: searched || Boolean(wxContext)
     });
   } catch (error) {
     console.error('Handler error:', error);

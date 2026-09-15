@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>List your club, activity or business — Ask Wakefield</title>
+  <meta name="description" content="Submit a Wakefield club, activity, class, community group or local business for review and possible inclusion in the Ask Wakefield directory."/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--red:#e61c5d;--ink:#111;--dim:#747474;--line:rgba(17,17,17,.11);--paper:#faf9f7;--soft:#f3f0ed}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Syne',sans-serif;background:var(--paper);color:var(--ink);min-height:100dvh}
+    a{color:inherit}
+    header{padding:34px 48px;border-bottom:1px solid var(--line);display:flex;align-items:flex-end;justify-content:space-between;gap:20px;background:#fff}
+    .logo-link{text-decoration:none}.logo{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,50px);font-weight:300;line-height:1}.logo em{font-style:italic;color:var(--red)}
+    .back-link{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);text-decoration:none;border:1px solid var(--line);padding:9px 14px;border-radius:3px}.back-link:hover{border-color:var(--red);color:var(--red)}
+    .page-wrap{max-width:760px;margin:0 auto;padding:52px 24px 86px}
+    .page-sub{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,7vw,66px);font-weight:300;line-height:.98;margin-bottom:16px}
+    .page-desc{font-size:15px;color:var(--dim);line-height:1.75;border-bottom:1px solid var(--line);padding-bottom:30px;margin-bottom:34px}
+    .notice{background:#fff;border:1px solid var(--line);border-left:3px solid var(--red);padding:16px 18px;margin:-10px 0 34px;font-size:13px;line-height:1.65;color:#555}
+    .form-section{margin-bottom:34px}.section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--red);margin-bottom:18px}
+    .field{margin-bottom:20px}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}.req{color:var(--red)}
+    input,textarea,select{width:100%;background:#fff;border:1px solid var(--line);border-radius:3px;padding:12px 14px;font:14px 'Syne',sans-serif;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+    input:focus,textarea:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(230,28,93,.08)}
+    textarea{resize:vertical;min-height:115px;line-height:1.6}select{cursor:pointer}
+    .hint{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
+    .checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:4px}.check{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);background:#fff;padding:10px 12px;border-radius:3px;font-size:13px;line-height:1.4;color:#444}.check input{width:auto;margin-top:2px;accent-color:var(--red)}
+    .consent{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);padding:14px;border-radius:3px;font-size:13px;line-height:1.55;color:#444}.consent input{width:auto;margin-top:3px;accent-color:var(--red)}
+    .honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+    .submit-btn{width:100%;background:var(--red);border:0;padding:14px 22px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:#fff;border-radius:3px;cursor:pointer;margin-top:10px}.submit-btn:hover{background:#ff4d7a}.submit-btn:disabled{opacity:.45;cursor:not-allowed}
+    .error-msg{display:none;background:rgba(230,28,93,.06);border:1px solid rgba(230,28,93,.25);padding:12px 14px;border-radius:3px;color:#a51645;font-size:13px;line-height:1.55;margin-top:12px}
+    .success-state{display:none;text-align:center;padding:54px 16px}.success-mark{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(230,28,93,.08);color:var(--red);font-size:24px;margin:0 auto 18px}.success-title{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300}.success-msg{color:var(--dim);line-height:1.75;margin:10px auto 22px;max-width:560px}.success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.success-actions a{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:3px}.success-actions a.primary{background:var(--red);border-color:var(--red);color:white}
+    footer{border-top:1px solid var(--line);padding:24px 48px;font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);display:flex;justify-content:space-between;gap:20px;background:#fff}
+    @media(max-width:640px){header{padding:22px 18px;align-items:flex-start;flex-direction:column}.page-wrap{padding:34px 18px 60px}.field-row,.checks{grid-template-columns:1fr}footer{padding:20px 18px;flex-direction:column}}
+  </style>
+</head>
+<body>
+<header>
+  <a class="logo-link" href="/"><div class="logo">Ask <em>Wakefield</em></div></a>
+  <a class="back-link" href="/activities">← Back to activities</a>
+</header>
+
+<main class="page-wrap">
+  <div id="formState">
+    <div class="page-sub">Grow the local directory</div>
+    <h1 class="page-title">List your club, activity or business.</h1>
+    <p class="page-desc">Tell us about a Wakefield club, class, activity, community group, venue or local business. We review submissions before anything is added to Ask Wakefield so the directory stays useful and current.</p>
+    <div class="notice"><strong>Nothing is published automatically.</strong> We may verify details against your website or social pages before adding a listing. Submission does not guarantee inclusion.</div>
+
+    <form id="listingForm" novalidate>
+      <div class="form-section">
+        <div class="section-label">About the listing</div>
+        <div class="field">
+          <label for="listingName">Name <span class="req">*</span></label>
+          <input id="listingName" name="listingName" type="text" maxlength="160" placeholder="e.g. Calder Grove Cricket Club" required/>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="listingType">Listing type <span class="req">*</span></label>
+            <select id="listingType" name="listingType" required>
+              <option value="">Choose one</option>
+              <option>Club</option>
+              <option>Class or activity</option>
+              <option>Local business</option>
+              <option>Community group</option>
+              <option>Support service</option>
+              <option>Venue or facility</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="category">Main category <span class="req">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">Choose one</option>
+              <option>After-school & kids</option>
+              <option>Swimming</option><option>Football</option><option>Cricket</option><option>Running & athletics</option><option>Walking & hiking</option><option>Padel & racket sports</option><option>Gym & fitness</option>
+              <option>Dance</option><option>Drama & performing arts</option><option>Martial arts</option><option>Music</option><option>Coding & STEM</option><option>Scouts & youth groups</option><option>Tutoring</option>
+              <option>Parent & family support</option><option>Community & volunteering</option><option>Food & coffee</option><option>Local service</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Who is it for?</label>
+          <div class="checks">
+            <label class="check"><input type="checkbox" name="audience" value="Babies & toddlers"/> Babies & toddlers</label>
+            <label class="check"><input type="checkbox" name="audience" value="Children 5–11"/> Children 5–11</label>
+            <label class="check"><input type="checkbox" name="audience" value="Young people 12–17"/> Young people 12–17</label>
+            <label class="check"><input type="checkbox" name="audience" value="Adults"/> Adults</label>
+            <label class="check"><input type="checkbox" name="audience" value="Families"/> Families</label>
+            <label class="check"><input type="checkbox" name="audience" value="All ages"/> All ages</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="description">Short description <span class="req">*</span></label>
+          <textarea id="description" name="description" maxlength="1800" placeholder="What do you offer, who is it for, and what should someone know before contacting you?" required></textarea>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-label">Where, when and cost</div>
+        <div class="field">
+          <label for="venue">Venue / address <span class="req">*</span></label>
+          <input id="venue" name="venue" type="text" maxlength="220" placeholder="Venue name and street address" required/>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="areaPostcode">Area / postcode <span class="req">*</span></label><input id="areaPostcode" name="areaPostcode" type="text" maxlength="100" placeholder="e.g. Sandal · WF2" required/></div>
+          <div class="field"><label for="cost">Cost</label><input id="cost" name="cost" type="text" maxlength="120" placeholder="e.g. Free · £5/session · Membership varies"/></div>
+        </div>
+        <div class="field">
+          <label for="daysTimes">Days & times</label>
+          <input id="daysTimes" name="daysTimes" type="text" maxlength="220" placeholder="e.g. Tuesdays 6–7pm, Saturdays 10am–12pm"/>
+          <p class="hint">If times change often, write “varies — see website”.</p>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-label">Official links & public contact</div>
+        <div class="field"><label for="website">Website or booking page</label><input id="website" name="website" type="url" placeholder="https://..."/></div>
+        <div class="field-row">
+          <div class="field"><label for="instagram">Instagram</label><input id="instagram" name="instagram" type="url" placeholder="https://instagram.com/..."/></div>
+          <div class="field"><label for="facebook">Facebook</label><input id="facebook" name="facebook" type="url" placeholder="https://facebook.com/..."/></div>
+        </div>
+        <div class="field"><label for="tiktok">TikTok</label><input id="tiktok" name="tiktok" type="url" placeholder="https://tiktok.com/@..."/></div>
+        <p class="hint" style="margin:-7px 0 18px">Please provide at least one website or social link so we can verify the listing.</p>
+        <div class="field-row">
+          <div class="field"><label for="publicEmail">Public email</label><input id="publicEmail" name="publicEmail" type="email" maxlength="254" placeholder="Only if you want it considered for the public listing"/></div>
+          <div class="field"><label for="publicPhone">Public phone</label><input id="publicPhone" name="publicPhone" type="tel" maxlength="60" placeholder="Only if you want it considered for the public listing"/></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-label">Your details</div>
+        <div class="field-row">
+          <div class="field"><label for="submitterName">Your name <span class="req">*</span></label><input id="submitterName" name="submitterName" type="text" maxlength="120" required/></div>
+          <div class="field"><label for="submitterEmail">Your email <span class="req">*</span></label><input id="submitterEmail" name="submitterEmail" type="email" maxlength="254" required/></div>
+        </div>
+        <div class="field"><label for="relationship">Your relationship to the listing <span class="req">*</span></label><select id="relationship" name="relationship" required><option value="">Choose one</option><option>Owner / organiser</option><option>Staff / coach / instructor</option><option>Volunteer / committee member</option><option>Member / participant</option><option>Parent / carer</option><option>Community recommendation</option><option>Other</option></select></div>
+        <label class="check" style="margin-bottom:12px"><input type="checkbox" name="featuredInterest" value="Yes"/> I’d like information about a clearly labelled Featured Listing or Ask Wakefield Local Partner option.</label>
+        <label class="consent"><input type="checkbox" name="consent" value="Yes" required/> <span>I confirm the information is accurate to the best of my knowledge, I have permission to submit it, and Ask Wakefield may verify and publish relevant details after review. <span class="req">*</span></span></label>
+      </div>
+
+      <div class="honeypot" aria-hidden="true"><label for="middleName">Middle name</label><input id="middleName" name="middleName" type="text" tabindex="-1" autocomplete="off"/></div>
+      <button class="submit-btn" id="submitBtn" type="submit">Submit listing for review</button>
+      <div class="error-msg" id="errorMsg">We couldn’t submit that just now. Check the required fields and try again. If it keeps happening, email hello@mediahubink.com.</div>
+    </form>
+  </div>
+
+  <section class="success-state" id="successState">
+    <div class="success-mark">✓</div>
+    <h2 class="success-title">Listing received.</h2>
+    <p class="success-msg">Thanks. We’ll review the details and verify the source before anything is added to the directory. You’ll receive an email confirming we have the submission.</p>
+    <div class="success-actions"><a class="primary" href="/activities">Browse activities</a><a href="/">Back to Ask Wakefield</a></div>
+  </section>
+</main>
+
+<footer><span>Ask Wakefield · Independent local assistant</span><span>Built by Mediahubink Limited · Wakefield</span></footer>
+<script>
+(function(){
+  var form=document.getElementById('listingForm');
+  var btn=document.getElementById('submitBtn');
+  var err=document.getElementById('errorMsg');
+  function values(name){return Array.prototype.slice.call(form.querySelectorAll('input[name="'+name+'"]:checked')).map(function(el){return el.value;});}
+  form.addEventListener('submit',async function(e){
+    e.preventDefault(); err.style.display='none';
+    if(!form.checkValidity()){form.reportValidity();return;}
+    var sourceLinks=[form.website.value,form.instagram.value,form.facebook.value,form.tiktok.value].filter(function(v){return v.trim();});
+    if(!sourceLinks.length){err.textContent='Please add at least one website or social link so we can verify the listing.';err.style.display='block';return;}
+    btn.disabled=true;btn.textContent='Submitting...';
+    var payload={
+      listingName:form.listingName.value.trim(),listingType:form.listingType.value,category:form.category.value,audience:values('audience').join(', ')||'Not specified',description:form.description.value.trim(),venue:form.venue.value.trim(),areaPostcode:form.areaPostcode.value.trim(),daysTimes:form.daysTimes.value.trim()||'Varies / not specified',cost:form.cost.value.trim()||'Not specified',website:form.website.value.trim(),instagram:form.instagram.value.trim(),facebook:form.facebook.value.trim(),tiktok:form.tiktok.value.trim(),publicEmail:form.publicEmail.value.trim(),publicPhone:form.publicPhone.value.trim(),submitterName:form.submitterName.value.trim(),submitterEmail:form.submitterEmail.value.trim(),relationship:form.relationship.value,featuredInterest:form.featuredInterest.checked?'Yes':'No',consent:form.consent.checked?'Yes':'No',middleName:form.middleName.value,timestamp:new Date().toISOString(),source:'askwakefield.co.uk/submit-listing'
+    };
+    try{
+      var response=await fetch('/api/submit-listing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      var data=await response.json().catch(function(){return{};});
+      if(!response.ok) throw new Error(data.error||'Submission failed');
+      document.getElementById('formState').style.display='none';document.getElementById('successState').style.display='block';window.scrollTo({top:0,behavior:'smooth'});
+    }catch(ex){btn.disabled=false;btn.textContent='Submit listing for review';err.textContent=ex.message==='Verification link required'?'Please add at least one website or social link so we can verify the listing.':'We couldn’t submit that just now. Please try again, or email hello@mediahubink.com.';err.style.display='block';}
+  });
+})();
+</script>
+</body>
+</html>

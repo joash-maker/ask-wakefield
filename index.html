@@ -314,7 +314,7 @@
     .assistant-links a:hover { color: var(--red); }
 
     .discover-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .discover-card { appearance: none; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; background: #fff; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; color: var(--ink); }
+    .discover-card { appearance: none; display: block; width: 100%; text-align: left; text-decoration: none; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; background: #fff; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; color: var(--ink); }
     .discover-card:hover { transform: translateY(-3px); border-color: rgba(230,28,93,0.30); box-shadow: 0 12px 30px rgba(17,17,17,0.07); }
     .discover-card:focus-visible { outline: 3px solid rgba(230,28,93,0.35); outline-offset: 3px; }
     .discover-art { height: 154px; position: relative; overflow: hidden; background: #171719; }
@@ -542,29 +542,29 @@
       <div class="discover-body"><div class="discover-label">Events &amp; culture</div><div class="discover-name">What's On</div><div class="discover-copy">Events, exhibitions, gigs, festivals and things happening this week.</div><div class="discover-link"><span>Ask about what's on</span><span>→</span></div></div>
     </button>
 
-    <button class="discover-card" type="button" onclick="sendMsg('Find family activities, after-school clubs and things for children to do in Wakefield. Ask me for ages and area if that would help.')">
+    <a class="discover-card" href="/activities?category=after-school">
       <div class="discover-art"><img src="/images/card-family.webp" alt="Family activity in Wakefield" loading="lazy"/></div>
-      <div class="discover-body"><div class="discover-label">Children &amp; parents</div><div class="discover-name">Families</div><div class="discover-copy">Days out, after-school activities, kids' clubs, free ideas and family support.</div><div class="discover-link"><span>Find family ideas</span><span>→</span></div></div>
-    </button>
+      <div class="discover-body"><div class="discover-label">Children &amp; parents</div><div class="discover-name">Families</div><div class="discover-copy">Days out, after-school activities, kids' clubs, free ideas and family support.</div><div class="discover-link"><span>Browse activities</span><span>→</span></div></div>
+    </a>
 
     <button class="discover-card" type="button" onclick="sendMsg('Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.')">
       <div class="discover-art"><img src="/images/card-restaurants.webp" alt="Food and dining in Wakefield" loading="lazy"/></div>
       <div class="discover-body"><div class="discover-label">Eat &amp; drink</div><div class="discover-name">Food &amp; Coffee</div><div class="discover-copy">Restaurants, cafés, coffee spots, pubs and local favourites for different occasions.</div><div class="discover-link"><span>Find somewhere</span><span>→</span></div></div>
     </button>
 
-    <button class="discover-card" type="button" onclick="sendMsg('Help me find sports and fitness in Wakefield, including gyms, swimming, padel, running clubs and activities for adults or children.')">
+    <a class="discover-card" href="/activities">
       <div class="discover-art graphic sport" aria-hidden="true">
         <svg viewBox="0 0 64 64" fill="none"><circle cx="38" cy="10" r="5" stroke="currentColor" stroke-width="3"/><path d="M31 20l9 7 8-3M31 20l-8 11 9 7M40 27l-7 11-12 9M33 38l10 7 7 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 52h18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
       </div>
-      <div class="discover-body"><div class="discover-label">Move &amp; play</div><div class="discover-name">Sports &amp; Fitness</div><div class="discover-copy">Gyms, swimming, padel, running, cricket, walking and activities for all abilities.</div><div class="discover-link"><span>Find an activity</span><span>→</span></div></div>
-    </button>
+      <div class="discover-body"><div class="discover-label">Move &amp; play</div><div class="discover-name">Sports &amp; Fitness</div><div class="discover-copy">Gyms, swimming, padel, running, cricket, walking and activities for all abilities.</div><div class="discover-link"><span>Browse activities</span><span>→</span></div></div>
+    </a>
 
-    <button class="discover-card" type="button" onclick="sendMsg('Help me find clubs and community groups in Wakefield, including walking groups, hiking, cricket, parent groups, Dad Matters and ways to meet people.')">
+    <a class="discover-card" href="/activities?category=community">
       <div class="discover-art graphic community" aria-hidden="true">
         <svg viewBox="0 0 64 64" fill="none"><circle cx="21" cy="22" r="7" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="20" r="6" stroke="currentColor" stroke-width="3"/><path d="M9 51c1-10 6-16 12-16s12 6 13 16M34 49c1-8 4-14 10-14 7 0 11 6 12 14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
       </div>
-      <div class="discover-body"><div class="discover-label">Meet &amp; belong</div><div class="discover-name">Clubs &amp; Community</div><div class="discover-copy">Local clubs, walking groups, community organisations, volunteering and parent support.</div><div class="discover-link"><span>Find your people</span><span>→</span></div></div>
-    </button>
+      <div class="discover-body"><div class="discover-label">Meet &amp; belong</div><div class="discover-name">Clubs &amp; Community</div><div class="discover-copy">Local clubs, walking groups, community organisations, volunteering and parent support.</div><div class="discover-link"><span>Browse groups</span><span>→</span></div></div>
+    </a>
 
     <button class="discover-card" type="button" onclick="sendMsg('Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.')">
       <div class="discover-art graphic services" aria-hidden="true">
@@ -953,6 +953,19 @@ function copyEmbed() {
     setTimeout(function() { label.textContent = 'Copy embed code'; }, 2000);
   });
 }
+
+// OPEN A PRE-FILLED QUESTION FROM DIRECTORY PAGES
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var question = params.get('ask');
+  if (!question) return;
+  setTimeout(function() {
+    var assistant = document.getElementById('assistant');
+    if (assistant) assistant.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    sendMsg(question);
+    if (history.replaceState) history.replaceState({}, '', window.location.pathname + '#assistant');
+  }, 350);
+})();
 </script>
 
 

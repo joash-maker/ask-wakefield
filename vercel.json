@@ -8,6 +8,10 @@
     {
       "source": "/for-organisations",
       "destination": "/for-organisations.html"
+    },
+    {
+      "source": "/activities",
+      "destination": "/activities.html"
     }
   ],
   "headers": [

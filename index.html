@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ask Wakefield — Your Local AI Assistant</title>
-  <meta name="description" content="An independent AI assistant for Wakefield — events, culture, council services, family activities and everything the district has to offer." />
+  <meta name="description" content="An independent AI assistant for Wakefield — what's on, family activities, food, sport, clubs, local services and trusted local information." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:title" content="Ask Wakefield" />
   <meta property="og:description" content="Your independent AI assistant for the Wakefield district." />
@@ -295,6 +295,114 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
     }
+
+
+    /* HOMEPAGE EVOLUTION */
+    .home-section { max-width: 1120px; margin: 0 auto; padding: 58px 48px 0; }
+    .assistant-section { padding-top: 52px; }
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 22px; }
+    .section-head-copy { max-width: 700px; }
+    .section-kicker { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin-bottom: 8px; }
+    .section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(38px, 5vw, 56px); line-height: 0.98; font-weight: 300; color: var(--ink); }
+    .section-intro { margin-top: 10px; color: var(--dim); font-size: 15px; line-height: 1.75; max-width: 720px; }
+    .section-note { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); max-width: 260px; text-align: right; line-height: 1.6; }
+
+    .assistant-shell { max-width: 860px; margin: 0 auto; }
+    .assistant-shell .chat-wrap { margin: 0; max-width: none; }
+    .assistant-links { display: flex; justify-content: space-between; gap: 16px; margin-top: 11px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+    .assistant-links a { color: var(--dim); text-decoration: none; }
+    .assistant-links a:hover { color: var(--red); }
+
+    .discover-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .discover-card { appearance: none; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; background: #fff; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; color: var(--ink); }
+    .discover-card:hover { transform: translateY(-3px); border-color: rgba(230,28,93,0.30); box-shadow: 0 12px 30px rgba(17,17,17,0.07); }
+    .discover-card:focus-visible { outline: 3px solid rgba(230,28,93,0.35); outline-offset: 3px; }
+    .discover-art { height: 154px; position: relative; overflow: hidden; background: #171719; }
+    .discover-art img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.55s ease; }
+    .discover-card:hover .discover-art img { transform: scale(1.045); }
+    .discover-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.26), transparent 58%); pointer-events: none; }
+    .discover-art.graphic { display: flex; align-items: center; justify-content: center; }
+    .discover-art.graphic::after { background: radial-gradient(circle at 70% 20%, rgba(255,255,255,0.14), transparent 30%); }
+    .discover-art.sport { background: linear-gradient(135deg, #111318 0%, #2b2140 58%, #e61c5d 165%); }
+    .discover-art.community { background: linear-gradient(135deg, #161818 0%, #273836 62%, #e61c5d 180%); }
+    .discover-art.services { background: linear-gradient(135deg, #15171a 0%, #28313a 62%, #e61c5d 180%); }
+    .discover-art svg { width: 68px; height: 68px; color: rgba(255,255,255,0.82); position: relative; z-index: 1; }
+    .discover-body { padding: 18px 18px 20px; min-height: 142px; display: flex; flex-direction: column; }
+    .discover-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 7px; }
+    .discover-name { font-family: 'Cormorant Garamond', serif; font-size: 27px; line-height: 1; font-weight: 300; }
+    .discover-copy { font-size: 13px; color: var(--dim); line-height: 1.55; margin-top: 9px; flex: 1; }
+    .discover-link { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .discover-link span:last-child { color: var(--red); font-size: 15px; }
+
+    .contribute-panel { border: 1px solid var(--line); border-radius: 5px; padding: 34px; background: linear-gradient(135deg, rgba(230,28,93,0.035), rgba(255,255,255,0.8)); }
+    .contribute-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 22px; }
+    .contribute-card { display: flex; gap: 14px; align-items: flex-start; padding: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.88); border-radius: 4px; color: var(--ink); text-decoration: none; transition: border-color 0.18s, transform 0.18s, background 0.18s; }
+    .contribute-card:hover { border-color: rgba(230,28,93,0.35); transform: translateY(-2px); background: #fff; }
+    .contribute-icon { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 38px; background: rgba(230,28,93,0.09); color: var(--red); }
+    .contribute-icon svg { width: 19px; height: 19px; }
+    .contribute-title { font-size: 15px; font-weight: 700; line-height: 1.3; }
+    .contribute-copy { font-size: 12px; color: var(--dim); line-height: 1.5; margin-top: 5px; }
+
+    .trust-section { max-width: 860px; margin: 50px auto 0; }
+    .trust-head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .trust-title { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 300; }
+    .trust-sub { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+    .trust-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .trust-item { border-bottom: 1px solid var(--line); }
+    .trust-item:nth-child(odd) { border-right: 1px solid var(--line); }
+    .trust-q { width: 100%; background: transparent; border: none; padding: 20px 22px; text-align: left; display: flex; justify-content: space-between; gap: 14px; cursor: pointer; font-family: 'Syne', sans-serif; color: var(--ink); font-weight: 600; font-size: 14px; line-height: 1.4; }
+    .trust-q span:last-child { color: var(--red); font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 400; transition: transform 0.2s; }
+    .trust-item.open .trust-q span:last-child { transform: rotate(45deg); }
+    .trust-a { display: none; padding: 0 22px 20px; color: var(--dim); font-size: 13px; line-height: 1.7; }
+    .trust-a a { color: var(--red); }
+    .trust-item.open .trust-a { display: block; }
+
+    .org-cta { max-width: 1120px; margin: 54px auto 0; padding: 0 48px; }
+    .org-cta-inner { position: relative; overflow: hidden; min-height: 250px; border-radius: 5px; padding: 40px; display: flex; align-items: flex-end; background: #11151a; color: #fff; }
+    .org-cta-inner::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(90deg, rgba(10,12,16,0.94) 0%, rgba(10,12,16,0.72) 44%, rgba(10,12,16,0.28) 76%), url('/images/hero-wakefield-2.webp'); background-size: cover; background-position: center 46%; opacity: 0.9; }
+    .org-cta-copy { position: relative; z-index: 1; max-width: 610px; }
+    .org-cta .section-kicker { color: var(--red-lt); }
+    .org-cta h2 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 42px; line-height: 1; }
+    .org-cta p { color: rgba(255,255,255,0.68); line-height: 1.7; font-size: 14px; margin: 12px 0 20px; max-width: 560px; }
+    .org-button { display: inline-flex; align-items: center; gap: 9px; border: 1px solid rgba(255,255,255,0.28); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .org-button:hover { border-color: var(--red); background: rgba(230,28,93,0.12); }
+
+    .public-footer { max-width: 1120px; margin: 44px auto 42px; padding: 24px 48px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1.35fr 0.65fr; gap: 30px; }
+    .public-footer-main { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--dim); line-height: 1.9; }
+    .public-footer-main a { color: var(--ink); text-decoration: none; font-weight: 500; }
+    .public-footer-main a:hover { color: var(--red); }
+    .public-footer-side { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--dim); font-style: italic; text-align: right; line-height: 1.5; }
+    .image-credit { max-width: 1120px; margin: -24px auto 0; padding: 0 48px 34px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.06em; color: rgba(17,17,17,0.28); }
+
+    @media (max-width: 960px) {
+      .home-section, .org-cta { padding-left: 24px; padding-right: 24px; }
+      .discover-grid { grid-template-columns: repeat(2, 1fr); }
+      .contribute-grid { grid-template-columns: 1fr; }
+      .public-footer { margin-left: 24px; margin-right: 24px; padding-left: 0; padding-right: 0; }
+      .image-credit { padding-left: 24px; padding-right: 24px; }
+    }
+    @media (max-width: 600px) {
+      .home-section { padding: 42px 16px 0; }
+      .section-head { align-items: flex-start; flex-direction: column; gap: 8px; }
+      .section-note { text-align: left; }
+      .discover-grid { grid-template-columns: 1fr; gap: 10px; }
+      .discover-card { display: grid; grid-template-columns: 42% 58%; }
+      .discover-art { height: auto; min-height: 164px; }
+      .discover-body { min-height: 164px; padding: 16px; }
+      .discover-name { font-size: 24px; }
+      .contribute-panel { padding: 24px 18px; }
+      .trust-section { margin-left: 16px; margin-right: 16px; }
+      .trust-head { align-items: flex-start; flex-direction: column; gap: 5px; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .trust-item:nth-child(odd) { border-right: none; }
+      .org-cta { padding: 0 16px; margin-top: 42px; }
+      .org-cta-inner { min-height: 300px; padding: 28px 22px; }
+      .org-cta h2 { font-size: 36px; }
+      .public-footer { margin: 34px 16px 36px; grid-template-columns: 1fr; }
+      .public-footer-side { text-align: left; }
+      .image-credit { padding: 0 16px 28px; }
+    }
+
   </style>
 </head>
 <body>
@@ -306,6 +414,8 @@
     <span class="marquee-item"><span class="dot"></span>Yorkshire Sculpture Park</span>
     <span class="marquee-item"><span class="dot"></span>WX Exchange</span>
     <span class="marquee-item"><span class="dot"></span>Family Days Out</span>
+    <span class="marquee-item"><span class="dot"></span>Sports &amp; Fitness</span>
+    <span class="marquee-item"><span class="dot"></span>Clubs &amp; Community</span>
     <span class="marquee-item"><span class="dot"></span>Restaurants</span>
     <span class="marquee-item"><span class="dot"></span>Road Closures</span>
     <span class="marquee-item"><span class="dot"></span>Council Tax</span>
@@ -314,6 +424,8 @@
     <span class="marquee-item"><span class="dot"></span>Yorkshire Sculpture Park</span>
     <span class="marquee-item"><span class="dot"></span>WX Exchange</span>
     <span class="marquee-item"><span class="dot"></span>Family Days Out</span>
+    <span class="marquee-item"><span class="dot"></span>Sports &amp; Fitness</span>
+    <span class="marquee-item"><span class="dot"></span>Clubs &amp; Community</span>
     <span class="marquee-item"><span class="dot"></span>Restaurants</span>
     <span class="marquee-item"><span class="dot"></span>Road Closures</span>
     <span class="marquee-item"><span class="dot"></span>Council Tax</span>
@@ -329,10 +441,10 @@
     <div class="hero-left">
       <div class="hero-eyebrow">Wakefield District · Independent AI Assistant</div>
       <h1 class="hero-title">Ask<br/><em>Wake&shy;field</em></h1>
-      <p class="hero-desc">Local answers, current information and trusted sources across the Wakefield district — from what's on and where to eat to council services and family days out.</p>
+      <p class="hero-desc">Local answers, current information and trusted sources across the Wakefield district — from what's on and family activities to food, sport, clubs and local services.</p>
       <div class="hero-actions">
         <a class="hero-cta" href="#assistant">Ask Wakefield →</a>
-        <a class="hero-cta secondary" href="/submit-event">Submit an event</a>
+        <a class="hero-cta secondary" href="#discover">Discover Wakefield</a>
       </div>
     </div>
     <div class="hero-right">
@@ -349,177 +461,176 @@
   </div>
 </section>
 
-<!-- DESTINATION CARDS -->
-<div class="cards-section">
-  <div class="cards-label">Explore the district</div>
-  <div class="cards-grid">
-    <div class="dest-card" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music?')">
-      <img class="dest-card-img" src="/images/card-whats-on.webp" alt="What's on in Wakefield" loading="lazy"/>
-      <div class="dest-card-overlay"></div>
-      <div class="dest-card-body">
-        <div class="dest-card-cat">Live & upcoming</div>
-        <div class="dest-card-name">What's on this week</div>
-        <div class="dest-card-cta">Ask now →</div>
-      </div>
-    </div>
-    <div class="dest-card" onclick="sendMsg('Tell me about The Hepworth Wakefield — what\'s on and what should I know before visiting?')">
-      <img class="dest-card-img" src="/images/card-hepworth.webp" alt="The Hepworth Wakefield" loading="lazy"/>
-      <div class="dest-card-overlay"></div>
-      <div class="dest-card-body">
-        <div class="dest-card-cat">World-class art · Free for Wakefield residents</div>
-        <div class="dest-card-name">The Hepworth Wakefield</div>
-        <div class="dest-card-cta">Ask now →</div>
-      </div>
-    </div>
-    <div class="dest-card" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">
-      <img class="dest-card-img" src="/images/card-restaurants.webp" alt="Restaurants in Wakefield" loading="lazy"/>
-      <div class="dest-card-overlay"></div>
-      <div class="dest-card-body">
-        <div class="dest-card-cat">Dining & food</div>
-        <div class="dest-card-name">Restaurants & dining</div>
-        <div class="dest-card-cta">Ask now →</div>
-      </div>
-    </div>
-    <div class="dest-card" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">
-      <img class="dest-card-img" src="/images/card-family.webp" alt="Family days out in West Yorkshire" loading="lazy"/>
-      <div class="dest-card-overlay"></div>
-      <div class="dest-card-body">
-        <div class="dest-card-cat">Outdoors & activities</div>
-        <div class="dest-card-name">Family days out</div>
-        <div class="dest-card-cta">Ask now →</div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="divider"></div>
-
-<div class="topics">
-  <button class="topic" onclick="sendMsg('What\'s on this week in Wakefield — events, exhibitions, live music?')">What's on this week</button>
-  <button class="topic" onclick="sendMsg('Tell me about The Hepworth Wakefield — what\'s on and what should I know before visiting?')">The Hepworth</button>
-  <button class="topic" onclick="sendMsg('What is happening at Yorkshire Sculpture Park right now?')">YSP</button>
-  <button class="topic" onclick="sendMsg('What events and activities are on at WX Exchange in Wakefield?')">WX Exchange</button>
-  <button class="topic" onclick="sendMsg('What are the best restaurants in Wakefield for a special occasion?')">Restaurants</button>
-  <button class="topic" onclick="sendMsg('What are the best family days out in Wakefield and West Yorkshire?')">Family days out</button>
-  <button class="topic" onclick="sendMsg('I\'m visiting Wakefield for the first time — what should I see and do?')">Visitor guide</button>
-  <button class="topic" onclick="sendMsg('Tell me about Newmillerdam Country Park — what can I do there?')">Newmillerdam</button>
-</div>
-
-<div class="chat-wrap" id="assistant">
-  <div class="chat-header">
-    <span class="chat-title">Ask Wakefield · AI Chat</span>
-    <div class="chat-header-right">
-      <button class="new-chat-btn" id="copyChatBtn" onclick="copyChatHistory()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
-        Copy chat
-      </button>
-      <button class="new-chat-btn" onclick="resetChat()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        New chat
-      </button>
-      <div class="status-dot"></div>
+<!-- ASK WAKEFIELD -->
+<section class="home-section assistant-section" aria-labelledby="ask-title">
+  <div class="section-head">
+    <div class="section-head-copy">
+      <div class="section-kicker">Ask the district</div>
+      <h2 class="section-title" id="ask-title">One place to ask about Wakefield.</h2>
+      <p class="section-intro">Ask about events, family activities, food and coffee, sport, clubs, transport or local services. For things that change, Ask Wakefield checks current sources where available.</p>
     </div>
+    <div class="section-note">Independent local assistant · trusted sources · plain-English answers</div>
   </div>
 
-  <div class="messages" id="messages">
-    <div class="msg bot">
-      <div class="msg-label">Ask Wakefield</div>
-      <div class="msg-text" id="welcomeMsg"></div>
+  <div class="assistant-shell">
+    <div class="chat-wrap" id="assistant">
+      <div class="chat-header">
+        <span class="chat-title">Ask Wakefield · AI Chat</span>
+        <div class="chat-header-right">
+          <button class="new-chat-btn" id="copyChatBtn" onclick="copyChatHistory()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
+            Copy chat
+          </button>
+          <button class="new-chat-btn" onclick="resetChat()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            New chat
+          </button>
+          <div class="status-dot"></div>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="msg bot">
+          <div class="msg-label">Ask Wakefield</div>
+          <div class="msg-text" id="welcomeMsg"></div>
+        </div>
+      </div>
+
+      <div class="chips" id="chips">
+        <button class="chip" onclick="sendMsg('What\'s on this week in Wakefield?')">What's on</button>
+        <button class="chip" onclick="sendMsg('What free or low-cost things can families do in Wakefield this week?')">Families</button>
+        <button class="chip" onclick="sendMsg('Where can I get good food or coffee in Wakefield?')">Food &amp; coffee</button>
+        <button class="chip" onclick="sendMsg('What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?')">Sports &amp; fitness</button>
+        <button class="chip" onclick="sendMsg('What local clubs, walking groups and community groups can I join in Wakefield?')">Clubs &amp; community</button>
+        <button class="chip" onclick="sendMsg('Help me with a Wakefield local service such as bins, parking or transport.')">Local services</button>
+      </div>
+
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask anything about Wakefield..." autocomplete="off" />
+        <button id="voiceBtn" title="Voice input">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3M8 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button id="sendBtn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="chat-credit">Powered by <a href="https://mediahubink.com" target="_blank" rel="noopener">Mediahubink Limited</a></div>
+    </div>
+    <div class="assistant-links">
+      <a href="/submit-event">+ Submit an event</a>
+      <a href="#discover">Browse Discover Wakefield ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- DISCOVER WAKEFIELD -->
+<section class="home-section" id="discover" aria-labelledby="discover-title">
+  <div class="section-head">
+    <div class="section-head-copy">
+      <div class="section-kicker">Discover Wakefield</div>
+      <h2 class="section-title" id="discover-title">Local life, without the digging around.</h2>
+      <p class="section-intro">Choose a starting point and Ask Wakefield will narrow things down using current information where it matters.</p>
     </div>
   </div>
 
-  <div class="chips" id="chips">
-    <button class="chip" onclick="sendMsg('What\'s on this week in Wakefield?')">What's on this week</button>
-    <button class="chip" onclick="sendMsg('Best restaurants in Wakefield for a special occasion?')">Restaurants</button>
-    <button class="chip" onclick="sendMsg('Best family days out in Wakefield?')">Family days out</button>
-    <button class="chip" onclick="sendMsg('I\'m visiting Wakefield — what should I see and do?')">Visitor guide</button>
-  </div>
-
-  <div class="input-area">
-    <input type="text" id="userInput" placeholder="Ask anything about Wakefield..." autocomplete="off" />
-    <button id="voiceBtn" title="Voice input">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3M8 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <div class="discover-grid">
+    <button class="discover-card" type="button" onclick="sendMsg('What\'s on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.')">
+      <div class="discover-art"><img src="/images/card-whats-on.webp" alt="Wakefield city centre in the evening" loading="lazy"/></div>
+      <div class="discover-body"><div class="discover-label">Events &amp; culture</div><div class="discover-name">What's On</div><div class="discover-copy">Events, exhibitions, gigs, festivals and things happening this week.</div><div class="discover-link"><span>Ask about what's on</span><span>→</span></div></div>
     </button>
-    <button id="sendBtn" onclick="sendMessage()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+
+    <button class="discover-card" type="button" onclick="sendMsg('Find family activities, after-school clubs and things for children to do in Wakefield. Ask me for ages and area if that would help.')">
+      <div class="discover-art"><img src="/images/card-family.webp" alt="Family activity in Wakefield" loading="lazy"/></div>
+      <div class="discover-body"><div class="discover-label">Children &amp; parents</div><div class="discover-name">Families</div><div class="discover-copy">Days out, after-school activities, kids' clubs, free ideas and family support.</div><div class="discover-link"><span>Find family ideas</span><span>→</span></div></div>
+    </button>
+
+    <button class="discover-card" type="button" onclick="sendMsg('Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.')">
+      <div class="discover-art"><img src="/images/card-restaurants.webp" alt="Food and dining in Wakefield" loading="lazy"/></div>
+      <div class="discover-body"><div class="discover-label">Eat &amp; drink</div><div class="discover-name">Food &amp; Coffee</div><div class="discover-copy">Restaurants, cafés, coffee spots, pubs and local favourites for different occasions.</div><div class="discover-link"><span>Find somewhere</span><span>→</span></div></div>
+    </button>
+
+    <button class="discover-card" type="button" onclick="sendMsg('Help me find sports and fitness in Wakefield, including gyms, swimming, padel, running clubs and activities for adults or children.')">
+      <div class="discover-art graphic sport" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none"><circle cx="38" cy="10" r="5" stroke="currentColor" stroke-width="3"/><path d="M31 20l9 7 8-3M31 20l-8 11 9 7M40 27l-7 11-12 9M33 38l10 7 7 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 52h18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="discover-body"><div class="discover-label">Move &amp; play</div><div class="discover-name">Sports &amp; Fitness</div><div class="discover-copy">Gyms, swimming, padel, running, cricket, walking and activities for all abilities.</div><div class="discover-link"><span>Find an activity</span><span>→</span></div></div>
+    </button>
+
+    <button class="discover-card" type="button" onclick="sendMsg('Help me find clubs and community groups in Wakefield, including walking groups, hiking, cricket, parent groups, Dad Matters and ways to meet people.')">
+      <div class="discover-art graphic community" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none"><circle cx="21" cy="22" r="7" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="20" r="6" stroke="currentColor" stroke-width="3"/><path d="M9 51c1-10 6-16 12-16s12 6 13 16M34 49c1-8 4-14 10-14 7 0 11 6 12 14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="discover-body"><div class="discover-label">Meet &amp; belong</div><div class="discover-name">Clubs &amp; Community</div><div class="discover-copy">Local clubs, walking groups, community organisations, volunteering and parent support.</div><div class="discover-link"><span>Find your people</span><span>→</span></div></div>
+    </button>
+
+    <button class="discover-card" type="button" onclick="sendMsg('Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.')">
+      <div class="discover-art graphic services" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none"><path d="M32 56s17-15 17-31a17 17 0 10-34 0c0 16 17 31 17 31z" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="25" r="6" stroke="currentColor" stroke-width="3"/></svg>
+      </div>
+      <div class="discover-body"><div class="discover-label">Practical Wakefield</div><div class="discover-name">Local Services</div><div class="discover-copy">Bins, parking, transport, roads, council information, libraries and useful official links.</div><div class="discover-link"><span>Ask a local-service question</span><span>→</span></div></div>
     </button>
   </div>
-  <div class="chat-credit">Powered by <a href="https://mediahubink.com" target="_blank" rel="noopener">Mediahubink Limited</a></div>
-</div>
+</section>
 
-<div style="max-width:860px;margin:10px auto 0;text-align:right;padding:0 4px;">
-  <a href="/submit-event" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">
-    + Submit an event
-  </a>
-</div>
-<div class="embed-section">
-  <div class="embed-header">
-    <div class="embed-title">Embed this assistant</div>
-    <div class="embed-sub">One line of code</div>
-  </div>
-  <div class="embed-body">
-    <div class="embed-info">
-      <p>Add Ask Wakefield to any website with a single script tag. The widget loads asynchronously — no performance impact on your page.</p>
-      <ul class="step-list">
-        <li><span class="step-num">01</span><span>Copy the script tag opposite</span></li>
-        <li><span class="step-num">02</span><span>Paste before the closing &lt;/body&gt; tag of any webpage</span></li>
-        <li><span class="step-num">03</span><span>A floating chat button appears automatically in the bottom right corner</span></li>
-      </ul>
-    </div>
-    <div class="embed-code-wrap">
-      <div class="embed-code-label">Embed code</div>
-      <div class="code-block">&lt;script src="https://askwakefield.co.uk/widget.js"&gt;&lt;/script&gt;</div>
-      <button class="copy-embed-btn" onclick="copyEmbed()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
-        <span id="copyLabel">Copy embed code</span>
-      </button>
+<!-- CONTRIBUTE -->
+<section class="home-section" id="contribute" aria-labelledby="contribute-title">
+  <div class="contribute-panel">
+    <div class="section-kicker">Contribute</div>
+    <h2 class="section-title" id="contribute-title" style="font-size:clamp(34px,4vw,48px);">Help make Ask Wakefield more useful.</h2>
+    <p class="section-intro">Share something happening locally, tell us about your club or business, or ask about becoming an Ask Wakefield Local Partner.</p>
+
+    <div class="contribute-grid">
+      <a class="contribute-card" href="/submit-event">
+        <span class="contribute-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 3v4M16 3v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span><span class="contribute-title">Submit an event</span><span class="contribute-copy">Tell us what's happening in the district so people can discover it.</span></span>
+      </a>
+      <a class="contribute-card" href="mailto:hello@mediahubink.com?subject=List%20my%20club%20or%20business%20on%20Ask%20Wakefield">
+        <span class="contribute-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V9l8-5 8 5v12H4z" stroke="currentColor" stroke-width="2"/><path d="M9 21v-6h6v6" stroke="currentColor" stroke-width="2"/></svg></span>
+        <span><span class="contribute-title">List your club or business</span><span class="contribute-copy">Join the local directory as it develops and help us keep information current.</span></span>
+      </a>
+      <a class="contribute-card" href="mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20Local%20Partner%20advertising">
+        <span class="contribute-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13l12-5v8L4 11v2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6 14l2 6h4l-2-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M19 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span><span class="contribute-title">Advertise with us</span><span class="contribute-copy">Ask about clearly labelled featured listings and the Local Partner pilot.</span></span>
+      </a>
     </div>
   </div>
-</div>
+</section>
 
-<div class="faq-section">
-  <div class="faq-header">
-    <div class="faq-title">Frequently asked questions</div>
-    <div class="faq-sub">About this assistant &amp; Mediahubink</div>
+<!-- PUBLIC TRUST FAQ -->
+<section class="trust-section" aria-labelledby="trust-title">
+  <div class="trust-head">
+    <h2 class="trust-title" id="trust-title">Good to know</h2>
+    <div class="trust-sub">About Ask Wakefield</div>
   </div>
-  <div class="faq-grid">
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is this an official Wakefield Council service?</span><span class="faq-icon">+</span></button><div class="faq-a">No. Ask Wakefield is an independent demonstration tool built by <a href="https://mediahubink.com" target="_blank">Mediahubink</a>. It is not affiliated with Wakefield Council. For official services visit <a href="https://www.wakefield.gov.uk" target="_blank">wakefield.gov.uk</a> or call 0345 8 506 506.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Can the AI get things wrong?</span><span class="faq-icon">+</span></button><div class="faq-a">Yes — AI assistants can make mistakes. Always verify critical information with the relevant official source before acting on it.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What data do you collect from my conversation?</span><span class="faq-icon">+</span></button><div class="faq-a">Ask Wakefield does not create a saved chat history for you on this website. Messages are sent to our AI service provider to generate a response. Provider-side technical retention may apply, so please do not submit sensitive personal information.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is my conversation private?</span><span class="faq-icon">+</span></button><div class="faq-a">Your messages are processed by a third-party AI service to produce the answer. Mediahubink does not use your chat as a customer account history. Please do not share passwords, financial details, medical information or other sensitive personal data.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How does Mediahubink build AI agents for businesses?</span><span class="faq-icon">+</span></button><div class="faq-a">Mediahubink builds custom AI chat and voice agents for UK businesses. Each agent is tailored with its own branding, knowledge base, and conversation flows. We handle everything from design to deployment. Agents typically go live within 48–72 hours.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">What kinds of businesses do you work with?</span><span class="faq-icon">+</span></button><div class="faq-a">We work across five verticals: serviced offices, estate agents, dental practices, gyms, and schools — plus local service businesses across West Yorkshire. If you're answering the same questions repeatedly, an AI agent can handle those 24/7.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">How much does it cost?</span><span class="faq-icon">+</span></button><div class="faq-a">Pricing depends on the scope and scale. Ask Wakefield is a public-facing product with its own domain and live search — a different conversation from a standard business widget. Get in touch and we'll talk through what makes sense. <a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a> or <a href="tel:07544833862">07544 833 862</a>.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Is a Mediahubink agent GDPR compliant?</span><span class="faq-icon">+</span></button><div class="faq-a">We design deployments with UK GDPR requirements in mind. The final compliance position depends on the client's data, configuration, providers, retention settings and operating procedures. A Data Processing Agreement can be provided where appropriate.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Will an AI agent replace my staff?</span><span class="faq-icon">+</span></button><div class="faq-a">No. AI agents handle repetitive, out-of-hours, and high-volume enquiries so your team can focus on higher-value work. Complex queries get flagged for a human. Your team stays in control.</div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span class="faq-q-text">Could Wakefield Council get its own version?</span><span class="faq-icon">+</span></button><div class="faq-a">Absolutely — and Ask Wakefield exists to demonstrate exactly that. A purpose-built council assistant could handle resident enquiries around the clock, reduce call centre volume, and give people instant answers in plain English. If you work in Wakefield Council's digital or customer services team, we'd welcome a conversation. <a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a></div></div>
+  <div class="trust-grid">
+    <div class="trust-item"><button class="trust-q" onclick="toggleTrust(this)"><span>Is this an official Wakefield Council service?</span><span>+</span></button><div class="trust-a">No. Ask Wakefield is an independent tool built by <a href="https://mediahubink.com" target="_blank" rel="noopener">Mediahubink</a>. For official council services visit <a href="https://www.wakefield.gov.uk" target="_blank" rel="noopener">wakefield.gov.uk</a> or call 0345 8 506 506.</div></div>
+    <div class="trust-item"><button class="trust-q" onclick="toggleTrust(this)"><span>Can the AI get things wrong?</span><span>+</span></button><div class="trust-a">Yes. Ask Wakefield is designed to use current and official sources where appropriate, but AI can still make mistakes. Verify important information before acting on it.</div></div>
+    <div class="trust-item"><button class="trust-q" onclick="toggleTrust(this)"><span>What happens to my messages?</span><span>+</span></button><div class="trust-a">Messages are sent to our AI service provider to generate a response. Ask Wakefield does not create a saved customer chat history for you on this website. Provider-side technical retention may apply, so please do not submit sensitive personal information.</div></div>
+    <div class="trust-item"><button class="trust-q" onclick="toggleTrust(this)"><span>How are changing facts checked?</span><span>+</span></button><div class="trust-a">For changing information such as events, opening times, travel, parking and some local services, Ask Wakefield can check current trusted sources when available and show source links in the chat.</div></div>
   </div>
-</div>
+</section>
 
-<div class="contact-section">
-  <div class="contact-inner">
-    <div class="contact-block">
-      <div class="contact-label">Email us</div>
-      <div class="contact-value"><a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a></div>
-      <div class="contact-note">We aim to respond within one business day.</div>
-    </div>
-    <div class="contact-block">
-      <div class="contact-label">Call or WhatsApp</div>
-      <div class="contact-value"><a href="tel:07544833862">07544 833 862</a></div>
-      <div class="contact-note">West Yorkshire · Mon–Fri 9am–6pm · WhatsApp welcome</div>
+<!-- FOR ORGANISATIONS -->
+<section class="org-cta" aria-labelledby="org-title">
+  <div class="org-cta-inner">
+    <div class="org-cta-copy">
+      <div class="section-kicker">For organisations</div>
+      <h2 id="org-title">Want something like Ask Wakefield for your organisation?</h2>
+      <p>See how Mediahubink builds branded AI assistants for businesses and organisations, including embedded website chat, local knowledge and enquiry handling.</p>
+      <a class="org-button" href="/for-organisations">See how it works →</a>
     </div>
   </div>
-</div>
+</section>
 
-<footer>
-  <div class="footer-left">
-    Ask Wakefield is an independent tool. For official council services: <a href="https://www.wakefield.gov.uk" target="_blank">wakefield.gov.uk</a> &nbsp;·&nbsp; 0345 8 506 506 &nbsp;·&nbsp; Built by <a href="https://mediahubink.com" target="_blank">Mediahubink Limited</a>
+<footer class="public-footer">
+  <div class="public-footer-main">
+    Ask Wakefield is an independent tool. For official council services: <a href="https://www.wakefield.gov.uk" target="_blank" rel="noopener">wakefield.gov.uk</a> &nbsp;·&nbsp; 0345 8 506 506<br/>
+    Built by <a href="https://mediahubink.com" target="_blank" rel="noopener">Mediahubink Limited</a> &nbsp;·&nbsp; <a href="mailto:hello@mediahubink.com">hello@mediahubink.com</a>
   </div>
-  <div class="footer-right">Mediahubink Limited · Company No. 17218602<br/>7 Tileyard North, Wakefield WF1 5FY</div>
+  <div class="public-footer-side">Mediahubink Limited · Company No. 17218602<br/>7 Tileyard North, Wakefield WF1 5FY</div>
 </footer>
-<div style="max-width:860px;margin:-24px auto 0;padding:0 0 40px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(17,17,17,0.28);letter-spacing:0.06em;">
-  Hero & district imagery: illustrative visuals created for Ask Wakefield.
-</div>
+<div class="image-credit">Hero &amp; district imagery: illustrative visuals created for Ask Wakefield.</div>
 
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -535,7 +646,7 @@ function greeting() {
   return 'Good evening';
 }
 function welcomeText() {
-  return greeting() + ". Ask me about what's on, restaurants, family days out, attractions, transport or council-service links across the Wakefield district. For things that change, like events, opening times and travel, I'll check current sources where available.";
+  return greeting() + ". Ask me about what's on, restaurants, family days out, sport and fitness, local clubs, attractions, transport or council-service links across the Wakefield district. For things that change, like events, opening times and travel, I'll check current sources where available.";
 }
 document.getElementById('welcomeMsg').textContent = welcomeText();
 
@@ -794,6 +905,13 @@ function resetChat() {
 })();
 
 // FAQ
+function toggleTrust(btn) {
+  var item = btn.closest('.trust-item');
+  var wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.trust-item.open').forEach(function(el) { el.classList.remove('open'); });
+  if (!wasOpen) item.classList.add('open');
+}
+
 function toggleFaq(btn) {
   var item = btn.closest('.faq-item');
   var isOpen = item.classList.contains('open');

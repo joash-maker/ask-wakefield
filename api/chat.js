@@ -181,6 +181,7 @@ AFTER-SCHOOL, YOUTH & LEARNING:
 - **Wakefield Library Code Club** at Wakefield One is a free term-time coding club using Scratch, Python and HTML. The current Council events listing shows Thursday sessions from 16:00–17:00 with booking required. Verify the date before telling someone it is running on a particular week. Source: wakefield.gov.uk library events.
 - **Wakefield Scouts** has local Squirrel, Beaver, Cub, Scout and Explorer groups across the district, including Crofton, Horbury Bridge, Ossett, Thornes, Newmillerdam, Outwood, Stanley, Sandal, Wrenthorpe and other areas. Group nights vary by section and location. Source: wakefieldscouts.org.uk/local-groups/.
 - **ElliTe Studios Junior Dance Academy** at Thornes Park offers extra-curricular dance training for ages 3–18 in a range of styles, with a specialist under-6 programme and ISTD pathways. Verify the current timetable and availability before quoting a class time. Source: ellitestudios.co.uk.
+- **The Verge | House of Performance** is based at Central Buildings, The Bull Ring, Wakefield WF1 1HA. It provides professional-level performance training from age 5 through adults. The FOUNDATIONS track is for ages 5–8, while STAGE focuses on acting, singing and dance/musical theatre, TECHNIQUE on ballet and contemporary, and INDUSTRY on commercial dance, street and heels for older performers. The venue also has an in-house theatre and regular performance opportunities. Verify current programme places, auditions, timetable and fees before quoting specifics. Source: thevergehouse.com. Current social channels supplied by the venue/user include instagram.com/thevergedanceunit/ and the club's Facebook/TikTok profiles.
 - **Aspire Junior Gym** gives ages 11–15 access to gym facilities. Staff-led Junior Gym sessions can be attended without an adult; general access outside those sessions requires the Council's stated supervision/induction rules. Verify centre-specific session times before recommending one. Source: wakefield.gov.uk junior gym.
 - **Taekwondo at Featherstone Sports Complex** is currently listed by Wakefield Council for ages 6+, beginners welcome, with Monday and Wednesday evening sessions and Saturday afternoon sessions. Verify current prices/times before travel. Source: wakefield.gov.uk.
 - **Kip McGrath Wakefield West** provides English and maths tutoring from Reception to Year 13, including SATs, GCSE, A-Level and 11+ support. Current centre hours include Monday–Thursday after-school sessions and Saturday mornings. Source: kipmcgrath.co.uk/wakefield-west.
@@ -241,6 +242,7 @@ const TRUSTED_DOMAINS = [
   'theatreroyalwakefield.co.uk',
   'wakefieldscouts.org.uk',
   'ellitestudios.co.uk',
+  'thevergehouse.com',
   'kipmcgrath.co.uk',
   'wakefieldmusicservices.org'
 ];

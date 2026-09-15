@@ -176,6 +176,16 @@ DADS, PARENTS & COMMUNITY SUPPORT:
 - **Dad Matters Wakefield & District** offers peer support for dads and male carers, including hospital outreach, one-to-one support and Walk & Talk sessions for dads with babies and children. Current dates and venues change, so use dadmattersyorkshire.uk/wakefield/ for the latest programme and contacts.
 - Dad Matters is support-focused, not merely an activity club. Respond sensitively when a user asks about parenting, isolation, anxiety, stress or family support, and direct them to the current local service rather than diagnosing or counselling beyond scope.
 
+AFTER-SCHOOL, YOUTH & LEARNING:
+- **Theatre Royal Wakefield Performance Academy** runs Saturday term-time musical-theatre training. PA Kids is for ages 5–6 and Performance Academy is for ages 7–18. The Wakefield academy currently reports a waiting list, so verify spaces before suggesting someone can join immediately. Source: theatreroyalwakefield.co.uk/take-part/performance-academy.
+- **Wakefield Library Code Club** at Wakefield One is a free term-time coding club using Scratch, Python and HTML. The current Council events listing shows Thursday sessions from 16:00–17:00 with booking required. Verify the date before telling someone it is running on a particular week. Source: wakefield.gov.uk library events.
+- **Wakefield Scouts** has local Squirrel, Beaver, Cub, Scout and Explorer groups across the district, including Crofton, Horbury Bridge, Ossett, Thornes, Newmillerdam, Outwood, Stanley, Sandal, Wrenthorpe and other areas. Group nights vary by section and location. Source: wakefieldscouts.org.uk/local-groups/.
+- **ElliTe Studios Junior Dance Academy** at Thornes Park offers extra-curricular dance training for ages 3–18 in a range of styles, with a specialist under-6 programme and ISTD pathways. Verify the current timetable and availability before quoting a class time. Source: ellitestudios.co.uk.
+- **Aspire Junior Gym** gives ages 11–15 access to gym facilities. Staff-led Junior Gym sessions can be attended without an adult; general access outside those sessions requires the Council's stated supervision/induction rules. Verify centre-specific session times before recommending one. Source: wakefield.gov.uk junior gym.
+- **Taekwondo at Featherstone Sports Complex** is currently listed by Wakefield Council for ages 6+, beginners welcome, with Monday and Wednesday evening sessions and Saturday afternoon sessions. Verify current prices/times before travel. Source: wakefield.gov.uk.
+- **Kip McGrath Wakefield West** provides English and maths tutoring from Reception to Year 13, including SATs, GCSE, A-Level and 11+ support. Current centre hours include Monday–Thursday after-school sessions and Saturday mornings. Source: kipmcgrath.co.uk/wakefield-west.
+- **Wakefield Music Services** provides instrumental tuition across many instruments through schools/academies and direct routes, with some adult options. Availability and fees depend on instrument and setting. Source: wakefieldmusicservices.org.
+
 OTHER SPORTS & CLUBS:
 Wakefield has local football, rugby league and rugby union, cycling, tennis, martial arts, bowls, dance, disability sport and other clubs. If a user asks for a specific sport, search current first-party or governing-body sources rather than saying the category is unavailable. Ask age, location and ability level when that would materially improve the recommendation.
 
@@ -227,7 +237,12 @@ const TRUSTED_DOMAINS = [
   'playtomic.com',
   'dadmattersyorkshire.uk',
   'home-start.org.uk',
-  'englandathletics.org'
+  'englandathletics.org',
+  'theatreroyalwakefield.co.uk',
+  'wakefieldscouts.org.uk',
+  'ellitestudios.co.uk',
+  'kipmcgrath.co.uk',
+  'wakefieldmusicservices.org'
 ];
 
 const rateLimitMap = new Map();
@@ -279,7 +294,7 @@ function needsLiveSearch(messages) {
   const context = recentUserContext(messages);
   if (/https?:\/\//i.test(last)) return true;
 
-  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming|swimming lessons?|swim lessons?|running clubs?|run clubs?|parkrun|athletics clubs?|gyms?|fitness classes?|padel|walking clubs?|walking groups?|health walks?|nordic walks?|hiking clubs?|ramblers?|cricket clubs?|cricket training|cricket fixtures?|sports clubs?|dad matters|dads groups?|dad groups?|father support|parent support|family hubs?)\b/i;
+  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming|swimming lessons?|swim lessons?|running clubs?|run clubs?|parkrun|athletics clubs?|gyms?|fitness classes?|padel|walking clubs?|walking groups?|health walks?|nordic walks?|hiking clubs?|ramblers?|cricket clubs?|cricket training|cricket fixtures?|sports clubs?|dad matters|dads groups?|dad groups?|father support|parent support|family hubs?|after[- ]school|dance classes?|performing arts|drama classes?|code club|coding club|scouts?|beavers?|cubs?|explorers?|martial arts|taekwondo|karate|junior gym|tutoring|tuition|music lessons?|instrumental lessons?)\b/i;
   if (liveTerms.test(context)) return true;
 
   // Nearby/local-intent queries benefit from current source checks, especially
@@ -292,7 +307,7 @@ function needsLiveSearch(messages) {
 
 function requiresVerifiedSource(messages) {
   const context = recentUserContext(messages);
-  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost|swimming lessons?|running clubs?|parkrun|gyms?|padel|walking groups?|health walks?|nordic walks?|ramblers?|cricket clubs?|cricket fixtures?|dad matters|dads groups?)\b/i.test(context);
+  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost|swimming lessons?|running clubs?|parkrun|gyms?|padel|walking groups?|health walks?|nordic walks?|ramblers?|cricket clubs?|cricket fixtures?|dad matters|dads groups?|after[- ]school|dance classes?|performing arts|code club|coding club|scouts?|martial arts|taekwondo|karate|junior gym|tutoring|music lessons?)\b/i.test(context);
 }
 
 function verificationFallback(messages) {
@@ -315,7 +330,7 @@ function verificationFallback(messages) {
   if (/tk\s?maxx?|store|shop/.test(last)) {
     return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
   }
-  if (/running|parkrun|athletics|gym|fitness|padel|walking|hiking|ramblers|cricket|swimming lessons?|dad matters|dads group|father support/.test(last)) {
+  if (/running|parkrun|athletics|gym|fitness|padel|walking|hiking|ramblers|cricket|swimming lessons?|dad matters|dads group|father support|after[- ]school|dance|performing arts|code club|coding|scouts?|martial arts|taekwondo|karate|junior gym|tutoring|music lessons?/.test(last)) {
     return 'I could not verify the current club, session or timetable from a trusted source just now, so I do not want to give you an outdated time or booking detail. Tell me the activity, age group and part of the Wakefield district you are interested in, and I can narrow it down to the most relevant current options.';
   }
   return 'I could not verify that current information from a trusted source just now, so I do not want to guess. Please check the relevant official venue or service website.';

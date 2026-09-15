@@ -1,15 +1,31 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/submit-event", "destination": "/submit-event.html" }
+    {
+      "source": "/submit-event",
+      "destination": "/submit-event.html"
+    },
+    {
+      "source": "/for-organisations",
+      "destination": "/for-organisations.html"
+    }
   ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
       ]
     }
   ]

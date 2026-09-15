@@ -29,6 +29,14 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - Never invent current facts, opening times, prices, event dates, transport times, closures, deadlines, availability or eligibility rules.
 - **DATE ACCURACY:** Never calculate a weekday or calendar date from memory. For relative dates such as today, tonight, tomorrow, day after tomorrow and this weekend, use the exact server-supplied RELATIVE DATE MAP. If a source says a venue opens on certain weekdays, compare that rule against the mapped weekday before answering.
 - **LOCATION ACCURACY:** Never infer that a Wakefield place is near another town, neighbourhood, station, road or landmark unless that relationship is explicitly stated in this knowledge base or verified from a trusted source. Never invent distances, areas, postcodes, journey times or geographic relationships. If uncertain, omit the detail or verify it.
+- **WALKING-DISTANCE ACCURACY:** Do not invent walking times, cardinal directions or claims such as "ten minutes away". If the user asks what is nearby or within walking distance, use a current/official source where possible and give exact distances/times only when verified. Otherwise name central options without a made-up minute estimate.
+- **FALSE-PREMISE CHECK:** If the user says "I heard...", "my mate says...", or embeds a claim about current opening, price, closure, store presence or availability, do not accept the premise. Verify it from a current first-party source before agreeing or correcting it.
+- **TONIGHT MEANS EVENING:** Unless the user gives another time, interpret "tonight" as roughly 17:00 onward in Europe/London. Do not recommend a gallery, museum, cafe or attraction that closes at 17:00 as a tonight activity. Only recommend something for tonight when its opening/event time overlaps the evening or you explicitly say it is a daytime option instead.
+- **DATED EVENT MATCHING:** Never use an old, seasonal or different-day event merely because it appears in search results. For "tomorrow", "next Saturday", "this weekend" or another date request, the event's published date must explicitly match the mapped/requested date before you present it as happening then.
+- **WATER SAFETY:** Canoeing, kayaking, paddleboarding, swimming and launching craft are safety- and permission-sensitive. Verify the specific water body's current rules before recommending entry. Never infer that a lake is suitable for paddling because it is scenic or has historic water-sports associations.
+- **PARKING ACCURACY:** Parking terms can lead to fines. Never invent or generalise supermarket, shopping-centre, residential-street or council parking allowances. Verify the exact current scheme and remind users to check signs/ticket requirements where relevant.
+- **RETAIL ACCURACY:** Shops open, close and move. If asked whether a named retailer currently exists in Wakefield, verify against the retailer or shopping centre's current listing before answering.
+- **USER-SUPPLIED LINKS:** When the server provides content fetched from a trusted URL supplied by the user, use that content directly and acknowledge what it confirms. Never say "I cannot access external links" when a trusted-page snapshot has been supplied to you.
 - **ENTITY SEPARATION:** Keep facts attached to the correct named place. Never transfer an acreage, route number, opening time, price, award, address or facility from one Wakefield venue to another. In particular, YSP's 500-acre landscape is a Yorkshire Sculpture Park fact and must never be attributed to Newmillerdam.
 - **VENUE IDENTITY:** If the user names a venue or place that you cannot verify, do not silently substitute a similarly named venue. Say you cannot verify it and ask for clarification. Never infer that an outdoor space is open tonight merely because a source says it is open daily; use explicit current opening hours or say the evening access time is not confirmed.
 - **TRANSPORT ACCURACY:** Never invent a railway station, bus route, tram route, stop, connection or journey time. For route planning and exact public-transport times, verify against an official/current source. If you cannot verify it, say so and point to National Rail or West Yorkshire Metro.
@@ -81,6 +89,14 @@ WAKEFIELD MUMBLER: Family and parenting community — wakefield.mumbler.co.uk. B
 
 NEWMILLERDAM COUNTRY PARK: A large woodland country park and Local Nature Reserve about 3.5 miles south of Wakefield on the A61 (Barnsley Road). It has a central lake, a 1.5-mile surfaced lakeside path and way-marked trails. The park is open every day. Pay-and-display parking applies and toilets may carry a charge. The family-friendly Gnome Roam is associated with Newmillerdam. **The Boathouse Newmillerdam** is a waterside cafe. Do not add an estimated driving, bus, cycling or walking time unless a current route source verifies it. For current parking, access, facilities and cafe details use wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/newmillerdam-country-park and Experience Wakefield. Do not state an acreage for Newmillerdam unless a trusted source in the current request verifies it.
 
+PUGNEYS COUNTRY PARK: Asdale Road / Denby Dale Road, Wakefield WF2 7BN. Wakefield Council says Pugneys is now a countryside site and NO LONGER offers water-sport activities or fishing. For safety, visitors must not enter the lake by any means, including swimming, paddleboarding or kayaking. Do not recommend Pugneys for canoeing or paddling. Verify current opening/parking/facilities at wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/pugneys-country-park.
+
+WAKEFIELD WATERWAYS: Wakefield DOES have a navigable waterway. The Wakefield Branch of the Aire & Calder Navigation is approximately 7.5 miles long and links Wakefield to Castleford. For canoe/kayak launch access, licences, stoppages and navigation rules, verify current guidance with the Canal & River Trust at canalrivertrust.org.uk. Never recommend Newmillerdam or Pugneys for paddling unless an official current source explicitly allows it.
+
+WAKEFIELD PARKING: Wakefield Council currently states that up to two hours free parking is available in some Council-owned off-street car parks. A ticket must still be obtained from the machine and displayed, and users must check the car-park notice board for current restrictions. Do not claim supermarket or retail-centre parking is free unless verified from that operator's current terms. Merchant Gate and country parks have different arrangements and must not be assumed to be included.
+
+TRINITY WALK / TK MAXX: Trinity Walk is a Wakefield city-centre shopping centre at WF1 1QS. Its current store directory lists TK Maxx. Because retail tenants and opening hours can change, verify current status at trinitywalk.com or the retailer when asked.
+
 KEY ATTRACTIONS: Thornes Park (playgrounds and large green spaces). National Coal Mining Museum, Overton WF4 4RH (underground tours and mining heritage). Nostell (National Trust estate near Pontefract). Xscape Yorkshire, Glasshoughton (indoor leisure and entertainment). Wakefield Cathedral (historic city-centre cathedral). Pontefract Castle (historic castle site). Pugneys Country Park (lake and outdoor recreation). Wakefield Museum WF1 2UP. For changing details such as opening times, prices, activities and events, verify current information before stating it.
 
 RESTAURANTS: **Tet Restaurant** (Best Restaurant Wakefield 2024, Thai/Vietnamese fusion — a grand choice for a special evening). **Wentbridge House Hotel** (2 AA Rosette fine dining, 20 acres near Pontefract — spot on for Sunday lunch or a proper occasion). **The Weston at YSP** (modern British inside Yorkshire Sculpture Park, panoramic views, locally sourced — rather splendid). **Three Flames** (premium steakhouse, M1 Junction 40, A5 Wagyu — first-rate for meat lovers). **Estabulo Rodizio** (Brazilian churrasco, unlimited grilled meats at the table — grand for groups). **Qubana** (tapas, rooftop terrace — a fine choice on a warm evening). **Rustico** (family Italian, Kirkgate — reliable and good value). **Rice N Spice** (widely regarded as Wakefield's finest Indian). **Mimik Sushi & Ramen** (Japanese, near The Hepworth). **The Boathouse, Newmillerdam** (Georgian lakeside cafe, dog-friendly — lovely after a walk through the park). More at yorkshirefoodguide.co.uk/wakefield-restaurants.
@@ -116,14 +132,52 @@ DINING & FOOD:
 
 COFFEE & INFORMAL MEETINGS:
 - **The ESC — Elevate Social Club** — Joash's personal favourite and the place where many of Mediahubink's best ideas were born. Specialty roasted coffee, matcha lattes, protein smoothies, yoghurt bowls and high quality prep meals. Work-friendly — WiFi, plug sockets, easy listening music and chilled vibes. Ample free parking. Situated near the River Calder, close to Junction 41 off the M1. Sunday Run Club at 8am. instagram.com/_elevatesocialclub — a genuinely grand spot to think, plan and escape.
-- **Recent Coffee** — Wakefield's finest specialty coffee. recent.coffee. A spot on choice for a proper brew.
-- **Vinyl Cafe North at Tilyard North** — coffee and vinyl in a creative space. tileyardnorth.co.uk/vinylcafenorth. Rather grand atmosphere.
+- **Recent Coffee** — independent specialty coffee in Wakefield. recent.coffee. A Mediahubink favourite for a proper brew.
+- **Vinyl Cafe North at Tileyard North** — coffee and vinyl in a creative space. tileyardnorth.co.uk/vinylcafenorth. Rather grand atmosphere.
 - **Create Cafe Wakefield** — community cafe with a warm welcome. createcafewakefield.co.uk
 - **Costa Coffee** — Joash's go-to for informal client meetings. Comfortable, convenient, reliable. costa.co.uk
 
 ARTS & CULTURE VENUES (also worth noting):
 - **The Art House** — independent arts venue, creative hub. the-arthouse.org.uk
 - **The Ridings Centre** — Wakefield's main shopping centre. ridingscentre.com
+
+
+SPORTS, FITNESS & COMMUNITY:
+Use current/first-party sources for training times, class timetables, memberships, prices, age groups, booking availability and club status. Clubs and programmes change, so do not present an old timetable as current.
+
+RUNNING & ATHLETICS:
+- **Wakefield District Harriers & AC** — based at Thornes Park Stadium. Their current Road & Cross Country page lists Tuesday and Thursday training from 19:00–20:00, with groups for different abilities. Source: wakefieldharriers.co.uk.
+- Wakefield also has local running communities and parkrun events. Verify the current event page before giving start times, cancellations or course information. Trusted sources include parkrun.org.uk and club websites.
+- **Carleton Running Community** in Pontefract is a social running community for a range of abilities. Verify current sessions directly before quoting times or fees. Source: carletonrunning.co.uk.
+
+WALKING, NORDIC WALKING & HIKING:
+- Wakefield Council publishes a live Walking Groups Timetable with Health Walks and Nordic Walks across the district, including Wakefield, Horbury, Newmillerdam, Nostell, Pugneys, Walton, Pontefract, Castleford and other areas. Many sessions are free, but always verify the specific date, meeting point, difficulty, dog policy and whether booking is required. Source: wakefield.gov.uk/walking and the Council walking-groups timetable.
+- **Wakefield and District Ramblers** organises guided group walks ranging from easier local walks to longer moderate routes. Use ramblers.org.uk for current walks, distances, difficulty and meeting points.
+
+GYMS & FITNESS:
+- Wakefield Council's **Aspire** network includes Sun Lane Leisure, Aspire @ The Park, Featherstone Sports Complex, Minsthorpe Leisure, Normanton Leisure and Thornes Park Stadium. Aspire offers gyms, swimming and fitness classes, with memberships and Pay & Play options. Source: wakefield.gov.uk/sport-and-leisure.
+- Private gyms also operate throughout the district. For recommendations, verify the current location, facilities, opening hours, membership terms and whether the user wants 24-hour access, classes, strength training, budget or family facilities before ranking them.
+
+SWIMMING — CHILDREN & ADULTS:
+- Wakefield Council's STA Swim Academy offers lessons from age 1 through adulthood. Adult beginner and improver lessons are available, plus junior programmes including SEND swimming for ages 5+. Source: wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons.
+- **Sun Lane Leisure** has a 6-lane 25m pool plus a smaller pool. **Aspire @ The Park** has a 10-lane 25m pool. **Minsthorpe Leisure** has a 6-lane 25m pool. Always use the live Council timetable for public swims, lane swims, family sessions and lessons.
+
+PADEL:
+- **Midfield Padel & Wellness Centre**, East Ardsley, currently operates indoor padel courts. Verify current booking slots and prices through the venue/booking platform before recommending a specific session.
+- **Castle Padel Club** at Sandal Rugby Club is a new Wakefield padel project. Its official website has recently described the venue as 'opening soon', while third-party listings may show hours. Treat its operating status as changeable and verify directly before telling a user it is open or bookable.
+
+CRICKET:
+- **Calder Grove Cricket Club** is Ask Wakefield's primary local cricket listing. The club is based on Denby Dale Road, Calder Grove, Wakefield WF4 3DP and competes in the Pontefract & District Cricket League. Current club activity includes senior cricket, junior sessions and women's cricket. Verify current teams, fixtures, training and membership through caldergrove.play-cricket.com and the club's current social channels before giving specific times.
+- Calder Grove also has a notable community-service history. Cricket Yorkshire documented how club volunteers built a community food-bank response during the pandemic. Treat that as historical context unless current activity is separately verified.
+- Wakefield district also has other cricket clubs. If the user asks for alternatives, location-specific options, a particular age group or women's/girls' cricket, search current first-party or Play-Cricket sources rather than presenting a single club as objectively the best.
+- **Stumps Indoor Cricket Nets** in Wakefield can be useful for indoor practice. Verify current booking availability and prices before recommending.
+
+DADS, PARENTS & COMMUNITY SUPPORT:
+- **Dad Matters Wakefield & District** offers peer support for dads and male carers, including hospital outreach, one-to-one support and Walk & Talk sessions for dads with babies and children. Current dates and venues change, so use dadmattersyorkshire.uk/wakefield/ for the latest programme and contacts.
+- Dad Matters is support-focused, not merely an activity club. Respond sensitively when a user asks about parenting, isolation, anxiety, stress or family support, and direct them to the current local service rather than diagnosing or counselling beyond scope.
+
+OTHER SPORTS & CLUBS:
+Wakefield has local football, rugby league and rugby union, cycling, tennis, martial arts, bowls, dance, disability sport and other clubs. If a user asks for a specific sport, search current first-party or governing-body sources rather than saying the category is unavailable. Ask age, location and ability level when that would materially improve the recommendation.
 
 WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefield. Population 2.4m. Mayor: Tracy Brabin. westyorks-ca.gov.uk. London approximately 2 hours from Wakefield Westgate by train. Birthplace of **Barbara Hepworth** (Wakefield) and **Henry Moore** (Castleford) — the artistic heritage of this corner of Yorkshire is without equal. Key towns: Leeds (Royal Armouries, major arts scene), Bradford (National Science & Media Museum — free, Saltaire World Heritage Site), Halifax (The Piece Hall — stunning Grade I listed, free entry), Hebden Bridge (bohemian, independent shops, Calder Valley walks), Haworth (Brontë country, steam railway), Ilkley (spa town, Ilkley Moor, Box Tree restaurant), Huddersfield (university town, gateway to the Peak District).`;
 
@@ -156,7 +210,24 @@ const TRUSTED_DOMAINS = [
   'tileyardnorth.co.uk',
   'gov.uk',
   'planningportal.co.uk',
-  'guide.michelin.com'
+  'guide.michelin.com',
+  'canalrivertrust.org.uk',
+  'trinitywalk.com',
+  'tkmaxx.com',
+  'ridingscentre.com',
+  'recent.coffee',
+  'bobandberts.co.uk',
+  'wakefieldharriers.co.uk',
+  'parkrun.org.uk',
+  'carletonrunning.co.uk',
+  'ramblers.org.uk',
+  'play-cricket.com',
+  'castlepadelclub.com',
+  'midfield-ltd.co.uk',
+  'playtomic.com',
+  'dadmattersyorkshire.uk',
+  'home-start.org.uk',
+  'englandathletics.org'
 ];
 
 const rateLimitMap = new Map();
@@ -193,14 +264,35 @@ function sanitiseMessages(messages) {
   return bounded;
 }
 
+function recentUserContext(messages, maxUserMessages = 3) {
+  if (!Array.isArray(messages)) return '';
+  return messages
+    .filter(m => m?.role === 'user' && typeof m.content === 'string')
+    .slice(-maxUserMessages)
+    .map(m => m.content)
+    .join('\n')
+    .toLowerCase();
+}
+
 function needsLiveSearch(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
-  return /\b(today|tonight|tomorrow|this week|this weekend|weekend|right now|currently|current|latest|live|open now|opening hours?|closing time|what'?s on|happening|events?|tickets?|prices?|costs?|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand)\b/.test(last);
+  const context = recentUserContext(messages);
+  if (/https?:\/\//i.test(last)) return true;
+
+  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming|swimming lessons?|swim lessons?|running clubs?|run clubs?|parkrun|athletics clubs?|gyms?|fitness classes?|padel|walking clubs?|walking groups?|health walks?|nordic walks?|hiking clubs?|ramblers?|cricket clubs?|cricket training|cricket fixtures?|sports clubs?|dad matters|dads groups?|dad groups?|father support|parent support|family hubs?)\b/i;
+  if (liveTerms.test(context)) return true;
+
+  // Nearby/local-intent queries benefit from current source checks, especially
+  // when the user supplies a postcode, landmark or walking-distance request.
+  if (/\b(near|nearby|within walking distance|walking distance|close to|around)\b/i.test(context) &&
+      /\b(restaurant|meal|eat|dining|coffee|cafe|park|shop|parking|attraction|cathedral|tileyard|asda|wf\d{1,2})\b/i.test(context)) return true;
+
+  return false;
 }
 
 function requiresVerifiedSource(messages) {
-  const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
-  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|what'?s on|happening|this weekend|weekend|michelin|bib gourmand)\b/.test(last);
+  const context = recentUserContext(messages);
+  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost|swimming lessons?|running clubs?|parkrun|gyms?|padel|walking groups?|health walks?|nordic walks?|ramblers?|cricket clubs?|cricket fixtures?|dad matters|dads groups?)\b/i.test(context);
 }
 
 function verificationFallback(messages) {
@@ -213,6 +305,18 @@ function verificationFallback(messages) {
   }
   if (/michelin|bib gourmand/.test(last)) {
     return 'I could not verify the current Michelin Guide status from a trusted source just now, so I do not want to label any Wakefield restaurant as Michelin-starred. Please check the Michelin Guide for the current West Yorkshire listings.';
+  }
+  if (/canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|swim|swimming/.test(last)) {
+    return 'I could not verify a safe, permitted launch point from an official source just now, so I do not want to send you onto the wrong water. Pugneys Country Park currently prohibits entering the lake, including kayaking and paddleboarding. For navigable waterways around Wakefield, check the Canal & River Trust guidance for the Wakefield Branch of the Aire & Calder Navigation.';
+  }
+  if (/parking|free parking/.test(last)) {
+    return 'Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+  }
+  if (/tk\s?maxx?|store|shop/.test(last)) {
+    return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
+  }
+  if (/running|parkrun|athletics|gym|fitness|padel|walking|hiking|ramblers|cricket|swimming lessons?|dad matters|dads group|father support/.test(last)) {
+    return 'I could not verify the current club, session or timetable from a trusted source just now, so I do not want to give you an outdated time or booking detail. Tell me the activity, age group and part of the Wakefield district you are interested in, and I can narrow it down to the most relevant current options.';
   }
   return 'I could not verify that current information from a trusted source just now, so I do not want to guess. Please check the relevant official venue or service website.';
 }
@@ -334,6 +438,64 @@ async function fetchWxWhatsOnContext() {
 }
 
 
+function trustedHostname(hostname) {
+  const host = String(hostname || '').toLowerCase().replace(/^www\./, '');
+  return TRUSTED_DOMAINS.some(domain => host === domain || host.endsWith(`.${domain}`));
+}
+
+function extractTrustedUrlsFromLastUser(messages) {
+  const raw = messages?.[messages.length - 1]?.content || '';
+  const matches = raw.match(/https?:\/\/[^\s<>()]+/gi) || [];
+  const urls = [];
+  for (const value of matches.slice(0, 3)) {
+    try {
+      const parsed = new URL(value.replace(/[),.;]+$/, ''));
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') continue;
+      if (!trustedHostname(parsed.hostname)) continue;
+      urls.push(parsed.toString());
+    } catch {}
+  }
+  return [...new Set(urls)];
+}
+
+async function fetchTrustedUserUrlContext(messages) {
+  const urls = extractTrustedUrlsFromLastUser(messages);
+  if (!urls.length) return null;
+  const pages = [];
+
+  for (const url of urls) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8_000);
+    try {
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'AskWakefield/2.1 (+https://www.askwakefield.co.uk)' },
+        signal: controller.signal
+      });
+      if (!response.ok) continue;
+      try {
+        const finalUrl = new URL(response.url || url);
+        if (!trustedHostname(finalUrl.hostname)) continue;
+      } catch { continue; }
+      const type = response.headers.get('content-type') || '';
+      if (!/text\/html|text\/plain/i.test(type)) continue;
+      const text = htmlToPlainText(await response.text()).slice(0, 14000);
+      if (!text) continue;
+      pages.push({ url: response.url || url, text });
+    } catch (error) {
+      console.error('Trusted user URL fetch failed:', url, error?.message || error);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  if (!pages.length) return null;
+  return {
+    text: pages.map((page, i) => `USER-SUPPLIED TRUSTED PAGE ${i + 1}: ${page.url}\n${page.text}`).join('\n\n---\n\n').slice(0, 20000),
+    sources: pages.map(page => ({ title: new URL(page.url).hostname.replace(/^www\./, ''), url: page.url }))
+  };
+}
+
+
 function formatLondonDate(date) {
   return new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/London',
@@ -377,11 +539,13 @@ function londonContext() {
 
   const thisSaturday = formatLondonDate(new Date(now.getTime() + saturdayOffset * 24 * 60 * 60 * 1000));
   const thisSunday = formatLondonDate(new Date(now.getTime() + sundayOffset * 24 * 60 * 60 * 1000));
+  const followingSaturday = formatLondonDate(new Date(now.getTime() + (saturdayOffset + 7) * 24 * 60 * 60 * 1000));
 
   return [
     `CURRENT UK DATE AND TIME: ${today}, ${time} Europe/London.`,
-    `RELATIVE DATE MAP: Today = ${today}. Tonight = ${today}. Tomorrow = ${tomorrow}. Day after tomorrow = ${dayAfterTomorrow}. This weekend = Saturday ${thisSaturday.replace(/^Saturday\s+/, '')} and Sunday ${thisSunday.replace(/^Sunday\s+/, '')}.`,
-    'DATE ACCURACY RULE: When the user uses a relative date or period listed above, use the exact mapped date(s). Do not calculate or infer the weekday/date yourself. "This weekend" means the Saturday and Sunday in the map, not tomorrow or the next two calendar days.',
+    `RELATIVE DATE MAP: Today = ${today}. Tonight = ${today}, interpreted as 17:00 onward unless the user gives another time. Tomorrow = ${tomorrow}. Day after tomorrow = ${dayAfterTomorrow}. This weekend = Saturday ${thisSaturday.replace(/^Saturday\s+/, '')} and Sunday ${thisSunday.replace(/^Sunday\s+/, '')}. Following Saturday = ${followingSaturday}.`,
+    'DATE ACCURACY RULE: When the user uses a relative date or period listed above, use the exact mapped date(s). Do not calculate or infer the weekday/date yourself. "This weekend" means the Saturday and Sunday in the map, not tomorrow or the next two calendar days. If the phrase "next Saturday" is ambiguous in context, state the date you are using rather than hiding the interpretation.',
+    'TONIGHT FILTER RULE: For a request about something to do tonight, only present options whose verified opening/event time extends into the evening window from 17:00 onward. A place that closes at 17:00 is not a tonight recommendation.',
     'Use this context only when time or date matters. Do not start with a time-of-day greeting.'
   ].join('\n');
 }
@@ -493,16 +657,24 @@ export default async function handler(req, res) {
     wxContext = await fetchWxWhatsOnContext();
   }
 
+  const userUrlContext = await fetchTrustedUserUrlContext(messages);
+
   // WX event questions use the venue's first-party What's On page directly
   // when available. This is more reliable than asking a general search engine
   // to discover both days of a weekend listing.
   const useSearch = needsLiveSearch(messages) && !wxContext;
 
-  const directContext = wxContext
+  const wxDirectContext = wxContext
     ? `\n\nFIRST-PARTY WX CURRENT LISTING SNAPSHOT:\nSource: https://wxwakefield.co.uk/whats-on\nThis weekend is ${wxContext.dates.saturday} and ${wxContext.dates.sunday}.\nUse only the listing text below for WX event titles, dates, times and prices. Check BOTH weekend dates and list every matching event you can verify. Do not replace exact event titles with category labels.\n\n${wxContext.text}`
     : '';
 
-  const liveOutputContract = (useSearch || wxContext)
+  const userProvidedContext = userUrlContext
+    ? `\n\nTRUSTED USER-SUPPLIED PAGE SNAPSHOT:\nThe user supplied one or more trusted URLs and the server fetched them. Use this content directly where relevant. Do not claim you cannot access the link.\n\n${userUrlContext.text}`
+    : '';
+
+  const directContext = `${wxDirectContext}${userProvidedContext}`;
+
+  const liveOutputContract = (useSearch || wxContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
     : '';
 
@@ -552,6 +724,9 @@ export default async function handler(req, res) {
 
     const mergedSourceMap = new Map();
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);
+    for (const source of userUrlContext?.sources || []) {
+      if (source?.url) mergedSourceMap.set(source.url, source);
+    }
     for (const source of sources) {
       if (source?.url) mergedSourceMap.set(source.url, source);
     }
@@ -568,7 +743,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       reply: reply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: mergedSources,
-      live: searched || Boolean(wxContext)
+      live: searched || Boolean(wxContext) || Boolean(userUrlContext)
     });
   } catch (error) {
     console.error('Handler error:', error);

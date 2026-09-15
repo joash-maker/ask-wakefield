@@ -232,6 +232,7 @@
         </article>
 
       </div>
+      <div id="communityLoad" class="mono" style="font-size:9px;color:#999;margin-top:14px;letter-spacing:.08em;text-transform:uppercase">Loading approved community listings…</div>
       <div class="empty" id="empty"><h3>No exact matches yet.</h3><p>Try clearing a filter, or ask Ask Wakefield to look for something more specific. This directory is deliberately starting small and verified.</p><p style="margin-top:16px"><a class="btn primary" href="/?ask=Help%20me%20find%20an%20activity%20in%20Wakefield#assistant">Ask Wakefield</a></p></div>
 
       <section class="directory-cta">
@@ -246,19 +247,64 @@
 <script>
 (function(){
   var category=document.getElementById('category'), age=document.getElementById('age'), day=document.getElementById('day'), price=document.getElementById('price'), area=document.getElementById('area');
-  var cards=Array.prototype.slice.call(document.querySelectorAll('.card')); var count=document.getElementById('count'); var empty=document.getElementById('empty');
+  var cardsEl=document.getElementById('cards'), count=document.getElementById('count'), empty=document.getElementById('empty'), communityLoad=document.getElementById('communityLoad');
+  var cards=[];
+  function refreshCards(){cards=Array.prototype.slice.call(document.querySelectorAll('.card'));}
   function has(el,key,val){ if(val==='all') return true; var raw=(el.dataset[key]||'').toLowerCase(); if(key==='day' && raw.indexOf('varies')>-1) return true; if(key==='price' && raw.indexOf('varies')>-1 && val!=='free' && val!=='paid') return true; return raw.split(/\s+/).indexOf(val)>-1 || raw.indexOf(val)>-1; }
   function apply(){
+    refreshCards();
     var q=area.value.trim().toLowerCase(); var shown=0;
     cards.forEach(function(c){
       var ok=has(c,'category',category.value) && has(c,'age',age.value) && has(c,'day',day.value) && has(c,'price',price.value);
-      if(q){ var hay=(c.dataset.area+' '+c.innerText).toLowerCase(); ok=ok && hay.indexOf(q)>-1; }
+      if(q){ var hay=((c.dataset.area||'')+' '+c.innerText).toLowerCase(); ok=ok && hay.indexOf(q)>-1; }
       c.classList.toggle('hidden',!ok); if(ok) shown++;
     });
     count.textContent=shown+' '+(shown===1?'listing':'listings'); empty.classList.toggle('show',shown===0);
   }
+  function categoryTokens(item){
+    var map={
+      'After-school & kids':'after-school','Swimming':'swimming','Football':'football','Cricket':'cricket','Running & athletics':'running',
+      'Walking & hiking':'walking','Padel & racket sports':'padel','Gym & fitness':'fitness','Dance':'dance','Drama & performing arts':'drama',
+      'Martial arts':'martial-arts','Music':'music','Coding & STEM':'coding','Scouts & youth groups':'scouts','Tutoring':'tutoring',
+      'Parent & family support':'community','Community & volunteering':'community','Food & coffee':'food','Local service':'community','Other':'community'
+    };
+    var tokens=[map[item.category]||'community'];
+    if(/Children|Young people|Babies|Families/i.test(item.audience||'')) tokens.push('after-school');
+    return tokens.join(' ');
+  }
+  function ageTokens(audience){
+    var a=audience||'', out=[];
+    if(/Babies|toddlers/i.test(a)) out.push('under5');
+    if(/Children 5/i.test(a)) out.push('5-11');
+    if(/Young people/i.test(a)) out.push('12-17');
+    if(/Adults/i.test(a)) out.push('adult');
+    if(/Families|All ages/i.test(a)) out=['under5','5-11','12-17','adult'];
+    return out.length?out.join(' '):'under5 5-11 12-17 adult';
+  }
+  function dayTokens(value){
+    var names=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'], v=(value||'').toLowerCase(), out=names.filter(function(d){return v.indexOf(d)>-1 || v.indexOf(d.slice(0,3))>-1;});
+    return out.length?out.join(' '):'varies';
+  }
+  function priceToken(value){var v=(value||'').toLowerCase(); if(v.indexOf('free')>-1) return 'free'; if(v.indexOf('varies')>-1||v.indexOf('not specified')>-1) return 'varies'; return 'paid';}
+  function tag(text){var s=document.createElement('span');s.className='tag';s.textContent=text;return s;}
+  function actionLink(label,href,cls){var a=document.createElement('a');a.className=cls||'source';a.target='_blank';a.rel='noopener';a.href=href;a.textContent=label;return a;}
+  function addCommunityCard(item){
+    var card=document.createElement('article');card.className='card';card.dataset.category=categoryTokens(item);card.dataset.age=ageTokens(item.audience);card.dataset.day=dayTokens(item.daysTimes);card.dataset.price=priceToken(item.cost);card.dataset.area=((item.areaPostcode||'')+' '+(item.venue||'')+' '+(item.listingName||'')).toLowerCase();
+    var top=document.createElement('div');top.className='card-top';var cat=document.createElement('div');cat.className='category';cat.textContent=item.category||item.listingType||'Community listing';var ver=document.createElement('div');ver.className='verified';ver.textContent='Ask Wakefield directory · approved';top.append(cat,ver);card.appendChild(top);
+    var h=document.createElement('h3');h.textContent=item.listingName;card.appendChild(h);
+    var p=document.createElement('p');p.className='summary';p.textContent=item.description;card.appendChild(p);
+    var meta=document.createElement('div');meta.className='meta';[item.audience,item.daysTimes,item.cost,item.areaPostcode].filter(Boolean).slice(0,4).forEach(function(v){meta.appendChild(tag(v));});card.appendChild(meta);
+    var actions=document.createElement('div');actions.className='card-actions';var source=item.website||item.facebook||item.instagram||item.tiktok;if(source)actions.appendChild(actionLink('Provider source ↗',source,'source'));var ask=document.createElement('a');ask.className='ask';ask.href='/?ask='+encodeURIComponent('Tell me about '+item.listingName+' in Wakefield and check the latest details')+'#assistant';ask.textContent='Ask Wakefield';actions.appendChild(ask);card.appendChild(actions);
+    cardsEl.appendChild(card);
+  }
+  async function loadApproved(){
+    try{
+      var r=await fetch('/api/public-listings',{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('Could not load listings');var data=await r.json();(data.listings||[]).forEach(addCommunityCard);communityLoad.textContent=(data.listings||[]).length?'Approved community listings are included below.':'No community-submitted listings approved yet.';
+    }catch(e){communityLoad.textContent='Community listings are temporarily unavailable.';}
+    apply();
+  }
   [category,age,day,price].forEach(function(el){el.addEventListener('change',apply)}); area.addEventListener('input',apply);
-  var params=new URLSearchParams(location.search); ['category','age','day','price'].forEach(function(k){var v=params.get(k); if(v && document.getElementById(k).querySelector('option[value="'+v+'"]')) document.getElementById(k).value=v;}); if(params.get('area')) area.value=params.get('area'); apply();
+  var params=new URLSearchParams(location.search); ['category','age','day','price'].forEach(function(k){var v=params.get(k); if(v && document.getElementById(k).querySelector('option[value="'+v+'"]')) document.getElementById(k).value=v;}); if(params.get('area')) area.value=params.get('area'); apply();loadApproved();
 })();
 </script>
 </body>

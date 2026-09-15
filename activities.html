@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activities in Wakefield — Ask Wakefield</title>
+  <meta name="description" content="Find sports, after-school activities, swimming, running, walking, cricket, padel and community groups across the Wakefield district." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{--red:#e61c5d;--red-lt:#ff4d7a;--ink:#111;--dim:#737373;--line:rgba(17,17,17,.11);--paper:#faf9f7;--soft:#f3f0ed;}
+    *{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth}
+    body{font-family:'Syne',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+    a{color:inherit}.wrap{width:min(1180px,calc(100% - 40px));margin:0 auto}
+    .topbar{border-bottom:1px solid var(--line);background:rgba(250,249,247,.94);position:sticky;top:0;z-index:20;backdrop-filter:blur(12px)}
+    .topbar-in{height:68px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{text-decoration:none;display:flex;align-items:baseline;gap:8px}.brand-main{font-family:'Cormorant Garamond',serif;font-size:29px;font-weight:400}.brand-main em{font-style:italic;color:var(--red)}
+    .brand-sub{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:var(--dim)}
+    .top-actions{display:flex;gap:9px;align-items:center}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid var(--line);padding:10px 14px;border-radius:3px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:white}.btn.primary{background:var(--red);border-color:var(--red);color:white}.btn:hover{border-color:var(--red)}
+    .hero{padding:76px 0 44px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(230,28,93,.035),rgba(255,255,255,.7))}
+    .eyebrow{font-family:'DM Mono',monospace;color:var(--red);font-size:11px;text-transform:uppercase;letter-spacing:.18em;margin-bottom:14px}
+    h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(54px,8vw,92px);line-height:.94;max-width:850px}
+    .hero p{font-size:17px;line-height:1.75;color:var(--dim);max-width:760px;margin-top:18px}.hero-note{margin-top:22px;display:flex;gap:18px;flex-wrap:wrap;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#777}
+    .filters-wrap{padding:26px 0;border-bottom:1px solid var(--line);background:#fff}
+    .filters{display:grid;grid-template-columns:1.2fr repeat(4,1fr);gap:10px}.field label{display:block;font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.11em;color:var(--dim);margin:0 0 7px 2px}.field select,.field input{width:100%;height:44px;border:1px solid var(--line);background:var(--paper);border-radius:3px;padding:0 12px;font:13px 'Syne',sans-serif;color:var(--ink);outline:none}.field select:focus,.field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(230,28,93,.08)}
+    .main{padding:40px 0 72px}.results-bar{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:20px}.results-bar h2{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300}.count{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:5px;padding:24px;display:flex;flex-direction:column;min-height:300px;transition:.18s transform,.18s border-color,.18s box-shadow}.card:hover{transform:translateY(-2px);border-color:rgba(230,28,93,.28);box-shadow:0 12px 28px rgba(0,0,0,.045)}.card.hidden{display:none}
+    .card-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.category{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--red)}.verified{font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#909090;text-align:right}.card h3{font-family:'Cormorant Garamond',serif;font-size:31px;font-weight:400;line-height:1.05;margin-top:9px}.summary{font-size:13px;line-height:1.65;color:var(--dim);margin-top:11px;max-width:640px}
+    .meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}.tag{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 9px;font-size:10px;color:#555}.tag.alert{border-color:rgba(230,28,93,.2);background:rgba(230,28,93,.05);color:#a01648}
+    .card-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:auto;padding-top:22px}.source{display:inline-flex;align-items:center;text-decoration:none;border-bottom:1px solid rgba(230,28,93,.3);font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--red);padding-bottom:2px}.ask{display:inline-flex;text-decoration:none;border:1px solid var(--line);padding:8px 10px;border-radius:2px;font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.ask:hover{border-color:var(--red)}
+    .empty{display:none;border:1px dashed rgba(17,17,17,.18);padding:46px;text-align:center}.empty.show{display:block}.empty h3{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300}.empty p{color:var(--dim);line-height:1.6;margin-top:7px}
+    .directory-cta{margin-top:42px;border:1px solid var(--line);background:linear-gradient(135deg,rgba(230,28,93,.04),#fff);padding:32px;border-radius:5px;display:flex;justify-content:space-between;gap:30px;align-items:center}.directory-cta h3{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:38px}.directory-cta p{color:var(--dim);line-height:1.6;max-width:650px;margin-top:7px}
+    footer{border-top:1px solid var(--line);padding:28px 0 46px;color:#777;font-size:11px;line-height:1.6}.footer-in{display:flex;justify-content:space-between;gap:24px}.mono{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+    @media(max-width:900px){.filters{grid-template-columns:1fr 1fr}.field:first-child{grid-column:1/-1}.cards{grid-template-columns:1fr}.directory-cta{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.wrap{width:min(100% - 24px,1180px)}.brand-sub{display:none}.top-actions .btn:not(.primary){display:none}.hero{padding:52px 0 34px}h1{font-size:56px}.hero p{font-size:15px}.filters{grid-template-columns:1fr}.field:first-child{grid-column:auto}.results-bar{align-items:flex-start;flex-direction:column}.card{padding:20px;min-height:0}.directory-cta{padding:24px}.footer-in{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap topbar-in">
+      <a class="brand" href="/"><span class="brand-main">Ask <em>Wakefield</em></span><span class="brand-sub">Independent local assistant</span></a>
+      <div class="top-actions"><a class="btn" href="/#discover">Discover</a><a class="btn primary" href="/?ask=Help%20me%20find%20an%20activity%20in%20Wakefield#assistant">Ask Wakefield</a></div>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Activities · clubs · sport · community</div>
+      <h1>Find something to do in Wakefield.</h1>
+      <p>Start with verified local options for children, adults and families. Filter by activity, age, area, day and cost, then follow the provider's own source for the latest availability.</p>
+      <div class="hero-note"><span>Starter directory</span><span>Sources checked 15 Sep 2026</span><span>More listings coming</span></div>
+    </div>
+  </header>
+
+  <section class="filters-wrap" aria-label="Activity filters">
+    <div class="wrap filters">
+      <div class="field"><label for="area">Area or postcode</label><input id="area" type="search" placeholder="e.g. WF2, Thornes, Wakefield" /></div>
+      <div class="field"><label for="category">Activity</label><select id="category"><option value="all">All activities</option><option value="after-school">After-school & kids</option><option value="swimming">Swimming</option><option value="running">Running & athletics</option><option value="walking">Walking & hiking</option><option value="padel">Padel</option><option value="cricket">Cricket</option><option value="football">Football</option><option value="fitness">Gym & fitness</option><option value="community">Community & parents</option></select></div>
+      <div class="field"><label for="age">Age</label><select id="age"><option value="all">All ages</option><option value="under5">Under 5</option><option value="5-11">5–11</option><option value="12-17">12–17</option><option value="adult">Adults</option></select></div>
+      <div class="field"><label for="day">Day</label><select id="day"><option value="all">Any day</option><option value="monday">Monday</option><option value="tuesday">Tuesday</option><option value="wednesday">Wednesday</option><option value="thursday">Thursday</option><option value="friday">Friday</option><option value="saturday">Saturday</option><option value="sunday">Sunday</option></select></div>
+      <div class="field"><label for="price">Cost</label><select id="price"><option value="all">Any cost</option><option value="free">Free</option><option value="paid">Paid</option><option value="varies">Varies / check</option></select></div>
+    </div>
+  </section>
+
+  <main class="main">
+    <div class="wrap">
+      <div class="results-bar"><div><div class="eyebrow">Browse activities</div><h2>Verified starting points</h2></div><div class="count" id="count"></div></div>
+      <div class="cards" id="cards">
+
+        <article class="card" data-category="swimming after-school" data-age="under5 5-11 12-17 adult" data-day="varies" data-price="paid" data-area="district wide wakefield aspire swimming">
+          <div class="card-top"><div class="category">Swimming</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+          <h3>Aspire swimming lessons</h3>
+          <p class="summary">Lessons from age 1 through to adults, including adult beginner and improver classes. Junior SEND swimming is available for children aged 5+ with a parent or responsible adult in the water.</p>
+          <div class="meta"><span class="tag">Age 1+ to adults</span><span class="tag">Beginners welcome</span><span class="tag">SEND 5+</span><span class="tag">District-wide</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons">Official source ↗</a><a class="ask" href="/?ask=Help%20me%20find%20the%20right%20swimming%20lesson%20in%20Wakefield#assistant">Ask about swimming</a></div>
+        </article>
+
+        <article class="card" data-category="fitness swimming" data-age="5-11 12-17 adult" data-day="varies" data-price="paid" data-area="district wide wakefield aspire gym swim fitness">
+          <div class="card-top"><div class="category">Gym · swim · classes</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+          <h3>Aspire Pay & Play</h3>
+          <p class="summary">Use Aspire gyms, public swimming, lane swimming and fitness classes without taking out a membership. Adult, junior and family swim prices are available, along with junior gym sessions.</p>
+          <div class="meta"><span class="tag">Adults & juniors</span><span class="tag">No membership needed</span><span class="tag">Pay per visit</span><span class="tag">Multiple centres</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities">Official source ↗</a><a class="ask" href="/?ask=Which%20Aspire%20gym%20or%20swimming%20facility%20is%20best%20for%20me%20in%20Wakefield%3F#assistant">Ask Wakefield</a></div>
+        </article>
+
+        <article class="card" data-category="running after-school" data-age="5-11" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
+          <div class="card-top"><div class="category">Junior athletics</div><div class="verified">Wakefield Harriers · checked 15 Sep</div></div>
+          <h3>Wakefield Harriers Junior Jets</h3>
+          <p class="summary">Athletics for children aged 8–10 at Thornes Park Stadium. Training runs Tuesdays and Thursdays, 5:45–6:45pm. The club currently says there is a waiting list for new Junior Jets.</p>
+          <div class="meta"><span class="tag">Ages 8–10</span><span class="tag">Tue & Thu</span><span class="tag">£3/session</span><span class="tag alert">Waiting list</span><span class="tag">WF2 8TY</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldharriers.co.uk/junior-jets/">Club source ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Wakefield%20Harriers%20Junior%20Jets%20and%20other%20athletics%20options%20for%20children#assistant">Ask about athletics</a></div>
+        </article>
+
+        <article class="card" data-category="running after-school" data-age="12-17" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
+          <div class="card-top"><div class="category">Youth athletics</div><div class="verified">Wakefield Harriers · checked 15 Sep</div></div>
+          <h3>Wakefield Harriers YARDS</h3>
+          <p class="summary">Development athletics for U13, U15 and U17 athletes at Thornes Park Stadium. Sessions are Tuesdays and Thursdays, 7–8pm. The club currently reports a waiting list.</p>
+          <div class="meta"><span class="tag">U13–U17</span><span class="tag">Tue & Thu</span><span class="tag">£3/session</span><span class="tag alert">Waiting list</span><span class="tag">WF2 8TY</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldharriers.co.uk/yards/">Club source ↗</a><a class="ask" href="/?ask=Help%20me%20find%20athletics%20for%20a%20teenager%20in%20Wakefield#assistant">Ask about youth athletics</a></div>
+        </article>
+
+        <article class="card" data-category="running" data-age="adult" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
+          <div class="card-top"><div class="category">Running</div><div class="verified">Wakefield Harriers · checked 15 Sep</div></div>
+          <h3>Wakefield Harriers Road & XC</h3>
+          <p class="summary">Road running and cross-country groups for different abilities. Training is Tuesdays and Thursdays, 7–8pm at Thornes Park Stadium, with road and track-based sessions.</p>
+          <div class="meta"><span class="tag">Adults</span><span class="tag">Different abilities</span><span class="tag">Tue & Thu</span><span class="tag">£1 road / £3 track</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldharriers.co.uk/road-xc/">Club source ↗</a><a class="ask" href="/?ask=Find%20me%20a%20running%20club%20in%20Wakefield%20that%20suits%20my%20ability#assistant">Ask about running</a></div>
+        </article>
+
+        <article class="card" data-category="walking community" data-age="adult" data-day="varies" data-price="free varies" data-area="district wide wakefield horbury normanton nostell walton eastmoor kettlethorpe hemsworth stanley">
+          <div class="card-top"><div class="category">Walking</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+          <h3>Wakefield Health Walks</h3>
+          <p class="summary">Led local walks across the district, including gentle health walks and longer routes. Current listings include Wakefield, Horbury, Nostell, Walton, Normanton, Hemsworth and other areas.</p>
+          <div class="meta"><span class="tag">Mostly adults</span><span class="tag">Various days</span><span class="tag">Many free</span><span class="tag">Different abilities</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable">Current timetable ↗</a><a class="ask" href="/?ask=Find%20a%20walking%20group%20near%20me%20in%20Wakefield#assistant">Ask about walks</a></div>
+        </article>
+
+        <article class="card" data-category="walking" data-age="adult" data-day="varies saturday sunday" data-price="varies" data-area="district wide wakefield ramblers hiking hikes">
+          <div class="card-top"><div class="category">Walking & hiking</div><div class="verified">Ramblers Yorkshire · checked 15 Sep</div></div>
+          <h3>Wakefield & District Ramblers</h3>
+          <p class="summary">A local Ramblers group offering regular led walks throughout the year, typically around 4–10 miles. A good option if you want something more substantial than a short health walk.</p>
+          <div class="meta"><span class="tag">Longer walks</span><span class="tag">Usually weekly</span><span class="tag">4–10 miles</span><span class="tag">Check programme</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://ramblersyorkshire.org/area-groups/wakefield-and-district.html">Walk programme ↗</a><a class="ask" href="/?ask=Find%20me%20a%20proper%20hiking%20or%20longer%20walking%20group%20around%20Wakefield#assistant">Ask about hiking</a></div>
+        </article>
+
+        <article class="card" data-category="padel" data-age="12-17 adult" data-day="monday tuesday wednesday thursday friday saturday sunday" data-price="paid" data-area="wakefield sports club padel wakefield">
+          <div class="card-top"><div class="category">Padel</div><div class="verified">Wakefield Sports Club · checked 15 Sep</div></div>
+          <h3>Wakefield Sports Club Padel</h3>
+          <p class="summary">Padel courts bookable online through Playtomic. The club lists adult and junior memberships, equipment hire and opening hours of 8am–10pm.</p>
+          <div class="meta"><span class="tag">Adults & juniors</span><span class="tag">Daily</span><span class="tag">8am–10pm</span><span class="tag">Booking required</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldsportsclub.com/padel/">Club source ↗</a><a class="ask" href="/?ask=Where%20can%20I%20play%20padel%20near%20Wakefield%3F#assistant">Ask about padel</a></div>
+        </article>
+
+        <article class="card" data-category="cricket after-school" data-age="5-11 12-17 adult" data-day="varies" data-price="varies" data-area="thornes wakefield field lane wf2 7rt cricket">
+          <div class="card-top"><div class="category">Cricket</div><div class="verified">Club / league sources · checked 15 Sep</div></div>
+          <h3>Wakefield Thornes Cricket Club</h3>
+          <p class="summary">A Wakefield club with senior cricket and junior teams from Under 9 through Under 17. The club has also added girls-only junior teams and runs coaching and school activity programmes.</p>
+          <div class="meta"><span class="tag">U9–U17</span><span class="tag">Senior teams</span><span class="tag">Girls & boys</span><span class="tag">Field Lane, WF2 7RT</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldthornescc.play-cricket.com/home">Club fixtures & contact ↗</a><a class="ask" href="/?ask=Help%20me%20find%20a%20cricket%20club%20for%20a%20child%20or%20adult%20in%20Wakefield#assistant">Ask about cricket</a></div>
+        </article>
+
+        <article class="card" data-category="football after-school" data-age="5-11 12-17" data-day="varies" data-price="varies" data-area="wakefield junior football wakefield afc">
+          <div class="card-top"><div class="category">Junior football</div><div class="verified">Wakefield AFC Juniors · checked 15 Sep</div></div>
+          <h3>Wakefield AFC Juniors</h3>
+          <p class="summary">The junior club currently lists teams across multiple age groups from U9 through U16. Use the club's current team page to find the right age group and make contact.</p>
+          <div class="meta"><span class="tag">U9–U16</span><span class="tag">Multiple teams</span><span class="tag">Check training details</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefieldafcjuniors.co.uk/teams">Club teams ↗</a><a class="ask" href="/?ask=Find%20a%20junior%20football%20club%20in%20Wakefield%20for%20my%20child#assistant">Ask about football</a></div>
+        </article>
+
+        <article class="card" data-category="community after-school" data-age="under5 adult" data-day="varies" data-price="varies" data-area="wakefield district dads dad matters parents parenting">
+          <div class="card-top"><div class="category">Dads & parent support</div><div class="verified">Dad Matters Yorkshire · checked 15 Sep</div></div>
+          <h3>Dad Matters Wakefield & District</h3>
+          <p class="summary">Peer support for dads and secondary carers, including one-to-one support, hospital outreach and Walk & Talk drop-ins where dads can come along with babies and children.</p>
+          <div class="meta"><span class="tag">Dads & male carers</span><span class="tag">Pre-birth to early years</span><span class="tag">Walk & Talk</span><span class="tag">Peer support</span></div>
+          <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://dadmattersyorkshire.uk/wakefield/">Service page ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Dad%20Matters%20and%20other%20parent%20support%20groups%20in%20Wakefield#assistant">Ask about support</a></div>
+        </article>
+
+      </div>
+      <div class="empty" id="empty"><h3>No exact matches yet.</h3><p>Try clearing a filter, or ask Ask Wakefield to look for something more specific. This directory is deliberately starting small and verified.</p><p style="margin-top:16px"><a class="btn primary" href="/?ask=Help%20me%20find%20an%20activity%20in%20Wakefield#assistant">Ask Wakefield</a></p></div>
+
+      <section class="directory-cta">
+        <div><div class="eyebrow">Grow the directory</div><h3>Run a club, class or local activity?</h3><p>Tell us about it. We’re building this directory around useful, current information rather than scraping hundreds of stale listings.</p></div>
+        <a class="btn primary" href="mailto:hello@mediahubink.com?subject=List%20my%20activity%20on%20Ask%20Wakefield">List your activity</a>
+      </section>
+    </div>
+  </main>
+
+  <footer><div class="wrap footer-in"><div><strong>Ask Wakefield</strong> is an independent local tool. Always confirm times, availability and prices with the provider before travelling.</div><div class="mono">Built by Mediahubink Limited · Wakefield</div></div></footer>
+
+<script>
+(function(){
+  var category=document.getElementById('category'), age=document.getElementById('age'), day=document.getElementById('day'), price=document.getElementById('price'), area=document.getElementById('area');
+  var cards=Array.prototype.slice.call(document.querySelectorAll('.card')); var count=document.getElementById('count'); var empty=document.getElementById('empty');
+  function has(el,key,val){ if(val==='all') return true; var raw=(el.dataset[key]||'').toLowerCase(); if(key==='day' && raw.indexOf('varies')>-1) return true; if(key==='price' && raw.indexOf('varies')>-1 && val!=='free' && val!=='paid') return true; return raw.split(/\s+/).indexOf(val)>-1 || raw.indexOf(val)>-1; }
+  function apply(){
+    var q=area.value.trim().toLowerCase(); var shown=0;
+    cards.forEach(function(c){
+      var ok=has(c,'category',category.value) && has(c,'age',age.value) && has(c,'day',day.value) && has(c,'price',price.value);
+      if(q){ var hay=(c.dataset.area+' '+c.innerText).toLowerCase(); ok=ok && hay.indexOf(q)>-1; }
+      c.classList.toggle('hidden',!ok); if(ok) shown++;
+    });
+    count.textContent=shown+' '+(shown===1?'listing':'listings'); empty.classList.toggle('show',shown===0);
+  }
+  [category,age,day,price].forEach(function(el){el.addEventListener('change',apply)}); area.addEventListener('input',apply);
+  var params=new URLSearchParams(location.search); ['category','age','day','price'].forEach(function(k){var v=params.get(k); if(v && document.getElementById(k).querySelector('option[value="'+v+'"]')) document.getElementById(k).value=v;}); if(params.get('area')) area.value=params.get('area'); apply();
+})();
+</script>
+</body>
+</html>

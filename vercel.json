@@ -12,6 +12,10 @@
     {
       "source": "/activities",
       "destination": "/activities.html"
+    },
+    {
+      "source": "/submit-listing",
+      "destination": "/submit-listing.html"
     }
   ],
   "headers": [

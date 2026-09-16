@@ -553,7 +553,7 @@
   </div>
 
   <div class="discover-grid">
-    <button class="discover-card" type="button" onclick="sendMsg('What\'s on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.')">
+    <button class="discover-card" type="button" onclick="askFromDiscover('What\'s on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.')">
       <div class="discover-art"><img src="/images/card-whats-on.webp" alt="Wakefield city centre in the evening" loading="lazy"/></div>
       <div class="discover-body"><div class="discover-label">Events &amp; culture</div><div class="discover-name">What's On</div><div class="discover-copy">Events, exhibitions, gigs, festivals and things happening this week.</div><div class="discover-link"><span>Ask about what's on</span><span>→</span></div></div>
     </button>
@@ -563,7 +563,7 @@
       <div class="discover-body"><div class="discover-label">Children &amp; parents</div><div class="discover-name">Families</div><div class="discover-copy">Days out, after-school activities, kids' clubs, free ideas and family support.</div><div class="discover-link"><span>Browse activities</span><span>→</span></div></div>
     </a>
 
-    <button class="discover-card" type="button" onclick="sendMsg('Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.')">
+    <button class="discover-card" type="button" onclick="askFromDiscover('Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.')">
       <div class="discover-art"><img src="/images/card-restaurants.webp" alt="Food and dining in Wakefield" loading="lazy"/></div>
       <div class="discover-body"><div class="discover-label">Eat &amp; drink</div><div class="discover-name">Food &amp; Coffee</div><div class="discover-copy">Restaurants, cafés, coffee spots, pubs and local favourites for different occasions.</div><div class="discover-link"><span>Find somewhere</span><span>→</span></div></div>
     </button>
@@ -582,7 +582,7 @@
       <div class="discover-body"><div class="discover-label">Meet &amp; belong</div><div class="discover-name">Clubs &amp; Community</div><div class="discover-copy">Local clubs, walking groups, community organisations, volunteering and parent support.</div><div class="discover-link"><span>Browse groups</span><span>→</span></div></div>
     </a>
 
-    <button class="discover-card" type="button" onclick="sendMsg('Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.')">
+    <button class="discover-card" type="button" onclick="askFromDiscover('Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.')">
       <div class="discover-art graphic services" aria-hidden="true">
         <svg viewBox="0 0 64 64" fill="none"><path d="M32 56s17-15 17-31a17 17 0 10-34 0c0 16 17 31 17 31z" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="25" r="6" stroke="currentColor" stroke-width="3"/></svg>
       </div>
@@ -843,6 +843,17 @@ function sendMessage(override) {
 }
 
 function sendMsg(text) { sendMessage(text); }
+
+// DISCOVER CARD → CHAT
+function askFromDiscover(text) {
+  sendMessage(text);
+  var assistant = document.getElementById('assistant');
+  if (assistant) {
+    setTimeout(function() {
+      assistant.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  }
+}
 
 inputEl.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }

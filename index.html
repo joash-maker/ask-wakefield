@@ -1169,8 +1169,9 @@ function getFollowups(question, answer, afterEl) {
           btn.onclick = function() { container.remove(); sendMessage(q); };
           container.appendChild(btn);
         });
+        // Add follow-up suggestions without moving the reader away from the answer.
+        // The user can reach them naturally after reading the response.
         afterEl.after(container);
-        msgsEl.scrollTop = msgsEl.scrollHeight;
       }
     } catch(e) {}
   };

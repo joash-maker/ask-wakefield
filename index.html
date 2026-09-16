@@ -405,6 +405,287 @@
       .image-credit { padding: 0 16px 28px; }
     }
 
+  
+
+    /* CHAT EXPERIENCE — 10/10 POLISH */
+    .assistant-shell { max-width: 920px; }
+    .assistant-shell .chat-wrap {
+      position: relative;
+      isolation: isolate;
+      height: 430px;
+      max-width: none;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-top: 0;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 12% -10%, rgba(230,28,93,0.16), transparent 32%),
+        radial-gradient(circle at 96% 12%, rgba(255,255,255,0.055), transparent 26%),
+        linear-gradient(180deg, #1a1a1d 0%, #141416 100%);
+      box-shadow: 0 26px 70px rgba(17,17,17,0.18), 0 8px 24px rgba(17,17,17,0.10);
+      transition: height .38s cubic-bezier(.2,.7,.2,1), box-shadow .25s ease;
+    }
+    .assistant-shell .chat-wrap::before {
+      content: '';
+      position: absolute;
+      z-index: 5;
+      top: 0;
+      left: 16px;
+      right: 16px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent 0%, var(--red) 18%, var(--red-lt) 52%, rgba(255,77,122,.25) 82%, transparent 100%);
+      pointer-events: none;
+    }
+    .assistant-shell .chat-wrap.chat-active {
+      height: min(620px, 72vh);
+      box-shadow: 0 32px 90px rgba(17,17,17,0.22), 0 10px 28px rgba(17,17,17,0.12);
+    }
+
+    .chat-header {
+      min-height: 76px;
+      padding: 16px 20px 15px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.075);
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0));
+      backdrop-filter: blur(14px);
+    }
+    .chat-brand { min-width: 0; }
+    .chat-brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 27px;
+      line-height: .95;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .chat-brand-name em { color: var(--red-lt); font-weight: 300; }
+    .chat-brand-sub {
+      margin-top: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      line-height: 1;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.28);
+    }
+    .chat-header-right { gap: 7px; }
+    .chat-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      margin-right: 3px;
+      border-radius: 999px;
+      background: rgba(74,222,128,.07);
+      border: 1px solid rgba(74,222,128,.15);
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      line-height: 1;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.46);
+    }
+    .status-dot { width: 6px; height: 6px; box-shadow: 0 0 0 3px rgba(74,222,128,.07); }
+    .new-chat-btn {
+      min-height: 32px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 9px;
+      letter-spacing: .07em;
+      color: rgba(255,255,255,.42);
+      background: rgba(255,255,255,.035);
+      border-color: rgba(255,255,255,.075);
+    }
+    .new-chat-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.075); }
+    .new-chat-btn:focus-visible, .chip:focus-visible, .fu-chip:focus-visible,
+    #voiceBtn:focus-visible, #sendBtn:focus-visible {
+      outline: 2px solid var(--red-lt);
+      outline-offset: 2px;
+    }
+
+    .messages {
+      padding: 24px 26px 18px;
+      gap: 16px;
+      background:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 100%);
+    }
+    .messages::-webkit-scrollbar { width: 5px; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); }
+
+    .msg { gap: 7px; max-width: 88%; }
+    .msg.bot { align-self: flex-start; }
+    .msg.user { align-self: flex-end; align-items: flex-end; max-width: 76%; }
+    .msg-label {
+      padding: 0 4px;
+      font-size: 9px;
+      letter-spacing: .13em;
+      color: rgba(255,255,255,.27);
+    }
+    .msg.bot .msg-label { color: var(--red-lt); }
+    .msg-text {
+      max-width: none;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.67;
+      border: 1px solid rgba(255,255,255,.075);
+      box-shadow: 0 7px 22px rgba(0,0,0,.12);
+    }
+    .msg.bot .msg-text {
+      color: rgba(255,255,255,.88);
+      border-left: 1px solid rgba(255,255,255,.075);
+      padding-left: 15px;
+      background: linear-gradient(135deg, rgba(255,255,255,.065), rgba(255,255,255,.028));
+    }
+    .msg.user .msg-text {
+      color: rgba(255,255,255,.88);
+      text-align: left;
+      border-right: 1px solid rgba(230,28,93,.32);
+      padding-right: 15px;
+      background: linear-gradient(135deg, rgba(230,28,93,.22), rgba(230,28,93,.11));
+      border-color: rgba(230,28,93,.28);
+    }
+    .messages > .msg.bot:first-child { max-width: 82%; margin-top: 2px; }
+    .messages > .msg.bot:first-child .msg-text {
+      padding: 16px 18px;
+      font-size: 14.5px;
+      background: linear-gradient(135deg, rgba(255,255,255,.085), rgba(255,255,255,.03));
+      border-color: rgba(255,255,255,.10);
+      box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    }
+    .messages > .msg.bot:first-child .msg-label::before {
+      content: 'WELCOME · ';
+      color: rgba(255,255,255,.22);
+    }
+    .msg-text strong { color: #fff; }
+    .msg-text a { color: #ff7898; text-decoration-thickness: 1px; }
+    .msg-text .bul { margin: 5px 0; }
+
+    .searching { padding: 0; min-height: 24px; font-size: 9px; color: rgba(255,255,255,.36); }
+    .dots { padding-left: 0; }
+    .msg-actions { padding-left: 3px; margin-top: 0; }
+    .copy-msg { border-radius: 8px; padding: 5px 9px; }
+
+    .source-list { padding-left: 3px; gap: 7px; margin-top: 9px; }
+    .source-label { font-size: 9px; color: rgba(255,255,255,.32); }
+    .source-link {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border-color: rgba(255,255,255,.075);
+      background: rgba(255,255,255,.035);
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .source-link:hover { transform: translateX(2px); background: rgba(255,255,255,.06); }
+
+    .followup-chips { padding-left: 3px; gap: 7px; margin-top: 10px; }
+    .fu-label { font-size: 9px; margin-bottom: 4px; }
+    .fu-chip {
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: rgba(255,255,255,.04);
+      font-size: 10px;
+      line-height: 1.25;
+    }
+
+    .chips {
+      position: relative;
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: 10px 20px 9px;
+      gap: 7px;
+      background: rgba(10,10,12,.20);
+    }
+    .chip {
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      line-height: 1;
+      color: rgba(255,255,255,.52);
+      border-color: rgba(255,255,255,.09);
+      background: rgba(255,255,255,.035);
+      letter-spacing: 0;
+    }
+    .chip:hover {
+      color: #fff;
+      border-color: rgba(230,28,93,.50);
+      background: rgba(230,28,93,.12);
+      transform: translateY(-1px);
+    }
+
+    .input-area {
+      margin: 0 16px 10px;
+      padding: 5px 5px 5px 14px;
+      gap: 5px;
+      border: 1px solid rgba(255,255,255,.105);
+      border-radius: 14px;
+      background: rgba(255,255,255,.055);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 25px rgba(0,0,0,.10);
+      transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .input-area:focus-within {
+      border-color: rgba(230,28,93,.55);
+      background: rgba(255,255,255,.07);
+      box-shadow: 0 0 0 3px rgba(230,28,93,.08), 0 10px 28px rgba(0,0,0,.14);
+    }
+    #userInput {
+      min-width: 0;
+      height: 42px;
+      padding: 8px 3px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      font-size: 14px;
+    }
+    #userInput:focus { border-color: transparent; background: transparent; }
+    #userInput::placeholder { font-size: 11px; color: rgba(255,255,255,.28); }
+    #voiceBtn, #sendBtn {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+    }
+    #voiceBtn { border: 0; background: transparent; }
+    #voiceBtn:hover { background: rgba(255,255,255,.06); }
+    #sendBtn {
+      background: linear-gradient(135deg, var(--red-lt), var(--red));
+      box-shadow: 0 7px 18px rgba(230,28,93,.28);
+    }
+    #sendBtn:hover { transform: translateY(-1px); box-shadow: 0 9px 22px rgba(230,28,93,.36); }
+
+    .chat-credit {
+      padding: 2px 18px 11px;
+      border-top: 0;
+      font-size: 8.5px;
+      line-height: 1.45;
+      letter-spacing: .045em;
+      color: rgba(255,255,255,.21);
+    }
+    .chat-credit a { color: rgba(255,255,255,.38); }
+
+    @media (max-width: 700px) {
+      .assistant-shell .chat-wrap {
+        margin: 0;
+        height: min(560px, calc(100dvh - 28px));
+        border-radius: 14px;
+      }
+      .assistant-shell .chat-wrap.chat-active { height: min(690px, calc(100dvh - 20px)); }
+      .chat-header { min-height: 68px; padding: 14px 12px 13px 15px; }
+      .chat-brand-name { font-size: 24px; }
+      .chat-brand-sub { font-size: 8px; }
+      .chat-status span:last-child { display: none; }
+      .chat-status { padding: 6px 7px; margin-right: 0; }
+      .new-chat-btn { width: 32px; height: 32px; justify-content: center; padding: 0; }
+      .new-chat-btn span { display: none; }
+      .messages { padding: 18px 14px 14px; }
+      .msg, .messages > .msg.bot:first-child { max-width: 94%; }
+      .msg.user { max-width: 86%; }
+      .msg-text, .messages > .msg.bot:first-child .msg-text { font-size: 13.5px; padding: 12px 13px; }
+      .chips { padding: 9px 12px; }
+      .input-area { margin: 0 10px 8px; padding-left: 11px; }
+      .chat-credit { padding: 1px 10px 9px; }
+    }
+
   </style>
 
 <!-- Vercel Web Analytics -->
@@ -494,17 +775,20 @@
   <div class="assistant-shell">
     <div class="chat-wrap" id="assistant">
       <div class="chat-header">
-        <span class="chat-title">Ask Wakefield · AI Chat</span>
+        <div class="chat-brand">
+          <div class="chat-brand-name">Ask <em>Wakefield</em></div>
+          <div class="chat-brand-sub">Local intelligence for the district</div>
+        </div>
         <div class="chat-header-right">
-          <button class="new-chat-btn" id="copyChatBtn" onclick="copyChatHistory()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
-            Copy chat
+          <div class="chat-status" aria-label="Ask Wakefield is online"><span class="status-dot"></span><span>Online</span></div>
+          <button class="new-chat-btn" id="copyChatBtn" onclick="copyChatHistory()" aria-label="Copy chat">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
+            <span>Copy</span>
           </button>
-          <button class="new-chat-btn" onclick="resetChat()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            New chat
+          <button class="new-chat-btn" onclick="resetChat()" aria-label="Start a new chat">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>New</span>
           </button>
-          <div class="status-dot"></div>
         </div>
       </div>
 
@@ -664,7 +948,7 @@ function greeting() {
   return 'Good evening';
 }
 function welcomeText() {
-  return greeting() + ". Ask me about what's on, restaurants, family days out, sport and fitness, local clubs, attractions, transport or council-service links across the Wakefield district. For things that change, like events, opening times and travel, I'll check current sources where available.";
+  return greeting() + ". I can help with what's on, food and coffee, family activities, sport, clubs, transport and local services across Wakefield. For things that change, I'll check current sources where available.";
 }
 document.getElementById('welcomeMsg').textContent = welcomeText();
 
@@ -680,6 +964,7 @@ var inputEl = document.getElementById('userInput');
 var sendBtn = document.getElementById('sendBtn');
 var voiceBtn = document.getElementById('voiceBtn');
 var chipsEl = document.getElementById('chips');
+var chatWrap = document.getElementById('assistant');
 var chatHistory = [];
 var chipsGone = false;
 var isSending = false;
@@ -737,6 +1022,7 @@ function sendMessage(override) {
   var text = typeof override === 'string' ? override.trim() : inputEl.value.trim();
   if (!text || isSending) return;
 
+  if (chatWrap) chatWrap.classList.add('chat-active');
   isSending = true;
   sendBtn.disabled = true;
   inputEl.value = '';
@@ -750,7 +1036,7 @@ function sendMessage(override) {
   // User bubble
   var uWrap = document.createElement('div');
   uWrap.className = 'msg user';
-  uWrap.innerHTML = '<div class="msg-label">You</div><div class="msg-text" style="align-self:flex-end;text-align:right;border-right:2px solid rgba(255,255,255,0.12);padding-right:14px;color:rgba(255,255,255,0.55);">' + escapeHtml(text) + '</div>';
+  uWrap.innerHTML = '<div class="msg-label">You</div><div class="msg-text">' + escapeHtml(text) + '</div>';
   msgsEl.appendChild(uWrap);
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
@@ -898,6 +1184,7 @@ function resetChat() {
   chipsGone = false;
   isSending = false;
   sendBtn.disabled = false;
+  if (chatWrap) chatWrap.classList.remove('chat-active');
   msgsEl.innerHTML = '';
   chipsEl.style.display = 'flex';
   var wrap = document.createElement('div');

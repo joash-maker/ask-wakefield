@@ -41,6 +41,10 @@
     .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .hint { font-size:13px; color:var(--dim); margin-top:5px; line-height:1.5; }
 
+    .consent { display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); padding:14px; margin:18px 0 0; font-size:13px; line-height:1.55; color:#555; }
+    .consent input { width:auto; margin-top:3px; accent-color:var(--red); }
+    .consent a { color:var(--red); }
+
     .submit-btn { width:100%; background:var(--red); border:none; padding:14px 24px; font-family:'DM Mono',monospace; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#fff; border-radius:2px; cursor:pointer; transition:background 0.15s; margin-top:8px; }
     .submit-btn:hover { background:#ff4d7a; }
     .submit-btn:disabled { background:rgba(17,17,17,0.15); cursor:not-allowed; }
@@ -171,6 +175,7 @@
           <label>Organisation / venue name</label>
           <input type="text" name="organisation" placeholder="e.g. WX Wakefield, Wakefield BID, independent"/>
         </div>
+        <label class="consent"><input type="checkbox" name="consent" value="Yes" required/> <span>I confirm the event information is accurate to the best of my knowledge, I have appropriate permission to submit it, and Ask Wakefield may verify, edit for clarity and publish relevant event details after review. I have read the <a href="/terms" target="_blank">Terms of Use</a> and <a href="/privacy" target="_blank">Privacy Notice</a>. <span class="req">*</span></span></label>
       </div>
 
       <button type="submit" class="submit-btn" id="submitBtn">Submit event</button>
@@ -189,8 +194,8 @@
 </div>
 
 <footer>
-  <span>Ask Wakefield — Independent AI assistant for the Wakefield district. Built by <a href="https://mediahubink.com" target="_blank">Mediahubink</a>.</span>
-  <a href="/">askwakefield.co.uk</a>
+  <span>Ask Wakefield — Independent AI assistant for the Wakefield district.<br><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/cookies">Cookies</a> · <a href="/accessibility">Accessibility</a> · <a href="/corrections">Corrections</a></span>
+  <span>Mediahubink Limited · Company No. 17218602 · Registered in England &amp; Wales<br>Registered office: 7 Tileyard North, Wakefield WF1 5FY</span>
 </footer>
 
 <script>
@@ -208,7 +213,8 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   var required = form.querySelectorAll('[required]');
   var valid = true;
   required.forEach(function(field) {
-    if (!field.value.trim()) {
+    var missing = (field.type === 'checkbox' || field.type === 'radio') ? !field.checked : !field.value.trim();
+    if (missing) {
       field.style.borderColor = 'var(--red)';
       valid = false;
     } else {

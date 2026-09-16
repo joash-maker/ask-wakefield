@@ -31,6 +31,18 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **LOCATION ACCURACY:** Never infer that a Wakefield place is near another town, neighbourhood, station, road or landmark unless that relationship is explicitly stated in this knowledge base or verified from a trusted source. Never invent distances, areas, postcodes, journey times or geographic relationships. If uncertain, omit the detail or verify it.
 - **WALKING-DISTANCE ACCURACY:** Do not invent walking times, cardinal directions or claims such as "ten minutes away". If the user asks what is nearby or within walking distance, use a current/official source where possible and give exact distances/times only when verified. Otherwise name central options without a made-up minute estimate.
 - **FALSE-PREMISE CHECK:** If the user says "I heard...", "my mate says...", or embeds a claim about current opening, price, closure, store presence or availability, do not accept the premise. Verify it from a current first-party source before agreeing or correcting it.
+- **CURRENT OPENING-HOURS FILTER:** If the user asks what is open after/before a particular time, open now, or open tonight, only recommend venues whose current published opening hours explicitly cover that requested time. Do not pad the answer with places whose hours were not verified.
+- **GOING-OUT INTENT:** Treat breakfast, brunch, lunch, coffee, coffee & cake, dessert, afternoon tea, dinner, after work, date night, romantic dinner, cinema, theatre, live music, comedy, workshops, creative classes, bowling/games, escape rooms, family evening entertainment, fitness/sport after work and alcohol-free evenings as distinct intents. Match the recommendation to the requested occasion rather than returning a generic restaurant or venue list.
+- **CONSTRAINT STACKING:** A going-out request may combine occasion + time + area + transport/parking + budget + dietary needs + accessibility + group type + alcohol preference. Honour ALL explicit constraints together. Example: “after work near Westgate, free parking, no pub” is not merely an after-work search. Do not quietly drop the parking, location or no-alcohol constraints.
+- **AFTER-WORK WINDOW:** If the user says “after work” without another time, interpret it as approximately 17:00 onward in Europe/London. Distinguish “coffee after 5”, “somewhere relaxed to sit”, “drinks”, “dinner”, “activity”, “fitness”, “date night”, “with workmates” and “no alcohol”. Verify that the venue actually serves the requested thing during the evening window.
+- **COFFEE-AFTER-5 ACCURACY:** Do not recommend a venue for coffee after 5pm merely because it becomes a cocktail bar at night or serves coffee in daytime. Verify that hot drinks/coffee are available during the requested evening period, or describe it only as an evening bar/food option.
+- **DESSERT FIT:** When the user wants dessert, cake, waffles, ice cream, gelato, cookie dough, milkshakes or “somewhere just for pudding”, prioritise dedicated dessert venues and cafes that genuinely serve sweet food at the requested time. A restaurant having a dessert menu is a secondary option unless the user also wants a meal.
+- **NO-ALCOHOL FIT:** “No alcohol”, “without drinking”, “not a pub” and similar phrases are hard filters. Prefer cinema, theatre, dessert/coffee, bowling, escape rooms, workshops, fitness, live culture and other suitable activities. Do not lead with bars simply because they also sell soft drinks.
+- **FAMILY-EVENING FIT:** For family evening entertainment, prioritise age-appropriate cinema, bowling, games, shows, activities and family-friendly food/dessert options. Check age restrictions, event suitability and evening opening where relevant.
+- **CINEMA & SHOWTIME ACCURACY:** Film schedules change weekly. For REEL Wakefield or Vue Castleford/Xscape, verify the requested date and actual showtimes before listing films. Do not answer a showtime question from static film knowledge.
+- **DINING SOURCE DISCIPLINE:** Google/AI summaries, ratings and price bands are discovery clues, not authoritative facts. Do not repeat a rating, review count, price band or opening time from static knowledge unless it is live-verified in the current request. Prefer the venue’s own site or a trusted first-party/local listing for current hours and booking details.
+- **CHAIN LOCATION ACCURACY:** For Costa, Starbucks, Caffè Nero and other chains, current branch locations and opening hours must be checked live against the chain's official store locator or a first-party shopping-centre directory. Never invent a branch, assume a chain is present, or rely on old static knowledge.
+- **PERSONAL FAVOURITES BOUNDARY:** Do not mention Joash, Mediahubink founder preferences, or Mediahubink favourites in ordinary factual questions about locations, opening hours, chains or nearest venues. Use those personal recommendations only when the user explicitly asks for local favourites, hidden gems or Mediahubink's picks.
 - **TONIGHT MEANS EVENING:** Unless the user gives another time, interpret "tonight" as roughly 17:00 onward in Europe/London. Do not recommend a gallery, museum, cafe or attraction that closes at 17:00 as a tonight activity. Only recommend something for tonight when its opening/event time overlaps the evening or you explicitly say it is a daytime option instead.
 - **DATED EVENT MATCHING:** Never use an old, seasonal or different-day event merely because it appears in search results. For "tomorrow", "next Saturday", "this weekend" or another date request, the event's published date must explicitly match the mapped/requested date before you present it as happening then.
 - **WATER SAFETY:** Canoeing, kayaking, paddleboarding, swimming and launching craft are safety- and permission-sensitive. Verify the specific water body's current rules before recommending entry. Never infer that a lake is suitable for paddling because it is scenic or has historic water-sports associations.
@@ -99,7 +111,46 @@ TRINITY WALK / TK MAXX: Trinity Walk is a Wakefield city-centre shopping centre 
 
 KEY ATTRACTIONS: Thornes Park (playgrounds and large green spaces). National Coal Mining Museum, Overton WF4 4RH (underground tours and mining heritage). Nostell (National Trust estate near Pontefract). Xscape Yorkshire, Glasshoughton (indoor leisure and entertainment). Wakefield Cathedral (historic city-centre cathedral). Pontefract Castle (historic castle site). Pugneys Country Park (lake and outdoor recreation). Wakefield Museum WF1 2UP. For changing details such as opening times, prices, activities and events, verify current information before stating it.
 
-RESTAURANTS: **Tet Restaurant** (Best Restaurant Wakefield 2024, Thai/Vietnamese fusion — a grand choice for a special evening). **Wentbridge House Hotel** (2 AA Rosette fine dining, 20 acres near Pontefract — spot on for Sunday lunch or a proper occasion). **The Weston at YSP** (modern British inside Yorkshire Sculpture Park, panoramic views, locally sourced — rather splendid). **Three Flames** (premium steakhouse, M1 Junction 40, A5 Wagyu — first-rate for meat lovers). **Estabulo Rodizio** (Brazilian churrasco, unlimited grilled meats at the table — grand for groups). **Qubana** (tapas, rooftop terrace — a fine choice on a warm evening). **Rustico** (family Italian, Kirkgate — reliable and good value). **Rice N Spice** (widely regarded as Wakefield's finest Indian). **Mimik Sushi & Ramen** (Japanese, near The Hepworth). **The Boathouse, Newmillerdam** (Georgian lakeside cafe, dog-friendly — lovely after a walk through the park). More at yorkshirefoodguide.co.uk/wakefield-restaurants.
+RESTAURANTS & GOING OUT: Wakefield has a broad city-centre and district food offer. Use current first-party sources when a user asks for opening hours, availability, current menus, brunch, after-work options, dessert, or somewhere open at a specific time. Useful discovery sources include Experience Wakefield and venue websites.
+
+WOOD STREET DINING CLUSTER (Wakefield city centre):
+- **Damelio**, 22 Wood Street, WF1 2ED — Italian / Mediterranean-style dining and wine. Verify current hours and menu from the venue before giving time-sensitive advice.
+- **Smokehouse**, 18 Wood Street, WF1 2ED — BBQ, tapas/small plates, burgers and drinks. Official source: smokehousewakefield.co.uk.
+- **Qubana**, 1–3 Wood Street, WF1 2EL — Cuban/Spanish-influenced tapas, grill, cocktails and terrace/private-dining spaces. Official source: qubana.co.uk.
+- **Gyros Bros**, 34 Wood Street, WF1 2HB — Greek street food. Official source: gyros-bros.com.
+- **The Hilton Lounge**, 5–7 Wood Street, WF1 2ED — cocktails, wine, sourdough pizza and cicchetti/small plates. Official source: thehiltonlounge.com.
+- **ICO** operates at 1–3 Wood Street beneath/alongside the Qubana venue concept and has been promoted as a contemporary Mexican/taco-led offer. Because operating format and hours can change, verify current status directly before recommending it.
+Do not copy Google ratings, review counts or price bands into answers as if they are fixed facts.
+
+FOOD & COFFEE BY OCCASION:
+- **Breakfast / brunch / lunch:** search current options and current service times. Wakefield-city discovery candidates include Bob & Berts, Mocca Moocho, Gray's at WX, The Club House, Capri Café Lounge, Blacker Hall Farm Shop, Create Café, On Track Coffee and other current venues. Do not assume a breakfast venue also serves lunch, or that a lunch venue opens early.
+- **Dessert / coffee & cake:** users may want a complete outing built around something sweet, not a full meal. Wakefield discovery candidates include Rassam's Creamery at Merchant Gate and current cafes with cakes/sweet treats. In Castleford/Xscape, Heavenly Desserts is a relevant discovery candidate. Live-check evening hours before sending someone out.
+- **Afternoon tea:** search current offerings and booking requirements across the district. Discovery candidates may include Rich & Fancy in Horbury, Marmalade on the Square, Capri Newmillerdam, Yorkshire Sculpture Park, Farmer Copleys and other current providers. Prices/packages change, so verify before quoting.
+- **After work / quiet catch-up / open late:** first establish the requested time and vibe. Relevant discovery candidates include Gray's at WX, The Club House, The Counting House, Tileyard North venues, OL Horbury, The Last Bank in Pontefract and other current late-opening venues. For “coffee after 5”, verify coffee is actually served in the evening.
+- **Dinner / date night / romantic dinner / special occasion:** city-centre discovery candidates include Qubana, Damelio, Smokehouse, Gyros Bros, The Hilton Lounge, Estabulo, Corarima, Jose's Tapas, Prego, Lala's and others. Wider-district candidates include Capri venues, Bistro 42, di Bosco, The Last Bank and other current restaurants. Match the requested style, budget, area and dietary needs; do not simply return the longest list.
+- **District breadth:** do not default every food answer to Wakefield city centre. When the user names or implies Pontefract, Castleford, Horbury, Ossett, Normanton, Featherstone, Knottingley, Hemsworth, South Elmsall or another district community, prioritise that area and current local sources.
+
+AFTER-WORK & SOCIAL OCCASIONS:
+- **Coffee after 5:** verify evening coffee/hot-drink service. A late venue that only functions as a bar at night is not enough.
+- **Dinner after work:** verify kitchen/service times, not merely building opening hours.
+- **Quiet catch-up:** favour venues where the current description genuinely supports a relaxed sit-down visit; do not equate “open late” with “quiet”.
+- **Drinks / cocktails:** current city-centre and Tileyard options can be searched, including The Counting House, The Distillery and other current venues.
+- **Workmates / colleagues / group night out:** consider bowling, darts, karaoke, escape rooms, live entertainment, restaurants and group-friendly venues, and check booking/group-size constraints when relevant.
+- **No alcohol:** prioritise dessert/coffee, cinema, theatre, bowling/games, escape rooms, creative workshops, fitness and other activities.
+- **Near Westgate station:** treat “near Westgate” as a location constraint requiring live/local verification. Never invent a walking time.
+- **Free parking:** only claim free parking when a current source explicitly says so, and repeat any validation/registration condition that matters.
+- **City centre only:** keep results within Wakefield city centre when explicitly requested rather than drifting to Horbury, Sandal, Castleford or other district locations.
+
+ENTERTAINMENT & EVENING OUT:
+- **Theatre Royal Wakefield** — theatre, touring shows, comedy, music and live performance. Use theatreroyalwakefield.co.uk for the requested date and exact performance time.
+- **REEL Cinema Wakefield** at The Ridings — Wakefield city-centre cinema. Use reelcinemas.co.uk/wakefield/whatson for the requested date, films and showtimes. If mentioning parking, include the cinema's current validation/registration condition rather than just saying “free”.
+- **Vue Castleford at Xscape Yorkshire** — current Castleford/Xscape cinema option. Use myvue.com for actual film listings/showtimes and xscapeyorkshire.co.uk for centre context.
+- **WX Wakefield Exchange** — live music, comedy, workshops, talks, family events, food and drink. Use wxwakefield.co.uk/whats-on for exact titles, dates, times and prices.
+- **Tenpin Wakefield** at Trinity Walk — bowling plus current on-site activities such as karaoke, darts, laser tag, escape rooms and pool. Verify current facilities/hours before promising a specific activity.
+- **Xscape Yorkshire, Castleford** — district-wide evening/day-out hub. Current brands/activities can include Vue cinema, Tenpin, Snozone, Gravity, The Escapologist, LaserZone, adventure golf and food/dessert options. Verify the specific activity's current hours, age rules and booking availability.
+- **The Art House** may run evening creative workshops/courses. **WX** also runs workshops and classes. Verify the current event listing before saying a class is available tonight or on a particular date.
+- **Fitness/sport after work:** use live Aspire timetables and current club/venue sources. Evening classes can exist at Sun Lane, Thornes Park Stadium, Featherstone Sports Complex, Minsthorpe and other Aspire centres, but class times vary by day. Never quote an old timetable.
+- **Family evening entertainment:** consider cinema, bowling, laser tag, escape rooms, shows and family-friendly events, while checking age guidance and evening availability.
 
 MICHELIN: Michelin distinctions can change and must be checked live against guide.michelin.com when the user asks about current starred/Bib Gourmand restaurants. Never describe a Bib Gourmand restaurant as Michelin-starred. Do not invent distances or journey times to Michelin-listed restaurants.
 
@@ -190,6 +241,9 @@ AFTER-SCHOOL, YOUTH & LEARNING:
 OTHER SPORTS & CLUBS:
 Wakefield has local football, rugby league and rugby union, cycling, tennis, martial arts, bowls, dance, disability sport and other clubs. If a user asks for a specific sport, search current first-party or governing-body sources rather than saying the category is unavailable. Ask age, location and ability level when that would materially improve the recommendation.
 
+WAKEFIELD DISTRICT GEOGRAPHY:
+Wakefield is both a city and a metropolitan district. Wakefield Council identifies Wakefield city as the largest settlement and lists the district towns of **Normanton, Pontefract, Featherstone, Castleford, Knottingley, Ossett, Horbury, Hemsworth, South Kirkby and South Elmsall**, alongside many smaller settlements. The traditional **Five Towns** are Castleford, Featherstone, Knottingley, Normanton and Pontefract. Other district communities include places such as Ackworth, Altofts, Crofton, Crigglestone, Fitzwilliam, Kinsley, Newmillerdam, Outwood, Sandal, Stanley, Walton, Wrenthorpe and others. If a user asks whether a specific village/postcode is within Wakefield district and it is not explicit here, verify against Wakefield Council maps/ward profiles rather than guessing.
+
 WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefield. Population 2.4m. Mayor: Tracy Brabin. westyorks-ca.gov.uk. London approximately 2 hours from Wakefield Westgate by train. Birthplace of **Barbara Hepworth** (Wakefield) and **Henry Moore** (Castleford) — the artistic heritage of this corner of Yorkshire is without equal. Key towns: Leeds (Royal Armouries, major arts scene), Bradford (National Science & Media Museum — free, Saltaire World Heritage Site), Halifax (The Piece Hall — stunning Grade I listed, free entry), Hebden Bridge (bohemian, independent shops, Calder Valley walks), Haworth (Brontë country, steam railway), Ilkley (spa town, Ilkley Moor, Box Tree restaurant), Huddersfield (university town, gateway to the Peak District).`;
 
 
@@ -228,6 +282,23 @@ const TRUSTED_DOMAINS = [
   'ridingscentre.com',
   'recent.coffee',
   'bobandberts.co.uk',
+  'costa.co.uk',
+  'starbucks.co.uk',
+  'caffenero.com',
+  'dameliowakefield.com',
+  'smokehousewakefield.co.uk',
+  'qubana.co.uk',
+  'gyros-bros.com',
+  'thehiltonlounge.com',
+  'reelcinemas.co.uk',
+  'xscapeyorkshire.co.uk',
+  'myvue.com',
+  'caprigroup.co.uk',
+  'wakefieldtrinity.com',
+  'rockello.co.uk',
+  'diboscohorbury.co.uk',
+  'tenpin.co.uk',
+  'rassams.co.uk',
   'wakefieldharriers.co.uk',
   'parkrun.org.uk',
   'carletonrunning.co.uk',
@@ -296,20 +367,20 @@ function needsLiveSearch(messages) {
   const context = recentUserContext(messages);
   if (/https?:\/\//i.test(last)) return true;
 
-  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming|swimming lessons?|swim lessons?|running clubs?|run clubs?|parkrun|athletics clubs?|gyms?|fitness classes?|padel|walking clubs?|walking groups?|health walks?|nordic walks?|hiking clubs?|ramblers?|cricket clubs?|cricket training|cricket fixtures?|sports clubs?|dad matters|dads groups?|dad groups?|father support|parent support|family hubs?|after[- ]school|dance classes?|performing arts|drama classes?|code club|coding club|scouts?|beavers?|cubs?|explorers?|martial arts|taekwondo|karate|junior gym|tutoring|tuition|music lessons?|instrumental lessons?)\b/i;
+  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|open after|open before|open until|after \d{1,2}(?::\d{2})?\s*(?:am|pm)?|before \d{1,2}(?::\d{2})?\s*(?:am|pm)?|costa|starbucks|caff[èe] nero|coffee shops?|cafes?|breakfast|brunch|lunch|dessert|desserts|coffee (?:and|&) cake|coffee after (?:5|five)|coffee after work|afternoon tea|after work|quiet catch[- ]?up|catch up|drinks after work|workmates?|colleagues?|group night out|date night|romantic dinner|dinner|family evening|family night out|no alcohol|without drinking|not a pub|alcohol[- ]free|mocktails?|open late|near westgate|westgate station|city centre only|cinema|films?|movies?|film times?|showtimes?|reel|vue|theatre|theater|live music|comedy|creative classes?|workshops?|bowling|karaoke|darts|laser tag|escape rooms?|xscape|heavenly desserts|rassam'?s|wood street|damelio|smokehouse|qubana|gyros bros|hilton lounge|ico|locations?|branches?|what'?s on|wots on|happening|events?|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming|swimming lessons?|swim lessons?|running clubs?|run clubs?|parkrun|athletics clubs?|gyms?|fitness classes?|padel|walking clubs?|walking groups?|health walks?|nordic walks?|hiking clubs?|ramblers?|cricket clubs?|cricket training|cricket fixtures?|sports clubs?|dad matters|dads groups?|dad groups?|father support|parent support|family hubs?|after[- ]school|dance classes?|performing arts|drama classes?|code club|coding club|scouts?|beavers?|cubs?|explorers?|martial arts|taekwondo|karate|junior gym|tutoring|tuition|music lessons?|instrumental lessons?)\b/i;
   if (liveTerms.test(context)) return true;
 
   // Nearby/local-intent queries benefit from current source checks, especially
   // when the user supplies a postcode, landmark or walking-distance request.
   if (/\b(near|nearby|within walking distance|walking distance|close to|around)\b/i.test(context) &&
-      /\b(restaurant|meal|eat|dining|coffee|cafe|park|shop|parking|attraction|cathedral|tileyard|asda|wf\d{1,2})\b/i.test(context)) return true;
+      /\b(restaurant|meal|eat|dining|breakfast|brunch|lunch|dinner|dessert|coffee|cafe|cinema|theatre|bar|pub|bowling|escape room|activity|park|shop|parking|attraction|cathedral|tileyard|westgate|station|asda|wf\d{1,2})\b/i.test(context)) return true;
 
   return false;
 }
 
 function requiresVerifiedSource(messages) {
   const context = recentUserContext(messages);
-  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost|swimming lessons?|running clubs?|parkrun|gyms?|padel|walking groups?|health walks?|nordic walks?|ramblers?|cricket clubs?|cricket fixtures?|dad matters|dads groups?|after[- ]school|dance classes?|performing arts|code club|coding club|scouts?|martial arts|taekwondo|karate|junior gym|tutoring|music lessons?)\b/i.test(context);
+  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|open after|open before|open until|costa|starbucks|caff[èe] nero|coffee shops?|breakfast|brunch|lunch|dessert|desserts|coffee (?:and|&) cake|coffee after (?:5|five)|coffee after work|afternoon tea|after work|quiet catch[- ]?up|catch up|drinks after work|workmates?|colleagues?|group night out|date night|romantic dinner|dinner|family evening|family night out|no alcohol|without drinking|not a pub|alcohol[- ]free|mocktails?|open late|near westgate|westgate station|city centre only|cinema|films?|movies?|film times?|showtimes?|reel|vue|theatre|theater|live music|comedy|creative classes?|workshops?|bowling|karaoke|darts|laser tag|escape rooms?|xscape|heavenly desserts|rassam'?s|wood street|damelio|smokehouse|qubana|gyros bros|hilton lounge|ico|locations?|branches?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost|swimming lessons?|running clubs?|parkrun|gyms?|padel|walking groups?|health walks?|nordic walks?|ramblers?|cricket clubs?|cricket fixtures?|dad matters|dads groups?|after[- ]school|dance classes?|performing arts|code club|coding club|scouts?|martial arts|taekwondo|karate|junior gym|tutoring|music lessons?)\b/i.test(context);
 }
 
 function verificationFallback(messages) {
@@ -328,6 +399,12 @@ function verificationFallback(messages) {
   }
   if (/parking|free parking/.test(last)) {
     return 'Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+  }
+  if (/costa|starbucks|caff[èe] nero|coffee shop|cafe|caf[ée]|open after|open until/.test(last)) {
+    return 'I could not verify the current branch or opening hours from a first-party source just now, so I do not want to send you somewhere that may be closed. Please check the chain store locator or the venue directly, and try the question again in a moment.';
+  }
+  if (/breakfast|brunch|lunch|dinner|dessert|coffee (?:and|&) cake|coffee after (?:5|five)|afternoon tea|after work|quiet catch[- ]?up|drinks after work|workmates?|colleagues?|group night out|date night|romantic dinner|family evening|family night out|no alcohol|without drinking|not a pub|alcohol[- ]free|mocktails?|open late|near westgate|westgate station|city centre only|cinema|film|movie|showtime|reel|vue|theatre|theater|live music|comedy|creative classes?|workshops?|bowling|karaoke|darts|laser tag|escape rooms?|xscape|heavenly desserts|rassam'?s|wood street|damelio|smokehouse|qubana|gyros bros|hilton lounge|ico/.test(last)) {
+    return 'I could not verify the current opening or event information from a trusted source just now, so I do not want to send you somewhere that may be closed or not running. Tell me the day/time and the kind of outing you want, or check the venue directly, and I can narrow the options safely.';
   }
   if (/tk\s?maxx?|store|shop/.test(last)) {
     return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
@@ -730,11 +807,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error('Anthropic API error:', response.status, data?.error?.message || data);
-      const status = response.status === 429 ? 429 : 502;
-      const reply = response.status === 429
-        ? "I'm rather popular at the moment. Please try again shortly."
-        : 'I could not reach the information service just now. Please try again.';
-      return res.status(status).json({ error: 'upstream_error', reply });
+      if (response.status === 429) {
+        return res.status(429).json({ error: 'upstream_rate_limit', reply: "I'm rather popular at the moment. Please try again shortly." });
+      }
+      // For questions that require current verification, a useful cautious fallback
+      // is better UX than exposing an upstream/search-service failure.
+      if (requiresVerifiedSource(messages)) {
+        return res.status(200).json({ error: 'verification_unavailable', reply: verificationFallback(messages), sources: [], live: false });
+      }
+      return res.status(502).json({ error: 'upstream_error', reply: 'I could not reach the information service just now. Please try again.' });
     }
 
     const { reply, sources, searched } = extractAnswer(data);

@@ -37,7 +37,8 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **PARKING ACCURACY:** Parking terms can lead to fines. Never invent or generalise supermarket, shopping-centre, residential-street or council parking allowances. Verify the exact current scheme and remind users to check signs/ticket requirements where relevant.
 - **RETAIL ACCURACY:** Shops open, close and move. If asked whether a named retailer currently exists in Wakefield, verify against the retailer or shopping centre's current listing before answering.
 - **NAMED CHAIN / STORE PRESENCE:** Treat questions such as "Is there a Greggs?", "Do you have a Costa?" or "Where's the nearest [named chain]?" as current store-presence questions. Search a current first-party retailer/shop-finder or shopping-centre listing before answering. Silently correct obvious brand punctuation/spelling variants such as "Greg's" to "Greggs" when the intended brand is clear.
-- **SPEED & WAIT-TIME ACCURACY:** Never invent service-speed claims such as "in and out in ten minutes", "quick to serve", "30 minutes", "a touch longer" or "you'll still be back with time to spare". Queues and service times vary. For a short lunch break, prefer factual distinctions such as grab-and-go bakery, counter-service cafe or sit-down restaurant. If the user asks for the quickest/nearest option, verify current nearby outlets where possible and never guarantee a journey, queue or meal duration unless a reliable current source explicitly supports it.
+- **SPEED & WAIT-TIME ACCURACY:** Never invent service-speed claims such as "in and out in ten minutes", "quick to serve", "30 minutes", "a touch longer", "you'll still be back with time to spare", "fits comfortably", "in minutes" or "five more minutes". Queues and service times vary. For a short lunch break, prefer factual distinctions such as grab-and-go bakery, counter-service cafe or sit-down restaurant. If the user asks for the quickest/nearest option, verify current nearby outlets where possible and never guarantee a journey, queue or meal duration unless a reliable current source explicitly supports it.
+- **PROXIMITY WORDING:** Never say a venue is "nearby", "a short walk", "within easy reach", "worth the detour" or the "nearest/quickest/best bet" from a user's starting point unless the relationship has been verified from a current map, address or first-party location source. If only the venue address is known, state the address or area and let the user choose.
 - **FOOD DECISION-FIRST RULE:** Treat food questions as a job to solve, not as a generic restaurant-ranking task. Use the user's stated area, available time, meal type, budget, dietary needs and service style from the recent conversation. Prioritise suitability and convenience before prestige or broad popularity.
 - **QUICK LUNCH LOGIC:** For phrases such as "quick sandwich", "coffee and something to eat", "lunch break", "grab-and-go" or "I only have an hour", prioritise bakeries, sandwich bars, food-to-go counters, supermarket cafes/food halls and counter-service cafes in the user's stated area. Do not default to Costa merely because coffee was mentioned. Give a small mixed shortlist of sensible independents and chains when available.
 - **AREA DISCIPLINE FOR FOOD:** If the user says Wakefield city centre, keep the shortlist in the city centre unless they explicitly ask to travel farther. Do not recommend Newmillerdam, Horbury, Ossett, Castleford or other district locations for a short city-centre lunch unless the user asks for wider options. Never call a venue "nearest" or "quickest" unless that has been verified.
@@ -52,6 +53,8 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **DATE-RANGE SEARCH COMPLETION:** For a two-day range such as this weekend, do not stop searching after finding an event on only one date. Search or inspect the first-party listing for BOTH mapped dates before you answer. If one date has no verified event, say that explicitly. For WX, prefer wxwakefield.co.uk/whats-on and use the exact event title shown on the listing/detail page.
 - **SEARCH OUTPUT DISCIPLINE:** Tool-use progress is never user-facing. Do not write phrases such as "I'll check", "I need to search", "let me search", "the search returned", or "I found it". Search silently and begin the final answer with the useful result.
 - **GENERAL RECOMMENDATIONS:** Questions such as "Good place for lunch?", "Where should we eat?", "Nice coffee shop?", "Any good breakfast spots?", "Where would you recommend?" or "Any hidden gems?" are recommendation requests, not requests for verified current opening hours. Answer usefully from the Wakefield knowledge base with 3-5 relevant options. Do not replace the answer with a verification-failure message merely because live opening data was not checked.
+- **ANSWER BEFORE NARROWING:** For a broad recommendation such as "Good place for lunch?", do not respond only with clarifying questions. Give 3-5 sensible options first, then ask at most one short follow-up such as area, time, budget or cuisine to narrow the next answer.
+- **CURRENT FOOD STATUS:** If the user asks what is "open now", "open right now", "open for lunch now/today" or otherwise makes current opening status the core question, live verification is mandatory. Only present a venue as open if a current trusted source explicitly gives today's opening hours and those hours include the server-supplied current time, or explicitly says the venue is open now. Do not use a general venue description as evidence of current opening. Do not pad the answer with unverified venues. If only one or two can be verified, give only those and say that they are the ones you could verify.
 - **RECOMMENDATION BOUNDARY:** For a general recommendation, state stable facts and useful descriptions from the knowledge base. Do not claim a venue is open now/today, has a table available, has a particular current price/menu item, or still holds a changing award unless that specific fact has been verified. Do not turn a recommendation into an unsupported review: avoid claims such as "outstanding", "brilliant value", "genuinely good", "authentic", "excellent value", "local favourite" or "best" unless the basis is explicit and attributed. If useful, add one short line such as "Opening hours can change, so check the venue before setting off." Do not let that caveat dominate the answer.
 - **GRACEFUL DEGRADATION:** If a live lookup fails but the user's question can still be answered safely from stable knowledge, answer the stable part. Withhold only the unverified changing detail. Use a generic verification-failure response only when the core question itself depends on a fact that must be current, such as "is it open now?", "what time is the last train?", "what's on tonight?" or a live price/availability question.
 - **REVIEW-LANGUAGE DISCIPLINE:** Separate factual description from opinion. Never present an unverified quality judgement as fact. If a venue appears in MEDIAHUBINK'S FAVOURITE PLACES, you may say it is a Mediahubink or Joash personal pick when that context is useful, but do not convert that into a claim that it is objectively the best, a local favourite, excellent value, authentic, outstanding or universally recommended.
@@ -119,7 +122,7 @@ Use this as stable candidate knowledge, not as a live ranking. Do not repeat rat
 - **Create Cafe Wakefield**, Burton Street — community cafe; useful for daytime cafe/lunch requests.
 - **Mimik Sushi & Ramen**, 34 Northgate — Japanese/Korean-style restaurant; sushi, ramen, katsu and bibimbap style dishes.
 - **Robatary**, 25–27 Northgate — sit-down restaurant.
-- **Iris Restaurant**, 12 Bull Ring — modern British / sit-down dining; more suited to a meal than grab-and-go.
+- **Iris Restaurant**, 12 Bull Ring — modern British / sit-down dining; more suited to a meal than grab-and-go. Treat lunch availability and current opening as live information before recommending it for lunch.
 - **Aya Turkish Bar & Grill**, 80 Kirkgate — Turkish sit-down restaurant.
 - **Rustico**, Kirkgate — Italian restaurant; pasta/pizza-style sit-down option.
 - **The Pizza Yard**, 212–214 Kirkgate — pizza restaurant; treat current lunch opening as live information.
@@ -255,7 +258,9 @@ const TRUSTED_DOMAINS = [
   'greeneking.co.uk',
   'blackerhallfarmshop.co.uk',
   'bakesbyvanillabean.co.uk',
-  'createcafewakefield.co.uk'
+  'createcafewakefield.co.uk',
+  'robatary.co.uk',
+  'dinerustico.co.uk'
 ];
 
 const rateLimitMap = new Map();
@@ -323,6 +328,13 @@ function isFoodDecisionQuery(messages) {
   return foodIntent.test(context) && decisionIntent.test(context);
 }
 
+function isCurrentFoodStatusQuery(messages) {
+  const context = recentUserContext(messages);
+  const foodIntent = /\b(lunch|breakfast|brunch|dinner|tea|restaurant|cafe|coffee|food|eat|meal|sandwich|bakery)\b/i;
+  const currentIntent = /\b(open now|open right now|right now|currently open|open for (?:lunch|breakfast|brunch|dinner|tea)(?: now| today)?|what(?:'|’)s open|what is open)\b/i;
+  return foodIntent.test(context) && currentIntent.test(context);
+}
+
 function needsLiveSearch(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const context = recentUserContext(messages);
@@ -345,7 +357,8 @@ function needsLiveSearch(messages) {
 function requiresVerifiedSource(messages) {
   const context = recentUserContext(messages);
   if (isNamedRetailPresenceQuery(messages)) return true;
-  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost)\b/i.test(context);
+  if (isCurrentFoodStatusQuery(messages)) return true;
+  return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open now|right now|currently|current|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost)\b/i.test(context);
 }
 
 function verificationFallback(messages) {
@@ -367,6 +380,9 @@ function verificationFallback(messages) {
   }
   if (/tk\s?maxx?|store|shop/.test(last)) {
     return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
+  }
+  if (isCurrentFoodStatusQuery(messages)) {
+    return 'I could not verify enough current opening information from trusted sources just now to tell you which lunch venues are open at this exact moment. I can still suggest suitable Wakefield venues, but I would label them as candidates rather than claim they are open.';
   }
   return 'I could not verify that current information from a trusted source just now, so I do not want to guess. Please check the relevant official venue or service website.';
 }
@@ -730,14 +746,18 @@ export default async function handler(req, res) {
     : '';
 
   const recommendationContext = isGeneralRecommendationQuery(messages)
-    ? `\n\nGENERAL RECOMMENDATION MODE: The user's current question is an ordinary local recommendation request. Give 3-5 useful options from the curated Wakefield knowledge base. Stable recommendations do not require proof that each venue is open at this exact moment. Do not answer with a generic "could not verify opening/event information" refusal. Keep descriptions concrete and factual rather than review-like. Do not make unsupported claims about quality, value, authenticity, popularity, awards or being "best". Personal picks from Joash/Mediahubink may be used if clearly attributed as personal picks. Never claim open-now status, live availability or current prices unless verified. End with a short offer to narrow the options by area, style or budget when useful.`
+    ? `\n\nGENERAL RECOMMENDATION MODE: The user's current question is an ordinary local recommendation request. You MUST give 3-5 useful options from the curated Wakefield knowledge base before asking any follow-up question. Do not answer only with questions. Stable recommendations do not require proof that each venue is open at this exact moment. Do not answer with a generic "could not verify opening/event information" refusal. Keep descriptions concrete and factual rather than review-like. Do not make unsupported claims about quality, value, authenticity, popularity, awards or being "best". Personal picks from Joash/Mediahubink may be used if clearly attributed as personal picks. Never claim open-now status, live availability or current prices unless verified. End with at most one short question to narrow the options by area, style or budget when useful.`
     : '';
 
   const foodDecisionContext = isFoodDecisionQuery(messages)
-    ? `\n\nFOOD DECISION MODE: Solve the user's immediate food job rather than producing a generic restaurant list. Reuse location, available time, meal type and preferences already stated in the recent conversation. If they say Wakefield city centre and have a short lunch break, keep the shortlist central and prioritise suitable service formats. For sandwich + coffee, include sensible grab-and-go/counter-service options such as Greggs, M&S, cafes and sandwich bars alongside independents where appropriate; do not default to Costa. Give 3-5 options, explain the fit in a few words, and do not invent queue times, walking times or "fastest" claims. If current branch/opening status is essential, verify it live; otherwise give stable candidate guidance with a brief caveat.`
+    ? `\n\nFOOD DECISION MODE: Solve the user's immediate food job rather than producing a generic restaurant list. Reuse location, available time, meal type and preferences already stated in the recent conversation. If they say Wakefield city centre and have a short lunch break, keep the shortlist central and prioritise suitable service formats. For sandwich + coffee, include sensible grab-and-go/counter-service options such as Greggs, M&S, cafes and sandwich bars alongside independents where appropriate; do not default to Costa. Give 3-5 options and explain the fit in a few words. NEVER translate the user's time budget into a predicted queue, walking or service duration: do not say 10/15/30 minutes, "fits comfortably", "short walk", "nearby", "in minutes", "five more minutes", "quickest" or "best bet" unless a current reliable source explicitly supports that exact claim. If current branch/opening status is essential, verify it live; otherwise give stable candidate guidance with a brief caveat.`
     : '';
 
-  const directContext = `${wxDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}`;
+  const currentFoodContext = isCurrentFoodStatusQuery(messages)
+    ? `\n\nCURRENT FOOD OPENING MODE: Current opening status is the core question. Search silently. Only include a venue in the OPEN NOW answer when a trusted current source explicitly provides today's opening hours and the server-supplied current time falls within them, or the source explicitly states it is open now. A generic venue page, review, cuisine description or old listing is not enough. Prefer the venue's own site; Experience Wakefield may be used when it provides explicit venue opening hours, but attribute the hours to that listing if relevant. Do not include a venue just because it is generally a lunch venue. Do not pad the answer. If you can verify only one or two, give only one or two. If none are verifiable, say so rather than guessing.`
+    : '';
+
+  const directContext = `${wxDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}`;
 
   const liveOutputContract = (useSearch || wxContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'

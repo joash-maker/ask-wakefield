@@ -135,7 +135,7 @@ Use this as stable candidate knowledge, not as a live ranking. Do not repeat rat
 - **Taste of Dosa** — South Indian cuisine including dosas and other traditional dishes.
 - **Bob & Berts Wakefield** — all-day cafe with coffee, brunch and lighter food.
 - **M&S Cafe / Marks & Spencer food-to-go** — useful city-centre option for a straightforward cafe or light lunch. Verify the current Wakefield store/cafe setup before stating exact hours.
-- **Greggs** — useful grab-and-go bakery option. User-provided local knowledge identifies Wakefield Bus Station and town-centre branches; current branch presence and hours must be verified before giving exact location/open-now claims.
+- **Greggs** — useful grab-and-go bakery option. A first-party Greggs listing identifies **Greggs Wakefield, U1 Wakefield Bus Station, Marsh Way, WF1 3AQ**. Treat current opening hours and menu availability as live information and verify them when they matter. If a user explicitly says they are at Wakefield Bus Station and wants a sandwich/coffee quickly, check this exact branch first rather than guessing from generic city-centre knowledge. Never say that Greggs is probably there because transport hubs often have one.
 
 **Near the city centre / wider Wakefield:**
 - **Thornes Lane Cafe**, 86 Thornes Lane — cafe.
@@ -160,7 +160,7 @@ Use this as stable candidate knowledge, not as a live ranking. Do not repeat rat
 - **The Weston at Yorkshire Sculpture Park** — modern British dining at YSP; useful when visiting the sculpture park.
 
 **Food matching guidance:**
-- Quick sandwich + coffee / short lunch break: favour Greggs, M&S cafe/food-to-go, Cafe 19, KRA:FT, Create Cafe, Parkside Sandwich Bar or other verified nearby counter-service options in the user's area.
+- Quick sandwich + coffee / short lunch break: favour verified grab-and-go or counter-service options in the user's stated area. For **Wakefield Bus Station specifically**, check the Greggs U1 Bus Station branch first. Do not treat Parkside Sandwich Bar, M&S or other wider-city options as being in the bus-station area unless current location evidence supports that relationship.
 - Casual sit-down city-centre lunch: consider Marmalade On The Square, Bob & Berts, Gyros Bros, Taste of Dosa, Mimik, Rustico, Aya or Robatary depending on cuisine and current opening.
 - Meal with a walk / destination lunch: consider The Boathouse Newmillerdam, Capri at Newmillerdam, Blacker Hall Farm Shop or The Weston at YSP when the location fits.
 - Evening / occasion dining: use the appropriate sit-down restaurants, but verify current evening opening and booking information.
@@ -316,7 +316,7 @@ function isNamedRetailPresenceQuery(messages) {
 
 function isQuickFoodQuery(messages) {
   const context = recentUserContext(messages);
-  const speedIntent = /\b(quickest|quick lunch|quick bite|quick sandwich|grab[- ]?and[- ]go|in a hurry|lunch break|only have (?:an? )?hour|have an hour)\b/i;
+  const speedIntent = /\b(quickest|quickly|quick lunch|quick bite|quick sandwich|grab[- ]?and[- ]go|grab something quickly|in a hurry|in a rush|pressed for time|asap|lunch break|only have (?:an? )?hour|have an hour)\b/i;
   const foodIntent = /\b(lunch|sandwich|coffee|cafe|food|eat|meal|bakery|brunch)\b/i;
   return speedIntent.test(context) && foodIntent.test(context);
 }
@@ -722,6 +722,36 @@ function foodAnswerNeedsValidation(reply, messages) {
   return false;
 }
 
+function deterministicallySanitiseFoodAnswer(reply, messages) {
+  if (!reply || !isFoodDecisionQuery(messages)) return reply;
+  let out = String(reply);
+
+  const replacements = [
+    [/\bfastest option\b/gi, 'most convenient option location-wise'],
+    [/\bquickest move\b/gi, 'most convenient option location-wise'],
+    [/\bbest bet\b/gi, 'straightforward option'],
+    [/\ba short walk\b/gi, 'elsewhere in the city centre'],
+    [/\bshort walk\b/gi, 'city-centre option'],
+    [/\bgentle walk\b/gi, 'city-centre option'],
+    [/\bfive(?: more)? minutes\b/gi, 'a little more time'],
+    [/\bin no time\b/gi, ''],
+  ];
+  for (const [pattern, replacement] of replacements) out = out.replace(pattern, replacement);
+
+  // Remove a generic transport-hub guess if it ever leaks through.
+  out = out.replace(/[^.\n]*Greggs[^.\n]*transport hubs[^.\n]*\.?/gi, '');
+
+  // Exact bus-station requests should never present Parkside as a station-area option.
+  if (/\bwakefield bus station\b/i.test(recentUserContext(messages, 5))) {
+    out = out
+      .split(/\n/)
+      .filter(line => !/Parkside Sandwich Bar/i.test(line))
+      .join('\n');
+  }
+
+  return out.replace(/\n{3,}/g, '\n\n').replace(/\s+([,.!?])/g, '$1').trim();
+}
+
 async function validateFoodAnswer(reply, messages) {
   if (!foodAnswerNeedsValidation(reply, messages)) return reply;
 
@@ -819,14 +849,18 @@ export default async function handler(req, res) {
     : '';
 
   const currentFoodContext = isCurrentFoodStatusQuery(messages)
-    ? `\n\nCURRENT FOOD OPENING MODE: Current opening status is the core question. Search silently. IGNORE the curated venue list for deciding who is open: it may be used only for background after a venue has independently been verified by live evidence. Every venue named in the final answer MUST be backed by current live evidence that explicitly gives today's opening hours covering the server-supplied current time, or explicitly says it is open now. If you cannot support a venue that way, OMIT IT ENTIRELY from this answer. NEVER include a venue with wording such as "status not confirmed", "worth checking", "if it is open" or "exact current status unclear". A generic venue page, review, cuisine description or old listing is not enough. Prefer the venue's own site; Experience Wakefield may be used when it provides explicit current venue opening hours. Do not mention extra unverified candidates after verified venues. Do not pad the answer. If you can verify only one or two, give only one or two. If none are verifiable, say so rather than guessing. Do not label hours as "winter", "summer" or seasonal unless the source explicitly makes that label current for today's date. FINAL CLOCK CHECK: compare the server's current HH:MM numerically with every stated opening/closing range. If current time is inside the range, call it open. If current time is before the closing time, do not say it is closed or that the user has missed it.`
+    ? `\n\nCURRENT FOOD OPENING MODE: Current opening status is the core question. Search silently. IGNORE the curated venue list for deciding who is open: it may be used only for background after a venue has independently been verified by live evidence. Every venue named in the final answer MUST be backed by current live evidence that explicitly gives today's opening hours covering the server-supplied current time, or explicitly says it is open now. For EACH venue you retain, state the verified opening-hours window (or 'open now until X') used to establish that it is open. If you cannot support a venue that way, OMIT IT ENTIRELY from this answer. NEVER include a venue with wording such as "status not confirmed", "worth checking", "if it is open" or "exact current status unclear". A generic venue page, review, cuisine description or old listing is not enough. Prefer the venue's own site; Experience Wakefield may be used when it provides explicit current venue opening hours. Do not mention extra unverified candidates after verified venues. A shopping-centre directory or centre opening time does NOT prove that an individual cafe/restaurant inside it is open. Strip marketing adjectives copied from source pages or snippets (for example 'great', 'delicious', 'beautiful', 'popular', 'quality') unless they are necessary factual descriptions. Do not pad the answer. If you can verify only one or two, give only one or two. If none are verifiable, say so rather than guessing. Do not label hours as "winter", "summer" or seasonal unless the source explicitly makes that label current for today's date. FINAL CLOCK CHECK: compare the server's current HH:MM numerically with every stated opening/closing range. If current time is inside the range, call it open. If current time is before the closing time, do not say it is closed or that the user has missed it.`
     : '';
 
   const specificFoodStartingPointContext = hasSpecificFoodStartingPoint(messages) && isFoodDecisionQuery(messages)
     ? `\n\nSPECIFIC STARTING-POINT FOOD MODE: The user has given a named starting point or landmark. Only describe a venue as being at that exact location when live/current evidence or the curated knowledge explicitly supports it. For every other option, give its street/address or named area only. Do NOT say "nearby", "short walk", "quickest", "fastest", "best bet", "worth the detour", "five more minutes", "in no time" or invent a walking/service time. If one verified outlet is literally at the user's starting point, you may say it is the most convenient LOCATION-WISE because it is already there. You may then list other candidates by address without ranking their proximity or speed.`
     : '';
 
-  const directContext = `${wxDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}`;
+  const wakefieldBusStationFoodContext = /\bwakefield bus station\b/i.test(recentUserContext(messages, 5)) && isFoodDecisionQuery(messages)
+    ? `\n\nWAKEFIELD BUS STATION FOOD ANCHOR: The user has explicitly anchored the request at Wakefield Bus Station. First-party Greggs knowledge identifies Greggs Wakefield, U1 Wakefield Bus Station, Marsh Way, WF1 3AQ. For a sandwich-and-coffee / grab-and-go request, verify that exact branch first when live search is available. If verified, describe it as being at the bus station and therefore the most convenient LOCATION-WISE option. Do not claim it is the fastest by queue/service time. Do not say Greggs is merely a town-centre branch or that it is probably at the station. Do not list Parkside Sandwich Bar as a bus-station-area option. Only add alternatives when you can identify their exact address/area; do not invent walking times or call them nearby.`
+    : '';
+
+  const directContext = `${wxDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}`;
 
   const liveOutputContract = (useSearch || wxContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -894,7 +928,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const safeReply = await validateFoodAnswer(reply, messages);
+    const validatedReply = await validateFoodAnswer(reply, messages);
+    const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);
 
     return res.status(200).json({
       reply: safeReply || "I'm sorry, I couldn't generate a response. Please try again.",

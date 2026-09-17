@@ -345,6 +345,11 @@ function hasSpecificFoodStartingPoint(messages) {
   return /\b(bus station|westgate station|kirkgate station|trinity walk|the ridings|bull ring|wood street|northgate|kirkgate|westgate|theatre royal|the hepworth|tileyard north|wx|wakefield exchange)\b/i.test(context);
 }
 
+function isWakefieldCityCentreFoodContext(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(wakefield city centre|wakefield town centre|city centre|town centre)\b/i.test(context);
+}
+
 function needsLiveSearch(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const context = recentUserContext(messages);
@@ -753,6 +758,17 @@ function deterministicallySanitiseFoodAnswer(reply, messages) {
       .join('\n');
   }
 
+  // City-centre open-now answers must not leak clearly out-of-centre venues.
+  // This is a narrow deterministic backstop for known location labels; the
+  // model validator still performs the broader area check.
+  if (isCurrentFoodStatusQuery(messages) && isWakefieldCityCentreFoodContext(messages)) {
+    const outOfCentre = /\b(Calder Park|Newmillerdam|Horbury|Ossett|Silkwood Park)\b/i;
+    out = out
+      .split(/\n/)
+      .filter(line => !outOfCentre.test(line))
+      .join('\n');
+  }
+
   return out.replace(/\n{3,}/g, '\n\n').replace(/\s+([,.!?])/g, '$1').trim();
 }
 
@@ -765,6 +781,8 @@ ${londonContext()}
 
 Rules:
 - OPEN-NOW STRICT FILTER: if this is an open-now food answer, validate EVERY named venue independently. Retain a venue only when that venue's own item in the draft contains explicit current-day hours that cover the current time, or explicitly says it is open now/open until a stated time today. A venue name plus a description is NOT enough.
+- AREA STRICTNESS: if the user asked for Wakefield city centre, retain only venues whose draft evidence places them in Wakefield city centre or at a recognised central anchor/street. Remove venues explicitly identified as Calder Park, Newmillerdam, Horbury, Ossett, Silkwood Park or another out-of-centre district/location. Never treat a Wakefield postal address alone as proof of city-centre location.
+- CLOSING-SOON HANDLING: if the current time is less than 30 minutes before a verified closing time, do not present that venue as a normal practical lunch recommendation. You may keep it only in a short separate note labelled as closing very soon, with the exact closing time. If there are other practical verified options, prefer those and keep the closing-soon note brief.
 - Remove every named venue whose hours are missing, unconfirmed, unclear, conditional, merely suggested, or only inferred from a shopping centre / area / directory being open. Do not keep such venues as alternatives, examples, 'other options', or a final aside.
 - Do not introduce any new venue, opening time, address or factual claim while validating. If only one or two venues survive, return only those one or two.
 - Do clock arithmetic literally. If the draft says a venue is open 09:00-15:00 and the current time is 13:19, it is open. Never say it is closed, missed or too late before the closing time.
@@ -857,7 +875,7 @@ export default async function handler(req, res) {
     : '';
 
   const currentFoodContext = isCurrentFoodStatusQuery(messages)
-    ? `\n\nCURRENT FOOD OPENING MODE: Current opening status is the core question. Search silently. IGNORE the curated venue list for deciding who is open: it may be used only for background after a venue has independently been verified by live evidence. Every venue named in the final answer MUST be backed by current live evidence that explicitly gives today's opening hours covering the server-supplied current time, or explicitly says it is open now. For EACH venue you retain, state the verified opening-hours window (or 'open now until X') used to establish that it is open. If you cannot support a venue that way, OMIT IT ENTIRELY from this answer. NEVER include a venue with wording such as "status not confirmed", "worth checking", "if it is open" or "exact current status unclear". A generic venue page, review, cuisine description or old listing is not enough. Prefer the venue's own site; Experience Wakefield may be used when it provides explicit current venue opening hours. Do not mention extra unverified candidates after verified venues, even as 'alternatives', 'other sit-down options', 'worth checking', or examples. Every named venue anywhere in the final answer must pass the same open-now evidence rule. A shopping-centre directory or centre opening time does NOT prove that an individual cafe/restaurant inside it is open. Strip marketing adjectives copied from source pages or snippets (for example 'great', 'delicious', 'beautiful', 'popular', 'quality') unless they are necessary factual descriptions. Do not pad the answer. If you can verify only one or two, give only one or two. If none are verifiable, say so rather than guessing. Do not label hours as "winter", "summer" or seasonal unless the source explicitly makes that label current for today's date. FINAL CLOCK CHECK: compare the server's current HH:MM numerically with every stated opening/closing range. If current time is inside the range, call it open. If current time is before the closing time, do not say it is closed or that the user has missed it.`
+    ? `\n\nCURRENT FOOD OPENING MODE: Current opening status is the core question. Search silently. IGNORE the curated venue list for deciding who is open: it may be used only for background after a venue has independently been verified by live evidence. Every venue named in the final answer MUST be backed by current live evidence that explicitly gives today's opening hours covering the server-supplied current time, or explicitly says it is open now. For EACH venue you retain, state the verified opening-hours window (or 'open now until X') used to establish that it is open. If you cannot support a venue that way, OMIT IT ENTIRELY from this answer. NEVER include a venue with wording such as "status not confirmed", "worth checking", "if it is open" or "exact current status unclear". A generic venue page, review, cuisine description or old listing is not enough. Prefer the venue's own site; Experience Wakefield may be used when it provides explicit current venue opening hours. Do not mention extra unverified candidates after verified venues, even as 'alternatives', 'other sit-down options', 'worth checking', or examples. Every named venue anywhere in the final answer must pass the same open-now evidence rule. A shopping-centre directory or centre opening time does NOT prove that an individual cafe/restaurant inside it is open. Strip marketing adjectives copied from source pages or snippets (for example 'great', 'delicious', 'beautiful', 'popular', 'quality') unless they are necessary factual descriptions. Do not pad the answer. If you can verify only one or two, give only one or two. If none are verifiable, say so rather than guessing. If the user asked for Wakefield city centre, enforce the area literally: do not include Calder Park, Newmillerdam, Horbury, Ossett, Silkwood Park or another venue whose evidence places it outside the centre. A venue being in Wakefield generally is not enough. Do not label hours as "winter", "summer" or seasonal unless the source explicitly makes that label current for today's date. FINAL CLOCK CHECK: compare the server's current HH:MM numerically with every stated opening/closing range. If current time is inside the range, call it open. If current time is before the closing time, do not say it is closed or that the user has missed it. PRACTICAL CLOSING BUFFER: if a verified venue closes in less than 30 minutes, do not present it alongside normal lunch recommendations as though it has a full lunch window remaining. Either omit it when there are enough other verified options, or place it in a brief "closing soon" note with its exact closing time.`
     : '';
 
   const specificFoodStartingPointContext = hasSpecificFoodStartingPoint(messages) && isFoodDecisionQuery(messages)

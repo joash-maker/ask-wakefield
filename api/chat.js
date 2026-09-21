@@ -975,9 +975,85 @@ TRUSTED EVIDENCE:\n${evidenceParts.join('\n\n---\n\n') || 'No trusted event evid
 }
 
 
-function deterministicallySanitiseEventAnswer(reply, messages) {
+function combinedEventEvidenceText(evidence = {}) {
+  return [
+    evidence.wxContext?.text,
+    evidence.experienceEventsContext?.text,
+    evidence.cathedralContext?.text,
+    evidence.freeVenueContexts?.ysp?.text,
+    evidence.freeVenueContexts?.ncm?.text,
+    evidence.freeVenueContexts?.wxWeekly?.text
+  ].filter(Boolean).join('\n\n');
+}
+
+function eventLineTitleCandidate(line) {
+  const clean = String(line || '')
+    .replace(/^\s*[-*•]+\s*/, '')
+    .replace(/\*\*/g, '')
+    .trim();
+  if (!clean) return '';
+
+  // Most event rows use "Title at Venue". Keep the exact title portion so we can
+  // look for supporting price/free evidence close to the same event in the source text.
+  const atIndex = clean.toLowerCase().indexOf(' at ');
+  const title = atIndex > 4 ? clean.slice(0, atIndex) : clean.split(/\s+[—–]\s+/)[0];
+  return title.replace(/[.:,;\s]+$/, '').trim();
+}
+
+function eventClaimSupportedNearTitle(title, claim, evidenceText) {
+  if (!title || !claim || !evidenceText) return false;
+  const haystack = evidenceText.toLowerCase();
+  const needle = title.toLowerCase();
+  let from = 0;
+
+  while (from < haystack.length) {
+    const index = haystack.indexOf(needle, from);
+    if (index === -1) break;
+    const window = haystack.slice(index, Math.min(haystack.length, index + needle.length + 360));
+    if (claim.type === 'free') {
+      if (/\bfree\b|£\s*0(?:[.,]00)?\b/i.test(window)) return true;
+    } else if (claim.type === 'price') {
+      const price = claim.value.toLowerCase().replace(/\s+/g, '');
+      const compactWindow = window.replace(/\s+/g, '');
+      if (compactWindow.includes(price)) return true;
+    }
+    from = index + needle.length;
+  }
+  return false;
+}
+
+function stripUnsupportedEventPriceClaims(reply, evidence = {}) {
+  const evidenceText = combinedEventEvidenceText(evidence);
+  if (!evidenceText) return reply;
+
+  return String(reply).split('\n').map(line => {
+    if (!/\bfree\b|£\s*\d/i.test(line)) return line;
+    const title = eventLineTitleCandidate(line);
+    if (!title || title.length < 5) return line;
+
+    let next = line;
+    if (/\bfree\b/i.test(next) && !eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText)) {
+      next = next.replace(/\bfree\b\s*/gi, '');
+    }
+
+    const prices = [...next.matchAll(/£\s*\d+(?:[.,]\d{1,2})?/gi)].map(match => match[0]);
+    for (const price of prices) {
+      if (!eventClaimSupportedNearTitle(title, { type: 'price', value: price }, evidenceText)) {
+        next = next.replace(price, '');
+      }
+    }
+
+    return next
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\s+([,.!?])/g, '$1')
+      .replace(/([—–-])\s*([,.])/g, '$2')
+      .trimEnd();
+  }).join('\n');
+}
+
+function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   if (!reply || !isCurrentEventsQuery(messages)) return reply;
-  let out = String(reply);
+  let out = stripUnsupportedEventPriceClaims(String(reply), evidence);
 
   if (isFreeCurrentLeisureQuery(messages)) {
     // Safety net: a generic 'free' request must never surface an explicitly paid option.
@@ -993,7 +1069,7 @@ function deterministicallySanitiseEventAnswer(reply, messages) {
     out = kept.join('\n\n').trim();
   }
 
-  return out;
+  return out.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 
@@ -1172,7 +1248,7 @@ ${cathedralContext.text}`
     : '';
 
   const currentEventsContext = isCurrentEventsQuery(messages)
-    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
+    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an 'Every Wednesday' activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
     : '';
 
   const userProvidedContext = userUrlContext
@@ -1292,7 +1368,12 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       cathedralContext,
       freeVenueContexts
     });
-    const eventSafeReply = deterministicallySanitiseEventAnswer(eventValidatedReply, messages);
+    const eventSafeReply = deterministicallySanitiseEventAnswer(eventValidatedReply, messages, {
+      wxContext,
+      experienceEventsContext,
+      cathedralContext,
+      freeVenueContexts
+    });
     const validatedReply = await validateFoodAnswer(eventSafeReply, messages);
     const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);
 

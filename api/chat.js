@@ -644,6 +644,7 @@ function recentAssistantEventCandidates(messages) {
     const atIndex = candidate.toLowerCase().indexOf(' at ');
     if (atIndex > 4) candidate = candidate.slice(0, atIndex).trim();
     candidate = candidate.split(/\s+[—–]\s+/)[0].trim();
+    candidate = candidate.replace(/\s+(?:exhibition|event)$/i, '').trim();
     candidate = candidate.replace(/^[^A-Za-z0-9]+|[.:,;]+$/g, '').trim();
     if (candidate.split(/\s+/).length > 12) continue;
     if (candidate.length >= 5) out.push(candidate);
@@ -1148,7 +1149,7 @@ Rules:
 - If there is no verified scheduled event tonight, say that plainly. Do not pad with restaurants, pubs, generic leisure, normal venue opening, or a daytime exhibition.
 - WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. If the draft states a price or says FREE but the trusted evidence does not explicitly support that exact price/free claim for that event, REMOVE the unsupported claim. Keep the event if its date/time/venue are otherwise verified.
 - COST FOLLOW-UP: ${costFollowUp ? 'YES' : 'NO'}. When YES, the user is asking for the prices of events from the recent conversation. Keep every relevant event named in the draft. For each one, give the explicitly verified current price/free status from trusted evidence. If the price for a particular event cannot be verified, write "I couldn't verify the current price" for that event. Never leave a dangling dash, empty price field, or silently drop an event merely because its price is unverified.
-- FAMILY FOLLOW-UP: ${familyFollowUp ? 'YES' : 'NO'}. When YES, only describe a previous event as specifically child/family suitable when its event detail explicitly gives a family/children/young-people age range, a family category, or equivalent wording. Venue-level family guidance may support saying the VENUE is family-friendly, but do not turn that into a claim that the specific exhibition/event is designed for children. If using venue-level evidence, phrase the distinction plainly. Never recommend an adults-only event for children.
+- FAMILY FOLLOW-UP: ${familyFollowUp ? 'YES' : 'NO'}. When YES, only describe a previous event as specifically child/family suitable when its event detail explicitly gives a family/children/young-people age range, a family category, or equivalent wording. Venue-level family guidance may support saying the VENUE is family-friendly, but do not turn that into a claim that the specific exhibition/event is designed for children. If using venue-level evidence, phrase the distinction plainly. Never recommend an adults-only event for children. Do not use unsupported rankings or guarantees such as 'best option', 'best bet', 'standout' or 'guaranteed family day out'.
 - FREE REQUEST: every retained option must be explicitly marked Free/FREE/£0 in trusted evidence for that exact event/activity AND must be available on the requested date. Missing price information is NOT evidence that something is free. A concession such as 'under 18s free', 'members free' or 'residents free' does NOT make an option generally free unless the user has said they qualify.
 - RECURRING WEEKDAY RULE: Every Wednesday means Wednesday only, Every Friday means Friday only, and so on. If TOMORROW is Tuesday, remove Health Checks, Chair-Based Exercise, WX Pop Choir or any other Wednesday-only activity. Never shift a recurring activity onto the requested day.
 - Venue closure days override exhibition date ranges. In particular, if a source says a museum is closed on Tuesdays, do not list its exhibition for Tuesday. If WX says the Shed/main hall is closed Monday/Tuesday, remove The Wall or any Shed-based display from a Monday/Tuesday suggestion unless trusted evidence explicitly confirms that display is accessible despite the closure.
@@ -1298,53 +1299,186 @@ function eventCostWasRequested(messages) {
 }
 
 
-function verifiedEventCostForTitle(title, evidenceText) {
-  if (!title || !evidenceText) return null;
-  const needle = title.toLowerCase();
+function eventTitleSimilarity(a, b) {
+  const aSet = new Set(eventTokens(a));
+  const bSet = new Set(eventTokens(b));
+  if (!aSet.size || !bSet.size) return 0;
+  let overlap = 0;
+  for (const token of aSet) if (bSet.has(token)) overlap += 1;
+  return overlap / Math.min(aSet.size, bSet.size);
+}
+
+function normaliseCostLabel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  if (/^free$/i.test(raw) || /^£\s*0(?:[.,]00)?$/i.test(raw)) return 'Free';
+  const paid = raw.match(/£\s*\d+(?:[.,]\d{1,2})?/i);
+  return paid ? paid[0].replace(/\s+/g, '') : null;
+}
+
+function explicitCostFromDetailContext(title, eventDetailContexts = []) {
+  let best = null;
+  let bestScore = 0;
+  for (const item of eventDetailContexts) {
+    if (!item?.text) continue;
+    const label = item.source?.title || '';
+    const score = eventTitleSimilarity(title, label);
+    if (score > bestScore) {
+      best = item;
+      bestScore = score;
+    }
+  }
+  if (!best || bestScore < 0.66) return null;
+
+  const text = String(best.text);
+  const explicitPrice = text.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
+  if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
+
+  // Experience Wakefield detail pages commonly expose the ticket amount near
+  // the beginning of the event record rather than behind a PRICE label.
+  const head = text.slice(0, 1400);
+  const paid = head.match(/£\s*\d+(?:[.,]\d{1,2})?/i);
+  const explicitFree = head.match(/\b(?:Free event|Free entry|Price\s*:?\s*Free)\b/i);
+  if (paid) return normaliseCostLabel(paid[0]);
+  if (explicitFree) return 'Free';
+  return null;
+}
+
+function verifiedEventCostForTitle(title, evidence = {}) {
+  if (!title) return null;
+
+  // Strongest source: the specific event detail page fetched for this exact
+  // event. This prevents category labels such as "Free" elsewhere on a venue
+  // page from overriding an event's £3/£12 ticket price.
+  const detailCost = explicitCostFromDetailContext(title, evidence.eventDetailContexts || []);
+  if (detailCost) return detailCost;
+
+  const evidenceText = combinedEventEvidenceText(evidence);
+  if (!evidenceText) return null;
+  const needleTokens = eventTokens(title);
   const sources = String(evidenceText).split(/=== EVIDENCE SOURCE ===|=== END EVIDENCE SOURCE ===/).filter(Boolean);
 
   for (const rawSource of sources) {
-    const haystack = rawSource.toLowerCase();
-    if (/olivia bax|double take/i.test(needle) &&
-        /the weston/i.test(haystack) &&
-        /(?:free to enter|free entry|no ticket required)/i.test(haystack) &&
-        haystack.includes(needle)) {
+    const sourceNorm = normaliseEventToken(rawSource);
+    const sourceTokens = new Set(eventTokens(rawSource));
+    const overlap = needleTokens.filter(token => sourceTokens.has(token)).length;
+    const matchRatio = needleTokens.length ? overlap / needleTokens.length : 0;
+    if (matchRatio < 0.66) continue;
+
+    // The Weston gallery is explicitly free to enter. Wider YSP admission is
+    // separate, so keep that distinction visible rather than saying YSP is free.
+    if (/olivia bax|double take/i.test(title) &&
+        /the weston/i.test(rawSource) &&
+        /(?:free to enter|free entry|gallery, restaurant and shop are free to enter)/i.test(rawSource)) {
       return 'Free at The Weston gallery';
     }
-    let from = 0;
-    while (from < haystack.length) {
-      const index = haystack.indexOf(needle, from);
-      if (index === -1) break;
-      const window = rawSource.slice(index, Math.min(rawSource.length, index + title.length + 240));
-      const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(window);
-      const free = /\bfree\b|£\s*0(?:[.,]00)?\b/i.exec(window);
-      if (paid || free) {
-        if (free && (!paid || free.index < paid.index)) return 'Free';
-        if (paid && (!free || paid.index < free.index)) return paid[0].replace(/\s+/g, '');
-      }
-      from = index + needle.length;
-    }
+
+    const explicitPrice = rawSource.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
+    if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
+
+    // For official Experience Wakefield event records, the first monetary
+    // amount after the matching event title is the event tag/ticket amount.
+    const titleNorm = normaliseEventToken(title);
+    const idx = sourceNorm.indexOf(titleNorm);
+    const probe = idx >= 0 ? rawSource.slice(Math.max(0, idx - 100), idx + 1100) : rawSource.slice(0, 1200);
+    const paid = probe.match(/£\s*[1-9]\d*(?:[.,]\d{1,2})?/i);
+    if (paid) return normaliseCostLabel(paid[0]);
+    if (/\b(?:Free event|PRICE\s*:\s*Free)\b/i.test(probe)) return 'Free';
   }
 
-  if (eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText)) return 'Free';
   return null;
 }
 
 function buildVerifiedEventCostFollowUp(messages, evidence = {}) {
   if (!isEventCostFollowUp(messages)) return '';
-  const evidenceText = combinedEventEvidenceText(evidence);
-  if (!evidenceText) return '';
-  const lowerEvidence = evidenceText.toLowerCase();
-  const titles = recentAssistantEventCandidates(messages)
-    .filter(title => lowerEvidence.includes(title.toLowerCase()));
+  const titles = recentAssistantEventCandidates(messages);
   if (!titles.length) return '';
 
-  const lines = [];
+  return titles.map(title => {
+    const cost = verifiedEventCostForTitle(title, evidence);
+    return `${title} — ${cost || "I couldn't verify the current price."}`;
+  }).join('\n\n');
+}
+
+function buildVerifiedFreeEventFollowUp(messages, evidence = {}) {
+  if (!isFreeCurrentLeisureQuery(messages)) return '';
+  const titles = recentAssistantEventCandidates(messages);
+  const free = [];
+
   for (const title of titles) {
-    const cost = verifiedEventCostForTitle(title, evidenceText);
-    lines.push(`${title} — ${cost || "I couldn't verify the current price."}`);
+    const cost = verifiedEventCostForTitle(title, evidence);
+    if (!cost || !/^Free\b/i.test(cost)) continue;
+    if (/^Free at The Weston gallery$/i.test(cost)) {
+      free.push(`${title} — Free at The Weston gallery. A ticket is required if you also want to explore the wider YSP grounds and galleries.`);
+    } else {
+      free.push(`${title} — Free.`);
+    }
   }
-  return lines.join('\n\n');
+
+  if (!free.length) return 'I could not verify any generally free events from that list.';
+  return `The free options I could verify are:\n\n${free.join('\n\n')}`;
+}
+
+function eventDetailForTitle(title, eventDetailContexts = []) {
+  let best = null;
+  let bestScore = 0;
+  for (const item of eventDetailContexts) {
+    if (!item?.text) continue;
+    const score = eventTitleSimilarity(title, item.source?.title || '');
+    if (score > bestScore) {
+      best = item;
+      bestScore = score;
+    }
+  }
+  return bestScore >= 0.66 ? best : null;
+}
+
+function explicitFamilyEvidenceForTitle(title, evidence = {}) {
+  const detail = eventDetailForTitle(title, evidence.eventDetailContexts || []);
+  if (!detail?.text) return null;
+  const text = String(detail.text);
+
+  const ageRange = text.match(/AGE RANGE\s*:?([\s\S]{0,240})/i)?.[1] || '';
+  const hasChildren = /\bChildren\b/i.test(ageRange);
+  const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
+  const hasFamilies = /\bFamilies\b/i.test(ageRange);
+  if (hasChildren || hasYoungPeople || hasFamilies) {
+    const labels = [];
+    if (hasChildren) labels.push('Children');
+    if (hasYoungPeople) labels.push('Young People');
+    if (hasFamilies) labels.push('Families');
+    return `listed for ${labels.join(', ')}`;
+  }
+
+  if (/\bFamily friendly\b/i.test(text) || /\bActivity\s+Families\b/i.test(text)) {
+    return 'explicitly listed as family-friendly';
+  }
+
+  return null;
+}
+
+function buildVerifiedFamilyEventFollowUp(messages, evidence = {}) {
+  if (!isEventFamilyFollowUp(messages)) return '';
+  const titles = recentAssistantEventCandidates(messages);
+  const family = [];
+
+  for (const title of titles) {
+    const reason = explicitFamilyEvidenceForTitle(title, evidence);
+    if (!reason) continue;
+    family.push(`${title} — ${reason}.`);
+  }
+
+  const yspTitle = titles.find(title => /olivia bax|double take/i.test(title));
+  const yspVenueFamily = Boolean(evidence.familyVenueContexts?.yspFamily?.text);
+  const yspNote = yspTitle && yspVenueFamily && !family.some(line => /olivia bax|double take/i.test(line))
+    ? `\n\n${yspTitle} is at a family-friendly venue, but the exhibition itself is not specifically labelled as a children's/family event in the evidence I checked.`
+    : '';
+
+  if (!family.length) {
+    return yspNote.trim() || 'I could not verify any of those events as specifically aimed at children or families.';
+  }
+
+  return `The clearest family options from that list are:\n\n${family.join('\n\n')}${yspNote}`;
 }
 
 function stripUnrequestedEventPrices(reply) {
@@ -1403,30 +1537,29 @@ function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   if (isEventCostFollowUp(messages)) {
     const resolvedCosts = buildVerifiedEventCostFollowUp(messages, evidence);
     out = resolvedCosts || stripUnsupportedEventPriceClaims(out, evidence, { markUnverified: true });
+  } else if (isFreeCurrentLeisureQuery(messages)) {
+    const resolvedFree = buildVerifiedFreeEventFollowUp(messages, evidence);
+    out = resolvedFree || strictlyFilterFreeEventAnswer(out, evidence);
+  } else if (isEventFamilyFollowUp(messages)) {
+    const resolvedFamily = buildVerifiedFamilyEventFollowUp(messages, evidence);
+    out = resolvedFamily || out;
   } else if (!eventCostWasRequested(messages)) {
     out = stripUnrequestedEventPrices(out);
   } else {
     out = stripUnsupportedEventPriceClaims(out, evidence);
   }
 
-  if (isFreeCurrentLeisureQuery(messages)) {
-    // Free-only follow-ups are whitelist-based: an event survives only when the
-    // trusted evidence explicitly supports free public entry for that event.
-    out = strictlyFilterFreeEventAnswer(out, evidence);
-    const blocks = out.split(/\n\s*\n/);
-    const kept = blocks.filter(block => {
-      if (/£\s*[1-9]\d*(?:[.,]\d+)?/.test(block)) return false;
-      if (/entry\s+£\s*[1-9]/i.test(block)) return false;
-      if (/under[- ]?18s?\s+(?:are\s+)?free|members?\s+(?:are\s+)?free|residents?\s+(?:are\s+)?free/i.test(block) && !/\bfree entry for all\b/i.test(block)) return false;
-      return true;
-    });
-    out = kept.join('\n\n').trim();
-  }
-
-  return out
+  return String(out)
+    .split('\n')
+    .map(line => line
+      .replace(/,\s*\./g, '.')
+      .replace(/(\d)\.([a-z])/g, (_, digit, letter) => `${digit}. ${letter.toUpperCase()}`)
+      .replace(/\s+([,.!?])/g, '$1')
+      .replace(/\s*,\s*$/g, '')
+      .trimEnd())
+    .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .replace(/\.{2,}/g, '.')
-    .replace(/\s+([,.!?])/g, '$1')
     .trim();
 }
 

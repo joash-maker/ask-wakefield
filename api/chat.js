@@ -946,10 +946,11 @@ Rules:
 - Treat an event's title + date + time + venue + price/free status as one record. Never mix fields from different events.
 - TONIGHT: retain only events explicitly dated TODAY whose verified time overlaps 17:00 onward and has not ended. An event on Friday 25 September cannot appear in a Monday 21 September tonight answer.
 - If there is no verified scheduled event tonight, say that plainly. Do not pad with restaurants, pubs, generic leisure, normal venue opening, or a daytime exhibition.
-- WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. Correct a price only when the evidence explicitly supports the correction.
-- FREE REQUEST: every retained option must be explicitly free. A long-running exhibition/attraction also requires evidence that its venue/gallery is actually open on the requested weekday/date. Exhibition date range alone is insufficient.
-- Venue closure days override exhibition date ranges. In particular, if a source says a museum is closed on Tuesdays, do not list its exhibition for Tuesday. If WX says the Shed/main hall is closed Monday/Tuesday, do not assume a display inside it is accessible unless the evidence explicitly confirms access.
-- Do not call an event free when the source gives a ticket price. Do not invent £0 from missing price data.
+- WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. If the draft states a price or says FREE but the trusted evidence does not explicitly support that exact price/free claim for that event, REMOVE the price/free claim. Keep the event only if its date/time/venue are otherwise verified. Never preserve an unsupported price from the draft.
+- FREE REQUEST: every retained option must be explicitly marked Free/FREE/£0 in trusted evidence for that exact event/activity AND must be available on the requested date. Missing price information is NOT evidence that something is free. A concession such as 'under 18s free', 'members free' or 'residents free' does NOT make an option generally free unless the user has said they qualify.
+- RECURRING WEEKDAY RULE: 'Every Wednesday' means Wednesday only, 'Every Friday' means Friday only, and so on. If TOMORROW is Tuesday, remove Health Checks, Chair-Based Exercise, WX Pop Choir or any other Wednesday-only activity. Never shift a recurring activity onto the requested day.
+- Venue closure days override exhibition date ranges. In particular, if a source says a museum is closed on Tuesdays, do not list its exhibition for Tuesday. If WX says the Shed/main hall is closed Monday/Tuesday, remove The Wall or any Shed-based display from a Monday/Tuesday suggestion unless trusted evidence explicitly confirms that display is accessible despite the closure.
+- Do not call an event free when the source gives a ticket price. For a FREE REQUEST, REMOVE any option whose standard/public admission is non-zero even if a specific group (for example under-18s) enters free.
 - Remove promotional wording and ordinary dining suggestions from event answers.
 - Keep the corrected answer concise. If one or two verified options remain, that is enough.
 - Return only the corrected user-facing answer. No commentary, audit notes, source list, or FINAL_RESPONSE marker.
@@ -971,6 +972,28 @@ TRUSTED EVIDENCE:\n${evidenceParts.join('\n\n---\n\n') || 'No trusted event evid
   } catch {
     return reply;
   }
+}
+
+
+function deterministicallySanitiseEventAnswer(reply, messages) {
+  if (!reply || !isCurrentEventsQuery(messages)) return reply;
+  let out = String(reply);
+
+  if (isFreeCurrentLeisureQuery(messages)) {
+    // Safety net: a generic 'free' request must never surface an explicitly paid option.
+    // The semantic validator above does the main work; this catches obvious residual lines.
+    const blocks = out.split(/\n\s*\n/);
+    const kept = blocks.filter(block => {
+      const b = block.toLowerCase();
+      if (/£\s*[1-9]\d*(?:[.,]\d+)?/.test(block)) return false;
+      if (/entry\s+£\s*[1-9]/i.test(block)) return false;
+      if (/under[- ]?18s?\s+(?:are\s+)?free|members?\s+(?:are\s+)?free|residents?\s+(?:are\s+)?free/i.test(block) && !/\bfree entry for all\b/i.test(block)) return false;
+      return true;
+    });
+    out = kept.join('\n\n').trim();
+  }
+
+  return out;
 }
 
 
@@ -1149,7 +1172,7 @@ ${cathedralContext.text}`
     : '';
 
   const currentEventsContext = isCurrentEventsQuery(messages)
-    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly supported as free. You may include a free attraction/activity as well as a dated event only when current evidence also confirms it is open/available on the requested day. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
+    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an 'Every Wednesday' activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
     : '';
 
   const userProvidedContext = userUrlContext
@@ -1269,7 +1292,8 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       cathedralContext,
       freeVenueContexts
     });
-    const validatedReply = await validateFoodAnswer(eventValidatedReply, messages);
+    const eventSafeReply = deterministicallySanitiseEventAnswer(eventValidatedReply, messages);
+    const validatedReply = await validateFoodAnswer(eventSafeReply, messages);
     const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);
 
     return res.status(200).json({

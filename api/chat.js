@@ -27,6 +27,9 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - NOT an official Wakefield Council service — independent tool by Mediahubink. Be transparent if asked.
 - Direct people to official sources for legal, binding, eligibility or safety-critical matters.
 - Never invent current facts, opening times, prices, event dates, transport times, closures, deadlines, availability or eligibility rules.
+- **CONVERSATION CONTINUITY:** Treat the chat as one continuous conversation. Resolve follow-up references such as "those", "them", "these", "that one", "the first one", "which are free?", "how much are they?", "where are they?" and "what time are they?" from the recent assistant answer and user context. Never ask the user to repeat event/place names that are already visible in the recent conversation.
+- **FOLLOW-UP COMPLETENESS:** When a follow-up asks for a changing field across a previously listed set, such as "How much are those?", answer for every relevant item from that set unless the user narrows it. If one item's current value cannot be verified, keep the item in the answer and say "I couldn't verify the current price" (or the equivalent changing field) rather than dropping it or leaving a blank.
+- **MISSING PRICE IS NOT FREE:** Never infer that an event, attraction or activity is free because a price is absent from a listing. Only say Free/£0 when a current trusted source explicitly supports that status for that exact event or admission type.
 - **DATE ACCURACY:** Never calculate a weekday or calendar date from memory. For relative dates such as today, tonight, tomorrow, day after tomorrow and this weekend, use the exact server-supplied RELATIVE DATE MAP. If a source says a venue opens on certain weekdays, compare that rule against the mapped weekday before answering.
 - **LOCATION ACCURACY:** Never infer that a Wakefield place is near another town, neighbourhood, station, road or landmark unless that relationship is explicitly stated in this knowledge base or verified from a trusted source. Never invent distances, areas, postcodes, journey times or geographic relationships. If uncertain, omit the detail or verify it.
 - **WALKING-DISTANCE ACCURACY:** Do not invent walking times, cardinal directions or claims such as "ten minutes away". If the user asks what is nearby or within walking distance, use a current/official source where possible and give exact distances/times only when verified. Otherwise name central options without a made-up minute estimate.
@@ -318,6 +321,39 @@ function recentUserContext(messages, maxUserMessages = 3) {
     .toLowerCase();
 }
 
+function recentAssistantContext(messages, maxAssistantMessages = 2) {
+  if (!Array.isArray(messages)) return '';
+  return messages
+    .filter(m => m?.role === 'assistant' && typeof m.content === 'string')
+    .slice(-maxAssistantMessages)
+    .map(m => m.content)
+    .join('\n');
+}
+
+function hasRecentAssistantAnswer(messages) {
+  return recentAssistantContext(messages, 1).trim().length > 0;
+}
+
+function isEventCostFollowUp(messages) {
+  if (!hasRecentAssistantAnswer(messages)) return false;
+  const last = lastUserText(messages);
+  const costIntent = /\b(how much|price|prices|cost|costs|ticket price|ticket prices|entry fee|entry fees|admission|admission price|admission prices)\b/i;
+  const referenceIntent = /\b(those|them|these|they|the events?|the ones?|all of them|each one|each of them)\b/i;
+  if (!costIntent.test(last)) return false;
+
+  const priorContext = (Array.isArray(messages) ? messages.slice(0, -1) : [])
+    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+    .slice(-6)
+    .map(m => m.content)
+    .join('\n')
+    .toLowerCase();
+
+  const eventHistory = /\b(what(?:'|’)s on|wots on|anything on|happening|events?|things to do|something to do|this weekend|weekend|today|tonight|tomorrow|concert|comedy|festival|market|exhibition|workshop|gig|gigs|show|theatre|artist)\b/i;
+  if (!eventHistory.test(priorContext)) return false;
+
+  return referenceIntent.test(last) || last.trim().split(/\s+/).length <= 8;
+}
+
 function isNamedRetailPresenceQuery(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const presenceIntent = /\b(is there|are there|do (?:you|we) have|have (?:you|we) got|nearest|closest|where(?:'s| is) (?:the )?nearest)\b/i;
@@ -435,6 +471,7 @@ function isWxCurrentEventsQuery(messages) {
 function isCurrentEventsQuery(messages) {
   const context = recentUserContext(messages, 4);
   if (isCurrentFoodStatusQuery(messages)) return false;
+  if (isEventCostFollowUp(messages)) return true;
   const directWhatsOn = /\b(what(?:'|’)s on|wots on|anything on|what is happening|what(?:'|’)s happening|anything happening)\b/i.test(context);
   const eventIntent = /\b(events?|things to do|something to do|anything to do|what can (?:we|i) do|free to do|live music|gig|gigs|concert|show|shows|theatre|comedy|festival|market|exhibition|workshop|family event|heritage open days?)\b/i.test(context);
   const currentWindow = /\b(today|tonight|tomorrow|this weekend|weekend|this week|next saturday|next sunday|later today|later tonight|right now|currently)\b/i.test(context);
@@ -860,6 +897,7 @@ async function callAnthropic(body) {
 function extractAnswer(data) {
   const content = Array.isArray(data?.content) ? data.content : [];
   const sources = new Map();
+  const searchEvidence = [];
   let searched = false;
   let lastSearchResultIndex = -1;
 
@@ -887,6 +925,14 @@ function extractAnswer(data) {
         title: citation.title || citation.url,
         url: citation.url
       });
+      const citedText = String(citation.cited_text || '').trim();
+      if (citedText) {
+        searchEvidence.push({
+          title: citation.title || citation.url,
+          url: citation.url,
+          text: citedText
+        });
+      }
     }
   }
 
@@ -911,6 +957,7 @@ function extractAnswer(data) {
   return {
     reply: renderedReply,
     sources: Array.from(sources.values()).slice(0, 5),
+    searchEvidence: searchEvidence.slice(0, 20),
     searched
   };
 }
@@ -925,6 +972,7 @@ async function validateEventAnswer(reply, messages, evidence = {}) {
 
   const dates = eventDateState();
   const freeOnly = isFreeCurrentLeisureQuery(messages);
+  const costFollowUp = isEventCostFollowUp(messages);
   const currentContext = recentUserContext(messages, 5);
   const evidenceParts = [];
   if (evidence.wxContext?.text) evidenceParts.push(`WX CURRENT LISTING:\n${evidence.wxContext.text}`);
@@ -933,6 +981,13 @@ async function validateEventAnswer(reply, messages, evidence = {}) {
   if (evidence.freeVenueContexts?.ysp?.text) evidenceParts.push(`YSP VISIT / OPENING EVIDENCE:\n${evidence.freeVenueContexts.ysp.text}`);
   if (evidence.freeVenueContexts?.ncm?.text) evidenceParts.push(`NATIONAL COAL MINING MUSEUM OPENING EVIDENCE:\n${evidence.freeVenueContexts.ncm.text}`);
   if (evidence.freeVenueContexts?.wxWeekly?.text) evidenceParts.push(`WX WEEKLY / OPENING EVIDENCE:\n${evidence.freeVenueContexts.wxWeekly.text}`);
+  for (const item of evidence.searchEvidence || []) {
+    if (!item?.url || !item?.text) continue;
+    let trusted = false;
+    try { trusted = trustedHostname(new URL(item.url).hostname); } catch {}
+    if (!trusted) continue;
+    evidenceParts.push(`LIVE SEARCH CITATION:\nSource: ${item.title || item.url}\nURL: ${item.url}\n${item.text}`);
+  }
 
   const validationSystem = `You are the final factual validator for Ask Wakefield current-event answers. Rewrite the draft using ONLY the trusted evidence supplied below. Remove anything you cannot verify. You may correct a wrong date, time, price or free/paid status only when the trusted evidence explicitly gives the correct value. Do not add a new event that was not already named in the draft.
 
@@ -946,7 +1001,8 @@ Rules:
 - Treat an event's title + date + time + venue + price/free status as one record. Never mix fields from different events.
 - TONIGHT: retain only events explicitly dated TODAY whose verified time overlaps 17:00 onward and has not ended. An event on Friday 25 September cannot appear in a Monday 21 September tonight answer.
 - If there is no verified scheduled event tonight, say that plainly. Do not pad with restaurants, pubs, generic leisure, normal venue opening, or a daytime exhibition.
-- WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. If the draft states a price or says FREE but the trusted evidence does not explicitly support that exact price/free claim for that event, REMOVE the price/free claim. Keep the event only if its date/time/venue are otherwise verified. Never preserve an unsupported price from the draft.
+- WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. If the draft states a price or says FREE but the trusted evidence does not explicitly support that exact price/free claim for that event, REMOVE the unsupported claim. Keep the event if its date/time/venue are otherwise verified.
+- COST FOLLOW-UP: ${costFollowUp ? 'YES' : 'NO'}. When YES, the user is asking for the prices of events from the recent conversation. Keep every relevant event named in the draft. For each one, give the explicitly verified current price/free status from trusted evidence. If the price for a particular event cannot be verified, write "I couldn't verify the current price" for that event. Never leave a dangling dash, empty price field, or silently drop an event merely because its price is unverified.
 - FREE REQUEST: every retained option must be explicitly marked Free/FREE/£0 in trusted evidence for that exact event/activity AND must be available on the requested date. Missing price information is NOT evidence that something is free. A concession such as 'under 18s free', 'members free' or 'residents free' does NOT make an option generally free unless the user has said they qualify.
 - RECURRING WEEKDAY RULE: Every Wednesday means Wednesday only, Every Friday means Friday only, and so on. If TOMORROW is Tuesday, remove Health Checks, Chair-Based Exercise, WX Pop Choir or any other Wednesday-only activity. Never shift a recurring activity onto the requested day.
 - Venue closure days override exhibition date ranges. In particular, if a source says a museum is closed on Tuesdays, do not list its exhibition for Tuesday. If WX says the Shed/main hall is closed Monday/Tuesday, remove The Wall or any Shed-based display from a Monday/Tuesday suggestion unless trusted evidence explicitly confirms that display is accessible despite the closure.
@@ -976,13 +1032,22 @@ TRUSTED EVIDENCE:\n${evidenceParts.join('\n\n---\n\n') || 'No trusted event evid
 
 
 function combinedEventEvidenceText(evidence = {}) {
+  const searchText = (evidence.searchEvidence || [])
+    .filter(item => item?.url && item?.text)
+    .filter(item => {
+      try { return trustedHostname(new URL(item.url).hostname); } catch { return false; }
+    })
+    .map(item => `SEARCH SOURCE: ${item.title || item.url}\n${item.url}\n${item.text}`)
+    .join('\n\n');
+
   return [
     evidence.wxContext?.text,
     evidence.experienceEventsContext?.text,
     evidence.cathedralContext?.text,
     evidence.freeVenueContexts?.ysp?.text,
     evidence.freeVenueContexts?.ncm?.text,
-    evidence.freeVenueContexts?.wxWeekly?.text
+    evidence.freeVenueContexts?.wxWeekly?.text,
+    searchText
   ].filter(Boolean).join('\n\n');
 }
 
@@ -1022,9 +1087,10 @@ function eventClaimSupportedNearTitle(title, claim, evidenceText) {
   return false;
 }
 
-function stripUnsupportedEventPriceClaims(reply, evidence = {}) {
+function stripUnsupportedEventPriceClaims(reply, evidence = {}, options = {}) {
   const evidenceText = combinedEventEvidenceText(evidence);
   if (!evidenceText) return reply;
+  const markUnverified = Boolean(options.markUnverified);
 
   return String(reply).split('\n').map(line => {
     if (!/\bfree\b|£\s*\d/i.test(line)) return line;
@@ -1032,22 +1098,32 @@ function stripUnsupportedEventPriceClaims(reply, evidence = {}) {
     if (!title || title.length < 5) return line;
 
     let next = line;
+    let removedUnsupportedClaim = false;
+
     if (/\bfree\b/i.test(next) && !eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText)) {
       next = next.replace(/\bfree\b\s*/gi, '');
+      removedUnsupportedClaim = true;
     }
 
     const prices = [...next.matchAll(/£\s*\d+(?:[.,]\d{1,2})?/gi)].map(match => match[0]);
     for (const price of prices) {
       if (!eventClaimSupportedNearTitle(title, { type: 'price', value: price }, evidenceText)) {
         next = next.replace(price, '');
+        removedUnsupportedClaim = true;
       }
     }
 
-    return next
+    next = next
       .replace(/\s{2,}/g, ' ')
       .replace(/\s+([,.!?])/g, '$1')
       .replace(/([—–-])\s*([,.])/g, '$2')
+      .replace(/[—–-]\s*$/g, '')
       .trimEnd();
+
+    if (markUnverified && removedUnsupportedClaim && !/\bfree\b|£\s*\d/i.test(next)) {
+      return `${next.replace(/[\s:—–-]+$/g, '')} — I couldn't verify the current price.`;
+    }
+    return next;
   }).join('\n');
 }
 
@@ -1080,7 +1156,9 @@ function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   if (!eventCostWasRequested(messages)) {
     out = stripUnrequestedEventPrices(out);
   } else {
-    out = stripUnsupportedEventPriceClaims(out, evidence);
+    out = stripUnsupportedEventPriceClaims(out, evidence, {
+      markUnverified: isEventCostFollowUp(messages)
+    });
   }
 
   if (isFreeCurrentLeisureQuery(messages)) {
@@ -1258,7 +1336,8 @@ export default async function handler(req, res) {
   // sources instead of triggering another broad search. This cuts latency and
   // prevents generic attractions/search snippets from being mixed into events.
   const hasEventSnapshots = Boolean(wxContext || experienceEventsContext || cathedralContext);
-  const useSearch = needsLiveSearch(messages) && !hasEventSnapshots;
+  const needsEventPriceSearch = isCurrentEventsQuery(messages) && eventCostWasRequested(messages);
+  const useSearch = needsLiveSearch(messages) && (!hasEventSnapshots || needsEventPriceSearch);
 
   const wxDirectContext = wxContext
     ? `\n\nFIRST-PARTY WX CURRENT LISTING SNAPSHOT:\nSource: https://wxwakefield.co.uk/whats-on\nToday = ${wxContext.dates.today}. Tomorrow = ${wxContext.dates.tomorrow}. This weekend = ${wxContext.dates.saturday} and ${wxContext.dates.sunday}.\nUse only the listing text below for WX event titles, dates, times and prices. Match the user's requested date exactly. For this weekend, check BOTH dates. Do not replace exact event titles with category labels.\n\n${wxContext.text}`
@@ -1280,7 +1359,7 @@ ${cathedralContext.text}`
     : '';
 
   const currentEventsContext = isCurrentEventsQuery(messages)
-    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
+    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window or a follow-up to a current-event answer. Treat the supplied FIRST-PARTY event snapshots as the authority for event identity/date/time claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isEventCostFollowUp(messages) ? 'PRICE FOLLOW-UP: Resolve "those/them/they" from the recent assistant answer. The user wants the current price for EVERY event previously listed, unless they have narrowed the set. Search current trusted first-party event/detail pages for each named event when the supplied aggregate snapshot does not show its price. Return every event with either an explicitly verified price/free status or the words "I couldn\'t verify the current price." Never leave a blank price, a dangling dash, or infer free entry from missing price information.' : ''} ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
     : '';
 
   const userProvidedContext = userUrlContext
@@ -1338,7 +1417,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: isCurrentEventsQuery(messages) ? 5 : 7,
+      max_uses: isEventCostFollowUp(messages) ? 8 : (isCurrentEventsQuery(messages) ? 5 : 7),
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',
@@ -1369,7 +1448,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       return res.status(status).json({ error: 'upstream_error', reply });
     }
 
-    const { reply, sources, searched } = extractAnswer(data);
+    const { reply, sources, searchEvidence, searched } = extractAnswer(data);
 
     const mergedSourceMap = new Map();
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);
@@ -1398,13 +1477,15 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       wxContext,
       experienceEventsContext,
       cathedralContext,
-      freeVenueContexts
+      freeVenueContexts,
+      searchEvidence
     });
     const eventSafeReply = deterministicallySanitiseEventAnswer(eventValidatedReply, messages, {
       wxContext,
       experienceEventsContext,
       cathedralContext,
-      freeVenueContexts
+      freeVenueContexts,
+      searchEvidence
     });
     const validatedReply = await validateFoodAnswer(eventSafeReply, messages);
     const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);

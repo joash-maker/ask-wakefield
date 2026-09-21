@@ -1051,9 +1051,37 @@ function stripUnsupportedEventPriceClaims(reply, evidence = {}) {
   }).join('\n');
 }
 
+function eventCostWasRequested(messages) {
+  const context = recentUserContext(messages, 4);
+  return /\b(price|prices|cost|costs|how much|ticket price|entry fee|admission|free)\b/i.test(context);
+}
+
+function stripUnrequestedEventPrices(reply) {
+  return String(reply)
+    .split('\n')
+    .map(line => line
+      .replace(/\s*[—–-]?\s*£\s*\d+(?:[.,]\d{1,2})?\s*(?:entry|admission|per person|pp)?\b/gi, '')
+      .replace(/\s*[—–-]?\s*\bfree\s*(?:entry|admission|event|live music)?\b/gi, '')
+      .replace(/\s+([,.!?])/g, '$1')
+      .replace(/\.{2,}/g, '.')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\s+$/g, ''))
+    .join('\n');
+}
+
 function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   if (!reply || !isCurrentEventsQuery(messages)) return reply;
-  let out = stripUnsupportedEventPriceClaims(String(reply), evidence);
+  let out = String(reply);
+
+  // Price/free status is useful when the user asks about cost. Otherwise it is
+  // a high-risk changing detail and adds little to a general what's-on answer.
+  // Remove it deterministically rather than trusting an aggregate listing to
+  // keep each price attached to the correct event.
+  if (!eventCostWasRequested(messages)) {
+    out = stripUnrequestedEventPrices(out);
+  } else {
+    out = stripUnsupportedEventPriceClaims(out, evidence);
+  }
 
   if (isFreeCurrentLeisureQuery(messages)) {
     // Safety net: a generic 'free' request must never surface an explicitly paid option.
@@ -1069,7 +1097,11 @@ function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
     out = kept.join('\n\n').trim();
   }
 
-  return out.replace(/\n{3,}/g, '\n\n').trim();
+  return out
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\.{2,}/g, '.')
+    .replace(/\s+([,.!?])/g, '$1')
+    .trim();
 }
 
 

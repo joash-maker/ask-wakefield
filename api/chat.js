@@ -55,6 +55,9 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **EVENT TIME FILTERING:** For ‘tonight’, only include events whose verified time overlaps the evening from 17:00 onward. If the current time is already past a verified event’s end time, omit it. If an event is already underway and its verified end time is still ahead, you may say it is already underway. Do not infer an end time when none is published.
 - **EVENT AREA DISCIPLINE:** Respect the place the user names. If they ask for Wakefield city centre, do not pad the answer with Castleford, Pontefract, Ossett, Horbury or other district events. If they ask broadly for the Wakefield district, a district-wide mix is fine, but name the town/area for each event.
 - **EVENT FACT DISCIPLINE:** Only call an event free, ticketed, sold out, family-friendly, accessible or bookable when the current source supports that fact. Do not copy promotional adjectives from event pages as your own judgement. Prefer a short verified shortlist over a longer speculative one.
+- **EVENT PRICE/DATE CROSS-CHECK:** Before naming an event, cross-check its exact title against the published date, time and price in the supplied current source. Never move an event to another day or change a paid event into a free event. If the source says Rodeo Night is Friday 25 September, it must never be presented as happening on Monday 21 September.
+- **VENUE-DAY AVAILABILITY:** A long-running exhibition or attraction is not automatically available on every date inside its exhibition range. For 'today', 'tomorrow' and 'free to do' questions, verify that the venue/gallery is actually open on that requested weekday/date. Venue closure days override the exhibition date range.
+- **NO EVENT PADDING:** When no verified event matches tonight, say so. Do not fill the answer with restaurants, ordinary leisure sessions, attractions that close before the requested period, or events from a different day.
 - **SEARCH OUTPUT DISCIPLINE:** Tool-use progress is never user-facing. Do not write phrases such as "I'll check", "I need to search", "let me search", "the search returned", or "I found it". Search silently and begin the final answer with the useful result.
 - **GENERAL RECOMMENDATIONS:** Questions such as "Good place for lunch?", "Where should we eat?", "Nice coffee shop?", "Any good breakfast spots?", "Where would you recommend?" or "Any hidden gems?" are recommendation requests, not requests for verified current opening hours. Answer usefully from the Wakefield knowledge base with 3-5 relevant options, and NEVER name more than 5 venues in the first answer. Do not replace the answer with a verification-failure message merely because live opening data was not checked.
 - **ANSWER BEFORE NARROWING:** For a broad recommendation such as "Good place for lunch?", do not respond only with clarifying questions. Give 3-5 sensible options first, then ask at most one short follow-up such as area, time, budget or cuisine to narrow the next answer.
@@ -266,7 +269,9 @@ const TRUSTED_DOMAINS = [
   'bakesbyvanillabean.co.uk',
   'createcafewakefield.co.uk',
   'robatary.co.uk',
-  'dinerustico.co.uk'
+  'dinerustico.co.uk',
+  'ncm.org.uk',
+  'farmercopleys.co.uk'
 ];
 
 const rateLimitMap = new Map();
@@ -653,6 +658,71 @@ async function fetchExperienceWakefieldEventsContext() {
 }
 
 
+async function fetchSimpleFirstPartyContext(url, title) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_500);
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const text = htmlToPlainText(html);
+    if (!text) return null;
+    return {
+      text: text.slice(0, 9000),
+      source: { title, url }
+    };
+  } catch (error) {
+    console.error(`${title} first-party fetch failed:`, error?.message || error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchDatedFirstPartyContext(url, title) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_500);
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const text = htmlToPlainText(html);
+    if (!text) return null;
+    const dates = eventDateState();
+    return {
+      text: extractRelevantEventSegments(text, dates),
+      dates,
+      source: { title, url }
+    };
+  } catch (error) {
+    console.error(`${title} dated first-party fetch failed:`, error?.message || error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchFreeDayVenueContexts(messages) {
+  if (!isFreeCurrentLeisureQuery(messages)) return { ysp: null, ncm: null, wxWeekly: null };
+  const [ysp, ncm, wxWeekly] = await Promise.all([
+    fetchSimpleFirstPartyContext('https://ysp.org.uk/visit-us', 'Yorkshire Sculpture Park — Visit Us'),
+    fetchSimpleFirstPartyContext('https://www.ncm.org.uk/whats-on/', 'National Coal Mining Museum — What\'s On'),
+    fetchSimpleFirstPartyContext('https://www.wxwakefield.co.uk/Whats-On/Weekly-Events', 'Wakefield Exchange — Weekly Events')
+  ]);
+  return { ysp, ncm, wxWeekly };
+}
+
+
 function trustedHostname(hostname) {
   const host = String(hostname || '').toLowerCase().replace(/^www\./, '');
   return TRUSTED_DOMAINS.some(domain => host === domain || host.endsWith(`.${domain}`));
@@ -846,6 +916,64 @@ function extractAnswer(data) {
 }
 
 
+function eventAnswerNeedsValidation(reply, messages) {
+  return Boolean(reply && isCurrentEventsQuery(messages));
+}
+
+async function validateEventAnswer(reply, messages, evidence = {}) {
+  if (!eventAnswerNeedsValidation(reply, messages)) return reply;
+
+  const dates = eventDateState();
+  const freeOnly = isFreeCurrentLeisureQuery(messages);
+  const currentContext = recentUserContext(messages, 5);
+  const evidenceParts = [];
+  if (evidence.wxContext?.text) evidenceParts.push(`WX CURRENT LISTING:\n${evidence.wxContext.text}`);
+  if (evidence.experienceEventsContext?.text) evidenceParts.push(`EXPERIENCE WAKEFIELD CURRENT LISTING:\n${evidence.experienceEventsContext.text}`);
+  if (evidence.cathedralContext?.text) evidenceParts.push(`WAKEFIELD CATHEDRAL CURRENT EVENTS:\n${evidence.cathedralContext.text}`);
+  if (evidence.freeVenueContexts?.ysp?.text) evidenceParts.push(`YSP VISIT / OPENING EVIDENCE:\n${evidence.freeVenueContexts.ysp.text}`);
+  if (evidence.freeVenueContexts?.ncm?.text) evidenceParts.push(`NATIONAL COAL MINING MUSEUM OPENING EVIDENCE:\n${evidence.freeVenueContexts.ncm.text}`);
+  if (evidence.freeVenueContexts?.wxWeekly?.text) evidenceParts.push(`WX WEEKLY / OPENING EVIDENCE:\n${evidence.freeVenueContexts.wxWeekly.text}`);
+
+  const validationSystem = `You are the final factual validator for Ask Wakefield current-event answers. Rewrite the draft using ONLY the trusted evidence supplied below. Remove anything you cannot verify. You may correct a wrong date, time, price or free/paid status only when the trusted evidence explicitly gives the correct value. Do not add a new event that was not already named in the draft.
+
+${londonContext()}
+REQUEST CONTEXT: ${currentContext}
+TODAY: ${dates.today}
+TOMORROW: ${dates.tomorrow}
+THIS WEEKEND: ${dates.saturday} and ${dates.sunday}
+
+Rules:
+- Treat an event's title + date + time + venue + price/free status as one record. Never mix fields from different events.
+- TONIGHT: retain only events explicitly dated TODAY whose verified time overlaps 17:00 onward and has not ended. An event on Friday 25 September cannot appear in a Monday 21 September tonight answer.
+- If there is no verified scheduled event tonight, say that plainly. Do not pad with restaurants, pubs, generic leisure, normal venue opening, or a daytime exhibition.
+- WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. Correct a price only when the evidence explicitly supports the correction.
+- FREE REQUEST: every retained option must be explicitly free. A long-running exhibition/attraction also requires evidence that its venue/gallery is actually open on the requested weekday/date. Exhibition date range alone is insufficient.
+- Venue closure days override exhibition date ranges. In particular, if a source says a museum is closed on Tuesdays, do not list its exhibition for Tuesday. If WX says the Shed/main hall is closed Monday/Tuesday, do not assume a display inside it is accessible unless the evidence explicitly confirms access.
+- Do not call an event free when the source gives a ticket price. Do not invent £0 from missing price data.
+- Remove promotional wording and ordinary dining suggestions from event answers.
+- Keep the corrected answer concise. If one or two verified options remain, that is enough.
+- Return only the corrected user-facing answer. No commentary, audit notes, source list, or FINAL_RESPONSE marker.
+
+TRUSTED EVIDENCE:\n${evidenceParts.join('\n\n---\n\n') || 'No trusted event evidence was supplied.'}`;
+
+  const body = {
+    model: MODEL,
+    max_tokens: 850,
+    system: validationSystem,
+    messages: [{ role: 'user', content: `Validate and rewrite this draft:\n\n${reply}` }]
+  };
+
+  try {
+    const { response, data } = await callAnthropic(body);
+    if (!response.ok) return reply;
+    const corrected = extractAnswer(data).reply?.trim();
+    return corrected || reply;
+  } catch {
+    return reply;
+  }
+}
+
+
 function foodAnswerNeedsValidation(reply, messages) {
   if (!reply || !isFoodDecisionQuery(messages)) return false;
 
@@ -975,23 +1103,30 @@ export default async function handler(req, res) {
 
   let wxContext = null;
   let experienceEventsContext = null;
+  let cathedralContext = null;
   if (isCurrentEventsQuery(messages)) {
-    // Fetch the two strongest district event listings in parallel. This is both
-    // faster and less error-prone than doing a broad multi-step web search first.
-    [experienceEventsContext, wxContext] = await Promise.all([
+    // Fetch strong first-party/current event sources in parallel. This avoids
+    // a broad search while still covering the district aggregator, WX and the
+    // Cathedral's own dated events.
+    [experienceEventsContext, wxContext, cathedralContext] = await Promise.all([
       fetchExperienceWakefieldEventsContext(),
-      fetchWxWhatsOnContext()
+      fetchWxWhatsOnContext(),
+      fetchDatedFirstPartyContext('https://www.wakefieldcathedral.org.uk/whats-happening/events/', 'Wakefield Cathedral — Events')
     ]);
   } else if (isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
   }
+
+  const freeVenueContexts = isFreeCurrentLeisureQuery(messages)
+    ? await fetchFreeDayVenueContexts(messages)
+    : { ysp: null, ncm: null, wxWeekly: null };
 
   const userUrlContext = await fetchTrustedUserUrlContext(messages);
 
   // If current event snapshots are available, answer from those first-party
   // sources instead of triggering another broad search. This cuts latency and
   // prevents generic attractions/search snippets from being mixed into events.
-  const hasEventSnapshots = Boolean(wxContext || experienceEventsContext);
+  const hasEventSnapshots = Boolean(wxContext || experienceEventsContext || cathedralContext);
   const useSearch = needsLiveSearch(messages) && !hasEventSnapshots;
 
   const wxDirectContext = wxContext
@@ -1002,8 +1137,19 @@ export default async function handler(req, res) {
     ? `\n\nOFFICIAL EXPERIENCE WAKEFIELD CURRENT EVENTS SNAPSHOT:\nSource: https://experiencewakefield.co.uk/whats-on/\nToday = ${experienceEventsContext.dates.today}. Tomorrow = ${experienceEventsContext.dates.tomorrow}. This weekend = ${experienceEventsContext.dates.saturday} and ${experienceEventsContext.dates.sunday}.\nThis is a current official discovery source for the Wakefield district. Use event entries only when their published date/date-range actually covers the user's requested date. Preserve exact event titles, times and venues. Do not convert normal venue opening into an event. For tonight, apply the 17:00+ evening filter and current-time end check.\n\n${experienceEventsContext.text}`
     : '';
 
+  const cathedralDirectContext = cathedralContext
+    ? `
+
+WAKEFIELD CATHEDRAL CURRENT EVENTS SNAPSHOT:
+Source: https://www.wakefieldcathedral.org.uk/whats-happening/events/
+Today = ${cathedralContext.dates.today}. Tomorrow = ${cathedralContext.dates.tomorrow}. This weekend = ${cathedralContext.dates.saturday} and ${cathedralContext.dates.sunday}.
+Use only entries whose exact published date matches the requested day/window. Preserve exact title, time and any explicit free/ticket information.
+
+${cathedralContext.text}`
+    : '';
+
   const currentEventsContext = isCurrentEventsQuery(messages)
-    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, and (4) published time when available. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range when the source clearly presents them as continuous. For TONIGHT, only include verified scheduled events whose time overlaps 17:00 onward and has not ended. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly supported as free. You may include a free attraction/activity as well as a dated event only when current evidence also confirms it is open/available on the requested day. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
+    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window. Treat the supplied FIRST-PARTY event snapshots as the authority for event claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly supported as free. You may include a free attraction/activity as well as a dated event only when current evidence also confirms it is open/available on the requested day. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
     : '';
 
   const userProvidedContext = userUrlContext
@@ -1030,9 +1176,23 @@ export default async function handler(req, res) {
     ? `\n\nWAKEFIELD BUS STATION FOOD ANCHOR: The user has explicitly anchored the request at Wakefield Bus Station. First-party Greggs knowledge identifies Greggs Wakefield, U1 Wakefield Bus Station, Marsh Way, WF1 3AQ. For a sandwich-and-coffee / grab-and-go request, verify that exact branch first when live search is available. If verified, describe it as being at the bus station and therefore the most convenient LOCATION-WISE option. Do not claim it is the fastest by queue/service time. Do not say Greggs is merely a town-centre branch or that it is probably at the station. Do not list Parkside Sandwich Bar as a bus-station-area option. Only add alternatives when you can identify their exact address/area; do not invent walking times or call them nearby.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${currentEventsContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}`;
+  const freeVenueDirectContext = isFreeCurrentLeisureQuery(messages)
+    ? `
 
-  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || userUrlContext)
+FREE-DAY FIRST-PARTY VENUE AVAILABILITY:
+${freeVenueContexts.ysp?.text ? `YSP:
+${freeVenueContexts.ysp.text}
+` : ''}${freeVenueContexts.ncm?.text ? `NATIONAL COAL MINING MUSEUM:
+${freeVenueContexts.ncm.text}
+` : ''}${freeVenueContexts.wxWeekly?.text ? `WX WEEKLY / OPENING:
+${freeVenueContexts.wxWeekly.text}
+` : ''}
+Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
+    : '';
+
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}`;
+
+  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
     : '';
 
@@ -1083,6 +1243,10 @@ export default async function handler(req, res) {
     const mergedSourceMap = new Map();
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);
     if (experienceEventsContext?.source?.url) mergedSourceMap.set(experienceEventsContext.source.url, experienceEventsContext.source);
+    if (cathedralContext?.source?.url) mergedSourceMap.set(cathedralContext.source.url, cathedralContext.source);
+    for (const extraContext of [freeVenueContexts?.ysp, freeVenueContexts?.ncm, freeVenueContexts?.wxWeekly]) {
+      if (extraContext?.source?.url) mergedSourceMap.set(extraContext.source.url, extraContext.source);
+    }
     for (const source of userUrlContext?.sources || []) {
       if (source?.url) mergedSourceMap.set(source.url, source);
     }
@@ -1099,13 +1263,19 @@ export default async function handler(req, res) {
       });
     }
 
-    const validatedReply = await validateFoodAnswer(reply, messages);
+    const eventValidatedReply = await validateEventAnswer(reply, messages, {
+      wxContext,
+      experienceEventsContext,
+      cathedralContext,
+      freeVenueContexts
+    });
+    const validatedReply = await validateFoodAnswer(eventValidatedReply, messages);
     const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);
 
     return res.status(200).json({
       reply: safeReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: mergedSources,
-      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(userUrlContext)
+      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
     });
   } catch (error) {
     console.error('Handler error:', error);

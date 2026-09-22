@@ -729,7 +729,7 @@ async function fetchWxWhatsOnContext() {
   try {
     const response = await fetch('https://wxwakefield.co.uk/whats-on', {
       headers: {
-        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.3 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -834,7 +834,7 @@ async function fetchExperienceWakefieldEventsContext() {
     const url = 'https://experiencewakefield.co.uk/whats-on/';
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.3 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -867,7 +867,7 @@ async function fetchSimpleFirstPartyContext(url, title) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.3 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -893,7 +893,7 @@ async function fetchDatedFirstPartyContext(url, title) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.3 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -985,7 +985,7 @@ async function fetchTrustedUserUrlContext(messages) {
     const timer = setTimeout(() => controller.abort(), 8_000);
     try {
       const response = await fetch(url, {
-        headers: { 'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)' },
+        headers: { 'User-Agent': 'AskWakefield/2.3 (+https://www.askwakefield.co.uk)' },
         signal: controller.signal
       });
       if (!response.ok) continue;
@@ -1423,6 +1423,147 @@ function stripUnsupportedEventPriceClaims(reply, evidence = {}, options = {}) {
   }).join('\n');
 }
 
+
+function parseStrictJsonObject(value) {
+  const text = String(value || '').trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '');
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+}
+
+function bestResolvedEventFact(title, facts = []) {
+  let best = null;
+  let bestScore = 0;
+  for (const fact of facts || []) {
+    if (!fact || typeof fact.title !== 'string') continue;
+    const score = eventTitleSimilarity(title, fact.title);
+    if (score > bestScore) {
+      best = fact;
+      bestScore = score;
+    }
+  }
+  return bestScore >= 0.72 ? best : null;
+}
+
+async function resolveEventFactsViaWebSearch(messages) {
+  const titles = recentAssistantEventCandidates(messages);
+  if (!titles.length) return { facts: [], sources: [] };
+
+  const previousAnswer = recentAssistantContext(messages, 1).slice(0, 9000);
+  const system = `You are a factual event-record resolver for Ask Wakefield. Search current FIRST-PARTY official pages only and return one structured record for every supplied event title. This is not a prose-answer task.
+
+${londonContext()}
+
+Rules:
+- Search the exact named event, venue and date from the supplied previous answer.
+- Prefer the event's own official detail page. WX events: wxwakefield.co.uk. Experience Wakefield events: experiencewakefield.co.uk. YSP events/admission: ysp.org.uk. National Trust events: nationaltrust.org.uk. Farmer Copleys: farmercopleys.co.uk or Experience Wakefield.
+- NEVER transfer price, free status, age range or family tags between events.
+- price must be the STANDARD PUBLIC event/admission price for that exact event, such as "£12", "£3", "£6.70", or "Free". Do not use a carer/member/child concession as the standard price.
+- If an exhibition is free only in a specific gallery while the wider attraction is paid, set price="Free" and scope to that gallery. Do not replace it with the wider venue ticket price.
+- familySuitable=true only if the SPECIFIC EVENT page/listing explicitly labels children, young people, families, family-friendly, or equivalent. A generally family-friendly venue is not enough.
+- venueFamilyFriendly=true may be used when the venue is family-friendly but the specific event is not explicitly a family event.
+- adultOnly=true only when the event explicitly says adults only / over-18 / 18+.
+- If a fact cannot be verified, use null. Never guess.
+- sourceUrl must be the exact official page supporting that event record, not a search page or homepage.
+- Return valid JSON only. No markdown and no explanation.
+
+Schema:
+{"events":[{"title":"exact supplied title","price":"£12 or Free or null","scope":"optional admission scope or null","familySuitable":true,"venueFamilyFriendly":false,"adultOnly":false,"familyReason":"short evidence label or null","sourceUrl":"https://... or null"}]}`;
+
+  const body = {
+    model: MODEL,
+    max_tokens: 1800,
+    system,
+    messages: [{
+      role: 'user',
+      content: `EVENT TITLES:\n${titles.map((title, i) => `${i + 1}. ${title}`).join('\n')}\n\nPREVIOUS ASK WAKEFIELD ANSWER:\n${previousAnswer}`
+    }],
+    tools: [{
+      type: 'web_search_20250305',
+      name: 'web_search',
+      max_uses: Math.min(12, Math.max(6, titles.length + 3)),
+      allowed_domains: [
+        'wxwakefield.co.uk',
+        'experiencewakefield.co.uk',
+        'ysp.org.uk',
+        'nationaltrust.org.uk',
+        'farmercopleys.co.uk'
+      ],
+      user_location: {
+        type: 'approximate',
+        city: 'Wakefield',
+        region: 'West Yorkshire',
+        country: 'GB',
+        timezone: 'Europe/London'
+      }
+    }]
+  };
+
+  try {
+    const { response, data } = await callAnthropic(body);
+    if (!response.ok) return { facts: [], sources: [] };
+    const extracted = extractAnswer(data);
+    const parsed = parseStrictJsonObject(extracted.reply);
+    const rawFacts = Array.isArray(parsed?.events) ? parsed.events : [];
+    const facts = [];
+    const sourceMap = new Map();
+
+    for (const requestedTitle of titles) {
+      let best = null;
+      let bestScore = 0;
+      for (const raw of rawFacts) {
+        if (!raw || typeof raw.title !== 'string') continue;
+        const score = eventTitleSimilarity(requestedTitle, raw.title);
+        if (score > bestScore) {
+          best = raw;
+          bestScore = score;
+        }
+      }
+      if (!best || bestScore < 0.72) continue;
+
+      let sourceUrl = null;
+      if (typeof best.sourceUrl === 'string' && best.sourceUrl.startsWith('http')) {
+        try {
+          const parsedUrl = new URL(best.sourceUrl);
+          if (trustedHostname(parsedUrl.hostname)) sourceUrl = parsedUrl.toString();
+        } catch {}
+      }
+
+      const price = best.price == null ? null : normaliseCostLabel(String(best.price));
+      const fact = {
+        title: requestedTitle,
+        price,
+        scope: typeof best.scope === 'string' ? best.scope.trim().slice(0, 120) : null,
+        familySuitable: best.familySuitable === true ? true : best.familySuitable === false ? false : null,
+        venueFamilyFriendly: best.venueFamilyFriendly === true ? true : best.venueFamilyFriendly === false ? false : null,
+        adultOnly: best.adultOnly === true ? true : best.adultOnly === false ? false : null,
+        familyReason: typeof best.familyReason === 'string' ? best.familyReason.trim().slice(0, 180) : null,
+        sourceUrl
+      };
+      facts.push(fact);
+      if (sourceUrl) sourceMap.set(sourceUrl, { title: requestedTitle, url: sourceUrl });
+    }
+
+    // Also keep any official citations the search call surfaced, but never use
+    // them as event facts unless the structured record above names them.
+    for (const source of extracted.sources || []) {
+      try {
+        if (source?.url && trustedHostname(new URL(source.url).hostname)) {
+          sourceMap.set(source.url, source);
+        }
+      } catch {}
+    }
+
+    return { facts, sources: Array.from(sourceMap.values()).slice(0, 8) };
+  } catch (error) {
+    console.error('Event fact resolver failed:', error?.message || error);
+    return { facts: [], sources: [] };
+  }
+}
+
 function eventCostWasRequested(messages) {
   const context = recentUserContext(messages, 4);
   return /\b(price|prices|cost|costs|how much|ticket price|entry fee|admission|free)\b/i.test(context);
@@ -1525,6 +1666,11 @@ function verifiedEventCostForTitle(title, evidence = {}) {
   // that before any generic YSP/event page price to avoid returning the wider
   // park ticket price for the exhibition itself.
   if (/olivia bax|double take/i.test(title)) {
+    const resolvedOlivia = bestResolvedEventFact(title, evidence.searchFacts || []);
+    if (resolvedOlivia?.price === 'Free' && /weston/i.test(resolvedOlivia.scope || '')) {
+      return 'Free at The Weston gallery';
+    }
+
     const weston = String(evidence.freeVenueContexts?.yspWeston?.text || '');
     const record = exactEventRecordWindow(weston, title, 1100);
     const westonFree = /the weston/i.test(weston) && /(?:free to enter|free entry|gallery, restaurant and shop are free to enter)/i.test(weston);
@@ -1542,26 +1688,20 @@ function verifiedEventCostForTitle(title, evidence = {}) {
   const detailCost = explicitCostFromDetailContext(title, evidence.eventDetailContexts || []);
   if (detailCost) return detailCost;
 
-  const aggregateSources = [
-    evidence.wxContext?.text,
-    evidence.experienceEventsContext?.text,
-    evidence.cathedralContext?.text
-  ].filter(Boolean);
-
-  for (const source of aggregateSources) {
-    const cost = costFromAggregateSource(title, source);
-    if (cost) return cost;
+  // High-risk price/free follow-ups may use a structured web-search resolver.
+  // Unlike aggregate What's On text, this record is tied to one exact event
+  // and one exact first-party source URL.
+  const resolved = bestResolvedEventFact(title, evidence.searchFacts || []);
+  if (resolved?.price) {
+    if (/olivia bax|double take/i.test(title) && /^Free$/i.test(resolved.price) && /weston/i.test(resolved.scope || '')) {
+      return 'Free at The Weston gallery';
+    }
+    return resolved.price;
   }
 
-  // Search citations are deliberately last. Only a citation containing the
-  // exact event title and a price/free marker after that title may contribute.
-  for (const item of evidence.searchEvidence || []) {
-    if (!item?.text || !item?.url) continue;
-    try { if (!trustedHostname(new URL(item.url).hostname)) continue; } catch { continue; }
-    const cost = costFromAggregateSource(title, item.text);
-    if (cost) return cost;
-  }
-
+  // Deliberately DO NOT infer price/free status from aggregate listing text.
+  // Those pages place multiple event cards and filter labels close together,
+  // which previously caused "Free" to leak from one event onto another.
   return null;
 }
 
@@ -1632,6 +1772,12 @@ function explicitFamilyEvidenceForTitle(title, evidence = {}) {
     }
   }
 
+  const resolved = bestResolvedEventFact(title, evidence.searchFacts || []);
+  if (resolved?.adultOnly === true) return null;
+  if (resolved?.familySuitable === true) {
+    return resolved.familyReason || 'explicitly listed for children or families';
+  }
+
   // Safe fallback: these are dedicated family-event pages, so exact presence of
   // the event title is positive family suitability evidence even if a detail
   // page timed out. Do not use ordinary venue pages for this fallback.
@@ -1660,7 +1806,8 @@ function buildVerifiedFamilyEventFollowUp(messages, evidence = {}) {
   }
 
   const yspTitle = titles.find(title => /olivia bax|double take/i.test(title));
-  const yspVenueFamily = Boolean(evidence.familyVenueContexts?.yspFamily?.text);
+  const yspResolved = yspTitle ? bestResolvedEventFact(yspTitle, evidence.searchFacts || []) : null;
+  const yspVenueFamily = Boolean(evidence.familyVenueContexts?.yspFamily?.text) || yspResolved?.venueFamilyFriendly === true;
   const yspNote = yspTitle && yspVenueFamily && !family.some(line => /olivia bax|double take/i.test(line))
     ? `\n\n${yspTitle} is at a family-friendly venue, but the exhibition itself is not specifically labelled as a children's/family event in the evidence I checked.`
     : '';
@@ -1914,6 +2061,57 @@ export default async function handler(req, res) {
   }
 
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
+
+  // Price/free/family follow-ups are handled separately from the general event
+  // listing pipeline. The exact named events from the previous answer are
+  // resolved against first-party pages via web search, then rendered
+  // deterministically. Aggregate listings are never used to assign Free/paid.
+  const highRiskEventFollowUp = isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages) || isEventFamilyFollowUp(messages);
+  if (highRiskEventFollowUp) {
+    const [resolvedFacts, freeVenueContexts, familyVenueContexts] = await Promise.all([
+      resolveEventFactsViaWebSearch(messages),
+      (isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages))
+        ? fetchFreeDayVenueContexts(messages)
+        : Promise.resolve({ ysp: null, yspWeston: null, ncm: null, wxWeekly: null }),
+      isEventFamilyFollowUp(messages)
+        ? fetchFamilyVenueContexts(messages)
+        : Promise.resolve({ yspFamily: null, experienceFamilies: null, wxFamily: null })
+    ]);
+
+    const deterministicEvidence = {
+      wxContext: null,
+      experienceEventsContext: null,
+      cathedralContext: null,
+      freeVenueContexts,
+      familyVenueContexts,
+      eventDetailContexts: [],
+      searchEvidence: [],
+      searchFacts: resolvedFacts.facts || []
+    };
+
+    let reply = '';
+    if (isEventCostFollowUp(messages)) {
+      reply = buildVerifiedEventCostFollowUp(messages, deterministicEvidence);
+    } else if (isFreeCurrentLeisureQuery(messages)) {
+      reply = buildVerifiedFreeEventFollowUp(messages, deterministicEvidence);
+    } else {
+      reply = buildVerifiedFamilyEventFollowUp(messages, deterministicEvidence);
+    }
+
+    const sourceMap = new Map();
+    for (const source of resolvedFacts.sources || []) {
+      if (source?.url) sourceMap.set(source.url, source);
+    }
+    for (const item of [freeVenueContexts?.ysp, freeVenueContexts?.yspWeston, familyVenueContexts?.yspFamily, familyVenueContexts?.experienceFamilies, familyVenueContexts?.wxFamily]) {
+      if (item?.source?.url) sourceMap.set(item.source.url, item.source);
+    }
+
+    return res.status(200).json({
+      reply: reply || 'I could not verify those event details from current first-party sources.',
+      sources: Array.from(sourceMap.values()).slice(0, 8),
+      live: true
+    });
+  }
 
   let wxContext = null;
   let experienceEventsContext = null;

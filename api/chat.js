@@ -634,19 +634,34 @@ function recentAssistantEventCandidates(messages) {
   const text = recentAssistantContext(messages, 1);
   if (!text) return [];
   const out = [];
+  const timePattern = /\b(?:[01]?\d|2[0-3])(?::\d{2})?\s*(?:am|pm)?\s*[–—-]\s*(?:[01]?\d|2[0-3])(?::\d{2})?\s*(?:am|pm)?\b/i;
+
   for (const rawLine of text.split(/\n/)) {
     const line = rawLine.replace(/^\s*[-*•]+\s*/, '').replace(/\*\*/g, '').trim();
-    if (!line || line.length < 5 || line.length > 240) continue;
+    if (!line || line.length < 5 || line.length > 280) continue;
     if (/^(saturday|sunday|monday|tuesday|wednesday|thursday|friday)\b/i.test(line)) continue;
-    if (/^(this weekend|the events|for full details|would you|if you|from this weekend|ask wakefield)/i.test(line)) continue;
+    if (/^(this weekend|the events|for full details|would you|if you|from this weekend|ask wakefield|the free options|the clearest family options)/i.test(line)) continue;
+
+    // Only treat lines that look like actual event rows as event candidates.
+    // Description-only lines such as "Comedians MC Colin Manford..." must never
+    // become synthetic event titles in later price/free/family follow-ups.
+    const looksLikeEventRow = line.includes(' | ') || timePattern.test(line) || /\b(?:at|@)\s+[A-Z][^,.]{2,80}(?:,|\s+[–—-])/i.test(line);
+    if (!looksLikeEventRow) continue;
+
     let candidate = line;
     if (candidate.includes(' | ')) candidate = candidate.split(' | ')[0].trim();
+
     const atIndex = candidate.toLowerCase().indexOf(' at ');
     if (atIndex > 4) candidate = candidate.slice(0, atIndex).trim();
-    candidate = candidate.split(/\s+[—–]\s+/)[0].trim();
+
+    // Remove an obvious time/venue suffix when the answer used an em dash.
+    candidate = candidate.split(/\s+[—–]\s+(?=(?:at\s+)?(?:[01]?\d|2[0-3])|\d{1,2}:\d{2})/i)[0].trim();
     candidate = candidate.replace(/\s+(?:exhibition|event|continues?|returns?)$/i, '').trim();
     candidate = candidate.replace(/^[^A-Za-z0-9]+|[.:,;]+$/g, '').trim();
+
+    // A valid candidate should be a compact proper-name-like phrase, not prose.
     if (candidate.split(/\s+/).length > 12) continue;
+    if (/^(comedians?|meet artist|support local|local artisans?|outdoor performance|art exhibition|contemporary art|family-friendly|family friendly|booking|bookable)\b/i.test(candidate)) continue;
     if (candidate.length >= 5) out.push(candidate);
   }
   return [...new Set(out)];
@@ -714,7 +729,7 @@ async function fetchWxWhatsOnContext() {
   try {
     const response = await fetch('https://wxwakefield.co.uk/whats-on', {
       headers: {
-        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -819,7 +834,7 @@ async function fetchExperienceWakefieldEventsContext() {
     const url = 'https://experiencewakefield.co.uk/whats-on/';
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -852,7 +867,7 @@ async function fetchSimpleFirstPartyContext(url, title) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -878,7 +893,7 @@ async function fetchDatedFirstPartyContext(url, title) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -930,12 +945,13 @@ async function fetchFreeDayVenueContexts(messages) {
 }
 
 async function fetchFamilyVenueContexts(messages) {
-  if (!isEventFamilyFollowUp(messages)) return { yspFamily: null, experienceFamilies: null };
-  const [yspFamily, experienceFamilies] = await Promise.all([
+  if (!isEventFamilyFollowUp(messages)) return { yspFamily: null, experienceFamilies: null, wxFamily: null };
+  const [yspFamily, experienceFamilies, wxFamily] = await Promise.all([
     fetchSimpleFirstPartyContext('https://ysp.org.uk/visit-us/family-visits', 'Yorkshire Sculpture Park — Family Visits'),
-    fetchSimpleFirstPartyContext('https://experiencewakefield.co.uk/families/', 'Experience Wakefield — Families')
+    fetchSimpleFirstPartyContext('https://experiencewakefield.co.uk/families/', 'Experience Wakefield — Families'),
+    fetchSimpleFirstPartyContext('https://www.wxwakefield.co.uk/Whats-On/Family', 'Wakefield Exchange — Family Events')
   ]);
-  return { yspFamily, experienceFamilies };
+  return { yspFamily, experienceFamilies, wxFamily };
 }
 
 
@@ -969,7 +985,7 @@ async function fetchTrustedUserUrlContext(messages) {
     const timer = setTimeout(() => controller.abort(), 8_000);
     try {
       const response = await fetch(url, {
-        headers: { 'User-Agent': 'AskWakefield/2.1 (+https://www.askwakefield.co.uk)' },
+        headers: { 'User-Agent': 'AskWakefield/2.2 (+https://www.askwakefield.co.uk)' },
         signal: controller.signal
       });
       if (!response.ok) continue;
@@ -1279,14 +1295,41 @@ function exactEventRecordWindow(text, title, maxChars = 1200) {
   if (!regex) return '';
 
   let best = '';
-  let bestScore = -1;
+  let bestScore = -Infinity;
   let match;
   while ((match = regex.exec(source))) {
     const window = source.slice(match.index, Math.min(source.length, match.index + maxChars));
+
+    // Prefer the title occurrence that is immediately followed by event metadata.
+    // This avoids matching the HTML <title>, navigation, category menus, related
+    // cards or footer copies of the same event name.
+    const markerMatches = [
+      /\bPRICE\s*:/i.exec(window),
+      /\bDATE\s*:/i.exec(window),
+      /\bStart time\s*:/i.exec(window),
+      /\bImage:\s*Calendar/i.exec(window),
+      /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?\s+\d{1,2}\s+[A-Z][a-z]{2,8}\s+20\d{2}\b/i.exec(window),
+      /£\s*\d+(?:[.,]\d{1,2})?/i.exec(window)
+    ].filter(Boolean);
+
+    const nearestMarker = markerMatches.length ? Math.min(...markerMatches.map(m => m.index)) : 9999;
     let score = 0;
-    if (/\b(?:DATE|Start time|Calendar Icon|Clock)\b/i.test(window)) score += 2;
-    if (/\bPRICE\s*:|£\s*\d|\bFree\b/i.test(window)) score += 3;
-    if (/\bAGE RANGE\b|\bFamily friendly\b/i.test(window)) score += 1;
+    if (nearestMarker < 180) score += 12;
+    else if (nearestMarker < 350) score += 8;
+    else if (nearestMarker < 600) score += 4;
+    else if (nearestMarker < 900) score += 1;
+    else score -= 5;
+
+    if (/\bPRICE\s*:\s*(?:Free|£\s*\d)/i.test(window.slice(0, 700))) score += 8;
+    if (/\bAGE RANGE\s*:/i.test(window.slice(0, 1000))) score += 5;
+    if (/\bImage:\s*Tag\b/i.test(window.slice(0, 600))) score += 5;
+    if (/\bAbout\b/i.test(window.slice(0, 900))) score += 2;
+
+    // Strong penalty for category/navigation copies that put generic filters
+    // before the first actual event metadata marker.
+    const prefix = window.slice(0, Math.min(nearestMarker, 500));
+    if (/Free\s+Art\s*&\s*Exhibitions|Music\s*\/\s*Dance\s*\/\s*Theatre|Courses\s*\/\s*Workshops/i.test(prefix)) score -= 12;
+
     if (score > bestScore) {
       best = window;
       bestScore = score;
@@ -1431,7 +1474,7 @@ function explicitCostFromDetailContext(title, eventDetailContexts = []) {
 
     // WX exposes the public event price in a dedicated PRICE field. That must
     // outrank concessions such as "Registered Carers: Free" later in the page.
-    const explicitPrice = record.match(/\\bPRICE\\s*:\\s*(Free|£\\s*\\d+(?:[.,]\\d{1,2})?)/i);
+    const explicitPrice = record.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
     if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
 
     // Experience Wakefield places the event's main public price/tag between
@@ -1464,7 +1507,7 @@ function costFromAggregateSource(title, sourceText) {
 
   // This window begins at the exact event title, so category/navigation labels
   // before the event cannot be mistaken for its admission status.
-  const explicitPrice = /\\bPRICE\\s*:\\s*(Free|£\\s*\\d+(?:[.,]\\d{1,2})?)/i.exec(window);
+  const explicitPrice = /\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i.exec(window);
   if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
 
   const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(window);
@@ -1488,6 +1531,12 @@ function verifiedEventCostForTitle(title, evidence = {}) {
     if ((record || /olivia bax|double take/i.test(weston)) && westonFree) {
       return 'Free at The Weston gallery';
     }
+
+    // Experience Wakefield may expose a £0.00–£9.50 range that mixes Weston
+    // gallery access with wider YSP admission. Do not collapse that range to
+    // £9.50 or call it generally free. If the Weston rule cannot be verified,
+    // fail closed and report the price as unverified.
+    return null;
   }
 
   const detailCost = explicitCostFromDetailContext(title, evidence.eventDetailContexts || []);
@@ -1555,31 +1604,45 @@ function eventDetailForTitle(title, eventDetailContexts = []) {
 
 function explicitFamilyEvidenceForTitle(title, evidence = {}) {
   const detail = eventDetailForTitle(title, evidence.eventDetailContexts || []);
-  if (!detail?.text) return null;
 
-  // Start at the exact event title and stop before About. This prevents global
-  // navigation labels such as "Family" or related-event cards from leaking
-  // onto the current event.
-  const record = eventDetailRecord(title, detail.text, 2800);
-  if (!record) return null;
+  if (detail?.text) {
+    // Start at the exact event title and stop before About. This prevents global
+    // navigation labels such as "Family" or related-event cards from leaking
+    // onto the current event.
+    const record = eventDetailRecord(title, detail.text, 2800);
+    if (record) {
+      const ageMatch = record.match(/AGE RANGE\s*:?([\s\S]{0,380}?)(?:Tickets|Ticketing|Book Tickets|DATE:|Start time:|PRICE:|About|$)/i);
+      const ageRange = ageMatch?.[1] || '';
+      const hasChildren = /\bChildren\b/i.test(ageRange);
+      const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
+      const hasFamilies = /\bFamilies\b/i.test(ageRange);
+      if (hasChildren || hasYoungPeople || hasFamilies) {
+        const labels = [];
+        if (hasChildren) labels.push('Children');
+        if (hasYoungPeople) labels.push('Young People');
+        if (hasFamilies) labels.push('Families');
+        return `listed for ${labels.join(', ')}`;
+      }
 
-  const ageMatch = record.match(/AGE RANGE\s*:?([\s\S]{0,380}?)(?:Tickets|Ticketing|Book Tickets|DATE:|Start time:|PRICE:|About|$)/i);
-  const ageRange = ageMatch?.[1] || '';
-  const hasChildren = /\bChildren\b/i.test(ageRange);
-  const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
-  const hasFamilies = /\bFamilies\b/i.test(ageRange);
-  if (hasChildren || hasYoungPeople || hasFamilies) {
-    const labels = [];
-    if (hasChildren) labels.push('Children');
-    if (hasYoungPeople) labels.push('Young People');
-    if (hasFamilies) labels.push('Families');
-    return `listed for ${labels.join(', ')}`;
+      // Experience Wakefield's event-specific family tag appears between the
+      // event metadata and About. Generic site navigation is outside this block.
+      if (/\bFamily friendly\b/i.test(record) || /\bActivity\s+Families\b/i.test(record)) {
+        return 'explicitly listed as family-friendly';
+      }
+    }
   }
 
-  // Experience Wakefield's event-specific Family friendly tag appears in the
-  // event record before About. Do not inspect the rest of the page.
-  if (/\bFamily friendly\b/i.test(record) || /\bActivity\s+Families\b/i.test(record)) {
-    return 'explicitly listed as family-friendly';
+  // Safe fallback: these are dedicated family-event pages, so exact presence of
+  // the event title is positive family suitability evidence even if a detail
+  // page timed out. Do not use ordinary venue pages for this fallback.
+  const experienceFamilies = String(evidence.familyVenueContexts?.experienceFamilies?.text || '');
+  if (exactEventRecordWindow(experienceFamilies, title, 650)) {
+    return "listed by Experience Wakefield in its family-friendly events";
+  }
+
+  const wxFamily = String(evidence.familyVenueContexts?.wxFamily?.text || '');
+  if (exactEventRecordWindow(wxFamily, title, 650)) {
+    return "listed by Wakefield Exchange in its Family events";
   }
 
   return null;
@@ -1811,7 +1874,8 @@ function eventFollowUpSourceList({ wxContext, experienceEventsContext, cathedral
     freeVenueContexts?.yspWeston,
     freeVenueContexts?.ysp,
     familyVenueContexts?.yspFamily,
-    familyVenueContexts?.experienceFamilies
+    familyVenueContexts?.experienceFamilies,
+    familyVenueContexts?.wxFamily
   ]) {
     if (item?.source?.url) sourceMap.set(item.source.url, item.source);
   }
@@ -1873,7 +1937,7 @@ export default async function handler(req, res) {
 
   const familyVenueContexts = isEventFamilyFollowUp(messages)
     ? await fetchFamilyVenueContexts(messages)
-    : { yspFamily: null, experienceFamilies: null };
+    : { yspFamily: null, experienceFamilies: null, wxFamily: null };
 
   const eventDetailContexts = (isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages) || isEventFamilyFollowUp(messages))
     ? await fetchRelevantEventDetailContexts(messages, [wxContext, experienceEventsContext])
@@ -1954,7 +2018,7 @@ ${cathedralContext.text}`
     : '';
 
   const familyDirectContext = isEventFamilyFollowUp(messages)
-    ? `\n\nFAMILY SUITABILITY MODE: Filter the events from the recent answer rather than inventing a fresh list. A specific event is family/child-suitable only when its own detail page or current source explicitly gives a Family/Children/Young People age range/category or equivalent wording. Venue-level family guidance may support a softer statement such as "the venue is family-friendly, though this exhibition is not specifically billed as a children's event". Never infer child suitability from outdoor space, colourful artwork, popularity or a venue merely having families present. Adults-only events must be excluded.\n${familyVenueContexts.yspFamily?.text ? `YSP FAMILY GUIDANCE:\n${familyVenueContexts.yspFamily.text}\n` : ''}${familyVenueContexts.experienceFamilies?.text ? `EXPERIENCE WAKEFIELD FAMILY GUIDANCE:\n${familyVenueContexts.experienceFamilies.text}` : ''}`
+    ? `\n\nFAMILY SUITABILITY MODE: Filter the events from the recent answer rather than inventing a fresh list. A specific event is family/child-suitable only when its own detail page or current source explicitly gives a Family/Children/Young People age range/category or equivalent wording. Venue-level family guidance may support a softer statement such as "the venue is family-friendly, though this exhibition is not specifically billed as a children's event". Never infer child suitability from outdoor space, colourful artwork, popularity or a venue merely having families present. Adults-only events must be excluded.\n${familyVenueContexts.yspFamily?.text ? `YSP FAMILY GUIDANCE:\n${familyVenueContexts.yspFamily.text}\n` : ''}${familyVenueContexts.experienceFamilies?.text ? `EXPERIENCE WAKEFIELD FAMILY GUIDANCE:\n${familyVenueContexts.experienceFamilies.text}\n` : ''}${familyVenueContexts.wxFamily?.text ? `WX FAMILY EVENTS:\n${familyVenueContexts.wxFamily.text}` : ''}`
     : '';
 
   const userProvidedContext = userUrlContext
@@ -2096,7 +2160,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     return res.status(200).json({
       reply: finalReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: mergedSources,
-      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.yspWeston) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly) || Boolean(familyVenueContexts?.yspFamily) || Boolean(familyVenueContexts?.experienceFamilies) || eventDetailContexts.length > 0
+      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.yspWeston) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly) || Boolean(familyVenueContexts?.yspFamily) || Boolean(familyVenueContexts?.experienceFamilies) || Boolean(familyVenueContexts?.wxFamily) || eventDetailContexts.length > 0
     });
   } catch (error) {
     console.error('Handler error:', error);

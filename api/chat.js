@@ -901,10 +901,28 @@ async function fetchDatedFirstPartyContext(url, title) {
 }
 
 async function fetchFreeDayVenueContexts(messages) {
-  if (!isFreeCurrentLeisureQuery(messages)) return { ysp: null, yspWeston: null, ncm: null, wxWeekly: null };
+  const freeFollowUp = isFreeCurrentLeisureQuery(messages);
+  const costFollowUp = isEventCostFollowUp(messages);
+  if (!freeFollowUp && !costFollowUp) {
+    return { ysp: null, yspWeston: null, ncm: null, wxWeekly: null };
+  }
+
+  // The Weston has a separate admission rule from the wider YSP grounds. Fetch
+  // it for both free-only and price follow-ups so an exhibition in The Weston
+  // cannot inherit the park's general admission price.
+  const yspWestonPromise = fetchSimpleFirstPartyContext(
+    'https://ysp.org.uk/visit-us/the-weston',
+    'Yorkshire Sculpture Park — The Weston'
+  );
+
+  if (costFollowUp && !freeFollowUp) {
+    const yspWeston = await yspWestonPromise;
+    return { ysp: null, yspWeston, ncm: null, wxWeekly: null };
+  }
+
   const [ysp, yspWeston, ncm, wxWeekly] = await Promise.all([
     fetchSimpleFirstPartyContext('https://ysp.org.uk/visit-us', 'Yorkshire Sculpture Park — Visit Us'),
-    fetchSimpleFirstPartyContext('https://ysp.org.uk/visit-us/the-weston', 'Yorkshire Sculpture Park — The Weston'),
+    yspWestonPromise,
     fetchSimpleFirstPartyContext('https://www.ncm.org.uk/whats-on/', 'National Coal Mining Museum — What\'s On'),
     fetchSimpleFirstPartyContext('https://www.wxwakefield.co.uk/Whats-On/Weekly-Events', 'Wakefield Exchange — Weekly Events')
   ]);
@@ -1238,6 +1256,53 @@ function eventLineTitleCandidate(line) {
   return title.replace(/[.:,;\s]+$/, '').trim();
 }
 
+function eventLiteralWords(value) {
+  return String(value || '')
+    .replace(/[’‘`]/g, "'")
+    .replace(/[–—]/g, '-')
+    .toLowerCase()
+    .match(/[a-z0-9]+/g) || [];
+}
+
+function exactishEventTitleRegex(title, global = false) {
+  const words = eventLiteralWords(title);
+  if (!words.length) return null;
+  const escaped = words.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Start at the first actual title word. Never let category labels or a nearby
+  // word such as "Free" become part of the match window before the title.
+  return new RegExp(escaped.join('[\\s\\W_]{0,14}'), global ? 'gi' : 'i');
+}
+
+function exactEventRecordWindow(text, title, maxChars = 1200) {
+  const source = String(text || '');
+  const regex = exactishEventTitleRegex(title, true);
+  if (!regex) return '';
+
+  let best = '';
+  let bestScore = -1;
+  let match;
+  while ((match = regex.exec(source))) {
+    const window = source.slice(match.index, Math.min(source.length, match.index + maxChars));
+    let score = 0;
+    if (/\b(?:DATE|Start time|Calendar Icon|Clock)\b/i.test(window)) score += 2;
+    if (/\bPRICE\s*:|£\s*\d|\bFree\b/i.test(window)) score += 3;
+    if (/\bAGE RANGE\b|\bFamily friendly\b/i.test(window)) score += 1;
+    if (score > bestScore) {
+      best = window;
+      bestScore = score;
+    }
+    if (regex.lastIndex === match.index) regex.lastIndex += 1;
+  }
+  return best;
+}
+
+function eventDetailRecord(title, text, maxChars = 2600) {
+  const window = exactEventRecordWindow(text, title, maxChars);
+  if (!window) return '';
+  const aboutIndex = window.search(/\bAbout\b/i);
+  return aboutIndex > 0 ? window.slice(0, aboutIndex) : window;
+}
+
 function eventClaimSupportedNearTitle(title, claim, evidenceText) {
   if (!title || !claim || !evidenceText) return false;
   const needle = title.toLowerCase();
@@ -1349,15 +1414,9 @@ function detailContextMatchesTitle(title, item) {
   const requested = item.requestedTitle || '';
   if (requested && eventTitleSimilarity(title, requested) < 0.8) return false;
 
-  // A fetched detail page should identify itself near the start. This prevents
-  // a wrongly matched URL, footer card or generic category page from donating
-  // Free / Family-friendly / price claims to another event.
-  const head = String(item.text).slice(0, 420);
-  const titleTokens = eventTokens(title);
-  const headTokens = new Set(eventTokens(head));
-  if (!titleTokens.length) return false;
-  const covered = titleTokens.filter(token => headTokens.has(token)).length;
-  return covered / titleTokens.length >= 0.8;
+  // Require the actual event title to appear on the fetched page. Do not use
+  // navigation/category tokens near the top of the page as identity evidence.
+  return Boolean(exactEventRecordWindow(item.text, title, 900));
 }
 
 function explicitCostFromDetailContext(title, eventDetailContexts = []) {
@@ -1365,22 +1424,26 @@ function explicitCostFromDetailContext(title, eventDetailContexts = []) {
   if (!candidates.length) return null;
 
   candidates.sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || b.source?.title || '') - eventTitleSimilarity(title, a.requestedTitle || a.source?.title || ''));
-  const text = String(candidates[0].text || '');
-  const header = eventHeaderText(text, 1800);
 
-  // WX detail pages expose an explicit PRICE field. This outranks every other
-  // free/paid mention on the page, including free registered-carer tickets.
-  const explicitPrice = header.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
-  if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
+  for (const candidate of candidates) {
+    const record = eventDetailRecord(title, candidate.text, 2600);
+    if (!record) continue;
 
-  // Experience Wakefield places the event's main tag/price directly after the
-  // date, time and venue, before the About section. Use the first public price
-  // or explicit Free marker in this event header only.
-  const paid = header.match(/£\s*[1-9]\d*(?:[.,]\d{1,2})?/i);
-  const free = header.match(/\b(?:Free event|Free entry|Price\s*:?\s*Free|\bFree\b)/i);
-  if (paid && free) return paid.index <= free.index ? normaliseCostLabel(paid[0]) : 'Free';
-  if (paid) return normaliseCostLabel(paid[0]);
-  if (free) return 'Free';
+    // WX exposes the public event price in a dedicated PRICE field. That must
+    // outrank concessions such as "Registered Carers: Free" later in the page.
+    const explicitPrice = record.match(/\\bPRICE\\s*:\\s*(Free|£\\s*\\d+(?:[.,]\\d{1,2})?)/i);
+    if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
+
+    // Experience Wakefield places the event's main public price/tag between
+    // the title/date/venue block and About. Since this slice starts at the
+    // exact event title, site navigation cannot donate a stray Free marker.
+    const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(record);
+    const free = /\b(?:Free event|Free entry|Price\s*:?\s*Free|Free)\b/i.exec(record);
+    if (paid && free) return paid.index <= free.index ? normaliseCostLabel(paid[0]) : 'Free';
+    if (paid) return normaliseCostLabel(paid[0]);
+    if (free) return 'Free';
+  }
+
   return null;
 }
 
@@ -1392,20 +1455,18 @@ function titleTokenRegex(title) {
 }
 
 function sourceWindowAfterTitle(sourceText, title, maxChars = 900) {
-  const text = String(sourceText || '');
-  const regex = titleTokenRegex(title);
-  if (!regex) return '';
-  const match = regex.exec(text);
-  if (!match) return '';
-  return text.slice(match.index, Math.min(text.length, match.index + maxChars));
+  return exactEventRecordWindow(sourceText, title, maxChars);
 }
 
 function costFromAggregateSource(title, sourceText) {
-  const window = sourceWindowAfterTitle(sourceText, title, 850);
+  const window = sourceWindowAfterTitle(sourceText, title, 650);
   if (!window) return null;
 
-  // Stop before a likely next event heading where possible. The first price or
-  // explicit free marker after the matched event title belongs to this record.
+  // This window begins at the exact event title, so category/navigation labels
+  // before the event cannot be mistaken for its admission status.
+  const explicitPrice = /\\bPRICE\\s*:\\s*(Free|£\\s*\\d+(?:[.,]\\d{1,2})?)/i.exec(window);
+  if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
+
   const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(window);
   const free = /\bFREE\b|\bFree\b/i.exec(window);
   if (!paid && !free) return null;
@@ -1416,20 +1477,22 @@ function costFromAggregateSource(title, sourceText) {
 function verifiedEventCostForTitle(title, evidence = {}) {
   if (!title) return null;
 
-  const detailCost = explicitCostFromDetailContext(title, evidence.eventDetailContexts || []);
-  if (detailCost) return detailCost;
-
-  // The Weston gallery is free to enter. Wider YSP grounds/gallery admission
-  // is separate, so never collapse this to a generic 'YSP is free' claim.
+  // Double Take is physically in The Weston Gallery. The Weston has its own
+  // explicit free-entry rule, separate from general YSP park admission. Check
+  // that before any generic YSP/event page price to avoid returning the wider
+  // park ticket price for the exhibition itself.
   if (/olivia bax|double take/i.test(title)) {
     const weston = String(evidence.freeVenueContexts?.yspWeston?.text || '');
-    if (/the weston/i.test(weston) && /(?:free to enter|free entry|gallery, restaurant and shop are free to enter)/i.test(weston)) {
+    const record = exactEventRecordWindow(weston, title, 1100);
+    const westonFree = /the weston/i.test(weston) && /(?:free to enter|free entry|gallery, restaurant and shop are free to enter)/i.test(weston);
+    if ((record || /olivia bax|double take/i.test(weston)) && westonFree) {
       return 'Free at The Weston gallery';
     }
   }
 
-  // Use each aggregate listing independently and require the event title to be
-  // present in the same local record. Do not scan a whole page for shared words.
+  const detailCost = explicitCostFromDetailContext(title, evidence.eventDetailContexts || []);
+  if (detailCost) return detailCost;
+
   const aggregateSources = [
     evidence.wxContext?.text,
     evidence.experienceEventsContext?.text,
@@ -1441,8 +1504,8 @@ function verifiedEventCostForTitle(title, evidence = {}) {
     if (cost) return cost;
   }
 
-  // Search citations are a final fallback, but only when the cited text itself
-  // contains the event title and its price/free marker in the same short record.
+  // Search citations are deliberately last. Only a citation containing the
+  // exact event title and a price/free marker after that title may contribute.
   for (const item of evidence.searchEvidence || []) {
     if (!item?.text || !item?.url) continue;
     try { if (!trustedHostname(new URL(item.url).hostname)) continue; } catch { continue; }
@@ -1494,11 +1557,13 @@ function explicitFamilyEvidenceForTitle(title, evidence = {}) {
   const detail = eventDetailForTitle(title, evidence.eventDetailContexts || []);
   if (!detail?.text) return null;
 
-  // Only inspect the event header / metadata. Footers, related-event cards and
-  // venue-wide family labels must never make this event itself family-friendly.
-  const header = eventHeaderText(detail.text, 2200);
+  // Start at the exact event title and stop before About. This prevents global
+  // navigation labels such as "Family" or related-event cards from leaking
+  // onto the current event.
+  const record = eventDetailRecord(title, detail.text, 2800);
+  if (!record) return null;
 
-  const ageMatch = header.match(/AGE RANGE\s*:?([\s\S]{0,320}?)(?:Tickets|Book Tickets|DATE:|Start time:|PRICE:|$)/i);
+  const ageMatch = record.match(/AGE RANGE\s*:?([\s\S]{0,380}?)(?:Tickets|Ticketing|Book Tickets|DATE:|Start time:|PRICE:|About|$)/i);
   const ageRange = ageMatch?.[1] || '';
   const hasChildren = /\bChildren\b/i.test(ageRange);
   const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
@@ -1511,8 +1576,9 @@ function explicitFamilyEvidenceForTitle(title, evidence = {}) {
     return `listed for ${labels.join(', ')}`;
   }
 
-  // Experience Wakefield puts these event-specific labels before About.
-  if (/\bFamily friendly\b/i.test(header) || /\bActivity\s+Families\b/i.test(header)) {
+  // Experience Wakefield's event-specific Family friendly tag appears in the
+  // event record before About. Do not inspect the rest of the page.
+  if (/\bFamily friendly\b/i.test(record) || /\bActivity\s+Families\b/i.test(record)) {
     return 'explicitly listed as family-friendly';
   }
 
@@ -1733,6 +1799,25 @@ Rules:
   }
 }
 
+function eventFollowUpSourceList({ wxContext, experienceEventsContext, cathedralContext, freeVenueContexts, familyVenueContexts, eventDetailContexts } = {}) {
+  const sourceMap = new Map();
+  for (const item of eventDetailContexts || []) {
+    if (item?.source?.url) sourceMap.set(item.source.url, item.source);
+  }
+  for (const item of [
+    wxContext,
+    experienceEventsContext,
+    cathedralContext,
+    freeVenueContexts?.yspWeston,
+    freeVenueContexts?.ysp,
+    familyVenueContexts?.yspFamily,
+    familyVenueContexts?.experienceFamilies
+  ]) {
+    if (item?.source?.url) sourceMap.set(item.source.url, item.source);
+  }
+  return Array.from(sourceMap.values()).slice(0, 5);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -1782,7 +1867,7 @@ export default async function handler(req, res) {
     wxContext = await fetchWxWhatsOnContext();
   }
 
-  const freeVenueContexts = isFreeCurrentLeisureQuery(messages)
+  const freeVenueContexts = (isFreeCurrentLeisureQuery(messages) || isEventCostFollowUp(messages))
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, yspWeston: null, ncm: null, wxWeekly: null };
 
@@ -1795,6 +1880,43 @@ export default async function handler(req, res) {
     : [];
 
   const userUrlContext = await fetchTrustedUserUrlContext(messages);
+
+  // High-risk event follow-ups do not go back through the language model. Build
+  // them directly from event-bound first-party evidence so price/free/family
+  // attributes cannot migrate between events during generation or validation.
+  const deterministicEvidence = {
+    wxContext,
+    experienceEventsContext,
+    cathedralContext,
+    freeVenueContexts,
+    familyVenueContexts,
+    eventDetailContexts,
+    searchEvidence: []
+  };
+
+  let deterministicFollowUp = '';
+  if (isEventCostFollowUp(messages)) {
+    deterministicFollowUp = buildVerifiedEventCostFollowUp(messages, deterministicEvidence);
+  } else if (isFreeCurrentLeisureQuery(messages)) {
+    deterministicFollowUp = buildVerifiedFreeEventFollowUp(messages, deterministicEvidence);
+  } else if (isEventFamilyFollowUp(messages)) {
+    deterministicFollowUp = buildVerifiedFamilyEventFollowUp(messages, deterministicEvidence);
+  }
+
+  if (deterministicFollowUp) {
+    return res.status(200).json({
+      reply: deterministicFollowUp,
+      sources: eventFollowUpSourceList({
+        wxContext,
+        experienceEventsContext,
+        cathedralContext,
+        freeVenueContexts,
+        familyVenueContexts,
+        eventDetailContexts
+      }),
+      live: true
+    });
+  }
 
   // If current event snapshots are available, answer from those first-party
   // sources instead of triggering another broad search. This cuts latency and

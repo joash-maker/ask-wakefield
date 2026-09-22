@@ -644,7 +644,7 @@ function recentAssistantEventCandidates(messages) {
     const atIndex = candidate.toLowerCase().indexOf(' at ');
     if (atIndex > 4) candidate = candidate.slice(0, atIndex).trim();
     candidate = candidate.split(/\s+[—–]\s+/)[0].trim();
-    candidate = candidate.replace(/\s+(?:exhibition|event)$/i, '').trim();
+    candidate = candidate.replace(/\s+(?:exhibition|event|continues?|returns?)$/i, '').trim();
     candidate = candidate.replace(/^[^A-Za-z0-9]+|[.:,;]+$/g, '').trim();
     if (candidate.split(/\s+/).length > 12) continue;
     if (candidate.length >= 5) out.push(candidate);
@@ -666,23 +666,45 @@ async function fetchRelevantEventDetailContexts(messages, contexts = []) {
   const titles = recentAssistantEventCandidates(messages);
   if (!titles.length) return [];
   const links = contexts.flatMap(ctx => Array.isArray(ctx?.eventLinks) ? ctx.eventLinks : []);
-  const selected = new Map();
+  const selected = [];
 
-  for (const title of titles) {
+  for (const requestedTitle of titles) {
     let best = null;
     let bestScore = 0;
     for (const link of links) {
-      const score = eventLinkMatchScore(title, link);
+      const score = eventLinkMatchScore(requestedTitle, link);
       if (score > bestScore) {
         best = link;
         bestScore = score;
       }
     }
-    if (best && bestScore >= 0.66) selected.set(best.url, { ...best, title });
+    if (best && bestScore >= 0.72) {
+      selected.push({ ...best, requestedTitle, matchScore: bestScore });
+    }
   }
 
-  const items = Array.from(selected.values()).slice(0, 10);
-  const fetched = await Promise.all(items.map(item => fetchSimpleFirstPartyContext(item.url, item.title)));
+  const unique = [];
+  const seen = new Set();
+  for (const item of selected) {
+    const key = `${normaliseEventToken(item.requestedTitle)}|${item.url}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(item);
+  }
+
+  const items = unique.slice(0, 10);
+  const fetched = await Promise.all(items.map(async item => {
+    const ctx = await fetchSimpleFirstPartyContext(item.url, item.label || item.slug || item.requestedTitle);
+    if (!ctx) return null;
+    return {
+      ...ctx,
+      requestedTitle: item.requestedTitle,
+      matchedUrl: item.url,
+      matchedLabel: item.label || '',
+      matchedSlug: item.slug || '',
+      matchScore: item.matchScore
+    };
+  }));
   return fetched.filter(Boolean);
 }
 
@@ -1305,7 +1327,7 @@ function eventTitleSimilarity(a, b) {
   if (!aSet.size || !bSet.size) return 0;
   let overlap = 0;
   for (const token of aSet) if (bSet.has(token)) overlap += 1;
-  return overlap / Math.min(aSet.size, bSet.size);
+  return overlap / Math.max(aSet.size, bSet.size);
 }
 
 function normaliseCostLabel(value) {
@@ -1316,74 +1338,116 @@ function normaliseCostLabel(value) {
   return paid ? paid[0].replace(/\s+/g, '') : null;
 }
 
-function explicitCostFromDetailContext(title, eventDetailContexts = []) {
-  let best = null;
-  let bestScore = 0;
-  for (const item of eventDetailContexts) {
-    if (!item?.text) continue;
-    const label = item.source?.title || '';
-    const score = eventTitleSimilarity(title, label);
-    if (score > bestScore) {
-      best = item;
-      bestScore = score;
-    }
-  }
-  if (!best || bestScore < 0.66) return null;
+function eventHeaderText(text, maxChars = 2200) {
+  const raw = String(text || '').slice(0, maxChars);
+  const aboutIndex = raw.search(/\bAbout\b/i);
+  return aboutIndex > 0 ? raw.slice(0, aboutIndex) : raw;
+}
 
-  const text = String(best.text);
-  const explicitPrice = text.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
+function detailContextMatchesTitle(title, item) {
+  if (!title || !item?.text) return false;
+  const requested = item.requestedTitle || '';
+  if (requested && eventTitleSimilarity(title, requested) < 0.8) return false;
+
+  // A fetched detail page should identify itself near the start. This prevents
+  // a wrongly matched URL, footer card or generic category page from donating
+  // Free / Family-friendly / price claims to another event.
+  const head = String(item.text).slice(0, 420);
+  const titleTokens = eventTokens(title);
+  const headTokens = new Set(eventTokens(head));
+  if (!titleTokens.length) return false;
+  const covered = titleTokens.filter(token => headTokens.has(token)).length;
+  return covered / titleTokens.length >= 0.8;
+}
+
+function explicitCostFromDetailContext(title, eventDetailContexts = []) {
+  const candidates = eventDetailContexts.filter(item => detailContextMatchesTitle(title, item));
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || b.source?.title || '') - eventTitleSimilarity(title, a.requestedTitle || a.source?.title || ''));
+  const text = String(candidates[0].text || '');
+  const header = eventHeaderText(text, 1800);
+
+  // WX detail pages expose an explicit PRICE field. This outranks every other
+  // free/paid mention on the page, including free registered-carer tickets.
+  const explicitPrice = header.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
   if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
 
-  // Experience Wakefield detail pages commonly expose the ticket amount near
-  // the beginning of the event record rather than behind a PRICE label.
-  const head = text.slice(0, 1400);
-  const paid = head.match(/£\s*\d+(?:[.,]\d{1,2})?/i);
-  const explicitFree = head.match(/\b(?:Free event|Free entry|Price\s*:?\s*Free)\b/i);
+  // Experience Wakefield places the event's main tag/price directly after the
+  // date, time and venue, before the About section. Use the first public price
+  // or explicit Free marker in this event header only.
+  const paid = header.match(/£\s*[1-9]\d*(?:[.,]\d{1,2})?/i);
+  const free = header.match(/\b(?:Free event|Free entry|Price\s*:?\s*Free|\bFree\b)/i);
+  if (paid && free) return paid.index <= free.index ? normaliseCostLabel(paid[0]) : 'Free';
   if (paid) return normaliseCostLabel(paid[0]);
-  if (explicitFree) return 'Free';
+  if (free) return 'Free';
   return null;
+}
+
+function titleTokenRegex(title) {
+  const tokens = eventTokens(title).slice(0, 7);
+  if (!tokens.length) return null;
+  const escaped = tokens.map(token => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp(escaped.join('[\\s\\S]{0,80}?'), 'i');
+}
+
+function sourceWindowAfterTitle(sourceText, title, maxChars = 900) {
+  const text = String(sourceText || '');
+  const regex = titleTokenRegex(title);
+  if (!regex) return '';
+  const match = regex.exec(text);
+  if (!match) return '';
+  return text.slice(match.index, Math.min(text.length, match.index + maxChars));
+}
+
+function costFromAggregateSource(title, sourceText) {
+  const window = sourceWindowAfterTitle(sourceText, title, 850);
+  if (!window) return null;
+
+  // Stop before a likely next event heading where possible. The first price or
+  // explicit free marker after the matched event title belongs to this record.
+  const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(window);
+  const free = /\bFREE\b|\bFree\b/i.exec(window);
+  if (!paid && !free) return null;
+  if (paid && free) return paid.index <= free.index ? normaliseCostLabel(paid[0]) : 'Free';
+  return paid ? normaliseCostLabel(paid[0]) : 'Free';
 }
 
 function verifiedEventCostForTitle(title, evidence = {}) {
   if (!title) return null;
 
-  // Strongest source: the specific event detail page fetched for this exact
-  // event. This prevents category labels such as "Free" elsewhere on a venue
-  // page from overriding an event's £3/£12 ticket price.
   const detailCost = explicitCostFromDetailContext(title, evidence.eventDetailContexts || []);
   if (detailCost) return detailCost;
 
-  const evidenceText = combinedEventEvidenceText(evidence);
-  if (!evidenceText) return null;
-  const needleTokens = eventTokens(title);
-  const sources = String(evidenceText).split(/=== EVIDENCE SOURCE ===|=== END EVIDENCE SOURCE ===/).filter(Boolean);
-
-  for (const rawSource of sources) {
-    const sourceNorm = normaliseEventToken(rawSource);
-    const sourceTokens = new Set(eventTokens(rawSource));
-    const overlap = needleTokens.filter(token => sourceTokens.has(token)).length;
-    const matchRatio = needleTokens.length ? overlap / needleTokens.length : 0;
-    if (matchRatio < 0.66) continue;
-
-    // The Weston gallery is explicitly free to enter. Wider YSP admission is
-    // separate, so keep that distinction visible rather than saying YSP is free.
-    if (/olivia bax|double take/i.test(title) &&
-        /the weston/i.test(rawSource) &&
-        /(?:free to enter|free entry|gallery, restaurant and shop are free to enter)/i.test(rawSource)) {
+  // The Weston gallery is free to enter. Wider YSP grounds/gallery admission
+  // is separate, so never collapse this to a generic 'YSP is free' claim.
+  if (/olivia bax|double take/i.test(title)) {
+    const weston = String(evidence.freeVenueContexts?.yspWeston?.text || '');
+    if (/the weston/i.test(weston) && /(?:free to enter|free entry|gallery, restaurant and shop are free to enter)/i.test(weston)) {
       return 'Free at The Weston gallery';
     }
+  }
 
-    const explicitPrice = rawSource.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
-    if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
+  // Use each aggregate listing independently and require the event title to be
+  // present in the same local record. Do not scan a whole page for shared words.
+  const aggregateSources = [
+    evidence.wxContext?.text,
+    evidence.experienceEventsContext?.text,
+    evidence.cathedralContext?.text
+  ].filter(Boolean);
 
-    // For official Experience Wakefield event records, the first monetary
-    // amount after the matching event title is the event tag/ticket amount.
-    const titleNorm = normaliseEventToken(title);
-    const idx = sourceNorm.indexOf(titleNorm);
-    const probe = idx >= 0 ? rawSource.slice(Math.max(0, idx - 100), idx + 1100) : rawSource.slice(0, 1200);
-    const paid = probe.match(/£\s*[1-9]\d*(?:[.,]\d{1,2})?/i);
-    if (paid) return normaliseCostLabel(paid[0]);
-    if (/\b(?:Free event|PRICE\s*:\s*Free)\b/i.test(probe)) return 'Free';
+  for (const source of aggregateSources) {
+    const cost = costFromAggregateSource(title, source);
+    if (cost) return cost;
+  }
+
+  // Search citations are a final fallback, but only when the cited text itself
+  // contains the event title and its price/free marker in the same short record.
+  for (const item of evidence.searchEvidence || []) {
+    if (!item?.text || !item?.url) continue;
+    try { if (!trustedHostname(new URL(item.url).hostname)) continue; } catch { continue; }
+    const cost = costFromAggregateSource(title, item.text);
+    if (cost) return cost;
   }
 
   return null;
@@ -1420,25 +1484,22 @@ function buildVerifiedFreeEventFollowUp(messages, evidence = {}) {
 }
 
 function eventDetailForTitle(title, eventDetailContexts = []) {
-  let best = null;
-  let bestScore = 0;
-  for (const item of eventDetailContexts) {
-    if (!item?.text) continue;
-    const score = eventTitleSimilarity(title, item.source?.title || '');
-    if (score > bestScore) {
-      best = item;
-      bestScore = score;
-    }
-  }
-  return bestScore >= 0.66 ? best : null;
+  const matches = eventDetailContexts.filter(item => detailContextMatchesTitle(title, item));
+  if (!matches.length) return null;
+  matches.sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || '') - eventTitleSimilarity(title, a.requestedTitle || ''));
+  return matches[0];
 }
 
 function explicitFamilyEvidenceForTitle(title, evidence = {}) {
   const detail = eventDetailForTitle(title, evidence.eventDetailContexts || []);
   if (!detail?.text) return null;
-  const text = String(detail.text);
 
-  const ageRange = text.match(/AGE RANGE\s*:?([\s\S]{0,240})/i)?.[1] || '';
+  // Only inspect the event header / metadata. Footers, related-event cards and
+  // venue-wide family labels must never make this event itself family-friendly.
+  const header = eventHeaderText(detail.text, 2200);
+
+  const ageMatch = header.match(/AGE RANGE\s*:?([\s\S]{0,320}?)(?:Tickets|Book Tickets|DATE:|Start time:|PRICE:|$)/i);
+  const ageRange = ageMatch?.[1] || '';
   const hasChildren = /\bChildren\b/i.test(ageRange);
   const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
   const hasFamilies = /\bFamilies\b/i.test(ageRange);
@@ -1450,7 +1511,8 @@ function explicitFamilyEvidenceForTitle(title, evidence = {}) {
     return `listed for ${labels.join(', ')}`;
   }
 
-  if (/\bFamily friendly\b/i.test(text) || /\bActivity\s+Families\b/i.test(text)) {
+  // Experience Wakefield puts these event-specific labels before About.
+  if (/\bFamily friendly\b/i.test(header) || /\bActivity\s+Families\b/i.test(header)) {
     return 'explicitly listed as family-friendly';
   }
 
@@ -1553,6 +1615,7 @@ function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
     .split('\n')
     .map(line => line
       .replace(/,\s*\./g, '.')
+      .replace(/\b(am|pm)\.([a-z])/gi, (_, meridiem, letter) => `${meridiem}. ${letter.toUpperCase()}`)
       .replace(/(\d)\.([a-z])/g, (_, digit, letter) => `${digit}. ${letter.toUpperCase()}`)
       .replace(/\s+([,.!?])/g, '$1')
       .replace(/\s*,\s*$/g, '')
@@ -1761,7 +1824,7 @@ ${cathedralContext.text}`
     : '';
 
   const currentEventsContext = isCurrentEventsQuery(messages)
-    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window or a follow-up to a current-event answer. Treat the supplied FIRST-PARTY event snapshots as the authority for event identity/date/time claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isEventCostFollowUp(messages) ? 'PRICE FOLLOW-UP: Resolve "those/them/they" from the recent assistant answer. The user wants the current price for EVERY event previously listed, unless they have narrowed the set. Search current trusted first-party event/detail pages for each named event when the supplied aggregate snapshot does not show its price. Return every event with either an explicitly verified price/free status or the words "I couldn\'t verify the current price." Never leave a blank price, a dangling dash, or infer free entry from missing price information.' : ''} ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
+    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window or a follow-up to a current-event answer. Treat the supplied FIRST-PARTY event snapshots as the authority for event identity/date/time claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Start directly with the date/list rather than vague promotional lead-ins such as 'a strong mix', 'a good mix' or 'plenty going on'. Do not tell the user that an unverified venue/event might be open or worth checking. ${isEventCostFollowUp(messages) ? 'PRICE FOLLOW-UP: Resolve "those/them/they" from the recent assistant answer. The user wants the current price for EVERY event previously listed, unless they have narrowed the set. Search current trusted first-party event/detail pages for each named event when the supplied aggregate snapshot does not show its price. Return every event with either an explicitly verified price/free status or the words "I couldn\'t verify the current price." Never leave a blank price, a dangling dash, or infer free entry from missing price information.' : ''} ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
     : '';
 
   const eventDetailDirectContext = eventDetailContexts.length

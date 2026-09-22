@@ -1564,6 +1564,77 @@ Schema:
   }
 }
 
+function isSpecificEventDetailUrl(urlValue) {
+  try {
+    const u = new URL(String(urlValue || ''));
+    if (!trustedHostname(u.hostname)) return false;
+    const host = u.hostname.toLowerCase().replace(/^www\./, '');
+    if (host === 'wxwakefield.co.uk') {
+      return /\/whats-on\/details/i.test(u.pathname) && Boolean(u.searchParams.get('event'));
+    }
+    if (host === 'experiencewakefield.co.uk') {
+      return /\/event\/[^/]+\/?$/i.test(u.pathname);
+    }
+    if (host === 'nationaltrust.org.uk') {
+      return /\/events\//i.test(u.pathname);
+    }
+    if (host === 'farmercopleys.co.uk') {
+      return /event|pumpkin|festival/i.test(`${u.pathname}${u.search}`);
+    }
+    if (host === 'ysp.org.uk') {
+      return /olivia-bax|double-take|the-weston/i.test(`${u.pathname}${u.search}`);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function fetchResolvedFactDetailContexts(facts = []) {
+  const selected = [];
+  const seen = new Set();
+  for (const fact of facts || []) {
+    if (!fact || typeof fact.title !== 'string' || !isSpecificEventDetailUrl(fact.sourceUrl)) continue;
+    const key = `${normaliseEventToken(fact.title)}|${fact.sourceUrl}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    selected.push({ title: fact.title, url: fact.sourceUrl });
+  }
+
+  const fetched = await Promise.all(selected.slice(0, 10).map(async item => {
+    const ctx = await fetchSimpleFirstPartyContext(item.url, item.title);
+    if (!ctx) return null;
+    // Identity check: never accept a discovered URL unless the fetched page
+    // actually contains the requested event title.
+    if (!exactEventRecordWindow(ctx.text, item.title, 1000)) return null;
+    return {
+      ...ctx,
+      requestedTitle: item.title,
+      matchedUrl: item.url,
+      matchedLabel: item.title,
+      matchedSlug: eventSlugFromUrl(item.url),
+      matchScore: 1
+    };
+  }));
+
+  return fetched.filter(Boolean);
+}
+
+function mergeEventDetailContexts(...groups) {
+  const out = [];
+  const seen = new Set();
+  for (const group of groups) {
+    for (const item of group || []) {
+      if (!item?.text) continue;
+      const key = `${normaliseEventToken(item.requestedTitle || item.source?.title || '')}|${item.matchedUrl || item.source?.url || ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(item);
+    }
+  }
+  return out;
+}
+
 function eventCostWasRequested(messages) {
   const context = recentUserContext(messages, 4);
   return /\b(price|prices|cost|costs|how much|ticket price|entry fee|admission|free)\b/i.test(context);
@@ -1613,9 +1684,19 @@ function explicitCostFromDetailContext(title, eventDetailContexts = []) {
     const record = eventDetailRecord(title, candidate.text, 2600);
     if (!record) continue;
 
-    // WX exposes the public event price in a dedicated PRICE field. That must
-    // outrank concessions such as "Registered Carers: Free" later in the page.
-    const explicitPrice = record.match(/\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
+    // Prefer an explicit standard/public ticket over teaser prices and
+    // concessions. This matters for Comedy Night, where the page header says
+    // "From £8" for an expired early-bird tier while current General Admission
+    // is £12. Carer/member/child concessions must not become the standard price.
+    const generalAdmission = record.match(/\bGeneral Admission\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
+    if (generalAdmission) return normaliseCostLabel(generalAdmission[1]);
+
+    const standardTicket = record.match(/\b(?:Standard|Adult)\s+(?:Admission|Ticket)\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
+    if (standardTicket) return normaliseCostLabel(standardTicket[1]);
+
+    // WX exposes the public event price in a dedicated PRICE field. Accept
+    // "From £X" only when no explicit General Admission/standard price exists.
+    const explicitPrice = record.match(/\bPRICE\s*:\s*(?:From\s+)?(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
     if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
 
     // Experience Wakefield places the event's main public price/tag between
@@ -1743,44 +1824,52 @@ function eventDetailForTitle(title, eventDetailContexts = []) {
 }
 
 function explicitFamilyEvidenceForTitle(title, evidence = {}) {
-  const detail = eventDetailForTitle(title, evidence.eventDetailContexts || []);
+  const details = (evidence.eventDetailContexts || [])
+    .filter(item => detailContextMatchesTitle(title, item))
+    .sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || b.source?.title || '') - eventTitleSimilarity(title, a.requestedTitle || a.source?.title || ''));
 
-  if (detail?.text) {
-    // Start at the exact event title and stop before About. This prevents global
-    // navigation labels such as "Family" or related-event cards from leaking
-    // onto the current event.
-    const record = eventDetailRecord(title, detail.text, 2800);
-    if (record) {
-      const ageMatch = record.match(/AGE RANGE\s*:?([\s\S]{0,380}?)(?:Tickets|Ticketing|Book Tickets|DATE:|Start time:|PRICE:|About|$)/i);
-      const ageRange = ageMatch?.[1] || '';
-      const hasChildren = /\bChildren\b/i.test(ageRange);
-      const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
-      const hasFamilies = /\bFamilies\b/i.test(ageRange);
-      if (hasChildren || hasYoungPeople || hasFamilies) {
-        const labels = [];
-        if (hasChildren) labels.push('Children');
-        if (hasYoungPeople) labels.push('Young People');
-        if (hasFamilies) labels.push('Families');
-        return `listed for ${labels.join(', ')}`;
-      }
+  // Check every event-specific first-party page for the same event. Different
+  // official sources expose different fields: WX provides AGE RANGE, Experience
+  // Wakefield provides Family friendly tags, and National Trust can provide a
+  // precise child-suitability age.
+  for (const detail of details) {
+    if (!detail?.text) continue;
+    const record = eventDetailRecord(title, detail.text, 3200);
+    if (!record) continue;
 
-      // Experience Wakefield's event-specific family tag appears between the
-      // event metadata and About. Generic site navigation is outside this block.
-      if (/\bFamily friendly\b/i.test(record) || /\bActivity\s+Families\b/i.test(record)) {
-        return 'explicitly listed as family-friendly';
-      }
+    const ageMatch = record.match(/AGE RANGE\s*:?([\s\S]{0,380}?)(?:Tickets|Ticketing|Book Tickets|DATE:|Start time:|PRICE:|About|$)/i);
+    const ageRange = ageMatch?.[1] || '';
+    const hasChildren = /\bChildren\b/i.test(ageRange);
+    const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
+    const hasFamilies = /\bFamilies\b/i.test(ageRange);
+    if (hasChildren || hasYoungPeople || hasFamilies) {
+      const labels = [];
+      if (hasChildren) labels.push('Children');
+      if (hasYoungPeople) labels.push('Young People');
+      if (hasFamilies) labels.push('Families');
+      return `listed for ${labels.join(', ')}`;
+    }
+
+    if (/\bFamily friendly\b/i.test(record) || /\bActivity\s+Families\b/i.test(record)) {
+      return 'explicitly listed as family-friendly';
+    }
+
+    const childSuitability = record.match(/Suitability for children[\s\S]{0,260}?Suitable for ages\s*([^\n.]+)/i);
+    if (childSuitability) {
+      const ageText = childSuitability[1].trim().replace(/\s+/g, ' ');
+      return `suitable for ages ${ageText}`;
     }
   }
 
+  // Do not trust model-produced family flags. Search facts are URL discovery
+  // only in the high-risk branch. Keep this fallback for any legacy path where
+  // a fact has already been independently verified elsewhere.
   const resolved = bestResolvedEventFact(title, evidence.searchFacts || []);
   if (resolved?.adultOnly === true) return null;
   if (resolved?.familySuitable === true) {
     return resolved.familyReason || 'explicitly listed for children or families';
   }
 
-  // Safe fallback: these are dedicated family-event pages, so exact presence of
-  // the event title is positive family suitability evidence even if a detail
-  // page timed out. Do not use ordinary venue pages for this fallback.
   const experienceFamilies = String(evidence.familyVenueContexts?.experienceFamilies?.text || '');
   if (exactEventRecordWindow(experienceFamilies, title, 650)) {
     return "listed by Experience Wakefield in its family-friendly events";
@@ -2063,12 +2152,16 @@ export default async function handler(req, res) {
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
 
   // Price/free/family follow-ups are handled separately from the general event
-  // listing pipeline. The exact named events from the previous answer are
-  // resolved against first-party pages via web search, then rendered
-  // deterministically. Aggregate listings are never used to assign Free/paid.
+  // listing pipeline. Verification is deterministic: fetch the current WX and
+  // Experience Wakefield listings, follow the matched first-party event links,
+  // fetch each detail page, and parse that page. A model/search resolver may be
+  // used only to DISCOVER an official event-detail URL when the listing does not
+  // expose one; its claimed price/free/family fields are never trusted directly.
   const highRiskEventFollowUp = isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages) || isEventFamilyFollowUp(messages);
   if (highRiskEventFollowUp) {
-    const [resolvedFacts, freeVenueContexts, familyVenueContexts] = await Promise.all([
+    const [wxListing, experienceListing, resolvedUrls, freeVenueContexts, familyVenueContexts] = await Promise.all([
+      fetchWxWhatsOnContext(),
+      fetchExperienceWakefieldEventsContext(),
       resolveEventFactsViaWebSearch(messages),
       (isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages))
         ? fetchFreeDayVenueContexts(messages)
@@ -2078,15 +2171,24 @@ export default async function handler(req, res) {
         : Promise.resolve({ yspFamily: null, experienceFamilies: null, wxFamily: null })
     ]);
 
+    const [listingDetailContexts, discoveredDetailContexts] = await Promise.all([
+      fetchRelevantEventDetailContexts(messages, [wxListing, experienceListing]),
+      fetchResolvedFactDetailContexts(resolvedUrls.facts || [])
+    ]);
+
+    const eventDetailContexts = mergeEventDetailContexts(listingDetailContexts, discoveredDetailContexts);
+
     const deterministicEvidence = {
-      wxContext: null,
-      experienceEventsContext: null,
+      wxContext: wxListing,
+      experienceEventsContext: experienceListing,
       cathedralContext: null,
       freeVenueContexts,
       familyVenueContexts,
-      eventDetailContexts: [],
+      eventDetailContexts,
       searchEvidence: [],
-      searchFacts: resolvedFacts.facts || []
+      // Deliberately empty: model-generated fact values are not evidence. The
+      // resolver is URL discovery only; all attributes come from fetched pages.
+      searchFacts: []
     };
 
     let reply = '';
@@ -2099,12 +2201,15 @@ export default async function handler(req, res) {
     }
 
     const sourceMap = new Map();
-    for (const source of resolvedFacts.sources || []) {
-      if (source?.url) sourceMap.set(source.url, source);
-    }
-    for (const item of [freeVenueContexts?.ysp, freeVenueContexts?.yspWeston, familyVenueContexts?.yspFamily, familyVenueContexts?.experienceFamilies, familyVenueContexts?.wxFamily]) {
+    for (const item of [wxListing, experienceListing, freeVenueContexts?.ysp, freeVenueContexts?.yspWeston, familyVenueContexts?.yspFamily, familyVenueContexts?.experienceFamilies, familyVenueContexts?.wxFamily]) {
       if (item?.source?.url) sourceMap.set(item.source.url, item.source);
     }
+    for (const item of eventDetailContexts) {
+      if (item?.source?.url) sourceMap.set(item.source.url, item.source);
+    }
+    // Search-discovered URLs may be shown as sources only when they were
+    // successfully fetched and identity-checked above. Do not surface the
+    // resolver's unsupported claims.
 
     return res.status(200).json({
       reply: reply || 'I could not verify those event details from current first-party sources.',

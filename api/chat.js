@@ -2010,9 +2010,22 @@ function officialEventLinkForTitle(title, evidence = {}) {
   return null;
 }
 
-function markdownOfficialLink(url, label = 'Check official event details →') {
+function officialEventLinkLabel(url) {
+  if (!url) return 'Official event page ↗';
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+    if (host === 'wxwakefield.co.uk' || host.endsWith('.wxwakefield.co.uk')) return 'WX event page ↗';
+    if (host === 'experiencewakefield.co.uk' || host.endsWith('.experiencewakefield.co.uk')) return 'Experience Wakefield event page ↗';
+    if (host === 'farmercopleys.co.uk' || host.endsWith('.farmercopleys.co.uk')) return 'Farmer Copleys event page ↗';
+    if (host === 'ysp.org.uk' || host.endsWith('.ysp.org.uk')) return 'YSP event page ↗';
+    if (host === 'nationaltrust.org.uk' || host.endsWith('.nationaltrust.org.uk')) return 'National Trust event page ↗';
+  } catch {}
+  return 'Official event page ↗';
+}
+
+function markdownOfficialLink(url, label = null) {
   if (!url) return '';
-  return `[${label}](${url})`;
+  return `[${label || officialEventLinkLabel(url)}](${url})`;
 }
 
 function buildVerifiedEventCostFollowUp(messages, evidence = {}) {
@@ -2022,13 +2035,13 @@ function buildVerifiedEventCostFollowUp(messages, evidence = {}) {
 
   return titles.map(title => {
     const cost = verifiedEventCostForTitle(title, evidence);
-    if (cost) return `${title} — ${cost}`;
+    if (cost) return `**${title}** — ${cost}`;
 
     const officialUrl = officialEventLinkForTitle(title, evidence);
     if (officialUrl) {
-      return `${title} — Current price not confirmed. ${markdownOfficialLink(officialUrl)}`;
+      return `**${title}**\nCurrent price not confirmed.\n${markdownOfficialLink(officialUrl)}`;
     }
-    return `${title} — Current price not confirmed.`;
+    return `**${title}**\nCurrent price not confirmed.`;
   }).join('\n\n');
 }
 
@@ -2042,16 +2055,18 @@ function buildVerifiedFreeEventFollowUp(messages, evidence = {}) {
     const cost = verifiedEventCostForTitle(title, evidence);
     if (cost && /^Free\b/i.test(cost)) {
       if (/^Free at The Weston gallery$/i.test(cost)) {
-        free.push(`${title} — Free at The Weston gallery. A ticket is required if you also want to explore the wider YSP grounds and galleries.`);
+        free.push(`**${title}** — Free at The Weston gallery. A ticket is required if you also want to explore the wider YSP grounds and galleries.`);
       } else {
-        free.push(`${title} — Free.`);
+        free.push(`**${title}** — Free.`);
       }
       continue;
     }
 
     if (!cost) {
       const officialUrl = officialEventLinkForTitle(title, evidence);
-      if (officialUrl) unverified.push(`${title} — ${markdownOfficialLink(officialUrl, 'Check free/paid status →')}`);
+      if (officialUrl) {
+        unverified.push(`**${title}**\nFree/paid status not confirmed.\n${markdownOfficialLink(officialUrl)}`);
+      }
     }
   }
 
@@ -2060,7 +2075,7 @@ function buildVerifiedFreeEventFollowUp(messages, evidence = {}) {
   else sections.push('I could not verify any generally free events from that list.');
 
   if (unverified.length) {
-    sections.push(`I couldn't confirm the free/paid status of these, so I'd check the official pages rather than guess:\n\n${unverified.join('\n\n')}`);
+    sections.push(`I couldn't confirm the free/paid status of these, so here are the official pages rather than guessing:\n\n${unverified.join('\n\n')}`);
   }
 
   return sections.join('\n\n');

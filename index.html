@@ -138,6 +138,21 @@
     .msg.bot .msg-text { color: rgba(255,255,255,0.88); border-left: 2px solid var(--red); padding-left: 14px; }
     .msg.user .msg-text { color: rgba(255,255,255,0.55); align-self: flex-end; text-align: right; border-right: 2px solid rgba(255,255,255,0.12); padding-right: 14px; }
     .msg-text a { color: var(--red-lt); text-decoration: underline; text-underline-offset: 3px; }
+    .msg-text .chat-inline-link {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 3px;
+      color: #ff7898;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,120,152,.42);
+      transition: color .15s ease, border-color .15s ease;
+    }
+    .msg-text .chat-inline-link:hover {
+      color: #fff;
+      border-bottom-color: #ff7898;
+    }
     .msg-text strong { color: #fff; font-weight: 700; }
     .msg-text .bul { display: block; padding-left: 14px; position: relative; margin: 3px 0; }
     .msg-text .bul::before { content: '·'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
@@ -972,14 +987,42 @@ var isSending = false;
 // FORMAT
 function fmt(t) {
   if (!t) return '';
-  return String(t)
+
+  var value = String(t)
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+
+  // Protect Markdown links first so their URLs are not exposed or re-linked.
+  // Example: [WX event page ↗](https://example.com) becomes a clean clickable label.
+  var links = [];
+  value = value.replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g, function(_, label, url) {
+    var token = '%%AW_LINK_' + links.length + '%%';
+    links.push(
+      '<a class="chat-inline-link" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+      label + '</a>'
+    );
+    return token;
+  });
+
+  // Keep support for genuinely bare https:// links elsewhere in an answer.
+  value = value.replace(/(https:\/\/[^\s<]+)/g,
+    '<a class="chat-inline-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
+
+  value = value
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
     .replace(/^- (.+)$/gm,'<span class="bul">$1</span>')
-    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
     .replace(/\n/g,'<br/>');
+
+  // Restore the protected Markdown links after bare-URL processing.
+  links.forEach(function(link, i) {
+    value = value.replace('%%AW_LINK_' + i + '%%', link);
+  });
+
+  return value;
 }
 
 function escapeHtml(value) {

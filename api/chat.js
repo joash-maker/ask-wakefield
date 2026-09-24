@@ -424,6 +424,11 @@ function isNamedEventDetailQuery(messages) {
   return eventSignal.test(context) && detailIntent.test(context);
 }
 
+function isLightUpWakefieldQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(light up wakefield|nature['’]?s return|illuminated (?:street )?parade)\b/i.test(context);
+}
+
 function isPropertySpecificCouncilQuery(messages) {
   const context = recentUserContext(messages, 5);
   return /\b(bin|bins|bin collection|collection day|collection date|council tax|catchment|where i live)\b/i.test(context);
@@ -800,6 +805,86 @@ async function fetchSimpleFirstPartyContext(url, title) {
   }
 }
 
+
+async function fetchNamedEventFirstPartyContexts(messages) {
+  if (!isNamedEventDetailQuery(messages)) return { parade: null, festival: null };
+
+  // Flagship events get an exact first-party page fetch so a broad listings page
+  // cannot hide the operational detail the user actually asked for.
+  if (isLightUpWakefieldQuery(messages)) {
+    const [parade, festival] = await Promise.all([
+      fetchSimpleFirstPartyContext(
+        'https://experiencewakefield.co.uk/event/light-up-wakefield-parade/',
+        'Experience Wakefield — Light Up Wakefield Parade'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://experiencewakefield.co.uk/event/light-up-wakefield/',
+        'Experience Wakefield — Light Up Wakefield'
+      )
+    ]);
+    return { parade, festival };
+  }
+
+  return { parade: null, festival: null };
+}
+
+async function fetchAccessibilityFirstPartyContexts(messages) {
+  if (!isAccessibilityItineraryQuery(messages)) {
+    return { hepworth: null, wx: null, grays: null, mocca: null, bakes: null, recent: null };
+  }
+
+  const [hepworth, wx, grays, mocca, bakes, recent] = await Promise.all([
+    fetchSimpleFirstPartyContext(
+      'https://hepworthwakefield.org/your-visit/access/',
+      'The Hepworth Wakefield — Access'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/wakefield-exchange-wx/',
+      'Experience Wakefield — WX Wakefield Exchange'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/grays-coffee-shop/',
+      "Experience Wakefield — Gray's Coffee Shop"
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/mocca-moocho/',
+      'Experience Wakefield — Mocca Moocho'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/bakes-by-vanilla-bean/',
+      'Experience Wakefield — Bakes by Vanilla Bean'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/recent/',
+      'Experience Wakefield — Recent'
+    )
+  ]);
+
+  return { hepworth, wx, grays, mocca, bakes, recent };
+}
+
+async function fetchRunningFirstPartyContexts(messages) {
+  if (!isTimedLocalActivityQuery(messages)) return { harriers: null, thornes: null };
+
+  const context = recentUserContext(messages, 5);
+  if (!/\b(run|running|parkrun|athletics)\b/i.test(context)) {
+    return { harriers: null, thornes: null };
+  }
+
+  const [harriers, thornes] = await Promise.all([
+    fetchSimpleFirstPartyContext(
+      'https://wakefieldharriers.co.uk/road-xc/',
+      'Wakefield District Harriers — Road & XC'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://www.parkrun.org.uk/wakefieldthornes/',
+      'Wakefield Thornes parkrun'
+    )
+  ]);
+
+  return { harriers, thornes };
+}
+
 async function fetchDatedFirstPartyContext(url, title) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5_500);
@@ -1057,6 +1142,8 @@ async function validateEventAnswer(reply, messages, evidence = {}) {
   if (evidence.wxContext?.text) evidenceParts.push(`WX CURRENT LISTING:\n${evidence.wxContext.text}`);
   if (evidence.experienceEventsContext?.text) evidenceParts.push(`EXPERIENCE WAKEFIELD CURRENT LISTING:\n${evidence.experienceEventsContext.text}`);
   if (evidence.cathedralContext?.text) evidenceParts.push(`WAKEFIELD CATHEDRAL CURRENT EVENTS:\n${evidence.cathedralContext.text}`);
+  if (evidence.namedEventContexts?.parade?.text) evidenceParts.push(`NAMED EVENT EXACT PAGE — PARADE:\n${evidence.namedEventContexts.parade.text}`);
+  if (evidence.namedEventContexts?.festival?.text) evidenceParts.push(`NAMED EVENT EXACT PAGE — MAIN EVENT:\n${evidence.namedEventContexts.festival.text}`);
   if (evidence.freeVenueContexts?.ysp?.text) evidenceParts.push(`YSP VISIT / OPENING EVIDENCE:\n${evidence.freeVenueContexts.ysp.text}`);
   if (evidence.freeVenueContexts?.ncm?.text) evidenceParts.push(`NATIONAL COAL MINING MUSEUM OPENING EVIDENCE:\n${evidence.freeVenueContexts.ncm.text}`);
   if (evidence.freeVenueContexts?.wxWeekly?.text) evidenceParts.push(`WX WEEKLY / OPENING EVIDENCE:\n${evidence.freeVenueContexts.wxWeekly.text}`);
@@ -1124,6 +1211,8 @@ function combinedEventEvidenceText(evidence = {}) {
     evidence.wxContext?.text,
     evidence.experienceEventsContext?.text,
     evidence.cathedralContext?.text,
+    evidence.namedEventContexts?.parade?.text,
+    evidence.namedEventContexts?.festival?.text,
     evidence.freeVenueContexts?.ysp?.text,
     evidence.freeVenueContexts?.ncm?.text,
     evidence.freeVenueContexts?.wxWeekly?.text,
@@ -1268,6 +1357,13 @@ function combinedReliabilityEvidence(evidence = {}) {
   if (evidence.wxContext?.text) parts.push(`WX FIRST-PARTY:\n${evidence.wxContext.text}`);
   if (evidence.experienceEventsContext?.text) parts.push(`EXPERIENCE WAKEFIELD FIRST-PARTY:\n${evidence.experienceEventsContext.text}`);
   if (evidence.cathedralContext?.text) parts.push(`WAKEFIELD CATHEDRAL FIRST-PARTY:\n${evidence.cathedralContext.text}`);
+  if (evidence.namedEventContexts?.parade?.text) parts.push(`NAMED EVENT FIRST-PARTY — PARADE:\n${evidence.namedEventContexts.parade.text}`);
+  if (evidence.namedEventContexts?.festival?.text) parts.push(`NAMED EVENT FIRST-PARTY — FESTIVAL:\n${evidence.namedEventContexts.festival.text}`);
+  for (const [label, ctx] of Object.entries(evidence.accessibilityContexts || {})) {
+    if (ctx?.text) parts.push(`ACCESSIBILITY FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
+  }
+  if (evidence.runningContexts?.harriers?.text) parts.push(`RUNNING FIRST-PARTY — WAKEFIELD HARRIERS:\n${evidence.runningContexts.harriers.text}`);
+  if (evidence.runningContexts?.thornes?.text) parts.push(`RUNNING FIRST-PARTY — WAKEFIELD THORNES PARKRUN:\n${evidence.runningContexts.thornes.text}`);
   for (const item of evidence.searchEvidence || []) {
     if (!item?.url || !item?.text) continue;
     let trusted = false;
@@ -1293,10 +1389,12 @@ Rules:
 - MULTI-PART: answer every distinct part. If one part is not verified, say so while still answering the verified parts.
 - APPROXIMATE LOCATION: "near", "close to", "around" and a landmark do NOT establish the user's exact property or postcode. Never claim a property address/postcode unless the user supplied it or the evidence ties the exact property to the user.
 - BINS / PROPERTY SERVICES: exact collection dates require the actual property. If the exact property is missing, ask for full postcode or house number + street. Do not replace this with a generic fortnightly schedule.
-- ACCESSIBILITY: do not call an itinerary fully wheelchair accessible unless the evidence supports the relevant venue access AND the practical connection between stops. If the connection is unverified, say so. Do not transfer accessibility features between venues.
-- NAMED EVENTS: prefer the event-specific official page. Lead with the exact requested start time/date/route when verified. Do not say a detail is unavailable if it appears in the trusted evidence.
+- ACCESSIBILITY: do not call an itinerary fully wheelchair accessible unless the evidence supports the relevant venue access AND the practical connection between stops. If the connection is unverified, say so. Do not transfer accessibility features between venues. Never invent terrain claims such as "mainly flat", "easy to navigate", "few inclines" or "no steps" unless a trusted route/access source explicitly supports that exact connection.
+- ACCESSIBILITY FACILITY MATCHING: only say a venue is wheelchair accessible, step-free or has an accessible toilet when that exact venue's evidence lists that facility. If a venue page lists only Assistance Dogs Welcome, that is not evidence of wheelchair access or step-free entry. Prefer a coffee venue with explicit wheelchair/step-free evidence over one with ambiguous access evidence.
+- NAMED EVENTS: prefer the event-specific official page. Lead with the exact requested start time/date/route when verified. Do not say a detail is unavailable if it appears in the trusted evidence. For Light Up Wakefield, if the event-specific parade evidence gives 17:30 / 5:30pm, surface that exact time.
 - PARKING / CLOSURES: parking availability does not prove a route avoids road closures. Never guarantee closure avoidance without explicit current closure-route evidence.
-- CLUBS / ACTIVITIES: the activity type, day and time must all match. Do not substitute walking for running or Sunday for Saturday. A parkrun is a running event, not a traditional running club; label it as a close alternative if appropriate.
+- CLUBS / ACTIVITIES: the activity type, day and time must all match. Do not substitute walking for running or Sunday for Saturday. A parkrun is a running event, not a traditional running club; label it as a close alternative if appropriate. If an official club page explicitly gives Tuesday/Thursday evening training, do not tell the user to contact that club to discover a Saturday-morning session; state that the published schedule does not match Saturday morning.
+- RESPONSE ORDER: for multi-part questions, answer the parts in the same order the user asked them unless safety requires otherwise.
 - Do not add a new named venue, event, club, address, postcode, timetable or current fact unless supported by the evidence.
 - Keep the answer concise, useful and natural. Return only the corrected user-facing answer, with no audit notes or FINAL_RESPONSE marker.
 
@@ -1466,7 +1564,12 @@ export default async function handler(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const userUrlContext = await fetchTrustedUserUrlContext(messages);
+  const [namedEventContexts, accessibilityContexts, runningContexts, userUrlContext] = await Promise.all([
+    fetchNamedEventFirstPartyContexts(messages),
+    fetchAccessibilityFirstPartyContexts(messages),
+    fetchRunningFirstPartyContexts(messages),
+    fetchTrustedUserUrlContext(messages)
+  ]);
 
   // If current event snapshots are available, answer from those first-party
   // sources instead of triggering another broad search. This cuts latency and
@@ -1501,6 +1604,40 @@ ${cathedralContext.text}`
 
   const userProvidedContext = userUrlContext
     ? `\n\nTRUSTED USER-SUPPLIED PAGE SNAPSHOT:\nThe user supplied one or more trusted URLs and the server fetched them. Use this content directly where relevant. Do not claim you cannot access the link.\n\n${userUrlContext.text}`
+    : '';
+
+
+  const namedEventFirstPartyDirectContext = (namedEventContexts?.parade?.text || namedEventContexts?.festival?.text)
+    ? `
+
+NAMED EVENT EXACT FIRST-PARTY PAGES:
+${namedEventContexts?.parade?.text ? `PARADE PAGE:
+${namedEventContexts.parade.text}
+` : ''}${namedEventContexts?.festival?.text ? `MAIN EVENT PAGE:
+${namedEventContexts.festival.text}
+` : ''}
+For the named event, these exact first-party pages outrank aggregate listings. Extract the requested start time/date/route directly from them. If they contain the answer, do not say it is unavailable.`
+    : '';
+
+  const accessibilityFirstPartyDirectContext = Object.values(accessibilityContexts || {}).some(ctx => ctx?.text)
+    ? `
+
+ACCESSIBILITY FIRST-PARTY EVIDENCE:
+${Object.entries(accessibilityContexts || {}).filter(([,ctx]) => ctx?.text).map(([key, ctx]) => `${key.toUpperCase()}:
+${ctx.text}`).join('\n\n')}
+Use accessibility facilities only for the exact venue whose page states them. A page that lists only Assistance Dogs Welcome does NOT establish wheelchair access or step-free entry. Do not invent street terrain, gradients, dropped kerbs or route accessibility between venues.`
+    : '';
+
+  const runningFirstPartyDirectContext = (runningContexts?.harriers?.text || runningContexts?.thornes?.text)
+    ? `
+
+RUNNING FIRST-PARTY EVIDENCE:
+${runningContexts?.harriers?.text ? `WAKEFIELD HARRIERS:
+${runningContexts.harriers.text}
+` : ''}${runningContexts?.thornes?.text ? `WAKEFIELD THORNES PARKRUN:
+${runningContexts.thornes.text}
+` : ''}
+Use the published days/times literally. If Harriers publishes Tuesday/Thursday 19:00–20:00, that is not a Saturday-morning match. Wakefield Thornes parkrun is a Saturday 09:00 running event, not a traditional running club.`
     : '';
 
   const recommendationContext = isGeneralRecommendationQuery(messages)
@@ -1553,7 +1690,7 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -1607,7 +1744,16 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);
     if (experienceEventsContext?.source?.url) mergedSourceMap.set(experienceEventsContext.source.url, experienceEventsContext.source);
     if (cathedralContext?.source?.url) mergedSourceMap.set(cathedralContext.source.url, cathedralContext.source);
-    for (const extraContext of [freeVenueContexts?.ysp, freeVenueContexts?.ncm, freeVenueContexts?.wxWeekly]) {
+    for (const extraContext of [
+      namedEventContexts?.parade,
+      namedEventContexts?.festival,
+      ...Object.values(accessibilityContexts || {}),
+      runningContexts?.harriers,
+      runningContexts?.thornes,
+      freeVenueContexts?.ysp,
+      freeVenueContexts?.ncm,
+      freeVenueContexts?.wxWeekly
+    ]) {
       if (extraContext?.source?.url) mergedSourceMap.set(extraContext.source.url, extraContext.source);
     }
     for (const source of userUrlContext?.sources || []) {
@@ -1630,6 +1776,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       wxContext,
       experienceEventsContext,
       cathedralContext,
+      namedEventContexts,
       freeVenueContexts,
       searchEvidence
     });
@@ -1637,6 +1784,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       wxContext,
       experienceEventsContext,
       cathedralContext,
+      namedEventContexts,
       freeVenueContexts,
       searchEvidence
     });
@@ -1644,6 +1792,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       wxContext,
       experienceEventsContext,
       cathedralContext,
+      namedEventContexts,
+      accessibilityContexts,
+      runningContexts,
       searchEvidence
     });
     const validatedReply = await validateFoodAnswer(reliabilityValidatedReply, messages);
@@ -1652,7 +1803,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     return res.status(200).json({
       reply: safeReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: mergedSources,
-      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
+      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
     });
   } catch (error) {
     console.error('Handler error:', error);

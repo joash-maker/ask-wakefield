@@ -27,6 +27,15 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - NOT an official Wakefield Council service — independent tool by Mediahubink. Be transparent if asked.
 - Direct people to official sources for legal, binding, eligibility or safety-critical matters.
 - Never invent current facts, opening times, prices, event dates, transport times, closures, deadlines, availability or eligibility rules.
+- **EVIDENCE HIERARCHY:** For changing/local facts, prefer sources in this order: (1) Wakefield Council and other official public bodies, (2) Experience Wakefield and official event/venue pages, (3) the official website of the named venue, club or organisation, (4) trusted transport/mapping/event sources, then (5) other reputable sources only when a primary source does not answer the question.
+- **NO PLAUSIBLE GUESSING:** A fluent answer is not more important than a correct one. Never fill a missing fact with a likely postcode, likely time, typical schedule, assumed route or nearby-looking alternative. Clearly separate VERIFIED FACTS, reasonable ALTERNATIVES and UNVERIFIED details in the wording without using those labels mechanically.
+- **MULTI-PART COMPLETENESS:** Before answering, identify every distinct part of the user's question. Answer each part, mark it as unverified, or ask for the one piece of information needed. Never silently replace an unanswered part with a different activity, day, place or service.
+- **APPROXIMATE LOCATION IS NOT AN ADDRESS:** Words such as "near", "close to", "around", "by" and "staying near" do not identify an exact property, postcode or collection schedule. Never convert a landmark into the user's address. If a property-specific service needs an address, ask only for the minimum required detail while still answering any other parts of the question.
+- **PROPERTY-SPECIFIC COUNCIL SERVICES:** Bin collection dates and similar address-based council services must be tied to the actual property returned by the official lookup. Wakefield Council's Where I Live service requires a full postcode or house number and street. Do not claim a collection date, postcode or bin schedule for a user who supplied only an approximate landmark.
+- **ACCESSIBILITY ITINERARIES:** Never call an itinerary "fully wheelchair accessible" merely because each venue is accessible. Verify, where relevant, step-free entry, accessible toilets/Changing Places, accessible parking and the practical connection between stops. If the route between stops cannot be verified, say so. Prefer fewer stops when that reduces unnecessary travel.
+- **NAMED EVENT DETAIL CHECK:** When the user names a specific event and asks for a time, route, parking, access, tickets or road closures, search the event-specific official page before concluding the detail is unavailable. Answer the exact event fact first.
+- **PARKING VS ROAD CLOSURES:** Recommended parking is not the same as a verified route that avoids a road closure. Never say a car park will avoid closures unless current official traffic/closure evidence supports the approach route. If parking is verified but the closure plan is not, say exactly that.
+- **ACTIVITY-TYPE MATCH:** Respect the requested activity, day and time together. A walking group is not a running club. A Sunday session is not a Saturday-morning answer. A parkrun is a running event, not a traditional running club; if it is the closest verified match, label it accurately as an alternative.
 - **CONVERSATION CONTINUITY:** Treat the chat as one continuous conversation. Resolve follow-up references such as "those", "them", "these", "that one", "the first one", "which are free?", "how much are they?", "where are they?" and "what time are they?" from the recent assistant answer and user context. Never ask the user to repeat event/place names that are already visible in the recent conversation.
 - **FOLLOW-UP COMPLETENESS:** When a follow-up asks for a changing field across a previously listed set, such as "How much are those?", answer for every relevant item from that set unless the user narrows it. If one item's current value cannot be verified, keep the item in the answer and say "I couldn't verify the current price" (or the equivalent changing field) rather than dropping it or leaving a blank.
 - **MISSING PRICE IS NOT FREE:** Never infer that an event, attraction or activity is free because a price is absent from a listing. Only say Free/£0 when a current trusted source explicitly supports that status for that exact event or admission type.
@@ -85,7 +94,7 @@ Short paragraphs (2-3 sentences). Bold key venue names with **bold**. Bullet poi
 
 ### KNOWLEDGE BASE
 
-BINS: Black bin (general waste) every 2 weeks. Green bin (recycling) every 2 weeks alternating. Brown bin (garden waste) subscription Apr-Dec. Find your exact collection dates by postcode: wakefield.gov.uk/where-i-live — enter your postcode and all your bin dates appear. Phone: 0345 8 506 506. Tips at Calder Vale Rd WF1 5PH, Normanton WF6 1AL, Hemsworth WF9 4PH, Pontefract WF8 2QP.
+BINS: Most Wakefield homes have a green household-waste bin and two brown bins: one for mixed recycling and one for garden waste. Garden-waste collections run from March through November. Exact collection dates are property-specific: use wakefield.gov.uk/where-i-live and enter the FULL postcode or the house number and street. Never infer the user's property from a nearby landmark or venue. Phone: 0345 8 506 506. For current household-waste, recycling and garden-waste dates, rely on the property result returned by Where I Live rather than a generic fortnightly pattern.
 
 ROADS: Live closures: one.network or wakefield.gov.uk/roads. Report potholes: wakefield.gov.uk/potholes. Out-of-hours: 01924 306 987.
 
@@ -98,6 +107,8 @@ COUNCIL: 0345 8 506 506 (Mon-Fri 8:30am-5pm). Out-of-hours: 01924 306 987. wakef
 PLANNING: Do not assume a two-storey extension automatically requires planning permission. In England, some two-storey rear extensions can fall within permitted development if all current limits and conditions are met; two-storey side/front extensions require planning permission, and designated land or removed permitted-development rights can change the position. Always verify current rules live using planningportal.co.uk, gov.uk and Wakefield Council before stating specific limits. Building Regulations are separate from planning permission.
 
 LEISURE (Aspire): Aspire@ThePark WF2 8QZ, Sun Lane Ossett WF5 9DZ, Minsthorpe WF9 2HL, Castleford WF10 1EB. aspire.org.uk or 01924 367 300.
+
+RUNNING & CLUBS: Treat club schedules as changing information and verify the requested day/time live. **Wakefield Thornes parkrun** is a useful Saturday-running candidate at Thornes Park, Horbury Road, WF2 8TY, but parkrun is a free weekly running event rather than a traditional independent running club. Verify its current Saturday start time from a current source before stating it. **Wakefield District Harriers** is a traditional athletics/running club; verify its current training days/times from its official site before recommending a specific session. Never substitute a walking club for a running request.
 
 THE HEPWORTH WAKEFIELD: Gallery Walk WF1 5AW. Wakefield District residents and under 18s receive free exhibition entry. Opening days, exhibition prices and special-event arrangements can change, so verify current details when asked. Cafe, sculpture garden, shop. hepworthwakefield.org.
 
@@ -223,7 +234,6 @@ WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefi
 
 
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
-const GEMINI_SEARCH_MODEL = process.env.GEMINI_SEARCH_MODEL || 'gemini-3.8-flash';
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 3000;
 const MAX_TOTAL_CHARS = 14000;
@@ -275,7 +285,9 @@ const TRUSTED_DOMAINS = [
   'robatary.co.uk',
   'dinerustico.co.uk',
   'ncm.org.uk',
-  'farmercopleys.co.uk'
+  'farmercopleys.co.uk',
+  'parkrun.org.uk',
+  'wakefieldharriers.co.uk'
 ];
 
 const rateLimitMap = new Map();
@@ -355,23 +367,6 @@ function isEventCostFollowUp(messages) {
   return referenceIntent.test(last) || last.trim().split(/\s+/).length <= 8;
 }
 
-
-function isEventFamilyFollowUp(messages) {
-  if (!hasRecentAssistantAnswer(messages)) return false;
-  const last = lastUserText(messages);
-  const familyIntent = /\b(kids?|children|child|family|families|family[- ]friendly|toddlers?|teenagers?|teens?|young people|good for kids|suitable for kids|with children)\b/i;
-  if (!familyIntent.test(last)) return false;
-
-  const priorContext = (Array.isArray(messages) ? messages.slice(0, -1) : [])
-    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-    .slice(-6)
-    .map(m => m.content)
-    .join('\n')
-    .toLowerCase();
-
-  return /\b(what(?:'|’)s on|wots on|events?|this weekend|weekend|today|tonight|tomorrow|concert|comedy|festival|market|exhibition|workshop|gig|show|theatre|artist)\b/i.test(priorContext);
-}
-
 function isNamedRetailPresenceQuery(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const presenceIntent = /\b(is there|are there|do (?:you|we) have|have (?:you|we) got|nearest|closest|where(?:'s| is) (?:the )?nearest)\b/i;
@@ -415,6 +410,49 @@ function isWakefieldCityCentreFoodContext(messages) {
   return /\b(wakefield city centre|wakefield town centre|city centre|town centre)\b/i.test(context);
 }
 
+function isAccessibilityItineraryQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const accessIntent = /\b(wheelchair|wheelchair accessible|accessible|accessibility|step[- ]?free|blue badge|changing places|mobility|disabled access)\b/i;
+  const planIntent = /\b(itinerary|weekend|day out|visit|trip|route|coffee|art|culture|gallery|museum|things to do)\b/i;
+  return accessIntent.test(context) && planIntent.test(context);
+}
+
+function isNamedEventDetailQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const eventSignal = /\b(light up wakefield|rhubarb festival|parade|illuminated parade|festival|switch[- ]?on|named event|event)\b/i;
+  const detailIntent = /\b(what time|when|start|starts|where|route|road closures?|traffic|park|parking|ticket|tickets|price|cost|accessible|access|how long)\b/i;
+  return eventSignal.test(context) && detailIntent.test(context);
+}
+
+function isPropertySpecificCouncilQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(bin|bins|bin collection|collection day|collection date|council tax|catchment|where i live)\b/i.test(context);
+}
+
+function isTimedLocalActivityQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const activityIntent = /\b(running club|run club|parkrun|running group|walking club|hiking club|swimming club|gym class|club|group)\b/i;
+  const timeIntent = /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|morning|afternoon|evening|tonight|today|tomorrow|weekend|\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i;
+  return activityIntent.test(context) && timeIntent.test(context);
+}
+
+function hasApproximateLocationOnly(messages) {
+  const last = lastUserText(messages);
+  const approximate = /\b(near|close to|around|by|staying near|not far from)\b/i.test(last);
+  const exactAddress = /\b\d+[a-z]?\s+[a-z][a-z' -]+\s+(road|rd|street|st|lane|ln|avenue|ave|drive|dr|close|way|place|pl|terrace|court|grove|crescent)\b/i.test(last);
+  const fullPostcode = /\b(?:wf\d{1,2})\s*\d[a-z]{2}\b/i.test(last);
+  return approximate && !exactAddress && !fullPostcode;
+}
+
+function needsReliabilityValidation(messages) {
+  const context = recentUserContext(messages, 5);
+  return isAccessibilityItineraryQuery(messages)
+    || isNamedEventDetailQuery(messages)
+    || isPropertySpecificCouncilQuery(messages)
+    || isTimedLocalActivityQuery(messages)
+    || /\broad closures?|avoid(?:ing)? (?:the )?closures?|without hitting (?:the )?road closures?\b/i.test(context);
+}
+
 function needsLiveSearch(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const context = recentUserContext(messages);
@@ -422,8 +460,12 @@ function needsLiveSearch(messages) {
 
   if (isNamedRetailPresenceQuery(messages)) return true;
   if (isQuickFoodQuery(messages)) return true;
+  if (isAccessibilityItineraryQuery(messages)) return true;
+  if (isNamedEventDetailQuery(messages)) return true;
+  if (isPropertySpecificCouncilQuery(messages)) return true;
+  if (isTimedLocalActivityQuery(messages)) return true;
 
-  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming)\b/i;
+  const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|parade|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|bins?|bin collection|collection day|collection date|running club|run club|parkrun|wheelchair|accessibility|step[- ]?free|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming)\b/i;
   if (liveTerms.test(context)) return true;
 
   // Nearby/local-intent queries benefit from current source checks, especially
@@ -438,11 +480,30 @@ function requiresVerifiedSource(messages) {
   const context = recentUserContext(messages);
   if (isNamedRetailPresenceQuery(messages)) return true;
   if (isCurrentFoodStatusQuery(messages)) return true;
+  if (isAccessibilityItineraryQuery(messages)) return true;
+  if (isNamedEventDetailQuery(messages)) return true;
+  if (isPropertySpecificCouncilQuery(messages)) return true;
+  if (isTimedLocalActivityQuery(messages)) return true;
   return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open now|right now|currently|current|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost)\b/i.test(context);
 }
 
 function verificationFallback(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
+  if (isPropertySpecificCouncilQuery(messages) && hasApproximateLocationOnly(messages)) {
+    return "I can check the bin collection accurately, but I need the rental's full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
+  }
+  if (isPropertySpecificCouncilQuery(messages)) {
+    return 'I could not verify the current property-specific council information from the official lookup just now, so I do not want to guess a collection date. Please use Wakefield Council Where I Live with the full postcode or house number and street.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+  }
+  if (isAccessibilityItineraryQuery(messages)) {
+    return 'I could not verify enough current accessibility information to describe the whole itinerary as wheelchair accessible. I would rather leave the unverified connection between stops open than guess. Please check the relevant venue access pages or tell me which stops you want to use and I can narrow the route.';
+  }
+  if (isNamedEventDetailQuery(messages)) {
+    return 'I could not verify the named event detail from a current official source just now, so I do not want to guess the start time, route or road-closure access. Please check the event-specific Experience Wakefield listing and Wakefield Council traffic information.';
+  }
+  if (isTimedLocalActivityQuery(messages)) {
+    return 'I could not verify a current group that matches the activity, day and time you asked for, so I do not want to substitute a different day or a different activity. If a close alternative exists, I will label it clearly rather than present it as an exact match.';
+  }
   if (/planning permission|permitted development|building regulations?|two[- ]storey|extension/.test(last)) {
     return 'Some two-storey rear extensions in England can fall within permitted development, but the rules depend on the property, dimensions, position, designated land and whether permitted-development rights have been removed. I could not verify the current rules for your property from an official source just now, so please check Wakefield Council Planning and the Planning Portal before relying on this. Building Regulations are separate from planning permission.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
   }
@@ -497,9 +558,8 @@ function isCurrentEventsQuery(messages) {
 }
 
 function isFreeCurrentLeisureQuery(messages) {
-  const last = lastUserText(messages);
   const context = recentUserContext(messages, 4);
-  return isCurrentEventsQuery(messages) && /\bfree\b/i.test(last) && /\b(today|tonight|tomorrow|this weekend|weekend|this week|next saturday|next sunday)\b/i.test(context);
+  return isCurrentEventsQuery(messages) && /\bfree\b/i.test(context) && /\b(today|tonight|tomorrow|this weekend|weekend|this week|next saturday|next sunday)\b/i.test(context);
 }
 
 function decodeBasicEntities(value) {
@@ -578,159 +638,13 @@ function extractRelevantDateSegments(text, dates) {
   return (unique.length ? unique.join('\n---\n') : text.slice(0, 14000)).slice(0, 16000);
 }
 
-
-function normaliseEventToken(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/september/g, 'sept')
-    .replace(/october/g, 'oct')
-    .replace(/november/g, 'nov')
-    .replace(/december/g, 'dec')
-    .replace(/january/g, 'jan')
-    .replace(/february/g, 'feb')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-function eventTokens(value) {
-  const stop = new Set(['the','a','an','at','and','or','of','with','in','on','for','to','by','wakefield','event','events','makers','market']);
-  return normaliseEventToken(value)
-    .split(/\s+/)
-    .map(token => token.replace(/(20)?26$/, ''))
-    .filter(token => token.length >= 3 && !stop.has(token));
-}
-
-function eventSlugFromUrl(urlValue) {
-  try {
-    const u = new URL(urlValue);
-    const queryEvent = u.searchParams.get('event');
-    if (queryEvent) return queryEvent;
-    return u.pathname.split('/').filter(Boolean).slice(-1)[0] || '';
-  } catch {
-    return '';
-  }
-}
-
-function extractEventLinksFromHtml(html, baseUrl, kind) {
-  const out = new Map();
-  const anchor = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
-  let match;
-  while ((match = anchor.exec(String(html || '')))) {
-    try {
-      const url = new URL(match[1], baseUrl);
-      const host = url.hostname.toLowerCase().replace(/^www\./, '');
-      if (!trustedHostname(host)) continue;
-      const href = url.toString();
-      const isWx = /\/whats-on\/details/i.test(url.pathname) && url.searchParams.get('event');
-      const isExperience = /\/event\/[^/]+\/?$/i.test(url.pathname);
-      if ((kind === 'wx' && !isWx) || (kind === 'experience' && !isExperience)) continue;
-      const label = htmlToPlainText(match[2]);
-      out.set(href, { url: href, label, slug: eventSlugFromUrl(href) });
-    } catch {}
-  }
-  return Array.from(out.values());
-}
-
-function recentAssistantEventCandidates(messages) {
-  const text = recentAssistantContext(messages, 1);
-  if (!text) return [];
-  const out = [];
-  const timePattern = /\b(?:[01]?\d|2[0-3])(?::\d{2})?\s*(?:am|pm)?\s*[–—-]\s*(?:[01]?\d|2[0-3])(?::\d{2})?\s*(?:am|pm)?\b/i;
-
-  for (const rawLine of text.split(/\n/)) {
-    const line = rawLine.replace(/^\s*[-*•]+\s*/, '').replace(/\*\*/g, '').trim();
-    if (!line || line.length < 5 || line.length > 280) continue;
-    if (/^(saturday|sunday|monday|tuesday|wednesday|thursday|friday)\b/i.test(line)) continue;
-    if (/^(this weekend|the events|for full details|would you|if you|from this weekend|ask wakefield|the free options|the clearest family options)/i.test(line)) continue;
-
-    // Only treat lines that look like actual event rows as event candidates.
-    // Description-only lines such as "Comedians MC Colin Manford..." must never
-    // become synthetic event titles in later price/free/family follow-ups.
-    const looksLikeEventRow = line.includes(' | ') || timePattern.test(line) || /\b(?:at|@)\s+[A-Z][^,.]{2,80}(?:,|\s+[–—-])/i.test(line);
-    if (!looksLikeEventRow) continue;
-
-    let candidate = line;
-    if (candidate.includes(' | ')) candidate = candidate.split(' | ')[0].trim();
-
-    const atIndex = candidate.toLowerCase().indexOf(' at ');
-    if (atIndex > 4) candidate = candidate.slice(0, atIndex).trim();
-
-    // Remove an obvious time/venue suffix when the answer used an em dash.
-    candidate = candidate.split(/\s+[—–]\s+(?=(?:at\s+)?(?:[01]?\d|2[0-3])|\d{1,2}:\d{2})/i)[0].trim();
-    candidate = candidate.replace(/\s+(?:exhibition|event|continues?|returns?)$/i, '').trim();
-    candidate = candidate.replace(/^[^A-Za-z0-9]+|[.:,;]+$/g, '').trim();
-
-    // A valid candidate should be a compact proper-name-like phrase, not prose.
-    if (candidate.split(/\s+/).length > 12) continue;
-    if (/^(comedians?|meet artist|support local|local artisans?|outdoor performance|art exhibition|contemporary art|family-friendly|family friendly|booking|bookable)\b/i.test(candidate)) continue;
-    if (candidate.length >= 5) out.push(candidate);
-  }
-  return [...new Set(out)];
-}
-
-function eventLinkMatchScore(title, link) {
-  const titleSet = new Set(eventTokens(title));
-  const slugSet = new Set(eventTokens(link?.slug || link?.label || ''));
-  if (!titleSet.size || !slugSet.size) return 0;
-  let overlap = 0;
-  for (const token of slugSet) if (titleSet.has(token)) overlap += 1;
-  if (!overlap) return 0;
-  return overlap / Math.min(titleSet.size, slugSet.size);
-}
-
-async function fetchRelevantEventDetailContexts(messages, contexts = []) {
-  const titles = recentAssistantEventCandidates(messages);
-  if (!titles.length) return [];
-  const links = contexts.flatMap(ctx => Array.isArray(ctx?.eventLinks) ? ctx.eventLinks : []);
-  const selected = [];
-
-  for (const requestedTitle of titles) {
-    let best = null;
-    let bestScore = 0;
-    for (const link of links) {
-      const score = eventLinkMatchScore(requestedTitle, link);
-      if (score > bestScore) {
-        best = link;
-        bestScore = score;
-      }
-    }
-    if (best && bestScore >= 0.72) {
-      selected.push({ ...best, requestedTitle, matchScore: bestScore });
-    }
-  }
-
-  const unique = [];
-  const seen = new Set();
-  for (const item of selected) {
-    const key = `${normaliseEventToken(item.requestedTitle)}|${item.url}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(item);
-  }
-
-  const items = unique.slice(0, 10);
-  const fetched = await Promise.all(items.map(async item => {
-    const ctx = await fetchSimpleFirstPartyContext(item.url, item.label || item.slug || item.requestedTitle);
-    if (!ctx) return null;
-    return {
-      ...ctx,
-      requestedTitle: item.requestedTitle,
-      matchedUrl: item.url,
-      matchedLabel: item.label || '',
-      matchedSlug: item.slug || '',
-      matchScore: item.matchScore
-    };
-  }));
-  return fetched.filter(Boolean);
-}
-
 async function fetchWxWhatsOnContext() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5_500);
   try {
     const response = await fetch('https://wxwakefield.co.uk/whats-on', {
       headers: {
-        'User-Agent': 'AskWakefield/2.4 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -742,7 +656,6 @@ async function fetchWxWhatsOnContext() {
     return {
       text: extractRelevantEventSegments(text, dates),
       dates,
-      eventLinks: extractEventLinksFromHtml(html, 'https://wxwakefield.co.uk/whats-on', 'wx'),
       source: {
         title: "Wakefield Exchange — What's On",
         url: 'https://wxwakefield.co.uk/whats-on'
@@ -835,7 +748,7 @@ async function fetchExperienceWakefieldEventsContext() {
     const url = 'https://experiencewakefield.co.uk/whats-on/';
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.4 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -847,7 +760,6 @@ async function fetchExperienceWakefieldEventsContext() {
     return {
       text: extractRelevantEventSegments(text, dates),
       dates,
-      eventLinks: extractEventLinksFromHtml(html, url, 'experience'),
       source: {
         title: "Experience Wakefield — What's On",
         url
@@ -868,7 +780,7 @@ async function fetchSimpleFirstPartyContext(url, title) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.4 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -894,7 +806,7 @@ async function fetchDatedFirstPartyContext(url, title) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'AskWakefield/2.4 (+https://www.askwakefield.co.uk)'
+        'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)'
       },
       signal: controller.signal
     });
@@ -917,42 +829,13 @@ async function fetchDatedFirstPartyContext(url, title) {
 }
 
 async function fetchFreeDayVenueContexts(messages) {
-  const freeFollowUp = isFreeCurrentLeisureQuery(messages);
-  const costFollowUp = isEventCostFollowUp(messages);
-  if (!freeFollowUp && !costFollowUp) {
-    return { ysp: null, yspWeston: null, ncm: null, wxWeekly: null };
-  }
-
-  // The Weston has a separate admission rule from the wider YSP grounds. Fetch
-  // it for both free-only and price follow-ups so an exhibition in The Weston
-  // cannot inherit the park's general admission price.
-  const yspWestonPromise = fetchSimpleFirstPartyContext(
-    'https://ysp.org.uk/visit-us/the-weston',
-    'Yorkshire Sculpture Park — The Weston'
-  );
-
-  if (costFollowUp && !freeFollowUp) {
-    const yspWeston = await yspWestonPromise;
-    return { ysp: null, yspWeston, ncm: null, wxWeekly: null };
-  }
-
-  const [ysp, yspWeston, ncm, wxWeekly] = await Promise.all([
+  if (!isFreeCurrentLeisureQuery(messages)) return { ysp: null, ncm: null, wxWeekly: null };
+  const [ysp, ncm, wxWeekly] = await Promise.all([
     fetchSimpleFirstPartyContext('https://ysp.org.uk/visit-us', 'Yorkshire Sculpture Park — Visit Us'),
-    yspWestonPromise,
     fetchSimpleFirstPartyContext('https://www.ncm.org.uk/whats-on/', 'National Coal Mining Museum — What\'s On'),
     fetchSimpleFirstPartyContext('https://www.wxwakefield.co.uk/Whats-On/Weekly-Events', 'Wakefield Exchange — Weekly Events')
   ]);
-  return { ysp, yspWeston, ncm, wxWeekly };
-}
-
-async function fetchFamilyVenueContexts(messages) {
-  if (!isEventFamilyFollowUp(messages)) return { yspFamily: null, experienceFamilies: null, wxFamily: null };
-  const [yspFamily, experienceFamilies, wxFamily] = await Promise.all([
-    fetchSimpleFirstPartyContext('https://ysp.org.uk/visit-us/family-visits', 'Yorkshire Sculpture Park — Family Visits'),
-    fetchSimpleFirstPartyContext('https://experiencewakefield.co.uk/families/', 'Experience Wakefield — Families'),
-    fetchSimpleFirstPartyContext('https://www.wxwakefield.co.uk/Whats-On/Family', 'Wakefield Exchange — Family Events')
-  ]);
-  return { yspFamily, experienceFamilies, wxFamily };
+  return { ysp, ncm, wxWeekly };
 }
 
 
@@ -986,7 +869,7 @@ async function fetchTrustedUserUrlContext(messages) {
     const timer = setTimeout(() => controller.abort(), 8_000);
     try {
       const response = await fetch(url, {
-        headers: { 'User-Agent': 'AskWakefield/2.4 (+https://www.askwakefield.co.uk)' },
+        headers: { 'User-Agent': 'AskWakefield/2.1 (+https://www.askwakefield.co.uk)' },
         signal: controller.signal
       });
       if (!response.ok) continue;
@@ -1160,7 +1043,7 @@ function extractAnswer(data) {
 
 
 function eventAnswerNeedsValidation(reply, messages) {
-  return Boolean(reply && isCurrentEventsQuery(messages));
+  return Boolean(reply && (isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages)));
 }
 
 async function validateEventAnswer(reply, messages, evidence = {}) {
@@ -1169,21 +1052,14 @@ async function validateEventAnswer(reply, messages, evidence = {}) {
   const dates = eventDateState();
   const freeOnly = isFreeCurrentLeisureQuery(messages);
   const costFollowUp = isEventCostFollowUp(messages);
-  const familyFollowUp = isEventFamilyFollowUp(messages);
   const currentContext = recentUserContext(messages, 5);
   const evidenceParts = [];
   if (evidence.wxContext?.text) evidenceParts.push(`WX CURRENT LISTING:\n${evidence.wxContext.text}`);
   if (evidence.experienceEventsContext?.text) evidenceParts.push(`EXPERIENCE WAKEFIELD CURRENT LISTING:\n${evidence.experienceEventsContext.text}`);
   if (evidence.cathedralContext?.text) evidenceParts.push(`WAKEFIELD CATHEDRAL CURRENT EVENTS:\n${evidence.cathedralContext.text}`);
   if (evidence.freeVenueContexts?.ysp?.text) evidenceParts.push(`YSP VISIT / OPENING EVIDENCE:\n${evidence.freeVenueContexts.ysp.text}`);
-  if (evidence.freeVenueContexts?.yspWeston?.text) evidenceParts.push(`YSP THE WESTON EVIDENCE:\n${evidence.freeVenueContexts.yspWeston.text}`);
   if (evidence.freeVenueContexts?.ncm?.text) evidenceParts.push(`NATIONAL COAL MINING MUSEUM OPENING EVIDENCE:\n${evidence.freeVenueContexts.ncm.text}`);
   if (evidence.freeVenueContexts?.wxWeekly?.text) evidenceParts.push(`WX WEEKLY / OPENING EVIDENCE:\n${evidence.freeVenueContexts.wxWeekly.text}`);
-  for (const item of evidence.eventDetailContexts || []) {
-    if (item?.text) evidenceParts.push(`FIRST-PARTY EVENT DETAIL:\nSource: ${item.source?.url || ''}\n${item.text}`);
-  }
-  if (evidence.familyVenueContexts?.yspFamily?.text) evidenceParts.push(`YSP FAMILY GUIDANCE:\n${evidence.familyVenueContexts.yspFamily.text}`);
-  if (evidence.familyVenueContexts?.experienceFamilies?.text) evidenceParts.push(`EXPERIENCE WAKEFIELD FAMILY GUIDANCE:\n${evidence.familyVenueContexts.experienceFamilies.text}`);
   for (const item of evidence.searchEvidence || []) {
     if (!item?.url || !item?.text) continue;
     let trusted = false;
@@ -1200,13 +1076,13 @@ TODAY: ${dates.today}
 TOMORROW: ${dates.tomorrow}
 THIS WEEKEND: ${dates.saturday} and ${dates.sunday}
 
-Rules:
+Rules:Rules:
 - Treat an event's title + date + time + venue + price/free status as one record. Never mix fields from different events.
+- NAMED EVENT DETAIL: If the user named a specific event, the event-specific first-party page outranks an aggregate listing. Answer the requested time/date/route first when supported. If a parking location is supported but the route avoiding road closures is not, keep the parking fact but explicitly say the closure-avoidance route is not yet verified. Never turn recommended parking into a guarantee that the user will avoid closures.
 - TONIGHT: retain only events explicitly dated TODAY whose verified time overlaps 17:00 onward and has not ended. An event on Friday 25 September cannot appear in a Monday 21 September tonight answer.
 - If there is no verified scheduled event tonight, say that plainly. Do not pad with restaurants, pubs, generic leisure, normal venue opening, or a daytime exhibition.
 - WEEKEND: retain only entries whose exact date/session covers the mapped Saturday or Sunday. Preserve the correct day. If the draft states a price or says FREE but the trusted evidence does not explicitly support that exact price/free claim for that event, REMOVE the unsupported claim. Keep the event if its date/time/venue are otherwise verified.
 - COST FOLLOW-UP: ${costFollowUp ? 'YES' : 'NO'}. When YES, the user is asking for the prices of events from the recent conversation. Keep every relevant event named in the draft. For each one, give the explicitly verified current price/free status from trusted evidence. If the price for a particular event cannot be verified, write "I couldn't verify the current price" for that event. Never leave a dangling dash, empty price field, or silently drop an event merely because its price is unverified.
-- FAMILY FOLLOW-UP: ${familyFollowUp ? 'YES' : 'NO'}. When YES, only describe a previous event as specifically child/family suitable when its event detail explicitly gives a family/children/young-people age range, a family category, or equivalent wording. Venue-level family guidance may support saying the VENUE is family-friendly, but do not turn that into a claim that the specific exhibition/event is designed for children. If using venue-level evidence, phrase the distinction plainly. Never recommend an adults-only event for children. Do not use unsupported rankings or guarantees such as 'best option', 'best bet', 'standout' or 'guaranteed family day out'.
 - FREE REQUEST: every retained option must be explicitly marked Free/FREE/£0 in trusted evidence for that exact event/activity AND must be available on the requested date. Missing price information is NOT evidence that something is free. A concession such as 'under 18s free', 'members free' or 'residents free' does NOT make an option generally free unless the user has said they qualify.
 - RECURRING WEEKDAY RULE: Every Wednesday means Wednesday only, Every Friday means Friday only, and so on. If TOMORROW is Tuesday, remove Health Checks, Chair-Based Exercise, WX Pop Choir or any other Wednesday-only activity. Never shift a recurring activity onto the requested day.
 - Venue closure days override exhibition date ranges. In particular, if a source says a museum is closed on Tuesdays, do not list its exhibition for Tuesday. If WX says the Shed/main hall is closed Monday/Tuesday, remove The Wall or any Shed-based display from a Monday/Tuesday suggestion unless trusted evidence explicitly confirms that display is accessible despite the closure.
@@ -1245,18 +1121,14 @@ function combinedEventEvidenceText(evidence = {}) {
     .join('\n\n');
 
   return [
-    ...(evidence.eventDetailContexts || []).map(item => item?.text).filter(Boolean),
-    evidence.freeVenueContexts?.yspWeston?.text,
     evidence.wxContext?.text,
     evidence.experienceEventsContext?.text,
     evidence.cathedralContext?.text,
     evidence.freeVenueContexts?.ysp?.text,
     evidence.freeVenueContexts?.ncm?.text,
     evidence.freeVenueContexts?.wxWeekly?.text,
-    evidence.familyVenueContexts?.yspFamily?.text,
-    evidence.familyVenueContexts?.experienceFamilies?.text,
     searchText
-  ].filter(Boolean).map(part => `=== EVIDENCE SOURCE ===\n${part}\n=== END EVIDENCE SOURCE ===`).join('\n\n');
+  ].filter(Boolean).join('\n\n');
 }
 
 function eventLineTitleCandidate(line) {
@@ -1273,113 +1145,24 @@ function eventLineTitleCandidate(line) {
   return title.replace(/[.:,;\s]+$/, '').trim();
 }
 
-function eventLiteralWords(value) {
-  return String(value || '')
-    .replace(/[’‘`]/g, "'")
-    .replace(/[–—]/g, '-')
-    .toLowerCase()
-    .match(/[a-z0-9]+/g) || [];
-}
-
-function exactishEventTitleRegex(title, global = false) {
-  const words = eventLiteralWords(title);
-  if (!words.length) return null;
-  const escaped = words.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  // Start at the first actual title word. Never let category labels or a nearby
-  // word such as "Free" become part of the match window before the title.
-  return new RegExp(escaped.join('[\\s\\W_]{0,14}'), global ? 'gi' : 'i');
-}
-
-function exactEventRecordWindow(text, title, maxChars = 1200) {
-  const source = String(text || '');
-  const regex = exactishEventTitleRegex(title, true);
-  if (!regex) return '';
-
-  let best = '';
-  let bestScore = -Infinity;
-  let match;
-  while ((match = regex.exec(source))) {
-    const window = source.slice(match.index, Math.min(source.length, match.index + maxChars));
-
-    // Prefer the title occurrence that is immediately followed by event metadata.
-    // This avoids matching the HTML <title>, navigation, category menus, related
-    // cards or footer copies of the same event name.
-    const markerMatches = [
-      /\bPRICE\s*:/i.exec(window),
-      /\bDATE\s*:/i.exec(window),
-      /\bStart time\s*:/i.exec(window),
-      /\bImage:\s*Calendar/i.exec(window),
-      /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?\s+\d{1,2}\s+[A-Z][a-z]{2,8}\s+20\d{2}\b/i.exec(window),
-      /£\s*\d+(?:[.,]\d{1,2})?/i.exec(window)
-    ].filter(Boolean);
-
-    const nearestMarker = markerMatches.length ? Math.min(...markerMatches.map(m => m.index)) : 9999;
-    let score = 0;
-    if (nearestMarker < 180) score += 12;
-    else if (nearestMarker < 350) score += 8;
-    else if (nearestMarker < 600) score += 4;
-    else if (nearestMarker < 900) score += 1;
-    else score -= 5;
-
-    if (/\bPRICE\s*:\s*(?:Free|£\s*\d)/i.test(window.slice(0, 700))) score += 8;
-    if (/\bAGE RANGE\s*:/i.test(window.slice(0, 1000))) score += 5;
-    if (/\bImage:\s*Tag\b/i.test(window.slice(0, 600))) score += 5;
-    if (/\bAbout\b/i.test(window.slice(0, 900))) score += 2;
-
-    // Strong penalty for category/navigation copies that put generic filters
-    // before the first actual event metadata marker.
-    const prefix = window.slice(0, Math.min(nearestMarker, 500));
-    if (/Free\s+Art\s*&\s*Exhibitions|Music\s*\/\s*Dance\s*\/\s*Theatre|Courses\s*\/\s*Workshops/i.test(prefix)) score -= 12;
-
-    if (score > bestScore) {
-      best = window;
-      bestScore = score;
-    }
-    if (regex.lastIndex === match.index) regex.lastIndex += 1;
-  }
-  return best;
-}
-
-function eventDetailRecord(title, text, maxChars = 2600) {
-  const window = exactEventRecordWindow(text, title, maxChars);
-  if (!window) return '';
-  const aboutIndex = window.search(/\bAbout\b/i);
-  return aboutIndex > 0 ? window.slice(0, aboutIndex) : window;
-}
-
 function eventClaimSupportedNearTitle(title, claim, evidenceText) {
   if (!title || !claim || !evidenceText) return false;
+  const haystack = evidenceText.toLowerCase();
   const needle = title.toLowerCase();
-  const sources = String(evidenceText).split(/=== EVIDENCE SOURCE ===|=== END EVIDENCE SOURCE ===/).filter(Boolean);
+  let from = 0;
 
-  for (const rawSource of sources) {
-    const haystack = rawSource.toLowerCase();
-    let from = 0;
-    while (from < haystack.length) {
-      const index = haystack.indexOf(needle, from);
-      if (index === -1) break;
-      const window = haystack.slice(index, Math.min(haystack.length, index + needle.length + 240));
-
-      if (claim.type === 'free') {
-        const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(window);
-        const free = /\bfree\b|£\s*0(?:[.,]00)?\b/i.exec(window);
-        if (paid || free) {
-          if (free && (!paid || free.index < paid.index)) return true;
-          if (paid && (!free || paid.index < free.index)) return false;
-        }
-
-        // Double Take is in The Weston. The Weston gallery itself is explicitly
-        // free to enter, even though wider YSP grounds require admission.
-        if (/olivia bax|double take/i.test(needle) &&
-            /the weston/i.test(haystack) &&
-            /(?:free to enter|free entry|no ticket required)/i.test(haystack)) return true;
-      } else if (claim.type === 'price') {
-        const price = claim.value.toLowerCase().replace(/\s+/g, '');
-        const compactWindow = window.replace(/\s+/g, '');
-        if (compactWindow.includes(price)) return true;
-      }
-      from = index + needle.length;
+  while (from < haystack.length) {
+    const index = haystack.indexOf(needle, from);
+    if (index === -1) break;
+    const window = haystack.slice(index, Math.min(haystack.length, index + needle.length + 360));
+    if (claim.type === 'free') {
+      if (/\bfree\b|£\s*0(?:[.,]00)?\b/i.test(window)) return true;
+    } else if (claim.type === 'price') {
+      const price = claim.value.toLowerCase().replace(/\s+/g, '');
+      const compactWindow = window.replace(/\s+/g, '');
+      if (compactWindow.includes(price)) return true;
     }
+    from = index + needle.length;
   }
   return false;
 }
@@ -1424,760 +1207,9 @@ function stripUnsupportedEventPriceClaims(reply, evidence = {}, options = {}) {
   }).join('\n');
 }
 
-
-function parseStrictJsonObject(value) {
-  const text = String(value || '').trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '');
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end <= start) return null;
-  try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
-}
-
-function bestResolvedEventFact(title, facts = []) {
-  let best = null;
-  let bestScore = 0;
-  for (const fact of facts || []) {
-    if (!fact || typeof fact.title !== 'string') continue;
-    const score = eventTitleSimilarity(title, fact.title);
-    if (score > bestScore) {
-      best = fact;
-      bestScore = score;
-    }
-  }
-  return bestScore >= 0.72 ? best : null;
-}
-
-async function resolveEventFactsViaWebSearch(messages) {
-  const titles = recentAssistantEventCandidates(messages);
-  if (!titles.length) return { facts: [], sources: [] };
-
-  const previousAnswer = recentAssistantContext(messages, 1).slice(0, 9000);
-  const system = `You are a factual event-record resolver for Ask Wakefield. Search current FIRST-PARTY official pages only and return one structured record for every supplied event title. This is not a prose-answer task.
-
-${londonContext()}
-
-Rules:
-- Search the exact named event, venue and date from the supplied previous answer.
-- Prefer the event's own official detail page. WX events: wxwakefield.co.uk. Experience Wakefield events: experiencewakefield.co.uk. YSP events/admission: ysp.org.uk. National Trust events: nationaltrust.org.uk. Farmer Copleys: farmercopleys.co.uk or Experience Wakefield.
-- NEVER transfer price, free status, age range or family tags between events.
-- price must be the STANDARD PUBLIC event/admission price for that exact event, such as "£12", "£3", "£6.70", or "Free". Do not use a carer/member/child concession as the standard price.
-- If an exhibition is free only in a specific gallery while the wider attraction is paid, set price="Free" and scope to that gallery. Do not replace it with the wider venue ticket price.
-- familySuitable=true only if the SPECIFIC EVENT page/listing explicitly labels children, young people, families, family-friendly, or equivalent. A generally family-friendly venue is not enough.
-- venueFamilyFriendly=true may be used when the venue is family-friendly but the specific event is not explicitly a family event.
-- adultOnly=true only when the event explicitly says adults only / over-18 / 18+.
-- If a fact cannot be verified, use null. Never guess.
-- sourceUrl must be the exact official page supporting that event record, not a search page or homepage.
-- Return valid JSON only. No markdown and no explanation.
-
-Schema:
-{"events":[{"title":"exact supplied title","price":"£12 or Free or null","scope":"optional admission scope or null","familySuitable":true,"venueFamilyFriendly":false,"adultOnly":false,"familyReason":"short evidence label or null","sourceUrl":"https://... or null"}]}`;
-
-  const body = {
-    model: MODEL,
-    max_tokens: 1800,
-    system,
-    messages: [{
-      role: 'user',
-      content: `EVENT TITLES:\n${titles.map((title, i) => `${i + 1}. ${title}`).join('\n')}\n\nPREVIOUS ASK WAKEFIELD ANSWER:\n${previousAnswer}`
-    }],
-    tools: [{
-      type: 'web_search_20250305',
-      name: 'web_search',
-      max_uses: Math.min(12, Math.max(6, titles.length + 3)),
-      allowed_domains: [
-        'wxwakefield.co.uk',
-        'experiencewakefield.co.uk',
-        'ysp.org.uk',
-        'nationaltrust.org.uk',
-        'farmercopleys.co.uk'
-      ],
-      user_location: {
-        type: 'approximate',
-        city: 'Wakefield',
-        region: 'West Yorkshire',
-        country: 'GB',
-        timezone: 'Europe/London'
-      }
-    }]
-  };
-
-  try {
-    const { response, data } = await callAnthropic(body);
-    if (!response.ok) return { facts: [], sources: [] };
-    const extracted = extractAnswer(data);
-    const parsed = parseStrictJsonObject(extracted.reply);
-    const rawFacts = Array.isArray(parsed?.events) ? parsed.events : [];
-    const facts = [];
-    const sourceMap = new Map();
-
-    for (const requestedTitle of titles) {
-      let best = null;
-      let bestScore = 0;
-      for (const raw of rawFacts) {
-        if (!raw || typeof raw.title !== 'string') continue;
-        const score = eventTitleSimilarity(requestedTitle, raw.title);
-        if (score > bestScore) {
-          best = raw;
-          bestScore = score;
-        }
-      }
-      if (!best || bestScore < 0.72) continue;
-
-      let sourceUrl = null;
-      if (typeof best.sourceUrl === 'string' && best.sourceUrl.startsWith('http')) {
-        try {
-          const parsedUrl = new URL(best.sourceUrl);
-          if (trustedHostname(parsedUrl.hostname)) sourceUrl = parsedUrl.toString();
-        } catch {}
-      }
-
-      const price = best.price == null ? null : normaliseCostLabel(String(best.price));
-      const fact = {
-        title: requestedTitle,
-        price,
-        scope: typeof best.scope === 'string' ? best.scope.trim().slice(0, 120) : null,
-        familySuitable: best.familySuitable === true ? true : best.familySuitable === false ? false : null,
-        venueFamilyFriendly: best.venueFamilyFriendly === true ? true : best.venueFamilyFriendly === false ? false : null,
-        adultOnly: best.adultOnly === true ? true : best.adultOnly === false ? false : null,
-        familyReason: typeof best.familyReason === 'string' ? best.familyReason.trim().slice(0, 180) : null,
-        sourceUrl
-      };
-      facts.push(fact);
-      if (sourceUrl) sourceMap.set(sourceUrl, { title: requestedTitle, url: sourceUrl });
-    }
-
-    // Also keep any official citations the search call surfaced, but never use
-    // them as event facts unless the structured record above names them.
-    for (const source of extracted.sources || []) {
-      try {
-        if (source?.url && trustedHostname(new URL(source.url).hostname)) {
-          sourceMap.set(source.url, source);
-        }
-      } catch {}
-    }
-
-    return { facts, sources: Array.from(sourceMap.values()).slice(0, 8) };
-  } catch (error) {
-    console.error('Event fact resolver failed:', error?.message || error);
-    return { facts: [], sources: [] };
-  }
-}
-
-
-function extractGeminiGroundedResponse(data) {
-  const textParts = [];
-  const citations = [];
-
-  for (const step of Array.isArray(data?.steps) ? data.steps : []) {
-    if (step?.type !== 'model_output') continue;
-    for (const block of Array.isArray(step?.content) ? step.content : []) {
-      if (block?.type !== 'text') continue;
-      if (typeof block.text === 'string') textParts.push(block.text);
-      for (const annotation of Array.isArray(block?.annotations) ? block.annotations : []) {
-        if (annotation?.type !== 'url_citation' || !annotation?.url) continue;
-        citations.push({
-          title: annotation.title || annotation.url,
-          url: annotation.url
-        });
-      }
-    }
-  }
-
-  return {
-    text: textParts.join('\n').trim(),
-    citations
-  };
-}
-
-function trustedGroundedCitationUrls(citations = []) {
-  const out = [];
-  const seen = new Set();
-  for (const citation of citations) {
-    try {
-      const url = new URL(String(citation?.url || ''));
-      if (!trustedHostname(url.hostname)) continue;
-      const clean = url.toString();
-      if (seen.has(clean)) continue;
-      seen.add(clean);
-      out.push({ title: citation.title || url.hostname, url: clean });
-    } catch {}
-  }
-  return out;
-}
-
-function canonicalGroundedUrl(value) {
-  try {
-    const u = new URL(String(value || ''));
-    if (!trustedHostname(u.hostname)) return null;
-    u.hash = '';
-    u.hostname = u.hostname.replace(/^www\./, '');
-    for (const key of [...u.searchParams.keys()]) {
-      if (/^(utm_|authuser$|gclid$|fbclid$)/i.test(key)) u.searchParams.delete(key);
-    }
-    let out = u.toString();
-    if (out.endsWith('/') && !u.search) out = out.slice(0, -1);
-    return out;
-  } catch {
-    return null;
-  }
-}
-
-function sameGroundedOfficialUrl(a, b) {
-  const ca = canonicalGroundedUrl(a);
-  const cb = canonicalGroundedUrl(b);
-  return Boolean(ca && cb && ca === cb);
-}
-
-async function resolveEventFactsViaGoogleSearch(messages) {
-  if (!process.env.GEMINI_API_KEY) return { facts: [], sources: [], available: false };
-
-  const titles = recentAssistantEventCandidates(messages);
-  if (!titles.length) return { facts: [], sources: [], available: true };
-
-  const previousAnswer = recentAssistantContext(messages, 1).slice(0, 9000);
-  const input = `You are verifying current Wakefield event information for Ask Wakefield. Use Google Search and FIRST-PARTY official sources only. Return valid JSON only, with one record for every supplied event title.\n\n${londonContext()}\n\nRules:\n- Search the exact event title, venue and date from the previous Ask Wakefield answer.\n- Prefer the event's own official page. Relevant official sources include wxwakefield.co.uk, experiencewakefield.co.uk, ysp.org.uk, nationaltrust.org.uk and farmercopleys.co.uk.\n- price must be the STANDARD PUBLIC admission/ticket price for the exact event, e.g. £12, £3, £6.70 or Free. Never use a carer/member/child concession as the standard public price.\n- If an exhibition is free only in a named gallery while the wider attraction is paid, price=Free and put that limitation in scope.\n- familySuitable=true only when the SPECIFIC EVENT is explicitly described for children, young people, families, family-friendly or gives a child/teen suitability age.\n- adultOnly=true only when the event explicitly says adults only / 18+ / over-18.\n- If a fact cannot be verified, use null. Never guess.\n- officialUrl must be the most relevant official event/venue page, not a review or social post.\n- Do not use third-party prices.\n\nReturn this schema only:\n{"events":[{"title":"exact supplied title","price":"£12 or Free or null","scope":"optional limitation or null","familySuitable":true,"adultOnly":false,"familyReason":"short evidence label or null","officialUrl":"https://... or null"}]}\n\nEVENT TITLES:\n${titles.map((title, i) => `${i + 1}. ${title}`).join('\n')}\n\nPREVIOUS ASK WAKEFIELD ANSWER:\n${previousAnswer}`;
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 14_000);
-  try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': process.env.GEMINI_API_KEY
-      },
-      body: JSON.stringify({
-        model: GEMINI_SEARCH_MODEL,
-        input,
-        tools: [{ type: 'google_search' }]
-      }),
-      signal: controller.signal
-    });
-
-    let data = {};
-    try { data = await response.json(); } catch {}
-    if (!response.ok) {
-      console.error('Gemini Google Search error:', response.status, data?.error?.message || data);
-      return { facts: [], sources: [], available: true };
-    }
-
-    const grounded = extractGeminiGroundedResponse(data);
-    const parsed = parseStrictJsonObject(grounded.text);
-    const rawFacts = Array.isArray(parsed?.events) ? parsed.events : [];
-    const groundedSources = trustedGroundedCitationUrls(grounded.citations);
-    const facts = [];
-
-    for (const requestedTitle of titles) {
-      let best = null;
-      let bestScore = 0;
-      for (const raw of rawFacts) {
-        if (!raw || typeof raw.title !== 'string') continue;
-        const score = eventTitleSimilarity(requestedTitle, raw.title);
-        if (score > bestScore) {
-          best = raw;
-          bestScore = score;
-        }
-      }
-      if (!best || bestScore < 0.72) continue;
-
-      let sourceUrl = null;
-      if (typeof best.officialUrl === 'string' && best.officialUrl.startsWith('http')) {
-        try {
-          const official = new URL(best.officialUrl);
-          if (trustedHostname(official.hostname)) {
-            const citedExactOfficialPage = groundedSources.some(source => sameGroundedOfficialUrl(source.url, official.toString()));
-            if (citedExactOfficialPage) sourceUrl = official.toString();
-          }
-        } catch {}
-      }
-
-      // If Gemini did not emit a usable officialUrl but Google grounding cited
-      // a trusted first-party page, retain a same-domain citation as the route
-      // the user can click through. Price is accepted only when at least one
-      // trusted first-party citation exists for this grounded response.
-      const hasTrustedGrounding = Boolean(sourceUrl);
-      const price = hasTrustedGrounding && best.price != null
-        ? normaliseCostLabel(String(best.price))
-        : null;
-
-      facts.push({
-        title: requestedTitle,
-        price,
-        scope: typeof best.scope === 'string' ? best.scope.trim().slice(0, 140) : null,
-        familySuitable: hasTrustedGrounding ? (best.familySuitable === true ? true : best.familySuitable === false ? false : null) : null,
-        venueFamilyFriendly: null,
-        adultOnly: hasTrustedGrounding ? (best.adultOnly === true ? true : best.adultOnly === false ? false : null) : null,
-        familyReason: typeof best.familyReason === 'string' ? best.familyReason.trim().slice(0, 180) : null,
-        sourceUrl,
-        groundedByGoogle: hasTrustedGrounding
-      });
-    }
-
-    return {
-      facts,
-      sources: groundedSources.slice(0, 10),
-      available: true
-    };
-  } catch (error) {
-    console.error('Gemini Google Search request failed:', error?.message || error);
-    return { facts: [], sources: [], available: true };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-function isSpecificEventDetailUrl(urlValue) {
-  try {
-    const u = new URL(String(urlValue || ''));
-    if (!trustedHostname(u.hostname)) return false;
-    const host = u.hostname.toLowerCase().replace(/^www\./, '');
-    if (host === 'wxwakefield.co.uk') {
-      return /\/whats-on\/details/i.test(u.pathname) && Boolean(u.searchParams.get('event'));
-    }
-    if (host === 'experiencewakefield.co.uk') {
-      return /\/event\/[^/]+\/?$/i.test(u.pathname);
-    }
-    if (host === 'nationaltrust.org.uk') {
-      return /\/events\//i.test(u.pathname);
-    }
-    if (host === 'farmercopleys.co.uk') {
-      return /event|pumpkin|festival/i.test(`${u.pathname}${u.search}`);
-    }
-    if (host === 'ysp.org.uk') {
-      return /olivia-bax|double-take|the-weston/i.test(`${u.pathname}${u.search}`);
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-async function fetchResolvedFactDetailContexts(facts = []) {
-  const selected = [];
-  const seen = new Set();
-  for (const fact of facts || []) {
-    if (!fact || typeof fact.title !== 'string' || !isSpecificEventDetailUrl(fact.sourceUrl)) continue;
-    const key = `${normaliseEventToken(fact.title)}|${fact.sourceUrl}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    selected.push({ title: fact.title, url: fact.sourceUrl });
-  }
-
-  const fetched = await Promise.all(selected.slice(0, 10).map(async item => {
-    const ctx = await fetchSimpleFirstPartyContext(item.url, item.title);
-    if (!ctx) return null;
-    // Identity check: never accept a discovered URL unless the fetched page
-    // actually contains the requested event title.
-    if (!pageContainsEventTitle(ctx.text, item.title)) return null;
-    return {
-      ...ctx,
-      requestedTitle: item.title,
-      matchedUrl: item.url,
-      matchedLabel: item.title,
-      matchedSlug: eventSlugFromUrl(item.url),
-      matchScore: 1
-    };
-  }));
-
-  return fetched.filter(Boolean);
-}
-
-function mergeEventDetailContexts(...groups) {
-  const out = [];
-  const seen = new Set();
-  for (const group of groups) {
-    for (const item of group || []) {
-      if (!item?.text) continue;
-      const key = `${normaliseEventToken(item.requestedTitle || item.source?.title || '')}|${item.matchedUrl || item.source?.url || ''}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push(item);
-    }
-  }
-  return out;
-}
-
 function eventCostWasRequested(messages) {
   const context = recentUserContext(messages, 4);
   return /\b(price|prices|cost|costs|how much|ticket price|entry fee|admission|free)\b/i.test(context);
-}
-
-
-function eventTitleSimilarity(a, b) {
-  const aSet = new Set(eventTokens(a));
-  const bSet = new Set(eventTokens(b));
-  if (!aSet.size || !bSet.size) return 0;
-  let overlap = 0;
-  for (const token of aSet) if (bSet.has(token)) overlap += 1;
-  return overlap / Math.max(aSet.size, bSet.size);
-}
-
-function normaliseCostLabel(value) {
-  const raw = String(value || '').trim();
-  if (!raw) return null;
-  if (/^free$/i.test(raw) || /^£\s*0(?:[.,]00)?$/i.test(raw)) return 'Free';
-  const paid = raw.match(/£\s*\d+(?:[.,]\d{1,2})?/i);
-  return paid ? paid[0].replace(/\s+/g, '') : null;
-}
-
-function eventHeaderText(text, maxChars = 2200) {
-  const raw = String(text || '').slice(0, maxChars);
-  const aboutIndex = raw.search(/\bAbout\b/i);
-  return aboutIndex > 0 ? raw.slice(0, aboutIndex) : raw;
-}
-
-function pageContainsEventTitle(text, title) {
-  if (!text || !title) return false;
-  const regex = exactishEventTitleRegex(title, false);
-  return Boolean(regex && regex.test(String(text)));
-}
-
-function detailContextMatchesTitle(title, item) {
-  if (!title || !item?.text) return false;
-  const requested = item.requestedTitle || '';
-  if (requested && eventTitleSimilarity(title, requested) < 0.8) return false;
-
-  // This is already a fetched, specific first-party event page. Identity only
-  // needs the requested title to appear somewhere on that page. Do NOT choose a
-  // "best" title occurrence and then parse a nearby window; that was the source
-  // of price/free leakage on WX detail pages.
-  return pageContainsEventTitle(item.text, title);
-}
-
-function sourceHostFromDetail(item) {
-  try {
-    return new URL(item?.matchedUrl || item?.source?.url || '').hostname.toLowerCase().replace(/^www\./, '');
-  } catch {
-    return '';
-  }
-}
-
-function textFromEventTitle(text, title, maxChars = 7000) {
-  const source = String(text || '');
-  const regex = exactishEventTitleRegex(title, false);
-  if (!regex) return source.slice(0, maxChars);
-  const match = regex.exec(source);
-  if (!match) return source.slice(0, maxChars);
-  return source.slice(match.index, Math.min(source.length, match.index + maxChars));
-}
-
-function explicitCostFromDetailContext(title, eventDetailContexts = []) {
-  const candidates = eventDetailContexts.filter(item => detailContextMatchesTitle(title, item));
-  if (!candidates.length) return null;
-
-  candidates.sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || b.source?.title || '') - eventTitleSimilarity(title, a.requestedTitle || a.source?.title || ''));
-
-  for (const candidate of candidates) {
-    const fullText = String(candidate.text || '');
-    const eventText = textFromEventTitle(fullText, title, 8000);
-    const host = sourceHostFromDetail(candidate);
-
-    // WX event detail pages expose an explicit PRICE field and, for ticketed
-    // events, a General Admission field. These always outrank concessions such
-    // as Registered Carers: Free or expired early-bird prices.
-    if (host === 'wxwakefield.co.uk') {
-      const generalAdmission = fullText.match(/\bGeneral Admission\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
-      if (generalAdmission) return normaliseCostLabel(generalAdmission[1]);
-
-      const standardTicket = fullText.match(/\b(?:Standard|Adult)\s+(?:Admission|Ticket)\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
-      if (standardTicket) return normaliseCostLabel(standardTicket[1]);
-
-      const explicitPrice = fullText.match(/\bPRICE\s*:\s*(?:From\s+)?(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
-      if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
-
-      // No generic FREE fallback on a WX detail page. A carer concession or a
-      // navigation category must never turn a paid event into a free event.
-      continue;
-    }
-
-    // Experience Wakefield event pages put the public price in the event header
-    // as an Image: Tag value. Read that exact field instead of the first random
-    // currency/free token on the page.
-    if (host === 'experiencewakefield.co.uk') {
-      const tagPrice = eventText.match(/Image:\s*Tag\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)(?!\s*-)/i);
-      if (tagPrice) return normaliseCostLabel(tagPrice[1]);
-
-      const explicitPrice = eventText.match(/\b(?:PRICE|Price)\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i);
-      if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
-
-      // A simple single public price in the event header is acceptable. Ignore
-      // mixed ranges such as £0.00 - £9.50; those require venue-scope logic.
-      const range = eventText.match(/£\s*\d+(?:[.,]\d{1,2})?\s*-\s*£\s*\d+(?:[.,]\d{1,2})?/i);
-      if (!range) {
-        const firstPaid = eventText.match(/£\s*[1-9]\d*(?:[.,]\d{1,2})?/i);
-        if (firstPaid) return normaliseCostLabel(firstPaid[0]);
-      }
-      if (/\bFree\s+(?:event|entry)\b/i.test(eventText.slice(0, 2200))) return 'Free';
-      continue;
-    }
-
-    // National Trust event pages expose a Prices section with a ticket value.
-    if (host === 'nationaltrust.org.uk') {
-      const pricesSection = fullText.match(/\bPrices\b[\s\S]{0,1400}?(£\s*\d+(?:[.,]\d{1,2})?)/i);
-      if (pricesSection) return normaliseCostLabel(pricesSection[1]);
-      continue;
-    }
-
-    // Farmer Copleys may occasionally resolve directly to its own event page.
-    // Accept only an explicit admission/ticket price, never a generic FREE word.
-    if (host === 'farmercopleys.co.uk') {
-      const admission = eventText.match(/\b(?:entry|admission|ticket(?:s)?)\b[\s\S]{0,120}?(£\s*\d+(?:[.,]\d{1,2})?)/i);
-      if (admission) return normaliseCostLabel(admission[1]);
-    }
-  }
-
-  return null;
-}
-
-function titleTokenRegex(title) {
-  const tokens = eventTokens(title).slice(0, 7);
-  if (!tokens.length) return null;
-  const escaped = tokens.map(token => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  return new RegExp(escaped.join('[\\s\\S]{0,80}?'), 'i');
-}
-
-function sourceWindowAfterTitle(sourceText, title, maxChars = 900) {
-  return exactEventRecordWindow(sourceText, title, maxChars);
-}
-
-function costFromAggregateSource(title, sourceText) {
-  const window = sourceWindowAfterTitle(sourceText, title, 650);
-  if (!window) return null;
-
-  // This window begins at the exact event title, so category/navigation labels
-  // before the event cannot be mistaken for its admission status.
-  const explicitPrice = /\bPRICE\s*:\s*(Free|£\s*\d+(?:[.,]\d{1,2})?)/i.exec(window);
-  if (explicitPrice) return normaliseCostLabel(explicitPrice[1]);
-
-  const paid = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.exec(window);
-  const free = /\bFREE\b|\bFree\b/i.exec(window);
-  if (!paid && !free) return null;
-  if (paid && free) return paid.index <= free.index ? normaliseCostLabel(paid[0]) : 'Free';
-  return paid ? normaliseCostLabel(paid[0]) : 'Free';
-}
-
-function verifiedEventCostForTitle(title, evidence = {}) {
-  if (!title) return null;
-
-  // High-risk price/free answers use only Google-grounded facts that cite the
-  // exact first-party official page for that event. If that verification is
-  // missing, we fail closed and send the user to the official link instead.
-  const grounded = bestResolvedEventFact(title, evidence.searchFacts || []);
-  if (grounded?.groundedByGoogle && grounded?.sourceUrl && grounded?.price) {
-    if (/olivia bax|double take/i.test(title) && /^Free$/i.test(grounded.price) && /weston/i.test(grounded.scope || '')) {
-      return 'Free at The Weston gallery';
-    }
-    return grounded.price;
-  }
-
-  // One safe first-party exception: The Weston publishes an explicit venue-level
-  // free-entry rule and the Olivia Bax exhibition is explicitly located there.
-  if (/olivia bax|double take/i.test(title)) {
-    const weston = String(evidence.freeVenueContexts?.yspWeston?.text || '');
-    const westonFree = /the weston/i.test(weston) && /(?:free to enter|free entry|free to enter without purchasing a ticket|gallery, restaurant and shop are free to enter)/i.test(weston);
-    const oliviaDetails = (evidence.eventDetailContexts || []).filter(item => detailContextMatchesTitle(title, item));
-    const oliviaInWeston = oliviaDetails.some(item => /\bThe Weston(?: Gallery)?\b/i.test(String(item.text || '')));
-    const westonListsOlivia = pageContainsEventTitle(weston, title);
-    if (westonFree && (oliviaInWeston || westonListsOlivia)) return 'Free at The Weston gallery';
-  }
-
-  return null;
-}
-
-function officialEventLinkForTitle(title, evidence = {}) {
-  const grounded = bestResolvedEventFact(title, evidence.searchFacts || []);
-  if (grounded?.sourceUrl) return grounded.sourceUrl;
-
-  const detail = eventDetailForTitle(title, evidence.eventDetailContexts || []);
-  if (detail?.source?.url) return detail.source.url;
-
-  if (/olivia bax|double take/i.test(title) && evidence.freeVenueContexts?.yspWeston?.source?.url) {
-    return evidence.freeVenueContexts.yspWeston.source.url;
-  }
-
-  const wxText = String(evidence.wxContext?.text || '');
-  if (pageContainsEventTitle(wxText, title) && evidence.wxContext?.source?.url) {
-    return evidence.wxContext.source.url;
-  }
-
-  const experienceText = String(evidence.experienceEventsContext?.text || '');
-  if (pageContainsEventTitle(experienceText, title) && evidence.experienceEventsContext?.source?.url) {
-    return evidence.experienceEventsContext.source.url;
-  }
-
-  return null;
-}
-
-function officialEventLinkLabel(url) {
-  if (!url) return 'Official event page ↗';
-  try {
-    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
-    if (host === 'wxwakefield.co.uk' || host.endsWith('.wxwakefield.co.uk')) return 'WX event page ↗';
-    if (host === 'experiencewakefield.co.uk' || host.endsWith('.experiencewakefield.co.uk')) return 'Experience Wakefield event page ↗';
-    if (host === 'farmercopleys.co.uk' || host.endsWith('.farmercopleys.co.uk')) return 'Farmer Copleys event page ↗';
-    if (host === 'ysp.org.uk' || host.endsWith('.ysp.org.uk')) return 'YSP event page ↗';
-    if (host === 'nationaltrust.org.uk' || host.endsWith('.nationaltrust.org.uk')) return 'National Trust event page ↗';
-  } catch {}
-  return 'Official event page ↗';
-}
-
-function markdownOfficialLink(url, label = null) {
-  if (!url) return '';
-  return `[${label || officialEventLinkLabel(url)}](${url})`;
-}
-
-function buildVerifiedEventCostFollowUp(messages, evidence = {}) {
-  if (!isEventCostFollowUp(messages)) return '';
-  const titles = recentAssistantEventCandidates(messages);
-  if (!titles.length) return '';
-
-  return titles.map(title => {
-    const cost = verifiedEventCostForTitle(title, evidence);
-    if (cost) return `**${title}** — ${cost}`;
-
-    const officialUrl = officialEventLinkForTitle(title, evidence);
-    if (officialUrl) {
-      return `**${title}**\nCurrent price not confirmed.\n${markdownOfficialLink(officialUrl)}`;
-    }
-    return `**${title}**\nCurrent price not confirmed.`;
-  }).join('\n\n');
-}
-
-function buildVerifiedFreeEventFollowUp(messages, evidence = {}) {
-  if (!isFreeCurrentLeisureQuery(messages)) return '';
-  const titles = recentAssistantEventCandidates(messages);
-  const free = [];
-  const unverified = [];
-
-  for (const title of titles) {
-    const cost = verifiedEventCostForTitle(title, evidence);
-    if (cost && /^Free\b/i.test(cost)) {
-      if (/^Free at The Weston gallery$/i.test(cost)) {
-        free.push(`**${title}** — Free at The Weston gallery. A ticket is required if you also want to explore the wider YSP grounds and galleries.`);
-      } else {
-        free.push(`**${title}** — Free.`);
-      }
-      continue;
-    }
-
-    if (!cost) {
-      const officialUrl = officialEventLinkForTitle(title, evidence);
-      if (officialUrl) {
-        unverified.push(`**${title}**\nFree/paid status not confirmed.\n${markdownOfficialLink(officialUrl)}`);
-      }
-    }
-  }
-
-  const sections = [];
-  if (free.length) sections.push(`The free options I could verify are:\n\n${free.join('\n\n')}`);
-  else sections.push('I could not verify any generally free events from that list.');
-
-  if (unverified.length) {
-    sections.push(`I couldn't confirm the free/paid status of these, so here are the official pages rather than guessing:\n\n${unverified.join('\n\n')}`);
-  }
-
-  return sections.join('\n\n');
-}
-
-function eventDetailForTitle(title, eventDetailContexts = []) {
-  const matches = eventDetailContexts.filter(item => detailContextMatchesTitle(title, item));
-  if (!matches.length) return null;
-  matches.sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || '') - eventTitleSimilarity(title, a.requestedTitle || ''));
-  return matches[0];
-}
-
-function explicitFamilyEvidenceForTitle(title, evidence = {}) {
-  const details = (evidence.eventDetailContexts || [])
-    .filter(item => detailContextMatchesTitle(title, item))
-    .sort((a, b) => eventTitleSimilarity(title, b.requestedTitle || b.source?.title || '') - eventTitleSimilarity(title, a.requestedTitle || a.source?.title || ''));
-
-  for (const detail of details) {
-    if (!detail?.text) continue;
-    const fullText = String(detail.text || '');
-    const eventText = textFromEventTitle(fullText, title, 8000);
-    const host = sourceHostFromDetail(detail);
-
-    if (host === 'wxwakefield.co.uk') {
-      const ageMatch = fullText.match(/AGE RANGE\s*:?([\s\S]{0,500}?)(?:Tickets|Ticketing|Book Tickets|DATE:|Start time:|PRICE:|About|$)/i);
-      const ageRange = ageMatch?.[1] || '';
-      const hasChildren = /\bChildren\b/i.test(ageRange);
-      const hasYoungPeople = /\bYoung People\b/i.test(ageRange);
-      const hasFamilies = /\bFamilies\b/i.test(ageRange);
-      if (hasChildren || hasYoungPeople || hasFamilies) {
-        const labels = [];
-        if (hasChildren) labels.push('Children');
-        if (hasYoungPeople) labels.push('Young People');
-        if (hasFamilies) labels.push('Families');
-        return `listed for ${labels.join(', ')}`;
-      }
-      // WX adults-only pages should not inherit the site's Family navigation.
-      if (/\bStrictly over 18s only\b|\bAGE RANGE\s*:\s*Adults\b/i.test(fullText)) return null;
-      continue;
-    }
-
-    if (host === 'experiencewakefield.co.uk') {
-      if (/\bFamily friendly\b/i.test(eventText) || /\bActivity\s+Families\b/i.test(eventText)) {
-        return 'explicitly listed as family-friendly';
-      }
-      continue;
-    }
-
-    if (host === 'nationaltrust.org.uk') {
-      const childSuitability = fullText.match(/Suitability for children[\s\S]{0,320}?Suitable for ages\s*([^\n.]+)/i);
-      if (childSuitability) {
-        const ageText = childSuitability[1].trim().replace(/\s+/g, ' ');
-        return `suitable for ages ${ageText}`;
-      }
-      continue;
-    }
-  }
-
-  // Family category pages are acceptable as a fallback only when the exact
-  // event title appears on that dedicated family listing.
-  const experienceFamilies = String(evidence.familyVenueContexts?.experienceFamilies?.text || '');
-  if (pageContainsEventTitle(experienceFamilies, title)) {
-    return "listed by Experience Wakefield in its family-friendly events";
-  }
-
-  const wxFamily = String(evidence.familyVenueContexts?.wxFamily?.text || '');
-  if (pageContainsEventTitle(wxFamily, title)) {
-    return "listed by Wakefield Exchange in its Family events";
-  }
-
-  return null;
-}
-
-function buildVerifiedFamilyEventFollowUp(messages, evidence = {}) {
-  if (!isEventFamilyFollowUp(messages)) return '';
-  const titles = recentAssistantEventCandidates(messages);
-  const family = [];
-
-  for (const title of titles) {
-    let reason = explicitFamilyEvidenceForTitle(title, evidence);
-    if (!reason) {
-      const grounded = bestResolvedEventFact(title, evidence.searchFacts || []);
-      if (grounded?.groundedByGoogle && grounded.familySuitable === true && grounded.adultOnly !== true) {
-        reason = grounded.familyReason || 'explicitly listed as suitable for children or families';
-      }
-    }
-    if (!reason) continue;
-    family.push(`${title} — ${reason}.`);
-  }
-
-  const yspTitle = titles.find(title => /olivia bax|double take/i.test(title));
-  const yspResolved = yspTitle ? bestResolvedEventFact(yspTitle, evidence.searchFacts || []) : null;
-  const yspVenueFamily = Boolean(evidence.familyVenueContexts?.yspFamily?.text) || yspResolved?.venueFamilyFriendly === true;
-  const yspNote = yspTitle && yspVenueFamily && !family.some(line => /olivia bax|double take/i.test(line))
-    ? `\n\n${yspTitle} is at a family-friendly venue, but the exhibition itself is not specifically labelled as a children's/family event in the evidence I checked.`
-    : '';
-
-  if (!family.length) {
-    return yspNote.trim() || 'I could not verify any of those events as specifically aimed at children or families.';
-  }
-
-  return `The clearest family options from that list are:\n\n${family.join('\n\n')}${yspNote}`;
 }
 
 function stripUnrequestedEventPrices(reply) {
@@ -2193,76 +1225,99 @@ function stripUnrequestedEventPrices(reply) {
     .join('\n');
 }
 
-
-function strictlyFilterFreeEventAnswer(reply, evidence = {}) {
-  const evidenceText = combinedEventEvidenceText(evidence);
-  if (!evidenceText) return reply;
-  const lowerEvidence = evidenceText.toLowerCase();
-  const blocks = String(reply).split(/\n\s*\n/);
-  const kept = [];
-
-  for (const block of blocks) {
-    const lines = block.split('\n');
-    let matchedEventTitle = '';
-    for (const line of lines) {
-      const candidate = eventLineTitleCandidate(line);
-      if (candidate.length >= 5 && lowerEvidence.includes(candidate.toLowerCase())) {
-        matchedEventTitle = candidate;
-        break;
-      }
-    }
-
-    if (!matchedEventTitle) {
-      kept.push(block);
-      continue;
-    }
-
-    if (eventClaimSupportedNearTitle(matchedEventTitle, { type: 'free' }, evidenceText)) {
-      kept.push(block);
-    }
-  }
-
-  return kept.join('\n\n').trim();
-}
-
 function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
-  if (!reply || !isCurrentEventsQuery(messages)) return reply;
+  if (!reply || !(isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages))) return reply;
   let out = String(reply);
 
   // Price/free status is useful when the user asks about cost. Otherwise it is
   // a high-risk changing detail and adds little to a general what's-on answer.
   // Remove it deterministically rather than trusting an aggregate listing to
   // keep each price attached to the correct event.
-  if (isEventCostFollowUp(messages)) {
-    const resolvedCosts = buildVerifiedEventCostFollowUp(messages, evidence);
-    out = resolvedCosts || stripUnsupportedEventPriceClaims(out, evidence, { markUnverified: true });
-  } else if (isFreeCurrentLeisureQuery(messages)) {
-    const resolvedFree = buildVerifiedFreeEventFollowUp(messages, evidence);
-    out = resolvedFree || strictlyFilterFreeEventAnswer(out, evidence);
-  } else if (isEventFamilyFollowUp(messages)) {
-    const resolvedFamily = buildVerifiedFamilyEventFollowUp(messages, evidence);
-    out = resolvedFamily || out;
-  } else if (!eventCostWasRequested(messages)) {
+  if (!eventCostWasRequested(messages)) {
     out = stripUnrequestedEventPrices(out);
   } else {
-    out = stripUnsupportedEventPriceClaims(out, evidence);
+    out = stripUnsupportedEventPriceClaims(out, evidence, {
+      markUnverified: isEventCostFollowUp(messages)
+    });
   }
 
-  return String(out)
-    .split('\n')
-    .map(line => line
-      .replace(/,\s*\./g, '.')
-      .replace(/\b(am|pm)\.([a-z])/gi, (_, meridiem, letter) => `${meridiem}. ${letter.toUpperCase()}`)
-      .replace(/(\d)\.([a-z])/g, (_, digit, letter) => `${digit}. ${letter.toUpperCase()}`)
-      .replace(/\s+([,.!?])/g, '$1')
-      .replace(/\s*,\s*$/g, '')
-      .trimEnd())
-    .join('\n')
+  if (isFreeCurrentLeisureQuery(messages)) {
+    // Safety net: a generic 'free' request must never surface an explicitly paid option.
+    // The semantic validator above does the main work; this catches obvious residual lines.
+    const blocks = out.split(/\n\s*\n/);
+    const kept = blocks.filter(block => {
+      const b = block.toLowerCase();
+      if (/£\s*[1-9]\d*(?:[.,]\d+)?/.test(block)) return false;
+      if (/entry\s+£\s*[1-9]/i.test(block)) return false;
+      if (/under[- ]?18s?\s+(?:are\s+)?free|members?\s+(?:are\s+)?free|residents?\s+(?:are\s+)?free/i.test(block) && !/\bfree entry for all\b/i.test(block)) return false;
+      return true;
+    });
+    out = kept.join('\n\n').trim();
+  }
+
+  return out
     .replace(/\n{3,}/g, '\n\n')
     .replace(/\.{2,}/g, '.')
+    .replace(/\s+([,.!?])/g, '$1')
     .trim();
 }
 
+
+function combinedReliabilityEvidence(evidence = {}) {
+  const parts = [];
+  if (evidence.wxContext?.text) parts.push(`WX FIRST-PARTY:\n${evidence.wxContext.text}`);
+  if (evidence.experienceEventsContext?.text) parts.push(`EXPERIENCE WAKEFIELD FIRST-PARTY:\n${evidence.experienceEventsContext.text}`);
+  if (evidence.cathedralContext?.text) parts.push(`WAKEFIELD CATHEDRAL FIRST-PARTY:\n${evidence.cathedralContext.text}`);
+  for (const item of evidence.searchEvidence || []) {
+    if (!item?.url || !item?.text) continue;
+    let trusted = false;
+    try { trusted = trustedHostname(new URL(item.url).hostname); } catch {}
+    if (!trusted) continue;
+    parts.push(`TRUSTED LIVE SOURCE:\n${item.title || item.url}\n${item.url}\n${item.text}`);
+  }
+  return parts.join('\n\n---\n\n');
+}
+
+async function validateReliabilityAnswer(reply, messages, evidence = {}) {
+  if (!reply || !needsReliabilityValidation(messages)) return reply;
+  const trustedEvidence = combinedReliabilityEvidence(evidence);
+  if (!trustedEvidence) return reply;
+
+  const context = recentUserContext(messages, 5);
+  const validationSystem = `You are the final reliability editor for Ask Wakefield. Rewrite the draft using ONLY the trusted evidence supplied below for changing, local, property-specific, accessibility, event, parking, closure and club-schedule facts. Keep stable conversational wording where it does not make a factual claim. Do not invent or infer missing facts.
+
+${londonContext()}
+USER REQUEST CONTEXT: ${context}
+
+Rules:
+- MULTI-PART: answer every distinct part. If one part is not verified, say so while still answering the verified parts.
+- APPROXIMATE LOCATION: "near", "close to", "around" and a landmark do NOT establish the user's exact property or postcode. Never claim a property address/postcode unless the user supplied it or the evidence ties the exact property to the user.
+- BINS / PROPERTY SERVICES: exact collection dates require the actual property. If the exact property is missing, ask for full postcode or house number + street. Do not replace this with a generic fortnightly schedule.
+- ACCESSIBILITY: do not call an itinerary fully wheelchair accessible unless the evidence supports the relevant venue access AND the practical connection between stops. If the connection is unverified, say so. Do not transfer accessibility features between venues.
+- NAMED EVENTS: prefer the event-specific official page. Lead with the exact requested start time/date/route when verified. Do not say a detail is unavailable if it appears in the trusted evidence.
+- PARKING / CLOSURES: parking availability does not prove a route avoids road closures. Never guarantee closure avoidance without explicit current closure-route evidence.
+- CLUBS / ACTIVITIES: the activity type, day and time must all match. Do not substitute walking for running or Sunday for Saturday. A parkrun is a running event, not a traditional running club; label it as a close alternative if appropriate.
+- Do not add a new named venue, event, club, address, postcode, timetable or current fact unless supported by the evidence.
+- Keep the answer concise, useful and natural. Return only the corrected user-facing answer, with no audit notes or FINAL_RESPONSE marker.
+
+TRUSTED EVIDENCE:\n${trustedEvidence}`;
+
+  const body = {
+    model: MODEL,
+    max_tokens: 950,
+    system: validationSystem,
+    messages: [{ role: 'user', content: `Validate and rewrite this draft:\n\n${reply}` }]
+  };
+
+  try {
+    const { response, data } = await callAnthropic(body);
+    if (!response.ok) return reply;
+    const corrected = extractAnswer(data).reply?.trim();
+    return corrected || reply;
+  } catch {
+    return reply;
+  }
+}
 
 function foodAnswerNeedsValidation(reply, messages) {
   if (!reply || !isFoodDecisionQuery(messages)) return false;
@@ -2274,18 +1329,6 @@ function foodAnswerNeedsValidation(reply, messages) {
 
   const risky = /\b(short walk|gentle walk|quickest|fastest|best bet|in no time|five more minutes|worth the detour|worth the drive|a mile or so|status (?:was |is )?not confirmed|wasn'?t confirmed|was not confirmed|couldn'?t confirm|could not confirm|exact current status[^.]{0,40}(?:unclear|not confirmed)|you may have just missed|missed the window)\b/i;
   return risky.test(reply);
-}
-
-
-function stripGenericTrailingFollowUp(reply) {
-  const text = String(reply || '').trim();
-  if (!text) return text;
-  const paragraphs = text.split(/\n\s*\n/);
-  const last = paragraphs[paragraphs.length - 1]?.trim() || '';
-  if (/^(would you|would you prefer|do you want|want me to|shall i|if you tell me|tell me if|let me know if)[\s\S]*\?$/i.test(last)) {
-    paragraphs.pop();
-  }
-  return paragraphs.join('\n\n').trim();
 }
 
 function deterministicallySanitiseFoodAnswer(reply, messages) {
@@ -2370,26 +1413,6 @@ Rules:
   }
 }
 
-function eventFollowUpSourceList({ wxContext, experienceEventsContext, cathedralContext, freeVenueContexts, familyVenueContexts, eventDetailContexts } = {}) {
-  const sourceMap = new Map();
-  for (const item of eventDetailContexts || []) {
-    if (item?.source?.url) sourceMap.set(item.source.url, item.source);
-  }
-  for (const item of [
-    wxContext,
-    experienceEventsContext,
-    cathedralContext,
-    freeVenueContexts?.yspWeston,
-    freeVenueContexts?.ysp,
-    familyVenueContexts?.yspFamily,
-    familyVenueContexts?.experienceFamilies,
-    familyVenueContexts?.wxFamily
-  ]) {
-    if (item?.source?.url) sourceMap.set(item.source.url, item.source);
-  }
-  return Array.from(sourceMap.values()).slice(0, 5);
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -2423,89 +1446,6 @@ export default async function handler(req, res) {
 
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
 
-  // Price/free/family follow-ups are handled separately from the general event
-  // listing pipeline. First use current first-party pages. Gemini Google Search
-  // grounding is the verification fallback when those pages do not expose a
-  // usable changing fact. If the fact still cannot be verified, return the most
-  // relevant official link instead of guessing.
-  const highRiskEventFollowUp = isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages) || isEventFamilyFollowUp(messages);
-  if (highRiskEventFollowUp) {
-    const [wxListing, experienceListing, googleResolved, freeVenueContexts, familyVenueContexts] = await Promise.all([
-      fetchWxWhatsOnContext(),
-      fetchExperienceWakefieldEventsContext(),
-      resolveEventFactsViaGoogleSearch(messages),
-      (isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages))
-        ? fetchFreeDayVenueContexts(messages)
-        : Promise.resolve({ ysp: null, yspWeston: null, ncm: null, wxWeekly: null }),
-      isEventFamilyFollowUp(messages)
-        ? fetchFamilyVenueContexts(messages)
-        : Promise.resolve({ yspFamily: null, experienceFamilies: null, wxFamily: null })
-    ]);
-
-    // When Gemini grounding is not configured or cannot resolve an official
-    // page, retain the existing Anthropic search resolver only for URL discovery.
-    // Its claimed prices/free/family fields are not trusted.
-    const fallbackResolved = (!googleResolved.available || !(googleResolved.facts || []).some(f => f?.sourceUrl))
-      ? await resolveEventFactsViaWebSearch(messages)
-      : { facts: [], sources: [] };
-
-    const discoveryFacts = [
-      ...(googleResolved.facts || []),
-      ...(fallbackResolved.facts || [])
-    ];
-
-    const [listingDetailContexts, discoveredDetailContexts] = await Promise.all([
-      fetchRelevantEventDetailContexts(messages, [wxListing, experienceListing]),
-      fetchResolvedFactDetailContexts(discoveryFacts)
-    ]);
-
-    const eventDetailContexts = mergeEventDetailContexts(listingDetailContexts, discoveredDetailContexts);
-
-    const deterministicEvidence = {
-      wxContext: wxListing,
-      experienceEventsContext: experienceListing,
-      cathedralContext: null,
-      freeVenueContexts,
-      familyVenueContexts,
-      eventDetailContexts,
-      searchEvidence: [],
-      // Only Gemini facts backed by trusted Google-grounded first-party citations
-      // are allowed to fill a price/free/family gap. Anthropic resolver facts are
-      // URL discovery only and are deliberately excluded here.
-      searchFacts: googleResolved.facts || [],
-      googleAvailable: googleResolved.available === true
-    };
-
-    let reply = '';
-    if (isEventCostFollowUp(messages)) {
-      reply = buildVerifiedEventCostFollowUp(messages, deterministicEvidence);
-    } else if (isFreeCurrentLeisureQuery(messages)) {
-      reply = buildVerifiedFreeEventFollowUp(messages, deterministicEvidence);
-    } else {
-      reply = buildVerifiedFamilyEventFollowUp(messages, deterministicEvidence);
-    }
-
-    const sourceMap = new Map();
-    for (const item of [wxListing, experienceListing, freeVenueContexts?.ysp, freeVenueContexts?.yspWeston, familyVenueContexts?.yspFamily, familyVenueContexts?.experienceFamilies, familyVenueContexts?.wxFamily]) {
-      if (item?.source?.url) sourceMap.set(item.source.url, item.source);
-    }
-    for (const item of eventDetailContexts) {
-      if (item?.source?.url) sourceMap.set(item.source.url, item.source);
-    }
-    for (const item of googleResolved.sources || []) {
-      if (item?.url) sourceMap.set(item.url, item);
-    }
-    // Search-discovered URLs may be shown as sources only when they were
-    // successfully fetched and identity-checked above. Do not surface the
-    // resolver's unsupported claims.
-
-    return res.status(200).json({
-      reply: reply || 'I could not verify those event details from current first-party sources.',
-      sources: Array.from(sourceMap.values()).slice(0, 8),
-      live: true
-    });
-  }
-
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
@@ -2522,64 +1462,19 @@ export default async function handler(req, res) {
     wxContext = await fetchWxWhatsOnContext();
   }
 
-  const freeVenueContexts = (isFreeCurrentLeisureQuery(messages) || isEventCostFollowUp(messages))
+  const freeVenueContexts = isFreeCurrentLeisureQuery(messages)
     ? await fetchFreeDayVenueContexts(messages)
-    : { ysp: null, yspWeston: null, ncm: null, wxWeekly: null };
-
-  const familyVenueContexts = isEventFamilyFollowUp(messages)
-    ? await fetchFamilyVenueContexts(messages)
-    : { yspFamily: null, experienceFamilies: null, wxFamily: null };
-
-  const eventDetailContexts = (isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages) || isEventFamilyFollowUp(messages))
-    ? await fetchRelevantEventDetailContexts(messages, [wxContext, experienceEventsContext])
-    : [];
+    : { ysp: null, ncm: null, wxWeekly: null };
 
   const userUrlContext = await fetchTrustedUserUrlContext(messages);
-
-  // High-risk event follow-ups do not go back through the language model. Build
-  // them directly from event-bound first-party evidence so price/free/family
-  // attributes cannot migrate between events during generation or validation.
-  const deterministicEvidence = {
-    wxContext,
-    experienceEventsContext,
-    cathedralContext,
-    freeVenueContexts,
-    familyVenueContexts,
-    eventDetailContexts,
-    searchEvidence: []
-  };
-
-  let deterministicFollowUp = '';
-  if (isEventCostFollowUp(messages)) {
-    deterministicFollowUp = buildVerifiedEventCostFollowUp(messages, deterministicEvidence);
-  } else if (isFreeCurrentLeisureQuery(messages)) {
-    deterministicFollowUp = buildVerifiedFreeEventFollowUp(messages, deterministicEvidence);
-  } else if (isEventFamilyFollowUp(messages)) {
-    deterministicFollowUp = buildVerifiedFamilyEventFollowUp(messages, deterministicEvidence);
-  }
-
-  if (deterministicFollowUp) {
-    return res.status(200).json({
-      reply: deterministicFollowUp,
-      sources: eventFollowUpSourceList({
-        wxContext,
-        experienceEventsContext,
-        cathedralContext,
-        freeVenueContexts,
-        familyVenueContexts,
-        eventDetailContexts
-      }),
-      live: true
-    });
-  }
 
   // If current event snapshots are available, answer from those first-party
   // sources instead of triggering another broad search. This cuts latency and
   // prevents generic attractions/search snippets from being mixed into events.
   const hasEventSnapshots = Boolean(wxContext || experienceEventsContext || cathedralContext);
   const needsEventPriceSearch = isCurrentEventsQuery(messages) && eventCostWasRequested(messages);
-  const needsEventFamilySearch = isEventFamilyFollowUp(messages);
-  const useSearch = needsLiveSearch(messages) && (!hasEventSnapshots || needsEventPriceSearch || needsEventFamilySearch);
+  const needsSpecificEventSearch = isNamedEventDetailQuery(messages);
+  const useSearch = needsLiveSearch(messages) && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
 
   const wxDirectContext = wxContext
     ? `\n\nFIRST-PARTY WX CURRENT LISTING SNAPSHOT:\nSource: https://wxwakefield.co.uk/whats-on\nToday = ${wxContext.dates.today}. Tomorrow = ${wxContext.dates.tomorrow}. This weekend = ${wxContext.dates.saturday} and ${wxContext.dates.sunday}.\nUse only the listing text below for WX event titles, dates, times and prices. Match the user's requested date exactly. For this weekend, check BOTH dates. Do not replace exact event titles with category labels.\n\n${wxContext.text}`
@@ -2601,15 +1496,7 @@ ${cathedralContext.text}`
     : '';
 
   const currentEventsContext = isCurrentEventsQuery(messages)
-    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window or a follow-up to a current-event answer. Treat the supplied FIRST-PARTY event snapshots as the authority for event identity/date/time claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Start directly with the date/list rather than vague promotional lead-ins such as 'a strong mix', 'a good mix' or 'plenty going on'. Do not tell the user that an unverified venue/event might be open or worth checking. ${isEventCostFollowUp(messages) ? 'PRICE FOLLOW-UP: Resolve "those/them/they" from the recent assistant answer. The user wants the current price for EVERY event previously listed, unless they have narrowed the set. Search current trusted first-party event/detail pages for each named event when the supplied aggregate snapshot does not show its price. Return every event with either an explicitly verified price/free status or the words "I couldn\'t verify the current price." Never leave a blank price, a dangling dash, or infer free entry from missing price information.' : ''} ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
-    : '';
-
-  const eventDetailDirectContext = eventDetailContexts.length
-    ? `\n\nFIRST-PARTY EVENT DETAIL PAGES:\n${eventDetailContexts.map(item => `Source: ${item.source?.url || ''}\n${item.text}`).join('\n\n---\n\n')}\nUse these detail pages as the strongest evidence for price, age range, booking and event-specific family suitability.`
-    : '';
-
-  const familyDirectContext = isEventFamilyFollowUp(messages)
-    ? `\n\nFAMILY SUITABILITY MODE: Filter the events from the recent answer rather than inventing a fresh list. A specific event is family/child-suitable only when its own detail page or current source explicitly gives a Family/Children/Young People age range/category or equivalent wording. Venue-level family guidance may support a softer statement such as "the venue is family-friendly, though this exhibition is not specifically billed as a children's event". Never infer child suitability from outdoor space, colourful artwork, popularity or a venue merely having families present. Adults-only events must be excluded.\n${familyVenueContexts.yspFamily?.text ? `YSP FAMILY GUIDANCE:\n${familyVenueContexts.yspFamily.text}\n` : ''}${familyVenueContexts.experienceFamilies?.text ? `EXPERIENCE WAKEFIELD FAMILY GUIDANCE:\n${familyVenueContexts.experienceFamilies.text}\n` : ''}${familyVenueContexts.wxFamily?.text ? `WX FAMILY EVENTS:\n${familyVenueContexts.wxFamily.text}` : ''}`
+    ? `\n\nCURRENT EVENTS MODE: The user is asking about a current date/window or a follow-up to a current-event answer. Treat the supplied FIRST-PARTY event snapshots as the authority for event identity/date/time claims and ignore static curated knowledge for deciding what is happening. Give a compact verified shortlist; fewer results are better than padding. For EVERY named event require: (1) exact published event title, (2) published date/session that explicitly covers the requested date, (3) named venue/location, (4) published time when available, and (5) the published price/free status exactly as shown when you mention price. Cross-check title/date/time/price as one record before writing it. Do not invent a generic event name from tags/categories. A broad date range does NOT automatically mean a recurring walk, class, concert or session happens every day in that range; require an exact session date or an explicit recurrence schedule that covers the requested date. Continuous exhibitions/festivals may use a published continuous date range only when the source clearly presents them as continuous AND current evidence confirms the relevant venue/gallery is open on the requested weekday/date. A date range alone is not enough. For TONIGHT, only include verified scheduled events whose published date is exactly TODAY and whose time overlaps 17:00 onward and has not ended. Do not include a Friday event in a Monday answer merely because it appears in the same listing snapshot. If you cannot verify a scheduled event tonight, say that plainly; DO NOT substitute leisure-centre classes, restaurants, pubs, ordinary venue openings or generic attractions. For THIS WEEKEND, inspect BOTH mapped Saturday and Sunday and preserve exact event titles. Respect the user's area literally. Only call something free, ticketed, family-friendly, accessible, sold out or bookable when the source says so. Strip promotional adjectives and copied marketing language. Do not tell the user that an unverified venue/event might be open or worth checking. ${isEventCostFollowUp(messages) ? 'PRICE FOLLOW-UP: Resolve "those/them/they" from the recent assistant answer. The user wants the current price for EVERY event previously listed, unless they have narrowed the set. Search current trusted first-party event/detail pages for each named event when the supplied aggregate snapshot does not show its price. Return every event with either an explicitly verified price/free status or the words "I couldn\'t verify the current price." Never leave a blank price, a dangling dash, or infer free entry from missing price information.' : ''} ${isFreeCurrentLeisureQuery(messages) ? 'FREE-ONLY REQUEST: Every option named must be explicitly marked Free/FREE/£0 in the supplied current evidence for that exact event/activity and must actually run or be accessible on the requested date. Missing price information does not mean free. Do not treat concession-only free entry (for example under-18s, members or residents) as generally free unless the user said they qualify. Recurring activities must match the requested weekday exactly: an "Every Wednesday" activity cannot appear for Tuesday. Venue closure days override long-running exhibition dates. Do not list a place and then tell the user to check its opening hours.' : ''} End with at most one short narrowing question if useful.`
     : '';
 
   const userProvidedContext = userUrlContext
@@ -2636,6 +1523,22 @@ ${cathedralContext.text}`
     ? `\n\nWAKEFIELD BUS STATION FOOD ANCHOR: The user has explicitly anchored the request at Wakefield Bus Station. First-party Greggs knowledge identifies Greggs Wakefield, U1 Wakefield Bus Station, Marsh Way, WF1 3AQ. For a sandwich-and-coffee / grab-and-go request, verify that exact branch first when live search is available. If verified, describe it as being at the bus station and therefore the most convenient LOCATION-WISE option. Do not claim it is the fastest by queue/service time. Do not say Greggs is merely a town-centre branch or that it is probably at the station. Do not list Parkside Sandwich Bar as a bus-station-area option. Only add alternatives when you can identify their exact address/area; do not invent walking times or call them nearby.`
     : '';
 
+  const accessibilityContext = isAccessibilityItineraryQuery(messages)
+    ? `\n\nACCESSIBILITY ITINERARY MODE: Treat "fully wheelchair accessible" as a verification claim, not a writing style. Search first-party access pages for each named stop. Verify step-free entry, accessible toilets/Changing Places and accessible parking where relevant. Also verify the practical connection between stops when the itinerary depends on moving between them. If you cannot verify the connection, say that clearly and do not label the whole itinerary fully accessible. Prefer a smaller number of well-supported stops over a longer speculative itinerary. Do not move an access feature from one venue to another.`
+    : '';
+
+  const namedEventDetailContext = isNamedEventDetailQuery(messages)
+    ? `\n\nNAMED EVENT DETAIL MODE: The user has named a specific event and wants concrete operational detail. Use live web search even if an aggregate events snapshot exists. Search the event-specific official Experience Wakefield or organiser page first, then official Council/traffic sources for closures. Answer the exact requested event time/date/route first. Keep parking and road-closure claims separate. A recommended car park is NOT proof that a route avoids closures. If the final closure plan cannot be verified, say so plainly instead of guessing.`
+    : '';
+
+  const propertyServiceContext = isPropertySpecificCouncilQuery(messages)
+    ? `\n\nPROPERTY-SPECIFIC COUNCIL MODE: Do not infer an exact property or postcode from a nearby landmark. ${hasApproximateLocationOnly(messages) ? 'The user has supplied only an approximate location. State that this is not enough to identify the property and ask for the full postcode or house number + street for an exact bin collection lookup. Do not claim the landmark postcode belongs to the rental.' : 'Use the official property-specific result when an exact address/postcode is available.'} If the question also asks about another local activity, answer that second part independently rather than dropping it.`
+    : '';
+
+  const timedActivityContext = isTimedLocalActivityQuery(messages)
+    ? `\n\nTIMED LOCAL ACTIVITY MODE: The requested activity, day and time are hard constraints. Search current official/first-party club or event information. Never offer a Sunday session as the answer to Saturday morning, and never replace running with walking. If the closest verified option is parkrun, say it is a free weekly running event rather than a traditional running club. If no exact independent running-club session is verified, say so and then offer the clearly labelled closest alternative.`
+    : '';
+
   const freeVenueDirectContext = isFreeCurrentLeisureQuery(messages)
     ? `
 
@@ -2650,7 +1553,7 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${familyDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -2667,7 +1570,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: (isEventCostFollowUp(messages) || isEventFamilyFollowUp(messages)) ? 8 : (isCurrentEventsQuery(messages) ? 5 : 7),
+      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isAccessibilityItineraryQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 9 : (isCurrentEventsQuery(messages) ? 5 : 7),
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',
@@ -2701,13 +1604,10 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     const { reply, sources, searchEvidence, searched } = extractAnswer(data);
 
     const mergedSourceMap = new Map();
-    for (const detailContext of eventDetailContexts) {
-      if (detailContext?.source?.url) mergedSourceMap.set(detailContext.source.url, detailContext.source);
-    }
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);
     if (experienceEventsContext?.source?.url) mergedSourceMap.set(experienceEventsContext.source.url, experienceEventsContext.source);
     if (cathedralContext?.source?.url) mergedSourceMap.set(cathedralContext.source.url, cathedralContext.source);
-    for (const extraContext of [freeVenueContexts?.yspWeston, freeVenueContexts?.ysp, freeVenueContexts?.ncm, freeVenueContexts?.wxWeekly, familyVenueContexts?.yspFamily, familyVenueContexts?.experienceFamilies]) {
+    for (const extraContext of [freeVenueContexts?.ysp, freeVenueContexts?.ncm, freeVenueContexts?.wxWeekly]) {
       if (extraContext?.source?.url) mergedSourceMap.set(extraContext.source.url, extraContext.source);
     }
     for (const source of userUrlContext?.sources || []) {
@@ -2731,8 +1631,6 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       experienceEventsContext,
       cathedralContext,
       freeVenueContexts,
-      familyVenueContexts,
-      eventDetailContexts,
       searchEvidence
     });
     const eventSafeReply = deterministicallySanitiseEventAnswer(eventValidatedReply, messages, {
@@ -2740,18 +1638,21 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       experienceEventsContext,
       cathedralContext,
       freeVenueContexts,
-      familyVenueContexts,
-      eventDetailContexts,
       searchEvidence
     });
-    const validatedReply = await validateFoodAnswer(eventSafeReply, messages);
+    const reliabilityValidatedReply = await validateReliabilityAnswer(eventSafeReply, messages, {
+      wxContext,
+      experienceEventsContext,
+      cathedralContext,
+      searchEvidence
+    });
+    const validatedReply = await validateFoodAnswer(reliabilityValidatedReply, messages);
     const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);
-    const finalReply = stripGenericTrailingFollowUp(safeReply);
 
     return res.status(200).json({
-      reply: finalReply || "I'm sorry, I couldn't generate a response. Please try again.",
+      reply: safeReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: mergedSources,
-      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.yspWeston) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly) || Boolean(familyVenueContexts?.yspFamily) || Boolean(familyVenueContexts?.experienceFamilies) || Boolean(familyVenueContexts?.wxFamily) || eventDetailContexts.length > 0
+      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
     });
   } catch (error) {
     console.error('Handler error:', error);

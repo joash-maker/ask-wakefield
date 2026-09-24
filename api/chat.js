@@ -43,8 +43,12 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **HARD CONSTRAINT MATCHING:** Treat explicit user constraints as hard filters: day, time-of-day, age, activity type, dietary need, dog policy, accessibility, independence/chain preference and "open now" status. Do not silently relax one constraint to make the answer easier. A near-match may be offered only after clearly saying it does not meet the exact request.
 - **COMPLEX DAY-PLAN DEGRADATION:** For a multi-constraint day plan, answer the verified parts even if one operational requirement cannot be guaranteed. Do not timeout or abandon the whole itinerary merely because road-closure-safe parking, an exact route, or another single detail is unavailable. State the unresolved constraint clearly and continue with a smaller evidence-backed plan.
 - **OPEN-NOW BUSINESS ACCURACY:** For pharmacies, retailers and other non-food businesses, shopping-centre opening hours do not prove the individual business is open. A Boots store's general retail hours do not prove the pharmacy counter is open. Verify the exact branch/service hours from the business's own current page when possible. Never call an option the nearest/closest unless distance or route evidence supports that relationship.
-- **PHARMACY DISCOVERY, NOT BRAND LOOKUP:** When the user asks for a pharmacy or chemist that is open now/later, do not default to Boots. Search across verified local community pharmacies and hospital/outpatient pharmacies whose public-facing service hours are available. Distinguish retail-store hours from pharmacy-counter hours. If you cannot prove which option is nearest, give verified open options and say that proximity/ranking is not confirmed.
-- **SERVICE INTENT IS NOT VENUE CATEGORY:** If a user wants coffee, dessert or a hot drink in the evening, do not restrict candidates to venues categorised as cafes. Restaurants, dessert venues, hotel lounges, bars and food halls may be valid when a current source explicitly confirms they are open at the requested time and serve the requested item/service. Never infer coffee/dessert availability merely because a venue is a restaurant.
+- **PHARMACY DISCOVERY, NOT BRAND LOOKUP:** When the user asks for a pharmacy or chemist that is open now/later, do not default to Boots. Search across verified local community pharmacies, supermarket pharmacies and hospital/outpatient pharmacies whose public-facing service hours are available. Distinguish retail-store hours from pharmacy-counter hours. If you cannot prove which option is nearest, give verified open options and say that proximity/ranking is not confirmed. Treat phrases such as "after 6pm" as a live late-opening pharmacy request even when the word "open" is omitted.
+- **PHARMACY FOLLOW-UP CONTINUITY:** If the user follows a pharmacy question with a short place or brand such as "City centre?", "Denby Dale?", "Asda Pharmacy" or "Sainsbury's has a pharmacy", keep the pharmacy intent. Do not restart the conversation or ask for information that a named exact branch can resolve. "Denby Dale" is ambiguous between Denby Dale village and Denby Dale Road/Durkar in Wakefield; ask which one only when the branch is not otherwise clear. Never invent a "Denby Dale Asda".
+- **FALSE PREMISE — SUPERMARKET PHARMACY:** Do not agree that a supermarket currently has a pharmacy merely because the supermarket is open or because it historically had one. The exact current store/service page must list a pharmacy. If the current Sainsbury's Wakefield store page does not list Pharmacy as a service, say that rather than agreeing with the premise.
+- **SERVICE INTENT IS NOT VENUE CATEGORY:** If a user wants coffee, dessert or a hot drink in the evening, do not restrict candidates to venues categorised as cafes. Restaurants, dessert venues, hotel lounges, bars and food halls may be valid when a current source explicitly confirms they are open at the requested time and serve the requested item/service. Never infer coffee/dessert availability merely because a venue is a restaurant. A venue with an explicit coffee-and-dessert menu and verified evening hours is a stronger match than a late-opening bakery with only sweet snacks.
+- **WAKEFIELD MEANS THE DISTRICT:** Unless the user explicitly says Wakefield city centre or names a smaller place, interpret "Wakefield" as the Wakefield metropolitan district, not just the city centre. Discovery searches should cover Wakefield city plus the district towns and communities, including Ossett, Horbury, Normanton, Castleford, Pontefract, Featherstone, Knottingley, Hemsworth, South Elmsall and nearby district communities. If the user gives a specific starting area, search that area first and expand district-wide only when the exact requirement is not well served locally.
+- **PLACES DISCOVERY VS VERIFICATION:** Google Places may be used to discover current local businesses, addresses and opening-hours candidates across the district. Treat exact official/first-party pages as stronger evidence for pharmacy-counter hours, event facts, access claims and specialised services. Do not infer a service such as coffee, dessert, dog-friendly access or pharmacy provision solely from a broad venue category when the Places evidence does not explicitly support it.
 - **USE VERIFIED CANDIDATE EVEN IF NEAREST IS UNKNOWN:** If the user asks for the nearest open pharmacy/business from an approximate landmark and you can verify a specific nearby-city-centre branch is open but cannot verify distance/ranking, give the verified open branch and explicitly say you cannot confirm it is the nearest. Do not fall back to a useless generic refusal when a concrete verified candidate exists.
 - **EXACT EVENT PRICE PAGES:** For a price/free follow-up, resolve each previously named event to its own official event-detail page wherever possible. A general What's On listing is discovery evidence, not sufficient price evidence when adjacent cards can leak labels. Treat a price range that includes any non-zero price as not generally free.
 - **DOG-FRIENDLY ACCURACY:** Outdoor seating does not prove dogs are allowed. Only call a venue dog-friendly when the exact venue's current first-party/official listing explicitly says Dog Friendly or otherwise clearly permits dogs. Assistance Dogs Welcome is not the same as a general dog-friendly policy.
@@ -255,6 +259,35 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 const OPENAI_VERIFY_MODEL = process.env.OPENAI_VERIFY_MODEL || 'gpt-5.6-terra';
 const OPENAI_FAILSAFE_ENABLED = process.env.OPENAI_FAILSAFE_ENABLED !== 'false';
 const OPENAI_FAILSAFE_TIMEOUT_MS = Math.max(4000, Math.min(Number(process.env.OPENAI_FAILSAFE_TIMEOUT_MS || 12000), 18000));
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_PLACES_ENABLED = process.env.GOOGLE_PLACES_ENABLED !== 'false';
+const GOOGLE_PLACES_TIMEOUT_MS = Math.max(2500, Math.min(Number(process.env.GOOGLE_PLACES_TIMEOUT_MS || 7000), 12000));
+// Broad rectangle containing the Wakefield metropolitan district. Named zone queries
+// keep discovery centred on district communities while the rectangle prevents far-away results.
+const WAKEFIELD_DISTRICT_VIEWPORT = {
+  low: { latitude: 53.45, longitude: -1.70 },
+  high: { latitude: 53.86, longitude: -1.10 }
+};
+const WAKEFIELD_DISTRICT_SEARCH_ZONES = [
+  'Wakefield city centre',
+  'Ossett Wakefield',
+  'Horbury Wakefield',
+  'Normanton Wakefield',
+  'Castleford Wakefield',
+  'Pontefract Wakefield',
+  'Featherstone Wakefield',
+  'Knottingley Wakefield',
+  'Hemsworth Wakefield',
+  'South Elmsall Wakefield'
+];
+const WAKEFIELD_DISTRICT_SECONDARY_ZONES = [
+  'South Kirkby Wakefield',
+  'Ackworth Wakefield',
+  'Crofton Wakefield',
+  'Stanley Wakefield',
+  'Wrenthorpe Wakefield',
+  'Sandal Wakefield'
+];
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 3000;
 const MAX_TOTAL_CHARS = 14000;
@@ -316,7 +349,11 @@ const TRUSTED_DOMAINS = [
   'midyorks.nhs.uk',
   'kingfisherpharmacy.co.uk',
   'pharmacyplushealth.co.uk',
-  'pharmacy-express.co.uk'
+  'pharmacy-express.co.uk',
+  'storelocator.asda.com',
+  'stores.sainsburys.co.uk',
+  'dolcevitawakefield.co.uk',
+  'rassams.co.uk'
 ];
 
 const rateLimitMap = new Map();
@@ -446,8 +483,23 @@ function isWakefieldCathedralPharmacyQuery(messages) {
 
 function isPharmacyOpenQuery(messages) {
   const context = recentUserContext(messages, 5);
-  return /\b(pharmacy|pharmacies|chemist|chemists|boots)\b/i.test(context)
-    && /\b(open now|open right now|right now|currently open|open today|open tonight|open late|late[- ]?night|this evening|evening|nearest|closest|where can i get|where(?:'|’)s)\b/i.test(context);
+  const pharmacyIntent = /\b(pharmacy|pharmacies|chemist|chemists|boots|asda pharmacy|sainsbury(?:'|’)s pharmacy|rowlands|numark)\b/i.test(context);
+  const timingOrDiscovery = /\b(open now|open right now|right now|currently open|open today|open tonight|open late|late[- ]?night|this evening|evening|nearest|closest|where can i get|where(?:'|’)s|after\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?|after\s+(?:six|seven|eight|nine)|later than\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i.test(context);
+  return pharmacyIntent && timingOrDiscovery;
+}
+
+function isAsdaPharmacyQuery(messages) {
+  return /\basda\b/i.test(recentUserContext(messages, 5)) && /\bpharmacy\b/i.test(recentUserContext(messages, 5));
+}
+
+function isSainsburysPharmacyQuery(messages) {
+  return /\bsainsbury(?:'|’)s\b/i.test(recentUserContext(messages, 5)) && /\bpharmacy\b/i.test(recentUserContext(messages, 5));
+}
+
+function isAmbiguousDenbyDalePharmacyFollowUp(messages) {
+  const last = lastUserText(messages).trim().toLowerCase();
+  const context = recentUserContext(messages, 5);
+  return /^denby dale\??$/.test(last) && /\b(pharmacy|chemist)\b/i.test(context);
 }
 
 function isEveningCoffeeDessertQuery(messages) {
@@ -455,6 +507,289 @@ function isEveningCoffeeDessertQuery(messages) {
   const service = /\b(coffee|hot drink|hot drinks|tea|dessert|desserts|cake|cakes|pudding|sweet treat|sweet treats)\b/i.test(context);
   const evening = /\b(tonight|this evening|evening|after 5|after 6|after 7|after 8|at [5-9](?::\d{2})?\s*(?:pm)?|(?:1[7-9]|2[0-3]):\d{2}|late coffee|coffee late)\b/i.test(context);
   return service && evening;
+}
+
+
+function shouldUseDistrictPlaces(messages) {
+  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return false;
+  if (isPharmacyOpenQuery(messages)) return true;
+  if (isEveningCoffeeDessertQuery(messages)) return true;
+  if (isCurrentFoodStatusQuery(messages)) return true;
+  if (isTimedFoodAvailabilityQuery(messages)) return true;
+  if (isDogFriendlyVenueQuery(messages)) return true;
+  if (isDietaryOpenQuery(messages)) return true;
+
+  const context = recentUserContext(messages, 5);
+  const localService = /\b(pharmacy|chemist|coffee|cafe|restaurant|dessert|cake|food|lunch|dinner|breakfast|takeaway|bakery|pub|bar|shop|store)\b/i.test(context);
+  const localIntent = /\b(open|open now|open tonight|after\s+\d|tonight|this evening|today|where can|find|looking for|need|want|near|nearby)\b/i.test(context);
+  return localService && localIntent;
+}
+
+function detectWakefieldArea(messages) {
+  const last = lastUserText(messages);
+  const context = recentUserContext(messages, 5);
+  const areaRules = [
+    [/\btileyard(?: north)?\b/i, 'Tileyard North Wakefield'],
+    [/\bbull ring\b/i, 'Bull Ring Wakefield'],
+    [/\bwood street\b/i, 'Wood Street Wakefield'],
+    [/\bwestgate(?: station)?\b/i, 'Wakefield Westgate station'],
+    [/\bwakefield cathedral\b|\bcathedral\b/i, 'Wakefield Cathedral'],
+    [/\bcity centre\b|\btown centre\b/i, 'Wakefield city centre'],
+    [/\bdenby dale road\b|\bdurkar\b/i, 'Denby Dale Road Durkar Wakefield'],
+    [/\bsandal\b/i, 'Sandal Wakefield'],
+    [/\bhorbury\b/i, 'Horbury Wakefield'],
+    [/\bossett\b/i, 'Ossett Wakefield'],
+    [/\bnormanton\b/i, 'Normanton Wakefield'],
+    [/\bcastleford\b/i, 'Castleford Wakefield'],
+    [/\bpontefract\b/i, 'Pontefract Wakefield'],
+    [/\bfeatherstone\b/i, 'Featherstone Wakefield'],
+    [/\bknottingley\b/i, 'Knottingley Wakefield'],
+    [/\bhemsworth\b/i, 'Hemsworth Wakefield'],
+    [/\bsouth elmsall\b/i, 'South Elmsall Wakefield'],
+    [/\bsouth kirkby\b/i, 'South Kirkby Wakefield'],
+    [/\backworth\b/i, 'Ackworth Wakefield']
+  ];
+  // A short follow-up such as 'Pontefract?' or 'Denby Dale Road?' should
+  // override an earlier area from the conversation. Check the latest user turn first.
+  for (const [pattern, label] of areaRules) {
+    if (pattern.test(last)) return label;
+  }
+  for (const [pattern, label] of areaRules) {
+    if (pattern.test(context)) return label;
+  }
+  return null;
+}
+
+function buildDistrictPlacesServiceQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  if (isPharmacyOpenQuery(messages)) return 'pharmacy';
+  if (isEveningCoffeeDessertQuery(messages)) {
+    if (/\bcoffee\b/i.test(context) && /\b(dessert|desserts|cake|cakes|pudding|sweet treat|sweet treats)\b/i.test(context)) return 'coffee dessert';
+    if (/\b(dessert|desserts|cake|cakes|pudding|sweet treat|sweet treats)\b/i.test(context)) return 'dessert';
+    return 'coffee';
+  }
+  if (isDogFriendlyVenueQuery(messages)) return 'dog friendly cafe restaurant';
+  if (isDietaryOpenQuery(messages)) {
+    const diet = (context.match(/\b(gluten[- ]?free|coeliac|celiac|vegan|vegetarian|dairy[- ]?free)\b/i) || [])[1] || 'dietary';
+    return `${diet} restaurant cafe`;
+  }
+  if (/\bsandwich\b/i.test(context)) return 'sandwich cafe bakery';
+  if (/\bcoffee\b/i.test(context)) return 'coffee cafe';
+  if (/\bbreakfast\b/i.test(context)) return 'breakfast cafe restaurant';
+  if (/\blunch\b/i.test(context)) return 'lunch restaurant cafe';
+  if (/\bdinner\b/i.test(context)) return 'dinner restaurant';
+  if (/\b(pub|bar)\b/i.test(context)) return 'pub bar';
+  return 'restaurant cafe food';
+}
+
+function requestedPlaceTimeConstraint(messages) {
+  const context = recentUserContext(messages, 5);
+  if (/\b(open now|open right now|right now|currently open|what(?:'|’)s open)\b/i.test(context)) {
+    return { mode: 'now' };
+  }
+
+  const exact12 = context.match(/\b(?:at|around|by)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+  if (exact12) {
+    let hour = Number(exact12[1]);
+    const minute = Number(exact12[2] || 0);
+    const meridiem = exact12[3].toLowerCase();
+    if (meridiem === 'pm' && hour !== 12) hour += 12;
+    if (meridiem === 'am' && hour === 12) hour = 0;
+    return { mode: 'at', hour, minute };
+  }
+  const exact24 = context.match(/\b(?:at|around|by)?\s*((?:1[7-9]|2[0-3])):(\d{2})\b/i);
+  if (exact24) return { mode: 'at', hour: Number(exact24[1]), minute: Number(exact24[2]) };
+
+  const after12 = context.match(/\bafter\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+  if (after12) {
+    let hour = Number(after12[1]);
+    const minute = Number(after12[2] || 0);
+    const meridiem = (after12[3] || '').toLowerCase();
+    if (meridiem === 'pm' && hour !== 12) hour += 12;
+    if (meridiem === 'am' && hour === 12) hour = 0;
+    if (!meridiem && hour >= 1 && hour <= 11 && /\b(evening|tonight|late|pharmacy)\b/i.test(context)) hour += 12;
+    return { mode: 'after', hour, minute };
+  }
+  const wordAfter = context.match(/\bafter\s+(six|seven|eight|nine)\b/i);
+  if (wordAfter) {
+    const map = { six: 18, seven: 19, eight: 20, nine: 21 };
+    return { mode: 'after', hour: map[wordAfter[1].toLowerCase()], minute: 0 };
+  }
+  return null;
+}
+
+function londonDayIndex() {
+  const short = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short' }).format(new Date());
+  return { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[short];
+}
+
+function minutesOfDay(hour, minute) {
+  return Number(hour || 0) * 60 + Number(minute || 0);
+}
+
+function placeOpenAtConstraint(place, constraint) {
+  if (!constraint) return true;
+  const hours = place?.currentOpeningHours;
+  if (!hours) return null;
+  if (constraint.mode === 'now') return typeof hours.openNow === 'boolean' ? hours.openNow : null;
+
+  const periods = Array.isArray(hours.periods) ? hours.periods : [];
+  if (!periods.length) return null;
+  const targetDay = londonDayIndex();
+  const target = minutesOfDay(constraint.hour, constraint.minute);
+
+  for (const period of periods) {
+    const open = period?.open;
+    const close = period?.close;
+    if (!open || Number(open.day) !== targetDay) continue;
+    const openMin = minutesOfDay(open.hour, open.minute);
+    if (!close) return constraint.mode === 'after' ? true : target >= openMin;
+    const closeDay = Number(close.day);
+    const closeMin = minutesOfDay(close.hour, close.minute);
+    if (constraint.mode === 'at') {
+      if (closeDay === targetDay) {
+        if (target >= openMin && target < closeMin) return true;
+      } else if (target >= openMin) {
+        return true;
+      }
+    } else if (constraint.mode === 'after') {
+      if (closeDay !== targetDay || closeMin > target) return true;
+    }
+  }
+  return false;
+}
+
+function compactPlace(place) {
+  return {
+    id: place?.id || null,
+    name: place?.displayName?.text || place?.displayName || '',
+    address: place?.formattedAddress || place?.shortFormattedAddress || '',
+    primaryType: place?.primaryType || '',
+    types: Array.isArray(place?.types) ? place.types.slice(0, 8) : [],
+    openNow: place?.currentOpeningHours?.openNow,
+    weekdayDescriptions: Array.isArray(place?.currentOpeningHours?.weekdayDescriptions)
+      ? place.currentOpeningHours.weekdayDescriptions.slice(0, 7)
+      : [],
+    websiteUri: place?.websiteUri || null,
+    googleMapsUri: place?.googleMapsUri || null,
+    location: place?.location || null
+  };
+}
+
+async function googlePlacesTextSearch(textQuery, { pageSize = 6, openNow = false } = {}) {
+  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return [];
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), GOOGLE_PLACES_TIMEOUT_MS);
+  try {
+    const body = {
+      textQuery,
+      pageSize,
+      languageCode: 'en',
+      regionCode: 'GB',
+      locationRestriction: { rectangle: WAKEFIELD_DISTRICT_VIEWPORT }
+    };
+    if (openNow) body.openNow = true;
+
+    const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.primaryType,places.types,places.currentOpeningHours,places.websiteUri,places.googleMapsUri'
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      let detail = '';
+      try { detail = await response.text(); } catch {}
+      console.warn('Google Places Text Search failed:', response.status, detail.slice(0, 300));
+      return [];
+    }
+    const data = await response.json();
+    return Array.isArray(data?.places) ? data.places : [];
+  } catch (error) {
+    if (error?.name === 'AbortError') console.warn('Google Places Text Search timed out:', textQuery);
+    else console.warn('Google Places Text Search error:', error?.message || error);
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function dedupePlaces(places) {
+  const seen = new Set();
+  const out = [];
+  for (const place of places || []) {
+    const key = place?.id || `${place?.displayName?.text || ''}|${place?.formattedAddress || ''}`.toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(place);
+  }
+  return out;
+}
+
+async function fetchWakefieldDistrictPlacesContext(messages) {
+  if (!shouldUseDistrictPlaces(messages)) return null;
+
+  const service = buildDistrictPlacesServiceQuery(messages);
+  const area = detectWakefieldArea(messages);
+  const constraint = requestedPlaceTimeConstraint(messages);
+  const openNow = constraint?.mode === 'now';
+
+  const runQueries = async zones => {
+    const batches = await Promise.all(zones.map(zone =>
+      googlePlacesTextSearch(`${service} ${zone}`, { pageSize: area ? 10 : 5, openNow })
+    ));
+    return dedupePlaces(batches.flat());
+  };
+
+  let scope = area ? 'local-first' : 'district';
+  let places = area ? await runQueries([area]) : [];
+  let matching = places.filter(place => placeOpenAtConstraint(place, constraint) !== false);
+
+  // A specific area is a preference, not a trap. If it produces too few viable
+  // results, expand across the Wakefield district automatically.
+  if (!area || matching.length < 3) {
+    const districtPlaces = await runQueries(WAKEFIELD_DISTRICT_SEARCH_ZONES);
+    places = dedupePlaces([...places, ...districtPlaces]);
+    matching = places.filter(place => placeOpenAtConstraint(place, constraint) !== false);
+    scope = area ? 'local-first-then-district' : 'district';
+  }
+
+  // Fill quieter/rural parts of the district only when the main district sweep
+  // has not produced enough viable options. This broadens coverage without
+  // paying for every village-level query on every request.
+  if (matching.length < 5) {
+    const secondaryPlaces = await runQueries(WAKEFIELD_DISTRICT_SECONDARY_ZONES);
+    places = dedupePlaces([...places, ...secondaryPlaces]);
+    matching = places.filter(place => placeOpenAtConstraint(place, constraint) !== false);
+    scope = area ? 'local-first-then-full-district' : 'full-district';
+  }
+
+  const scored = matching.map(place => {
+    const status = placeOpenAtConstraint(place, constraint);
+    let score = status === true ? 4 : 0;
+    const name = place?.displayName?.text || '';
+    const address = place?.formattedAddress || '';
+    if (area && `${name} ${address}`.toLowerCase().includes(area.split(' ')[0].toLowerCase())) score += 2;
+    return { place, score };
+  }).sort((a, b) => b.score - a.score);
+
+  const selected = scored.slice(0, 14).map(({ place }) => compactPlace(place));
+  if (!selected.length) return null;
+
+  return {
+    service,
+    area,
+    scope,
+    constraint,
+    places: selected,
+    sources: selected.filter(p => p.googleMapsUri).slice(0, 8).map(p => ({
+      title: `${p.name} — Google Places`,
+      url: p.googleMapsUri
+    }))
+  };
 }
 
 function isCathedralToYspRouteQuery(messages) {
@@ -607,11 +942,14 @@ function hasStrongFirstPartyEvidence(messages, evidence = {}) {
   const business = evidence.businessContexts || {};
   const food = evidence.foodConstraintContexts || {};
   const routes = evidence.routeContexts || {};
+  const evening = evidence.eveningServiceContexts || {};
   const eventDetails = evidence.eventDetailContexts || [];
 
-  if (isPharmacyOpenQuery(messages) && [business.bootsKirkgate, business.kingfisher, business.pinderfields].filter(Boolean).length >= 2) return true;
+  if (isPharmacyOpenQuery(messages) && [business.bootsKirkgate, business.kingfisher, business.pinderfields, business.asdaWakefield, business.sainsburysMarshWay].filter(Boolean).length >= 2) return true;
+  if (isEveningCoffeeDessertQuery(messages) && evening.dolceVita) return true;
   if (isDogFriendlyVenueQuery(messages) && Object.values(food).filter(Boolean).length >= 2) return true;
   if (isDietaryOpenQuery(messages) && Object.values(food).filter(Boolean).length >= 2) return true;
+  if ((isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages)) && evidence.districtPlacesContext?.places?.length >= 3) return true;
   if (isCathedralToYspRouteQuery(messages) && routes.yspGettingHere) return true;
   if ((isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages)) && eventDetails.length > 0) return true;
   return false;
@@ -650,7 +988,7 @@ function shouldUseOpenAIFailsafe(messages, evidence = {}) {
 
 function openAIDomainsForQuery(messages) {
   if (isPharmacyOpenQuery(messages)) {
-    return ['nhs.uk','midyorks.nhs.uk','boots.com','kingfisherpharmacy.co.uk','pharmacyplushealth.co.uk','pharmacy-express.co.uk'];
+    return ['nhs.uk','midyorks.nhs.uk','boots.com','kingfisherpharmacy.co.uk','pharmacyplushealth.co.uk','pharmacy-express.co.uk','storelocator.asda.com','stores.sainsburys.co.uk'];
   }
   if (isCathedralToYspRouteQuery(messages) || isRoutePlanningQuery(messages) || isLiveTransportTimesQuery(messages)) {
     return ['ysp.org.uk','wymetro.com','nationalrail.co.uk','northernrailway.co.uk','lner.co.uk','westyorks-ca.gov.uk'];
@@ -659,7 +997,7 @@ function openAIDomainsForQuery(messages) {
     return ['experiencewakefield.co.uk','wxwakefield.co.uk','wakefieldcathedral.org.uk','hepworthwakefield.org','ysp.org.uk','nationaltrust.org.uk','theatreroyalwakefield.co.uk'];
   }
   if (isDogFriendlyVenueQuery(messages) || isDietaryOpenQuery(messages) || isEveningCoffeeDessertQuery(messages) || isTimedFoodAvailabilityQuery(messages)) {
-    return ['experiencewakefield.co.uk','the-arthouse.org.uk','recent.coffee','bakesbyvanillabean.co.uk','dinerustico.co.uk','robatary.co.uk','tileyardnorth.co.uk'];
+    return ['experiencewakefield.co.uk','the-arthouse.org.uk','recent.coffee','bakesbyvanillabean.co.uk','dinerustico.co.uk','robatary.co.uk','tileyardnorth.co.uk','dolcevitawakefield.co.uk','rassams.co.uk'];
   }
   if (isGeneralAccessibilityQuery(messages)) {
     return ['experiencewakefield.co.uk','hepworthwakefield.org','wxwakefield.co.uk','ysp.org.uk','nationaltrust.org.uk'];
@@ -693,8 +1031,20 @@ function openAIVerificationEvidenceBundle(evidence = {}) {
   for (const [key, value] of Object.entries(evidence.businessContexts || {})) {
     push(`BUSINESS ${key}`, value?.text);
   }
+  for (const [key, value] of Object.entries(evidence.eveningServiceContexts || {})) {
+    push(`EVENING SERVICE ${key}`, value?.text);
+  }
   for (const [key, value] of Object.entries(evidence.routeContexts || {})) {
     push(`ROUTE ${key}`, value?.text);
+  }
+  if (evidence.districtPlacesContext?.places?.length) {
+    push('GOOGLE PLACES DISTRICT DISCOVERY', evidence.districtPlacesContext.places.map((place, index) => [
+      `${index + 1}. ${place.name}`,
+      `Address: ${place.address}`,
+      typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
+      place.weekdayDescriptions?.length ? `Hours: ${place.weekdayDescriptions.join(' | ')}` : '',
+      place.websiteUri ? `Website: ${place.websiteUri}` : ''
+    ].filter(Boolean).join('\n')).join('\n\n'));
   }
   for (const item of evidence.eventDetailContexts || []) {
     push(`EVENT DETAIL ${item?.name || ''}`, item?.context?.text);
@@ -775,9 +1125,9 @@ STRICT RULES:
 - Do not call an event "free" unless the exact event/detail page supports free/£0 for the requested admission. A range such as £0–£9.50 is variable-price, not generally free.
 - For accessibility, venue access does not prove the whole journey is step-free. State any route gap.
 - For "nearest" from an approximate location, do not claim nearest unless current location/distance evidence proves it. You may say "a verified option" instead.
-- For current pharmacy/open-now questions, distinguish store hours from pharmacy-counter hours.
-- For pharmacy discovery, do not default to one chain. If multiple verified local pharmacies are open, present useful verified options and distinguish later-closing options. Do not claim which is nearest unless distance evidence proves it.
-- For evening coffee/dessert, treat coffee/dessert as a requested service rather than a cafe-only category. A restaurant or other venue is valid only when current evidence confirms both the requested service and opening at the requested time.
+- For current pharmacy/open-now questions, distinguish store hours from pharmacy-counter hours. Treat "after 6pm" or similar as a hard live opening-hours constraint even when the user omits the word "open".
+- For pharmacy discovery, do not default to one chain. If multiple verified local pharmacies are open, present useful verified options and distinguish later-closing options. Do not claim which is nearest unless distance evidence proves it. If exact ASDA Wakefield pharmacy hours are in evidence, use them. Do not agree that Sainsbury's Wakefield has a pharmacy unless its current exact store page lists Pharmacy as a service.
+- For evening coffee/dessert, treat coffee/dessert as a requested service rather than a cafe-only category. A restaurant or other venue is valid only when current evidence confirms both the requested service and opening at the requested time. Prefer an exact coffee+dessert menu over a generic late-opening bakery or restaurant.
 - For transport, do not assemble an unverified multi-leg route. Prefer the direct official route if one is verified.
 - For transport, do not use words such as nearest/closest for a boarding stop unless that ranking is verified. Say to use the current journey planner to identify the correct boarding stop.
 - For complex itineraries, do not invent walking minutes, distance, terrain, a "natural loop", or claims that all venues are independent/child-friendly unless each claim is directly supported. If the independent-coffee requirement is explicit, only use a café explicitly described as independent to satisfy it.
@@ -1405,11 +1755,11 @@ async function fetchFoodConstraintFirstPartyContexts(messages) {
 
 async function fetchBusinessFirstPartyContexts(messages) {
   if (!isCurrentBusinessStatusQuery(messages) && !isPharmacyOpenQuery(messages)) {
-    return { bootsKirkgate: null, kingfisher: null, pinderfields: null };
+    return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
   }
 
   if (isPharmacyOpenQuery(messages)) {
-    const [bootsKirkgate, kingfisher, pinderfields] = await Promise.all([
+    const [bootsKirkgate, kingfisher, pinderfields, asdaWakefield, sainsburysMarshWay] = await Promise.all([
       fetchSimpleFirstPartyContext(
         'https://www.boots.com/stores/505-wakefield-kirkgate-wf1-1up',
         'Boots — Wakefield Kirkgate'
@@ -1421,12 +1771,43 @@ async function fetchBusinessFirstPartyContexts(messages) {
       fetchSimpleFirstPartyContext(
         'https://www.midyorks.nhs.uk/pharmacy',
         'Mid Yorkshire Teaching NHS Trust — Pinderfields Pharmacy'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://storelocator.asda.com/yorkshire-%26-humber/wakefield/asdale-road',
+        'ASDA Wakefield Superstore — Pharmacy'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://stores.sainsburys.co.uk/2258/wakefield-marsh-way',
+        "Sainsbury's Wakefield Marsh Way"
       )
     ]);
-    return { bootsKirkgate, kingfisher, pinderfields };
+    return { bootsKirkgate, kingfisher, pinderfields, asdaWakefield, sainsburysMarshWay };
   }
 
-  return { bootsKirkgate: null, kingfisher: null, pinderfields: null };
+  return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
+}
+
+async function fetchEveningServiceFirstPartyContexts(messages) {
+  if (!isEveningCoffeeDessertQuery(messages)) {
+    return { dolceVita: null, clubHouse: null, rassams: null };
+  }
+
+  const [dolceVita, clubHouse, rassams] = await Promise.all([
+    fetchSimpleFirstPartyContext(
+      'https://www.dolcevitawakefield.co.uk/menu/dessert-coffee-menu',
+      'Dolce Vita Wakefield — Dessert & Coffee Menu'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/the-club-house/',
+      'Experience Wakefield — The Club House'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://www.rassams.co.uk/stores/wakefield',
+      "Rassam's Creamery — Wakefield"
+    )
+  ]);
+
+  return { dolceVita, clubHouse, rassams };
 }
 
 async function fetchRouteFirstPartyContexts(messages) {
@@ -2020,8 +2401,20 @@ function combinedReliabilityEvidence(evidence = {}) {
   for (const [label, ctx] of Object.entries(evidence.businessContexts || {})) {
     if (ctx?.text) parts.push(`BUSINESS FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
   }
+  for (const [label, ctx] of Object.entries(evidence.eveningServiceContexts || {})) {
+    if (ctx?.text) parts.push(`EVENING SERVICE FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
+  }
   for (const [label, ctx] of Object.entries(evidence.routeContexts || {})) {
     if (ctx?.text) parts.push(`ROUTE FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
+  }
+  if (evidence.districtPlacesContext?.places?.length) {
+    parts.push(`GOOGLE PLACES DISTRICT DISCOVERY:\n${evidence.districtPlacesContext.places.map((place, index) => [
+      `${index + 1}. ${place.name}`,
+      `Address: ${place.address}`,
+      typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
+      place.weekdayDescriptions?.length ? `Hours: ${place.weekdayDescriptions.join(' | ')}` : '',
+      place.websiteUri ? `Website: ${place.websiteUri}` : ''
+    ].filter(Boolean).join('\n')).join('\n\n')}`);
   }
   for (const item of evidence.searchEvidence || []) {
     if (!item?.url || !item?.text) continue;
@@ -2052,6 +2445,9 @@ Rules:
 - ACCESSIBILITY FACILITY MATCHING: only say a venue is wheelchair accessible, step-free or has an accessible toilet when that exact venue's evidence lists that facility. If a venue page lists only Assistance Dogs Welcome, that is not evidence of wheelchair access or step-free entry. Prefer a coffee venue with explicit wheelchair/step-free evidence over one with ambiguous access evidence.
 - ACCESSIBILITY EVIDENCE JOIN: if an event is verified at a named venue and a separate official page for that SAME venue verifies step-free/wheelchair access, you may combine those facts. Do not require the event listing itself to repeat the access fields.
 - OPEN-NOW NON-FOOD: shopping-centre hours do not establish an individual shop/pharmacy is open. Retail-store hours do not establish the pharmacy counter is open. Exact pharmacy/retail service hours must come from that exact branch/service. Do not call anything nearest/closest without verified location/distance evidence. If an exact branch/service is verified open but nearest ranking is not, give it as a verified open option and say you cannot confirm it is the nearest.
+- LATE PHARMACY: "after 6pm" is a hard timing constraint. Prefer exact community-pharmacy counter evidence such as ASDA Wakefield Pharmacy when its published hours cover the requested time. Pinderfields Numark/Rowlands is a hospital/outpatient pharmacy and should be labelled as such rather than presented as a general community-pharmacy substitute. Do not ask which service they need merely to avoid answering an opening-hours question.
+- SUPERMARKET PHARMACY PREMISE: do not say Sainsbury's Wakefield has a pharmacy unless the exact current Sainsbury's store page lists Pharmacy as a current service. If it does not, correct the premise politely.
+- EVENING COFFEE + DESSERT: when the user asks for both, retain venues only when the same source/evidence establishes both the requested service and opening at the requested time. Dolce Vita's dessert-and-coffee menu plus its published evening hours is an exact match when the requested time falls within those hours. The Club House may qualify for coffee + cake when its current hours cover the time. Rassam's may be offered as a dessert-focused alternative unless coffee is also explicitly verified.
 - EVENT PRICE DETAIL: exact event-detail pages outrank aggregate listings for price/free status. A price range containing any non-zero amount is not generally free. For a free-only request, remove every event that is paid, variable-price, concession-only, or unverified.
 - DOG FRIENDLY: outdoor seating is not evidence dogs are permitted. Only retain general dog-friendly claims explicitly supported for that exact venue. Assistance-dog access alone is not a general dog-friendly claim. If the user says today/this afternoon/tonight, also verify the venue is open during that requested period.
 - DIETARY + OPEN: for an open-today/open-now dietary request, retain a venue only when evidence supports both the requested dietary need and the relevant current opening window. If Corarima opens only in the evening on the requested weekday, it is not a lunch option.
@@ -2199,6 +2595,7 @@ function stripInternalProcessLeakage(reply) {
     .split('\n')
     .filter(line => !/^\s*(?:---\s*)?(?:change made|changes? made|removed because|validator|validation note|audit note|draft note|internal note|recommended rewrite)\s*:/i.test(line))
     .filter(line => !/trusted evidence supplied/i.test(line))
+    .filter(line => !/^\s*(?:i(?:'|’)ll|i will|i need to|let me)\s+(?:carry out a live search|search|check live sources)\b/i.test(line))
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -2302,6 +2699,14 @@ export default async function handler(req, res) {
   const messages = sanitiseMessages(req.body?.messages);
   if (!messages) return res.status(400).json({ error: 'invalid_request', reply: 'Please enter a valid question.' });
 
+  if (isAmbiguousDenbyDalePharmacyFollowUp(messages)) {
+    return res.status(200).json({
+      reply: 'Do you mean Denby Dale village, or the Denby Dale Road / Durkar side of Wakefield? I can check late-opening pharmacies for the right area.',
+      sources: [],
+      live: false
+    });
+  }
+
   // "Open right now" is location-dependent across the Wakefield district.
   // Ask for an area before doing a live lookup rather than silently assuming city centre.
   if (isCurrentFoodStatusQuery(messages) && !hasFoodLocationContext(messages)) {
@@ -2334,13 +2739,15 @@ export default async function handler(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, routeContexts, userUrlContext] = await Promise.all([
+  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
     fetchAccessibilityFirstPartyContexts(messages),
     fetchRunningFirstPartyContexts(messages),
     fetchFoodConstraintFirstPartyContexts(messages),
     fetchBusinessFirstPartyContexts(messages),
+    fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
+    fetchWakefieldDistrictPlacesContext(messages),
     fetchTrustedUserUrlContext(messages)
   ]);
 
@@ -2356,17 +2763,31 @@ export default async function handler(req, res) {
   const hasEventDetailEvidence = eventDetailContexts.length > 0;
   const hasFoodConstraintEvidence = Object.values(foodConstraintContexts || {}).some(Boolean);
   const hasBusinessEvidence = Object.values(businessContexts || {}).some(Boolean);
+  const hasEveningServiceEvidence = Object.values(eveningServiceContexts || {}).some(Boolean);
   const hasRouteEvidence = Object.values(routeContexts || {}).some(Boolean);
+  const hasDistrictPlacesEvidence = Boolean(districtPlacesContext?.places?.length);
   const needsEventPriceSearch = isCurrentEventsQuery(messages) && eventCostWasRequested(messages) && !hasEventDetailEvidence;
   const needsSpecificEventSearch = isNamedEventDetailQuery(messages) && !Boolean(namedEventContexts?.parade || namedEventContexts?.festival);
   const directlyResolved = (isDogFriendlyVenueQuery(messages) && hasFoodConstraintEvidence)
     || (isDietaryOpenQuery(messages) && hasFoodConstraintEvidence)
     || (isPharmacyOpenQuery(messages) && hasBusinessEvidence)
+    || (isEveningCoffeeDessertQuery(messages) && hasEveningServiceEvidence)
     || (isCathedralToYspRouteQuery(messages) && hasRouteEvidence)
+    || (shouldUseDistrictPlaces(messages) && hasDistrictPlacesEvidence)
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
     && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
+
+  if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
+    console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
+  }
+  if (isEveningCoffeeDessertQuery(messages) && hasEveningServiceEvidence) {
+    console.info('Evening coffee/dessert query resolved with direct first-party service sources.');
+  }
+  if (hasDistrictPlacesEvidence) {
+    console.info(`Google Places district discovery: ${districtPlacesContext.places.length} candidates (${districtPlacesContext.scope}).`);
+  }
 
   const wxDirectContext = wxContext
     ? `\n\nFIRST-PARTY WX CURRENT LISTING SNAPSHOT:\nSource: https://wxwakefield.co.uk/whats-on\nToday = ${wxContext.dates.today}. Tomorrow = ${wxContext.dates.tomorrow}. This weekend = ${wxContext.dates.saturday} and ${wxContext.dates.sunday}.\nUse only the listing text below for WX event titles, dates, times and prices. Match the user's requested date exactly. For this weekend, check BOTH dates. Do not replace exact event titles with category labels.\n\n${wxContext.text}`
@@ -2401,7 +2822,12 @@ ${cathedralContext.text}`
 
   const pharmacyEvidenceEntries = Object.entries(businessContexts || {}).filter(([, ctx]) => ctx?.text);
   const businessFirstPartyDirectContext = pharmacyEvidenceEntries.length
-    ? `\n\nPHARMACY FIRST-PARTY EVIDENCE:\n${pharmacyEvidenceEntries.map(([key, ctx]) => `${key.toUpperCase()}:\nSOURCE: ${ctx.source?.url || ''}\n${ctx.text}`).join('\n\n---\n\n')}\nFor open-now/late pharmacy questions, compare the published pharmacy/service hours with the current London time. Do not default to Boots when another verified local pharmacy stays open later. Pinderfields/Numark Rowlands is a valid public-facing pharmacy option when the NHS Trust page confirms its opening hours. Because approximate landmarks do not prove distance ranking, never claim nearest/closest without map evidence; say which options are verified open and identify later-closing options instead.`
+    ? `\n\nPHARMACY FIRST-PARTY EVIDENCE:\n${pharmacyEvidenceEntries.map(([key, ctx]) => `${key.toUpperCase()}:\nSOURCE: ${ctx.source?.url || ''}\n${ctx.text}`).join('\n\n---\n\n')}\nFor open-now/late pharmacy questions, compare the published PHARMACY COUNTER/service hours with the current London time. Treat "after 6pm" as the requested window even if the user did not say "open". Do not default to Boots when another verified local pharmacy stays open later. ASDA Wakefield Superstore's exact store page may be used only for its explicitly listed Pharmacy hours. Pinderfields/Numark Rowlands may be mentioned as a hospital/outpatient pharmacy when the NHS Trust page confirms its opening hours, but do not present it as equivalent to a general community pharmacy unless the evidence confirms the user's required service. If the user says "Asda Pharmacy", use the exact Wakefield ASDA pharmacy evidence when it resolves the branch rather than asking for a postcode again. If the user says Sainsbury's has a pharmacy, do NOT agree unless the current Wakefield Sainsbury's store page itself lists Pharmacy among its services; absence from the current exact store service list means you should say you cannot verify a pharmacy there. Because approximate landmarks do not prove distance ranking, never claim nearest/closest without map evidence; say which options are verified open and identify later-closing options instead.`
+    : '';
+
+  const eveningServiceEntries = Object.entries(eveningServiceContexts || {}).filter(([, ctx]) => ctx?.text);
+  const eveningServiceFirstPartyDirectContext = eveningServiceEntries.length
+    ? `\n\nEVENING COFFEE / DESSERT FIRST-PARTY EVIDENCE:\n${eveningServiceEntries.map(([key, ctx]) => `${key.toUpperCase()}:\nSOURCE: ${ctx.source?.url || ''}\n${ctx.text}`).join('\n\n---\n\n')}\nThe user is asking for a service at a specific evening time, not for a cafe category. Match the requested clock time against the published opening hours. For a request for BOTH coffee and dessert, prefer a venue whose own page explicitly lists both. Dolce Vita's dessert-and-coffee menu is an exact service match when its opening hours cover the requested time. The Club House explicitly supports coffee and fresh cakes; present it as coffee + cake, not as proof of a full dessert menu. Rassam's is a verified late dessert venue; do not claim it serves coffee unless the supplied evidence explicitly says so. Never fall back to a daytime Greggs or cafe if a stronger exact evening-service match is in this evidence.`
     : '';
 
   const routeFirstPartyDirectContext = routeContexts?.yspGettingHere?.text
@@ -2517,6 +2943,18 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
     ? `\n\nTIMED FOOD AVAILABILITY MODE: Verify opening hours against the user-requested clock time/daypart, not merely the server's current time. Keep explicit preferences such as independent and quiet as hard constraints. If quietness cannot be verified, say so rather than claiming it.`
     : '';
 
+  const districtPlacesDirectContext = districtPlacesContext?.places?.length
+    ? `\n\nWAKEFIELD DISTRICT PLACES DISCOVERY:\nSearch scope: ${districtPlacesContext.scope}. ${districtPlacesContext.area ? `Local anchor: ${districtPlacesContext.area}. ` : ''}Service intent: ${districtPlacesContext.service}.\n${districtPlacesContext.constraint ? `Time constraint: ${JSON.stringify(districtPlacesContext.constraint)}.\n` : ''}${districtPlacesContext.places.map((place, index) => [
+        `${index + 1}. ${place.name}`,
+        `Address: ${place.address}`,
+        place.primaryType ? `Type: ${place.primaryType}` : '',
+        typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
+        place.weekdayDescriptions?.length ? `Published hours: ${place.weekdayDescriptions.join(' | ')}` : '',
+        place.websiteUri ? `Website: ${place.websiteUri}` : '',
+        place.googleMapsUri ? `Google Maps: ${place.googleMapsUri}` : ''
+      ].filter(Boolean).join('\n')).join('\n\n')}\n\nUse this as district-wide discovery evidence. If the user says only "Wakefield", do not silently narrow to the city centre. If a specific area was given, prefer matching local candidates but district-wide candidates may be offered when the exact requirement is not met locally. Opening-hours data may support current/time matching. For pharmacies, exact official pharmacy-counter hours from first-party evidence outrank Google Places. For specialised claims such as serves coffee + dessert, dog friendly, gluten free or wheelchair access, do not infer the service from a broad category alone unless other supplied evidence confirms it.`
+    : '';
+
   const routePlanningContext = isRoutePlanningQuery(messages)
     ? `\n\nROUTE PLANNING MODE: Use a current official journey source where possible. Do not construct multi-leg routes from separate facts. For Wakefield Cathedral/city centre to Yorkshire Sculpture Park, the verified public-transport fact is the 96 bus between Wakefield and Barnsley stopping at YSP; do not add an unnecessary train leg unless a current journey planner explicitly returns it.`
     : '';
@@ -2539,15 +2977,15 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${routeFirstPartyDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
 
-  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence)
+  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
     : '';
 
   const baseBody = {
     model: MODEL,
-    max_tokens: isCurrentEventsQuery(messages) ? 950 : 1200,
+    max_tokens: isCurrentEventsQuery(messages) ? 950 : (districtPlacesContext?.places?.length ? 1350 : 1200),
     system: `${SYSTEM_PROMPT}\n\n${londonContext()}${directContext}${liveOutputContract}`,
     messages
   };
@@ -2601,6 +3039,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       runningContexts?.thornes,
       ...Object.values(foodConstraintContexts || {}),
       ...Object.values(businessContexts || {}),
+      ...Object.values(eveningServiceContexts || {}),
       ...Object.values(routeContexts || {}),
       ...eventDetailContexts.map(item => item?.context).filter(Boolean),
       freeVenueContexts?.ysp,
@@ -2608,6 +3047,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       freeVenueContexts?.wxWeekly
     ]) {
       if (extraContext?.source?.url) mergedSourceMap.set(extraContext.source.url, extraContext.source);
+    }
+    for (const source of districtPlacesContext?.sources || []) {
+      if (source?.url) mergedSourceMap.set(source.url, source);
     }
     for (const source of userUrlContext?.sources || []) {
       if (source?.url) mergedSourceMap.set(source.url, source);
@@ -2617,7 +3059,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }
     const mergedSources = Array.from(mergedSourceMap.values()).slice(0, 5);
 
-    const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, routeContexts, eventDetailContexts, searchEvidence };
+    const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, eventDetailContexts, searchEvidence };
 
     if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages) && !shouldUseOpenAIFailsafe(messages, reliabilityEvidence)) {
       return res.status(200).json({
@@ -2668,7 +3110,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
           runningContexts,
           foodConstraintContexts,
           businessContexts,
+          eveningServiceContexts,
           routeContexts,
+          districtPlacesContext,
           eventDetailContexts,
           searchEvidence
         })
@@ -2703,7 +3147,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
           runningContexts,
           foodConstraintContexts,
           businessContexts,
+          eveningServiceContexts,
           routeContexts,
+          districtPlacesContext,
           eventDetailContexts,
           searchEvidence
         })
@@ -2757,7 +3203,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     return res.status(200).json({
       reply: finalReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: finalSources,
-      live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
+      live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
       verification: openAIResult?.verified ? 'dual-source' : 'primary'
     });
   } catch (error) {

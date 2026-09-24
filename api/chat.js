@@ -39,6 +39,16 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **CONVERSATION CONTINUITY:** Treat the chat as one continuous conversation. Resolve follow-up references such as "those", "them", "these", "that one", "the first one", "which are free?", "how much are they?", "where are they?" and "what time are they?" from the recent assistant answer and user context. Never ask the user to repeat event/place names that are already visible in the recent conversation.
 - **FOLLOW-UP COMPLETENESS:** When a follow-up asks for a changing field across a previously listed set, such as "How much are those?", answer for every relevant item from that set unless the user narrows it. If one item's current value cannot be verified, keep the item in the answer and say "I couldn't verify the current price" (or the equivalent changing field) rather than dropping it or leaving a blank.
 - **MISSING PRICE IS NOT FREE:** Never infer that an event, attraction or activity is free because a price is absent from a listing. Only say Free/£0 when a current trusted source explicitly supports that status for that exact event or admission type.
+- **FREE FOLLOW-UP ENTITY LOCK:** For follow-ups such as "Which of those are free?", keep each event title tied to its own price evidence. A nearby "Free" label belonging to the next event on an aggregate listing must never be transferred to the previous event. If the exact event page or same-record evidence shows a non-zero price or a price range containing a non-zero amount, that event is not generally free.
+- **HARD CONSTRAINT MATCHING:** Treat explicit user constraints as hard filters: day, time-of-day, age, activity type, dietary need, dog policy, accessibility, independence/chain preference and "open now" status. Do not silently relax one constraint to make the answer easier. A near-match may be offered only after clearly saying it does not meet the exact request.
+- **OPEN-NOW BUSINESS ACCURACY:** For pharmacies, retailers and other non-food businesses, shopping-centre opening hours do not prove the individual business is open. A Boots store's general retail hours do not prove the pharmacy counter is open. Verify the exact branch/service hours from the business's own current page when possible. Never call an option the nearest/closest unless distance or route evidence supports that relationship.
+- **DOG-FRIENDLY ACCURACY:** Outdoor seating does not prove dogs are allowed. Only call a venue dog-friendly when the exact venue's current first-party/official listing explicitly says Dog Friendly or otherwise clearly permits dogs. Assistance Dogs Welcome is not the same as a general dog-friendly policy.
+- **DIETARY + OPEN STATUS:** When the user asks for somewhere open now/today with a dietary requirement, the same venue must have evidence for BOTH current opening status and the requested dietary support. Do not list a venue that meets only one half of the request.
+- **FAMILY TIME MATCH:** Morning events are not afternoon recommendations. If the user asks for tomorrow afternoon, do not include an event that ends at noon. Respect published age guidance as well as date/time.
+- **ACCESSIBILITY EVIDENCE JOIN:** Accessibility information may be joined from an event page and a separate official venue-access page only when both refer to the exact same venue. Do not reject an accessible event merely because the event record itself omits access fields if the venue page verifies them.
+- **LIVE TRANSPORT TIMES:** Exact first/last train or bus times require current timetable evidence from National Rail, the operator or another official journey-planning source. Do not give a precise departure time from stale knowledge or a generic route page.
+- **ROUTE WORDING DISCIPLINE:** If walking distance/time or route accessibility is unverified, do not soften the caveat with claims such as "straightforward walk", "no major barriers", "very manageable", "easy to reach" or similar. State only what is verified.
+- **NO VALIDATOR LEAKS:** Never expose internal audit/editor text such as "Change made:", "Removed because", "validator", "draft", "trusted evidence supplied" or similar process commentary to the user.
 - **DATE ACCURACY:** Never calculate a weekday or calendar date from memory. For relative dates such as today, tonight, tomorrow, day after tomorrow and this weekend, use the exact server-supplied RELATIVE DATE MAP. If a source says a venue opens on certain weekdays, compare that rule against the mapped weekday before answering.
 - **LOCATION ACCURACY:** Never infer that a Wakefield place is near another town, neighbourhood, station, road or landmark unless that relationship is explicitly stated in this knowledge base or verified from a trusted source. Never invent distances, areas, postcodes, journey times or geographic relationships. If uncertain, omit the detail or verify it.
 - **WALKING-DISTANCE ACCURACY:** Do not invent walking times, cardinal directions or claims such as "ten minutes away". If the user asks what is nearby or within walking distance, use a current/official source where possible and give exact distances/times only when verified. Otherwise name central options without a made-up minute estimate.
@@ -287,7 +297,10 @@ const TRUSTED_DOMAINS = [
   'ncm.org.uk',
   'farmercopleys.co.uk',
   'parkrun.org.uk',
-  'wakefieldharriers.co.uk'
+  'wakefieldharriers.co.uk',
+  'hm.com',
+  'www2.hm.com',
+  'boots.com'
 ];
 
 const rateLimitMap = new Map();
@@ -369,9 +382,10 @@ function isEventCostFollowUp(messages) {
 
 function isNamedRetailPresenceQuery(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
-  const presenceIntent = /\b(is there|are there|do (?:you|we) have|have (?:you|we) got|nearest|closest|where(?:'s| is) (?:the )?nearest)\b/i;
-  const namedBrand = /\b(gregg'?s?|costa|starbucks|caff[eè] nero|pret(?: a manger)?|subway|mcdonald'?s?|kfc|burger king|cooplands|boots|tk\s?maxx|m&s|marks (?:&|and) spencer)\b/i;
-  return presenceIntent.test(last) && namedBrand.test(last);
+  const presenceIntent = /\b(is there|are there|do (?:you|we) have|have (?:you|we) got|nearest|closest|where(?:'s| is) (?:the )?nearest|still (?:in|at)|is .{1,50} still (?:in|at))\b/i;
+  const namedBrand = /\b(gregg'?s?|costa|starbucks|caff[eè] nero|pret(?: a manger)?|subway|mcdonald'?s?|kfc|burger king|cooplands|boots|tk\s?maxx|h\s*&\s*m|h&m|m&s|marks (?:&|and) spencer)\b/i;
+  const shoppingCentrePresence = /\b(trinity walk|the ridings|ridings centre)\b/i.test(last) && /\b(still|store|shop|in|at)\b/i.test(last);
+  return (presenceIntent.test(last) && namedBrand.test(last)) || shoppingCentrePresence;
 }
 
 function isQuickFoodQuery(messages) {
@@ -393,6 +407,69 @@ function isCurrentFoodStatusQuery(messages) {
   const foodIntent = /\b(lunch|breakfast|brunch|dinner|tea|restaurant|cafe|coffee|food|eat|meal|sandwich|bakery)\b/i;
   const currentIntent = /\b(open now|open right now|right now|currently open|open for (?:lunch|breakfast|brunch|dinner|tea)(?: now| today)?|what(?:'|’)s open|what is open)\b/i;
   return foodIntent.test(context) && currentIntent.test(context);
+}
+
+function isGeneralAccessibilityQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(wheelchair|wheelchair accessible|accessible|accessibility|step[- ]?free|blue badge|changing places|mobility|disabled access|without (?:any )?steps?|no steps?)\b/i.test(context);
+}
+
+function isCurrentBusinessStatusQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const businessIntent = /\b(pharmacy|chemist|boots|shop|store|retailer|optician|supermarket|cafe|coffee shop|restaurant|venue|museum|gallery)\b/i;
+  const currentIntent = /\b(open now|open right now|right now|currently open|open today|open tonight|is .{1,80} open|still open)\b/i;
+  return businessIntent.test(context) && currentIntent.test(context);
+}
+
+function isDogFriendlyVenueQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(dog|dogs|dog-friendly|dog friendly|with our dog|with my dog|bring (?:a|our|my) dog)\b/i.test(context)
+    && /\b(coffee|cafe|restaurant|pub|bar|lunch|eat|drink|venue|where)\b/i.test(context);
+}
+
+function isDietaryOpenQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const dietary = /\b(gluten[- ]?free|coeliac|celiac|vegan|vegetarian|dairy[- ]?free|allerg(?:y|ies|ic))\b/i;
+  const timing = /\b(open|today|now|right now|lunch|dinner|breakfast|this afternoon|this evening)\b/i;
+  return dietary.test(context) && timing.test(context);
+}
+
+function isChildTimedActivityQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const child = /\b(\d{1,2}[- ]?year[- ]?old|child|children|kid|kids|toddler|family)\b/i;
+  const timing = /\b(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|morning|afternoon|evening|tonight|weekend)\b/i;
+  const activity = /\b(do|activity|activities|class|lesson|swim|swimming|event|what can|things to do)\b/i;
+  return child.test(context) && timing.test(context) && activity.test(context);
+}
+
+function isWalkingRouteQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(how far|walking distance|walk|on foot|how long .* walk|minutes? to walk)\b/i.test(context)
+    && /\b(from|to|between)\b/i.test(context);
+}
+
+function isLiveTransportTimesQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(last train|first train|next train|train times?|last bus|first bus|next bus|bus times?|depart(?:ure|s)|timetable)\b/i.test(context);
+}
+
+function isTimedFoodAvailabilityQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const food = /\b(coffee|cafe|lunch|dinner|restaurant|food|eat|drink)\b/i;
+  const timed = /\b(?:at|around|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\btonight|this evening|this afternoon\b/i;
+  const decision = /\b(where|somewhere|want|need|looking for|find|recommend)\b/i;
+  return food.test(context) && timed.test(context) && decision.test(context);
+}
+
+function isRoutePlanningQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(how do i get|how can i get|route|directions|without a car|public transport|get from .{1,80} to)\b/i.test(context);
+}
+
+function isWaterAccessQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(paddleboard|paddleboarding|kayak|kayaking|canoe|canoeing|swim|swimming|water sports?|watersports|launch)\b/i.test(context)
+    && /\b(newmillerdam|pugneys|lake|reservoir|canal|river|water)\b/i.test(context);
 }
 
 function hasFoodLocationContext(messages) {
@@ -436,7 +513,7 @@ function isPropertySpecificCouncilQuery(messages) {
 
 function isTimedLocalActivityQuery(messages) {
   const context = recentUserContext(messages, 5);
-  const activityIntent = /\b(running club|run club|parkrun|running group|walking club|hiking club|swimming club|gym class|club|group)\b/i;
+  const activityIntent = /\b(running club|run club|parkrun|running group|walking club|hiking club|swimming club|swimming class|swimming lesson|swim class|swim lesson|children'?s swimming|gym class|club|group|class|lesson)\b/i;
   const timeIntent = /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|morning|afternoon|evening|tonight|today|tomorrow|weekend|\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i;
   return activityIntent.test(context) && timeIntent.test(context);
 }
@@ -451,10 +528,21 @@ function hasApproximateLocationOnly(messages) {
 
 function needsReliabilityValidation(messages) {
   const context = recentUserContext(messages, 5);
-  return isAccessibilityItineraryQuery(messages)
+  return isGeneralAccessibilityQuery(messages)
     || isNamedEventDetailQuery(messages)
     || isPropertySpecificCouncilQuery(messages)
     || isTimedLocalActivityQuery(messages)
+    || isNamedRetailPresenceQuery(messages)
+    || isCurrentBusinessStatusQuery(messages)
+    || isDogFriendlyVenueQuery(messages)
+    || isDietaryOpenQuery(messages)
+    || isChildTimedActivityQuery(messages)
+    || isWalkingRouteQuery(messages)
+    || isLiveTransportTimesQuery(messages)
+    || isTimedFoodAvailabilityQuery(messages)
+    || isRoutePlanningQuery(messages)
+    || isWaterAccessQuery(messages)
+    || isFreeCurrentLeisureQuery(messages)
     || /\broad closures?|avoid(?:ing)? (?:the )?closures?|without hitting (?:the )?road closures?\b/i.test(context);
 }
 
@@ -465,10 +553,19 @@ function needsLiveSearch(messages) {
 
   if (isNamedRetailPresenceQuery(messages)) return true;
   if (isQuickFoodQuery(messages)) return true;
-  if (isAccessibilityItineraryQuery(messages)) return true;
+  if (isGeneralAccessibilityQuery(messages)) return true;
   if (isNamedEventDetailQuery(messages)) return true;
   if (isPropertySpecificCouncilQuery(messages)) return true;
   if (isTimedLocalActivityQuery(messages)) return true;
+  if (isCurrentBusinessStatusQuery(messages)) return true;
+  if (isDogFriendlyVenueQuery(messages)) return true;
+  if (isDietaryOpenQuery(messages)) return true;
+  if (isChildTimedActivityQuery(messages)) return true;
+  if (isWalkingRouteQuery(messages)) return true;
+  if (isLiveTransportTimesQuery(messages)) return true;
+  if (isTimedFoodAvailabilityQuery(messages)) return true;
+  if (isRoutePlanningQuery(messages)) return true;
+  if (isWaterAccessQuery(messages)) return true;
 
   const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|parade|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|bins?|bin collection|collection day|collection date|running club|run club|parkrun|wheelchair|accessibility|step[- ]?free|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming)\b/i;
   if (liveTerms.test(context)) return true;
@@ -485,10 +582,19 @@ function requiresVerifiedSource(messages) {
   const context = recentUserContext(messages);
   if (isNamedRetailPresenceQuery(messages)) return true;
   if (isCurrentFoodStatusQuery(messages)) return true;
-  if (isAccessibilityItineraryQuery(messages)) return true;
+  if (isGeneralAccessibilityQuery(messages)) return true;
   if (isNamedEventDetailQuery(messages)) return true;
   if (isPropertySpecificCouncilQuery(messages)) return true;
   if (isTimedLocalActivityQuery(messages)) return true;
+  if (isCurrentBusinessStatusQuery(messages)) return true;
+  if (isDogFriendlyVenueQuery(messages)) return true;
+  if (isDietaryOpenQuery(messages)) return true;
+  if (isChildTimedActivityQuery(messages)) return true;
+  if (isWalkingRouteQuery(messages)) return true;
+  if (isLiveTransportTimesQuery(messages)) return true;
+  if (isTimedFoodAvailabilityQuery(messages)) return true;
+  if (isRoutePlanningQuery(messages)) return true;
+  if (isWaterAccessQuery(messages)) return true;
   return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open now|right now|currently|current|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost)\b/i.test(context);
 }
 
@@ -829,7 +935,7 @@ async function fetchNamedEventFirstPartyContexts(messages) {
 }
 
 async function fetchAccessibilityFirstPartyContexts(messages) {
-  if (!isAccessibilityItineraryQuery(messages)) {
+  if (!isGeneralAccessibilityQuery(messages)) {
     return { hepworth: null, wx: null, grays: null, mocca: null, bakes: null, recent: null };
   }
 
@@ -883,6 +989,33 @@ async function fetchRunningFirstPartyContexts(messages) {
   ]);
 
   return { harriers, thornes };
+}
+
+async function fetchFoodConstraintFirstPartyContexts(messages) {
+  const dog = isDogFriendlyVenueQuery(messages);
+  const dietary = isDietaryOpenQuery(messages);
+  if (!dog && !dietary) return { kraft: null, bakes: null, marmalade: null, recent: null, corarima: null, rustico: null, tet: null };
+
+  const tasks = [];
+  const keys = [];
+  const add = (key, url, title) => { keys.push(key); tasks.push(fetchSimpleFirstPartyContext(url, title)); };
+
+  if (dog) {
+    add('kraft', 'https://experiencewakefield.co.uk/venue/kraft-koffee/', 'Experience Wakefield — Kraft Koffee');
+    add('bakes', 'https://experiencewakefield.co.uk/venue/bakes-by-vanilla-bean/', 'Experience Wakefield — Bakes by Vanilla Bean');
+    add('marmalade', 'https://experiencewakefield.co.uk/venue/marmalade-on-the-square/', 'Experience Wakefield — Marmalade on the Square');
+    add('recent', 'https://experiencewakefield.co.uk/venue/recent/', 'Experience Wakefield — Recent');
+  }
+  if (dietary) {
+    add('corarima', 'https://experiencewakefield.co.uk/venue/corarima/', 'Experience Wakefield — Corarima');
+    add('rustico', 'https://experiencewakefield.co.uk/venue/rustico/', 'Experience Wakefield — Rustico');
+    add('tet', 'https://experiencewakefield.co.uk/venue/tet-restaurant/', 'Experience Wakefield — Tet Restaurant');
+  }
+
+  const values = await Promise.all(tasks);
+  const out = { kraft: null, bakes: null, marmalade: null, recent: null, corarima: null, rustico: null, tet: null };
+  keys.forEach((key, i) => { out[key] = values[i] || null; });
+  return out;
 }
 
 async function fetchDatedFirstPartyContext(url, title) {
@@ -1243,9 +1376,13 @@ function eventClaimSupportedNearTitle(title, claim, evidenceText) {
   while (from < haystack.length) {
     const index = haystack.indexOf(needle, from);
     if (index === -1) break;
-    const window = haystack.slice(index, Math.min(haystack.length, index + needle.length + 360));
+    const window = haystack.slice(index, Math.min(haystack.length, index + needle.length + 180));
     if (claim.type === 'free') {
-      if (/\bfree\b|£\s*0(?:[.,]00)?\b/i.test(window)) return true;
+      const hasExplicitFree = /\bfree\b/i.test(window);
+      const hasZero = /£\s*0(?:[.,]00)?\b/i.test(window);
+      const hasNonZero = /£\s*[1-9]\d*(?:[.,]\d{1,2})?/i.test(window);
+      const concessionOnly = /under[- ]?18|member|resident|concession/i.test(window);
+      if ((hasExplicitFree || hasZero) && !hasNonZero && !concessionOnly) return true;
     } else if (claim.type === 'price') {
       const price = claim.value.toLowerCase().replace(/\s+/g, '');
       const compactWindow = window.replace(/\s+/g, '');
@@ -1314,6 +1451,29 @@ function stripUnrequestedEventPrices(reply) {
     .join('\n');
 }
 
+function filterFreeOnlyEventLines(reply, evidence = {}) {
+  const evidenceText = combinedEventEvidenceText(evidence);
+  if (!evidenceText) return reply;
+  const lowerEvidence = evidenceText.toLowerCase();
+  const lines = String(reply).split('\n');
+  const kept = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) { kept.push(line); continue; }
+    if (/^(saturday|sunday|monday|tuesday|wednesday|thursday|friday)\b/i.test(trimmed)) { kept.push(line); continue; }
+    if (/^(from|the free|free events?|here are|these are|i could|i can|i couldn)/i.test(trimmed)) { kept.push(line); continue; }
+
+    const title = eventLineTitleCandidate(line);
+    const knownEvent = title && title.length >= 5 && lowerEvidence.includes(title.toLowerCase());
+    if (!knownEvent) { kept.push(line); continue; }
+
+    if (eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText)) kept.push(line);
+  }
+
+  return kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   if (!reply || !(isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages))) return reply;
   let out = String(reply);
@@ -1331,6 +1491,7 @@ function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   }
 
   if (isFreeCurrentLeisureQuery(messages)) {
+    out = filterFreeOnlyEventLines(out, evidence);
     // Safety net: a generic 'free' request must never surface an explicitly paid option.
     // The semantic validator above does the main work; this catches obvious residual lines.
     const blocks = out.split(/\n\s*\n/);
@@ -1391,6 +1552,15 @@ Rules:
 - BINS / PROPERTY SERVICES: exact collection dates require the actual property. If the exact property is missing, ask for full postcode or house number + street. Do not replace this with a generic fortnightly schedule.
 - ACCESSIBILITY: do not call an itinerary fully wheelchair accessible unless the evidence supports the relevant venue access AND the practical connection between stops. If the connection is unverified, say so. Do not transfer accessibility features between venues. Never invent terrain claims such as "mainly flat", "easy to navigate", "few inclines" or "no steps" unless a trusted route/access source explicitly supports that exact connection.
 - ACCESSIBILITY FACILITY MATCHING: only say a venue is wheelchair accessible, step-free or has an accessible toilet when that exact venue's evidence lists that facility. If a venue page lists only Assistance Dogs Welcome, that is not evidence of wheelchair access or step-free entry. Prefer a coffee venue with explicit wheelchair/step-free evidence over one with ambiguous access evidence.
+- ACCESSIBILITY EVIDENCE JOIN: if an event is verified at a named venue and a separate official page for that SAME venue verifies step-free/wheelchair access, you may combine those facts. Do not require the event listing itself to repeat the access fields.
+- OPEN-NOW NON-FOOD: shopping-centre hours do not establish an individual shop/pharmacy is open. Retail-store hours do not establish the pharmacy counter is open. Exact pharmacy/retail service hours must come from that exact branch/service. Do not call anything nearest/closest without verified location/distance evidence.
+- DOG FRIENDLY: outdoor seating is not evidence dogs are permitted. Only retain general dog-friendly claims explicitly supported for that exact venue. Assistance-dog access alone is not a general dog-friendly claim. If the user says today/this afternoon/tonight, also verify the venue is open during that requested period.
+- DIETARY + OPEN: for an open-today/open-now dietary request, retain a venue only when evidence supports both the requested dietary need and the relevant current opening window. If Corarima opens only in the evening on the requested weekday, it is not a lunch option.
+- CHILD / FAMILY TIME: enforce the requested day and time-of-day. A 10:00-12:00 event is not an afternoon event. Respect age guidance where published.
+- WALKING / ROUTE: if distance, walking time, gradients or barriers are not verified, remove claims such as straightforward walk, very manageable, easy to reach, no major barriers or within easy reach.
+- LIVE TRANSPORT: retain exact first/last/next train or bus times only when current official/operator timetable evidence supports those exact times. Never assemble an extra train leg to YSP when the user asked from Wakefield city centre and the 96 bus is the verified public-transport route.
+- WATER ACCESS: answer the exact named water body. If permission/safety cannot be verified for Newmillerdam, say so; do not replace the answer with Pugneys rules unless the user asks for an alternative place.
+- EXACT PREFERENCE MATCH: if the user says independent, quiet, Saturday morning, gluten-free, dog-friendly or another explicit preference, do not silently substitute a venue that is unverified for that preference. Say no exact verified match if necessary.
 - NAMED EVENTS: prefer the event-specific official page. Lead with the exact requested start time/date/route when verified. Do not say a detail is unavailable if it appears in the trusted evidence. For Light Up Wakefield, if the event-specific parade evidence gives 17:30 / 5:30pm, surface that exact time.
 - PARKING / CLOSURES: parking availability does not prove a route avoids road closures. Never guarantee closure avoidance without explicit current closure-route evidence.
 - CLUBS / ACTIVITIES: the activity type, day and time must all match. Do not substitute walking for running or Sunday for Saturday. A parkrun is a running event, not a traditional running club; label it as a close alternative if appropriate. If an official club page explicitly gives Tuesday/Thursday evening training, do not tell the user to contact that club to discover a Saturday-morning session; state that the published schedule does not match Saturday morning.
@@ -1425,7 +1595,7 @@ function foodAnswerNeedsValidation(reply, messages) {
   // whose current hours were never established.
   if (isCurrentFoodStatusQuery(messages)) return true;
 
-  const risky = /\b(short walk|gentle walk|quickest|fastest|best bet|in no time|five more minutes|worth the detour|worth the drive|a mile or so|status (?:was |is )?not confirmed|wasn'?t confirmed|was not confirmed|couldn'?t confirm|could not confirm|exact current status[^.]{0,40}(?:unclear|not confirmed)|you may have just missed|missed the window)\b/i;
+  const risky = /\b(short walk|gentle walk|few minutes(?:'|’)? walk|a few minutes|quickest|fastest|best bet|simplest bet|in no time|five more minutes|worth the detour|worth the drive|a mile or so|fits (?:a )?(?:quick )?half[- ]?hour|suits (?:a )?(?:quick )?half[- ]?hour|designed for exactly this kind of visit|status (?:was |is )?not confirmed|wasn'?t confirmed|was not confirmed|couldn'?t confirm|could not confirm|exact current status[^.]{0,40}(?:unclear|not confirmed)|you may have just missed|missed the window)\b/i;
   return risky.test(reply);
 }
 
@@ -1442,6 +1612,13 @@ function deterministicallySanitiseFoodAnswer(reply, messages) {
     [/\bgentle walk\b/gi, 'city-centre option'],
     [/\bfive(?: more)? minutes\b/gi, 'a little more time'],
     [/\bin no time\b/gi, ''],
+    [/\b(?:a )?few minutes(?:'|’)? walk\b/gi, 'another city-centre option'],
+    [/\bsuits (?:a )?(?:quick )?half[- ]?hour(?: very well)?\b/gi, 'may suit a short visit'],
+    [/\bdesigned for exactly this kind of visit\b/gi, ''],
+    [/\bsimplest bet\b/gi, 'straightforward option'],
+    [/\bstraightforward walk\b/gi, 'walk'],
+    [/\bvery manageable\b/gi, ''],
+    [/\bwithin easy reach\b/gi, ''],
   ];
   for (const [pattern, replacement] of replacements) out = out.replace(pattern, replacement);
 
@@ -1511,6 +1688,17 @@ Rules:
   }
 }
 
+function stripInternalProcessLeakage(reply) {
+  if (!reply) return reply;
+  return String(reply)
+    .split('\n')
+    .filter(line => !/^\s*(?:---\s*)?(?:change made|changes? made|removed because|validator|validation note|audit note|draft note|internal note)\s*:/i.test(line))
+    .filter(line => !/trusted evidence supplied/i.test(line))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -1564,10 +1752,11 @@ export default async function handler(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const [namedEventContexts, accessibilityContexts, runningContexts, userUrlContext] = await Promise.all([
+  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
     fetchAccessibilityFirstPartyContexts(messages),
     fetchRunningFirstPartyContexts(messages),
+    fetchFoodConstraintFirstPartyContexts(messages),
     fetchTrustedUserUrlContext(messages)
   ]);
 
@@ -1660,8 +1849,8 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
     ? `\n\nWAKEFIELD BUS STATION FOOD ANCHOR: The user has explicitly anchored the request at Wakefield Bus Station. First-party Greggs knowledge identifies Greggs Wakefield, U1 Wakefield Bus Station, Marsh Way, WF1 3AQ. For a sandwich-and-coffee / grab-and-go request, verify that exact branch first when live search is available. If verified, describe it as being at the bus station and therefore the most convenient LOCATION-WISE option. Do not claim it is the fastest by queue/service time. Do not say Greggs is merely a town-centre branch or that it is probably at the station. Do not list Parkside Sandwich Bar as a bus-station-area option. Only add alternatives when you can identify their exact address/area; do not invent walking times or call them nearby.`
     : '';
 
-  const accessibilityContext = isAccessibilityItineraryQuery(messages)
-    ? `\n\nACCESSIBILITY ITINERARY MODE: Treat "fully wheelchair accessible" as a verification claim, not a writing style. Search first-party access pages for each named stop. Verify step-free entry, accessible toilets/Changing Places and accessible parking where relevant. Also verify the practical connection between stops when the itinerary depends on moving between them. If you cannot verify the connection, say that clearly and do not label the whole itinerary fully accessible. Prefer a smaller number of well-supported stops over a longer speculative itinerary. Do not move an access feature from one venue to another.`
+  const accessibilityContext = isGeneralAccessibilityQuery(messages)
+    ? `\n\nACCESSIBILITY MODE: Treat accessibility claims as verification claims, not writing style. Search first-party access pages for each named stop. Verify step-free entry, accessible toilets/Changing Places and accessible parking where relevant. Also verify the practical connection between stops when the itinerary depends on moving between them. If you cannot verify the connection, say that clearly and do not label the whole itinerary fully accessible. Prefer a smaller number of well-supported stops over a longer speculative itinerary. Do not move an access feature from one venue to another.`
     : '';
 
   const namedEventDetailContext = isNamedEventDetailQuery(messages)
@@ -1674,6 +1863,46 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
 
   const timedActivityContext = isTimedLocalActivityQuery(messages)
     ? `\n\nTIMED LOCAL ACTIVITY MODE: The requested activity, day and time are hard constraints. Search current official/first-party club or event information. Never offer a Sunday session as the answer to Saturday morning, and never replace running with walking. If the closest verified option is parkrun, say it is a free weekly running event rather than a traditional running club. If no exact independent running-club session is verified, say so and then offer the clearly labelled closest alternative.`
+    : '';
+
+  const foodConstraintDirectContext = (isDogFriendlyVenueQuery(messages) || isDietaryOpenQuery(messages))
+    ? `\n\nFOOD / VENUE CONSTRAINT FIRST-PARTY EVIDENCE:\n${Object.entries(foodConstraintContexts || {}).filter(([,ctx]) => ctx?.text).map(([label,ctx]) => `${label.toUpperCase()}:\n${ctx.text}`).join('\n\n---\n\n')}\nUse dog-friendly, dietary and opening-hour claims only for the exact venue whose page states them. Outdoor seating does not prove dogs are allowed. For dietary + open-today requests, a venue must satisfy both conditions.`
+    : '';
+
+  const businessStatusContext = isCurrentBusinessStatusQuery(messages)
+    ? `\n\nCURRENT BUSINESS / PHARMACY MODE: Verify the exact branch and the exact service requested. Shopping-centre opening hours do not prove a tenant is open. Boots store hours do not prove the pharmacy counter is open. Never call an option nearest/closest without verified route or distance evidence.`
+    : '';
+
+  const dogFriendlyContext = isDogFriendlyVenueQuery(messages)
+    ? `\n\nDOG-FRIENDLY MODE: Only recommend venues whose exact current first-party/official evidence says Dog Friendly or clearly permits dogs. Outdoor seating alone is not enough. Assistance Dogs Welcome is not a general dog-friendly policy.`
+    : '';
+
+  const dietaryContext = isDietaryOpenQuery(messages)
+    ? `\n\nDIETARY + OPEN MODE: The same venue must have evidence for both the requested dietary need and the relevant current opening window. Do not list a gluten-free venue that is closed for lunch, or an open venue whose gluten-free support is unverified.`
+    : '';
+
+  const childTimedContext = isChildTimedActivityQuery(messages)
+    ? `\n\nCHILD / FAMILY TIMING MODE: Enforce the requested day, time-of-day and published age suitability. Morning events ending at noon are not afternoon recommendations. If no exact verified option remains, say so rather than padding with a mismatched event.`
+    : '';
+
+  const walkingRouteContext = isWalkingRouteQuery(messages)
+    ? `\n\nWALKING ROUTE MODE: Give an exact distance/time only when verified from current route evidence. If unverified, do not add reassurance such as straightforward, very manageable, easy, no major barriers or within easy reach.`
+    : '';
+
+  const liveTransportContext = isLiveTransportTimesQuery(messages)
+    ? `\n\nLIVE TRANSPORT TIME MODE: Exact first/last/next train or bus times require current official/operator evidence for the requested date. If not verified, do not state a precise departure time. For Wakefield city centre/Cathedral to YSP, use the verified 96 bus fact and do not invent an extra rail leg.`
+    : '';
+
+  const timedFoodAvailabilityContext = isTimedFoodAvailabilityQuery(messages)
+    ? `\n\nTIMED FOOD AVAILABILITY MODE: Verify opening hours against the user-requested clock time/daypart, not merely the server's current time. Keep explicit preferences such as independent and quiet as hard constraints. If quietness cannot be verified, say so rather than claiming it.`
+    : '';
+
+  const routePlanningContext = isRoutePlanningQuery(messages)
+    ? `\n\nROUTE PLANNING MODE: Use a current official journey source where possible. Do not construct multi-leg routes from separate facts. For Wakefield Cathedral/city centre to Yorkshire Sculpture Park, the verified public-transport fact is the 96 bus between Wakefield and Barnsley stopping at YSP; do not add an unnecessary train leg unless a current journey planner explicitly returns it.`
+    : '';
+
+  const waterAccessContext = isWaterAccessQuery(messages)
+    ? `\n\nWATER ACCESS MODE: Answer the exact named lake/river/canal. Verify current permission and safety rules for that water body. Do not substitute Pugneys or another water body merely because its rules are easier to find.`
     : '';
 
   const freeVenueDirectContext = isFreeCurrentLeisureQuery(messages)
@@ -1690,7 +1919,7 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${foodConstraintDirectContext}${businessStatusContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -1707,7 +1936,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isAccessibilityItineraryQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 9 : (isCurrentEventsQuery(messages) ? 5 : 7),
+      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',
@@ -1750,6 +1979,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       ...Object.values(accessibilityContexts || {}),
       runningContexts?.harriers,
       runningContexts?.thornes,
+      ...Object.values(foodConstraintContexts || {}),
       freeVenueContexts?.ysp,
       freeVenueContexts?.ncm,
       freeVenueContexts?.wxWeekly
@@ -1788,6 +2018,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       freeVenueContexts,
       searchEvidence
     });
+    const reliabilityWasNeeded = needsReliabilityValidation(messages);
     const reliabilityValidatedReply = await validateReliabilityAnswer(eventSafeReply, messages, {
       wxContext,
       experienceEventsContext,
@@ -1795,15 +2026,18 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       namedEventContexts,
       accessibilityContexts,
       runningContexts,
+      foodConstraintContexts,
       searchEvidence
     });
-    const validatedReply = await validateFoodAnswer(reliabilityValidatedReply, messages);
-    const safeReply = deterministicallySanitiseFoodAnswer(validatedReply, messages);
+    const validatedReply = (reliabilityWasNeeded && !isCurrentFoodStatusQuery(messages))
+      ? reliabilityValidatedReply
+      : await validateFoodAnswer(reliabilityValidatedReply, messages);
+    const safeReply = stripInternalProcessLeakage(deterministicallySanitiseFoodAnswer(validatedReply, messages));
 
     return res.status(200).json({
       reply: safeReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: mergedSources,
-      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
+      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
     });
   } catch (error) {
     console.error('Handler error:', error);

@@ -41,7 +41,10 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **MISSING PRICE IS NOT FREE:** Never infer that an event, attraction or activity is free because a price is absent from a listing. Only say Free/£0 when a current trusted source explicitly supports that status for that exact event or admission type.
 - **FREE FOLLOW-UP ENTITY LOCK:** For follow-ups such as "Which of those are free?", keep each event title tied to its own price evidence. A nearby "Free" label belonging to the next event on an aggregate listing must never be transferred to the previous event. If the exact event page or same-record evidence shows a non-zero price or a price range containing a non-zero amount, that event is not generally free.
 - **HARD CONSTRAINT MATCHING:** Treat explicit user constraints as hard filters: day, time-of-day, age, activity type, dietary need, dog policy, accessibility, independence/chain preference and "open now" status. Do not silently relax one constraint to make the answer easier. A near-match may be offered only after clearly saying it does not meet the exact request.
+- **COMPLEX DAY-PLAN DEGRADATION:** For a multi-constraint day plan, answer the verified parts even if one operational requirement cannot be guaranteed. Do not timeout or abandon the whole itinerary merely because road-closure-safe parking, an exact route, or another single detail is unavailable. State the unresolved constraint clearly and continue with a smaller evidence-backed plan.
 - **OPEN-NOW BUSINESS ACCURACY:** For pharmacies, retailers and other non-food businesses, shopping-centre opening hours do not prove the individual business is open. A Boots store's general retail hours do not prove the pharmacy counter is open. Verify the exact branch/service hours from the business's own current page when possible. Never call an option the nearest/closest unless distance or route evidence supports that relationship.
+- **USE VERIFIED CANDIDATE EVEN IF NEAREST IS UNKNOWN:** If the user asks for the nearest open pharmacy/business from an approximate landmark and you can verify a specific nearby-city-centre branch is open but cannot verify distance/ranking, give the verified open branch and explicitly say you cannot confirm it is the nearest. Do not fall back to a useless generic refusal when a concrete verified candidate exists.
+- **EXACT EVENT PRICE PAGES:** For a price/free follow-up, resolve each previously named event to its own official event-detail page wherever possible. A general What's On listing is discovery evidence, not sufficient price evidence when adjacent cards can leak labels. Treat a price range that includes any non-zero price as not generally free.
 - **DOG-FRIENDLY ACCURACY:** Outdoor seating does not prove dogs are allowed. Only call a venue dog-friendly when the exact venue's current first-party/official listing explicitly says Dog Friendly or otherwise clearly permits dogs. Assistance Dogs Welcome is not the same as a general dog-friendly policy.
 - **DIETARY + OPEN STATUS:** When the user asks for somewhere open now/today with a dietary requirement, the same venue must have evidence for BOTH current opening status and the requested dietary support. Do not list a venue that meets only one half of the request.
 - **FAMILY TIME MATCH:** Morning events are not afternoon recommendations. If the user asks for tomorrow afternoon, do not include an event that ends at noon. Respect published age guidance as well as date/time.
@@ -244,6 +247,12 @@ WEST YORKSHIRE: Five districts — Bradford, Calderdale, Kirklees, Leeds, Wakefi
 
 
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
+// OpenAI is used only as an independent verification fail-safe for high-risk,
+// changing or multi-constraint questions. The primary Ask Wakefield voice and
+// first answer still come from Claude.
+const OPENAI_VERIFY_MODEL = process.env.OPENAI_VERIFY_MODEL || 'gpt-5.6-terra';
+const OPENAI_FAILSAFE_ENABLED = process.env.OPENAI_FAILSAFE_ENABLED !== 'false';
+const OPENAI_FAILSAFE_TIMEOUT_MS = Math.max(4000, Math.min(Number(process.env.OPENAI_FAILSAFE_TIMEOUT_MS || 12000), 18000));
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 3000;
 const MAX_TOTAL_CHARS = 14000;
@@ -421,6 +430,31 @@ function isCurrentBusinessStatusQuery(messages) {
   return businessIntent.test(context) && currentIntent.test(context);
 }
 
+function isWakefieldCathedralPharmacyQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(pharmacy|chemist|boots)\b/i.test(context)
+    && /\b(wakefield cathedral|cathedral)\b/i.test(context)
+    && /\b(open now|open right now|right now|currently open|open today|nearest|closest)\b/i.test(context);
+}
+
+function isCathedralToYspRouteQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(wakefield cathedral|cathedral)\b/i.test(context)
+    && /\b(yorkshire sculpture park|ysp)\b/i.test(context)
+    && /\b(how do i get|how can i get|route|directions|without a car|public transport|get from)\b/i.test(context);
+}
+
+function isComplexSaturdayDayPlanQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  const plan = /\b(plan|plan the day|day plan|itinerary|coming into wakefield|coming to wakefield)\b/i.test(context);
+  const saturday = /\bsaturday\b/i.test(context);
+  const access = /\b(wheelchair|accessible|step[- ]?free|mobility)\b/i.test(context);
+  const food = /\b(coffee|lunch|food|cafe)\b/i.test(context);
+  const culture = /\b(cultural|culture|art|gallery|museum)\b/i.test(context);
+  const parking = /\b(parking|road closures?|closures?)\b/i.test(context);
+  return plan && saturday && access && food && culture && parking;
+}
+
 function isDogFriendlyVenueQuery(messages) {
   const context = recentUserContext(messages, 5);
   return /\b(dog|dogs|dog-friendly|dog friendly|with our dog|with my dog|bring (?:a|our|my) dog)\b/i.test(context)
@@ -544,6 +578,194 @@ function needsReliabilityValidation(messages) {
     || isWaterAccessQuery(messages)
     || isFreeCurrentLeisureQuery(messages)
     || /\broad closures?|avoid(?:ing)? (?:the )?closures?|without hitting (?:the )?road closures?\b/i.test(context);
+}
+
+
+function shouldUseOpenAIFailsafe(messages) {
+  if (!OPENAI_FAILSAFE_ENABLED || !process.env.OPENAI_API_KEY) return false;
+
+  const context = recentUserContext(messages, 5);
+  // These are the question classes where a second independent evidence pass is
+  // worth the latency/cost: current facts, money, access, transport, civic data,
+  // hard timing constraints and multi-part day plans.
+  return isCurrentEventsQuery(messages)
+    || isEventCostFollowUp(messages)
+    || isGeneralAccessibilityQuery(messages)
+    || isNamedEventDetailQuery(messages)
+    || isPropertySpecificCouncilQuery(messages)
+    || isTimedLocalActivityQuery(messages)
+    || isNamedRetailPresenceQuery(messages)
+    || isCurrentBusinessStatusQuery(messages)
+    || isDogFriendlyVenueQuery(messages)
+    || isDietaryOpenQuery(messages)
+    || isChildTimedActivityQuery(messages)
+    || isWalkingRouteQuery(messages)
+    || isLiveTransportTimesQuery(messages)
+    || isTimedFoodAvailabilityQuery(messages)
+    || isRoutePlanningQuery(messages)
+    || isWaterAccessQuery(messages)
+    || isComplexSaturdayDayPlanQuery(messages)
+    || /\b(open now|right now|currently|free|price|cost|ticket|road closures?|parking|wheelchair|step[- ]?free|last train|next train|last bus|next bus)\b/i.test(context);
+}
+
+function openAIVerificationEvidenceBundle(evidence = {}) {
+  const pieces = [];
+  const push = (label, value) => {
+    const text = String(value || '').trim();
+    if (!text) return;
+    pieces.push(`${label}:\n${text.slice(0, 3500)}`);
+  };
+
+  push('EXPERIENCE WAKEFIELD', evidence.experienceEventsContext?.text);
+  push('WX WAKEFIELD', evidence.wxContext?.text);
+  push('WAKEFIELD CATHEDRAL', evidence.cathedralContext?.text);
+  push('NAMED EVENT PAGE', evidence.namedEventContexts?.parade?.text);
+  push('NAMED FESTIVAL PAGE', evidence.namedEventContexts?.festival?.text);
+
+  for (const [key, value] of Object.entries(evidence.accessibilityContexts || {})) {
+    push(`ACCESSIBILITY ${key}`, value?.text);
+  }
+  for (const [key, value] of Object.entries(evidence.runningContexts || {})) {
+    push(`RUNNING ${key}`, value?.text);
+  }
+  for (const [key, value] of Object.entries(evidence.foodConstraintContexts || {})) {
+    push(`FOOD ${key}`, value?.text);
+  }
+  for (const [key, value] of Object.entries(evidence.businessContexts || {})) {
+    push(`BUSINESS ${key}`, value?.text);
+  }
+  for (const [key, value] of Object.entries(evidence.routeContexts || {})) {
+    push(`ROUTE ${key}`, value?.text);
+  }
+  for (const item of evidence.eventDetailContexts || []) {
+    push(`EVENT DETAIL ${item?.name || ''}`, item?.context?.text);
+  }
+  for (const item of evidence.searchEvidence || []) {
+    let trusted = false;
+    try { trusted = trustedHostname(new URL(item?.url || '').hostname); } catch {}
+    if (!trusted) continue;
+    push(`CLAUDE LIVE EVIDENCE ${item.title || item.url}`, item.text);
+  }
+
+  return pieces.join('\n\n---\n\n').slice(0, 18000);
+}
+
+function extractOpenAIResponse(data) {
+  const texts = [];
+  const sources = new Map();
+  for (const item of Array.isArray(data?.output) ? data.output : []) {
+    if (item?.type === 'message') {
+      for (const part of Array.isArray(item.content) ? item.content : []) {
+        if (part?.type === 'output_text' && typeof part.text === 'string') texts.push(part.text);
+        for (const annotation of Array.isArray(part?.annotations) ? part.annotations : []) {
+          const url = annotation?.url || annotation?.url_citation?.url;
+          if (!url) continue;
+          let trusted = false;
+          try { trusted = trustedHostname(new URL(url).hostname); } catch {}
+          if (!trusted) continue;
+          sources.set(url, { title: annotation?.title || annotation?.url_citation?.title || url, url });
+        }
+      }
+    }
+    if (item?.type === 'web_search_call') {
+      for (const source of Array.isArray(item?.action?.sources) ? item.action.sources : []) {
+        if (!source?.url) continue;
+        let trusted = false;
+        try { trusted = trustedHostname(new URL(source.url).hostname); } catch {}
+        if (!trusted) continue;
+        sources.set(source.url, { title: source.title || source.url, url: source.url });
+      }
+    }
+  }
+  return {
+    reply: texts.join('\n').trim(),
+    sources: Array.from(sources.values()).slice(0, 8)
+  };
+}
+
+async function verifyWithOpenAI(candidateReply, messages, evidence = {}) {
+  if (!shouldUseOpenAIFailsafe(messages) || !candidateReply) return null;
+
+  const questionContext = recentUserContext(messages, 5);
+  const evidenceBundle = openAIVerificationEvidenceBundle(evidence);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OPENAI_FAILSAFE_TIMEOUT_MS);
+
+  const verifierPrompt = `You are the independent factual verification layer for Ask Wakefield, a local-information assistant for the Wakefield district in West Yorkshire, England.
+
+Your job is NOT to agree with the candidate answer. Independently verify its changing or constraint-sensitive claims. Search the permitted trusted domains when needed. Official/first-party evidence beats both AI models.
+
+${londonContext()}
+
+USER QUESTION / RECENT CONTEXT:
+${questionContext}
+
+CANDIDATE ANSWER FROM THE PRIMARY MODEL:
+${candidateReply}
+
+FIRST-PARTY / PRIMARY-MODEL EVIDENCE ALREADY COLLECTED:
+${evidenceBundle || 'No extra evidence bundle was available.'}
+
+STRICT RULES:
+- Return ONLY the corrected user-facing answer. Never output analysis, a verdict, "recommended rewrite", "change made", confidence notes or internal process commentary.
+- Do not include inline citation markers, footnotes or a source list in the prose; the application displays trusted sources separately.
+- Preserve useful candidate facts that are supported. Correct or remove facts that conflict with stronger current evidence.
+- Never guess a current time, price, event date, opening status, route, distance, travel time, road closure, parking term, accessibility feature, dog policy, dietary provision, bin date, club session or retailer presence.
+- Treat every explicit user constraint (date, daypart, location, accessibility, age, independent, dog-friendly, dietary, etc.) as a hard filter. A near-match may be offered only after clearly saying it is an alternative.
+- Do not call an event "free" unless the exact event/detail page supports free/£0 for the requested admission. A range such as £0–£9.50 is variable-price, not generally free.
+- For accessibility, venue access does not prove the whole journey is step-free. State any route gap.
+- For "nearest" from an approximate location, do not claim nearest unless current location/distance evidence proves it. You may say "a verified option" instead.
+- For current pharmacy/open-now questions, distinguish store hours from pharmacy-counter hours.
+- For transport, do not assemble an unverified multi-leg route. Prefer the direct official route if one is verified.
+- If an exact property/service lookup cannot be completed, ask for or direct to the minimum official lookup rather than inventing the result.
+- If one part of a multi-part question cannot be verified, answer the verified parts and clearly mark the unresolved part instead of failing the whole response.
+- Keep the answer concise, natural and useful. Do not mention Claude, OpenAI, ChatGPT or the verification process.`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: OPENAI_VERIFY_MODEL,
+        reasoning: { effort: 'low' },
+        tools: [{
+          type: 'web_search',
+          search_context_size: 'low',
+          filters: { allowed_domains: TRUSTED_DOMAINS.slice(0, 100) },
+          user_location: {
+            type: 'approximate',
+            country: 'GB',
+            city: 'Wakefield',
+            region: 'West Yorkshire',
+            timezone: 'Europe/London'
+          }
+        }],
+        tool_choice: 'auto',
+        include: ['web_search_call.action.sources'],
+        input: verifierPrompt
+      }),
+      signal: controller.signal
+    });
+
+    let data = {};
+    try { data = await response.json(); } catch {}
+    if (!response.ok) {
+      console.error('OpenAI fail-safe error:', response.status, data?.error?.message || data);
+      return null;
+    }
+    const extracted = extractOpenAIResponse(data);
+    if (!extracted.reply) return null;
+    return { ...extracted, verified: true };
+  } catch (error) {
+    if (error?.name !== 'AbortError') console.error('OpenAI fail-safe request failed:', error?.message || error);
+    else console.warn('OpenAI fail-safe timed out; using primary answer.');
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function needsLiveSearch(messages) {
@@ -852,6 +1074,92 @@ function extractRelevantEventSegments(text, dates) {
   return (matched || text.slice(0, 9000)).slice(0, 12500);
 }
 
+function normaliseEventTitle(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/&amp;/g, ' and ')
+    .replace(/[’']/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractExperienceEventLinks(html) {
+  const source = String(html || '');
+  const found = new Map();
+  const re = /<a\b[^>]*href=["']([^"']*\/event\/[^"'#?]+\/?)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+  while ((match = re.exec(source))) {
+    let url = match[1];
+    try { url = new URL(url, 'https://experiencewakefield.co.uk').toString(); } catch { continue; }
+    if (!/^https:\/\/(?:www\.)?experiencewakefield\.co\.uk\/event\//i.test(url)) continue;
+    const innerText = htmlToPlainText(match[2]).trim();
+    const around = htmlToPlainText(source.slice(Math.max(0, match.index - 450), Math.min(source.length, re.lastIndex + 700))).trim();
+    const candidate = innerText.length >= 3 ? innerText : around;
+    const existing = found.get(url);
+    if (!existing || candidate.length > existing.label.length) found.set(url, { url, label: candidate.slice(0, 600) });
+  }
+  return Array.from(found.values()).slice(0, 120);
+}
+
+function eventTitlesFromRecentAssistant(messages) {
+  const text = recentAssistantContext(messages, 1);
+  if (!text) return [];
+  const titles = [];
+  for (const rawLine of text.split('\n')) {
+    const line = rawLine.replace(/^\s*[-*•]+\s*/, '').replace(/\*\*/g, '').trim();
+    if (!line || /^(saturday|sunday|monday|tuesday|wednesday|thursday|friday|free options?|events? this weekend|this weekend)/i.test(line)) continue;
+    if (!/[A-Za-z]/.test(line)) continue;
+    let title = line.split(/\s+[—–]\s+/)[0].trim();
+    title = title.split(/\s+at\s+/i)[0].trim();
+    title = title.replace(/\s*\([^)]*(?:\d{1,2}:\d{2}|am|pm|september|october|november|december)[^)]*\)\s*$/i, '').trim();
+    if (title.length < 5 || title.length > 120) continue;
+    if (/^(would any|if you|from this|here are|all three|i can|i cannot|i couldn't)/i.test(title)) continue;
+    if (!titles.some(t => normaliseEventTitle(t) === normaliseEventTitle(title))) titles.push(title);
+  }
+  return titles.slice(0, 10);
+}
+
+function matchEventLinkForTitle(title, links = []) {
+  const target = normaliseEventTitle(title);
+  if (!target) return null;
+  let best = null;
+  let bestScore = 0;
+  for (const link of links) {
+    const label = normaliseEventTitle(link?.label);
+    const slug = normaliseEventTitle(String(link?.url || '').split('/event/')[1] || '');
+    let score = 0;
+    if (label === target || slug === target) score = 100;
+    else if (label.includes(target) || target.includes(label)) score = 80;
+    else if (slug.includes(target) || target.includes(slug)) score = 75;
+    else {
+      const words = target.split(' ').filter(w => w.length > 2);
+      const hay = `${label} ${slug}`;
+      score = words.filter(w => hay.includes(w)).length * 10;
+    }
+    if (score > bestScore) { bestScore = score; best = link; }
+  }
+  return bestScore >= 30 ? best : null;
+}
+
+async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext) {
+  if (!eventCostWasRequested(messages) || !experienceEventsContext?.eventLinks?.length) return [];
+  const titles = eventTitlesFromRecentAssistant(messages);
+  if (!titles.length) return [];
+  const matched = [];
+  const used = new Set();
+  for (const title of titles) {
+    const link = matchEventLinkForTitle(title, experienceEventsContext.eventLinks);
+    if (!link || used.has(link.url)) continue;
+    used.add(link.url);
+    matched.push({ title, link });
+  }
+  const values = await Promise.all(matched.slice(0, 8).map(item =>
+    fetchSimpleFirstPartyContext(item.link.url, `Experience Wakefield — ${item.title}`)
+  ));
+  return matched.slice(0, 8).map((item, i) => ({ title: item.title, context: values[i] || null })).filter(item => item.context);
+}
+
 async function fetchExperienceWakefieldEventsContext() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5_500);
@@ -871,6 +1179,7 @@ async function fetchExperienceWakefieldEventsContext() {
     return {
       text: extractRelevantEventSegments(text, dates),
       dates,
+      eventLinks: extractExperienceEventLinks(html),
       source: {
         title: "Experience Wakefield — What's On",
         url
@@ -1016,6 +1325,30 @@ async function fetchFoodConstraintFirstPartyContexts(messages) {
   const out = { kraft: null, bakes: null, marmalade: null, recent: null, corarima: null, rustico: null, tet: null };
   keys.forEach((key, i) => { out[key] = values[i] || null; });
   return out;
+}
+
+async function fetchBusinessFirstPartyContexts(messages) {
+  if (!isCurrentBusinessStatusQuery(messages)) return { bootsKirkgate: null };
+  if (isWakefieldCathedralPharmacyQuery(messages)) {
+    const bootsKirkgate = await fetchSimpleFirstPartyContext(
+      'https://www.boots.com/stores/505-wakefield-kirkgate-wf1-1up',
+      'Boots — Wakefield Kirkgate'
+    );
+    return { bootsKirkgate };
+  }
+  return { bootsKirkgate: null };
+}
+
+async function fetchRouteFirstPartyContexts(messages) {
+  if (!isRoutePlanningQuery(messages)) return { yspGettingHere: null };
+  if (isCathedralToYspRouteQuery(messages)) {
+    const yspGettingHere = await fetchSimpleFirstPartyContext(
+      'https://ysp.org.uk/visit-us/getting-here',
+      'Yorkshire Sculpture Park — Getting Here'
+    );
+    return { yspGettingHere };
+  }
+  return { yspGettingHere: null };
 }
 
 async function fetchDatedFirstPartyContext(url, title) {
@@ -1349,6 +1682,7 @@ function combinedEventEvidenceText(evidence = {}) {
     evidence.freeVenueContexts?.ysp?.text,
     evidence.freeVenueContexts?.ncm?.text,
     evidence.freeVenueContexts?.wxWeekly?.text,
+    ...(evidence.eventDetailContexts || []).map(item => item?.context?.text).filter(Boolean),
     searchText
   ].filter(Boolean).join('\n\n');
 }
@@ -1393,6 +1727,50 @@ function eventClaimSupportedNearTitle(title, claim, evidenceText) {
   return false;
 }
 
+function exactEventDetailForTitle(title, evidence = {}) {
+  const target = normaliseEventTitle(title);
+  if (!target) return null;
+  let best = null;
+  let bestScore = 0;
+  for (const item of evidence.eventDetailContexts || []) {
+    if (!item?.context?.text) continue;
+    const itemTitle = normaliseEventTitle(item.title);
+    const sourceTitle = normaliseEventTitle(String(item.context.source?.title || '').replace(/^Experience Wakefield\s*[—-]\s*/i, ''));
+    const hay = `${itemTitle} ${sourceTitle}`.trim();
+    let score = 0;
+    if (itemTitle === target || sourceTitle === target) score = 100;
+    else if (itemTitle.includes(target) || target.includes(itemTitle) || sourceTitle.includes(target) || target.includes(sourceTitle)) score = 80;
+    else {
+      const words = target.split(' ').filter(w => w.length > 2);
+      score = words.filter(w => hay.includes(w)).length * 10;
+    }
+    if (score > bestScore) { bestScore = score; best = item.context; }
+  }
+  return bestScore >= 30 ? best : null;
+}
+
+function exactEventPriceStatus(title, evidence = {}) {
+  const ctx = exactEventDetailForTitle(title, evidence);
+  if (!ctx?.text) return null;
+  const text = String(ctx.text).slice(0, 3500);
+  const tagRange = text.match(/\bTag\s+£\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*[-–]\s*£?\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  if (tagRange) {
+    const a = Number(tagRange[1].replace(',', '.'));
+    const b = Number(tagRange[2].replace(',', '.'));
+    if (a === 0 && b === 0) return { type: 'free', raw: tagRange[0] };
+    return { type: 'variable', raw: tagRange[0] };
+  }
+  const tagPrice = text.match(/\bTag\s+£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  if (tagPrice) {
+    const value = Number(tagPrice[1].replace(',', '.'));
+    return value === 0 ? { type: 'free', raw: tagPrice[0] } : { type: 'paid', raw: `£${tagPrice[1]}` };
+  }
+  if (/\bTag\s+Free\b/i.test(text) || /\bFree event\b/i.test(text)) return { type: 'free', raw: 'Free' };
+  const admission = text.match(/\b(?:General Admission|Tickets?|Entry|Admission)\s*:?\s*£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  if (admission) return { type: Number(admission[1].replace(',', '.')) === 0 ? 'free' : 'paid', raw: `£${admission[1]}` };
+  return { type: 'unknown', raw: null };
+}
+
 function stripUnsupportedEventPriceClaims(reply, evidence = {}, options = {}) {
   const evidenceText = combinedEventEvidenceText(evidence);
   if (!evidenceText) return reply;
@@ -1406,14 +1784,24 @@ function stripUnsupportedEventPriceClaims(reply, evidence = {}, options = {}) {
     let next = line;
     let removedUnsupportedClaim = false;
 
-    if (/\bfree\b/i.test(next) && !eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText)) {
+    const exactStatus = exactEventPriceStatus(title, evidence);
+    const freeSupported = exactStatus
+      ? exactStatus.type === 'free'
+      : (evidence.eventDetailContexts?.length ? false : eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText));
+    if (/\bfree\b/i.test(next) && !freeSupported) {
       next = next.replace(/\bfree\b\s*/gi, '');
       removedUnsupportedClaim = true;
     }
 
     const prices = [...next.matchAll(/£\s*\d+(?:[.,]\d{1,2})?/gi)].map(match => match[0]);
     for (const price of prices) {
-      if (!eventClaimSupportedNearTitle(title, { type: 'price', value: price }, evidenceText)) {
+      const exactPriceSupported = exactStatus?.raw
+        ? String(exactStatus.raw).replace(/\s+/g, '').toLowerCase().includes(price.replace(/\s+/g, '').toLowerCase())
+        : null;
+      const supported = exactPriceSupported === null
+        ? (evidence.eventDetailContexts?.length ? false : eventClaimSupportedNearTitle(title, { type: 'price', value: price }, evidenceText))
+        : exactPriceSupported;
+      if (!supported) {
         next = next.replace(price, '');
         removedUnsupportedClaim = true;
       }
@@ -1468,10 +1856,16 @@ function filterFreeOnlyEventLines(reply, evidence = {}) {
     const knownEvent = title && title.length >= 5 && lowerEvidence.includes(title.toLowerCase());
     if (!knownEvent) { kept.push(line); continue; }
 
-    if (eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText)) kept.push(line);
+    const exactStatus = exactEventPriceStatus(title, evidence);
+    const supportedFree = exactStatus
+      ? exactStatus.type === 'free'
+      : (evidence.eventDetailContexts?.length ? false : eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText));
+    if (supportedFree) kept.push(line);
   }
 
-  return kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  let out = kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  out = out.replace(/(^|\n)(Saturday|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday)([^\n]*)\n\s*\n(?=(Saturday|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday)\b|$)/gim, '$1');
+  return out.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
@@ -1525,6 +1919,18 @@ function combinedReliabilityEvidence(evidence = {}) {
   }
   if (evidence.runningContexts?.harriers?.text) parts.push(`RUNNING FIRST-PARTY — WAKEFIELD HARRIERS:\n${evidence.runningContexts.harriers.text}`);
   if (evidence.runningContexts?.thornes?.text) parts.push(`RUNNING FIRST-PARTY — WAKEFIELD THORNES PARKRUN:\n${evidence.runningContexts.thornes.text}`);
+  for (const item of evidence.eventDetailContexts || []) {
+    if (item?.context?.text) parts.push(`EXACT EVENT DETAIL — ${String(item.title || '').toUpperCase()}:\n${item.context.text}`);
+  }
+  for (const [label, ctx] of Object.entries(evidence.foodConstraintContexts || {})) {
+    if (ctx?.text) parts.push(`FOOD CONSTRAINT FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
+  }
+  for (const [label, ctx] of Object.entries(evidence.businessContexts || {})) {
+    if (ctx?.text) parts.push(`BUSINESS FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
+  }
+  for (const [label, ctx] of Object.entries(evidence.routeContexts || {})) {
+    if (ctx?.text) parts.push(`ROUTE FIRST-PARTY — ${label.toUpperCase()}:\n${ctx.text}`);
+  }
   for (const item of evidence.searchEvidence || []) {
     if (!item?.url || !item?.text) continue;
     let trusted = false;
@@ -1553,7 +1959,8 @@ Rules:
 - ACCESSIBILITY: do not call an itinerary fully wheelchair accessible unless the evidence supports the relevant venue access AND the practical connection between stops. If the connection is unverified, say so. Do not transfer accessibility features between venues. Never invent terrain claims such as "mainly flat", "easy to navigate", "few inclines" or "no steps" unless a trusted route/access source explicitly supports that exact connection.
 - ACCESSIBILITY FACILITY MATCHING: only say a venue is wheelchair accessible, step-free or has an accessible toilet when that exact venue's evidence lists that facility. If a venue page lists only Assistance Dogs Welcome, that is not evidence of wheelchair access or step-free entry. Prefer a coffee venue with explicit wheelchair/step-free evidence over one with ambiguous access evidence.
 - ACCESSIBILITY EVIDENCE JOIN: if an event is verified at a named venue and a separate official page for that SAME venue verifies step-free/wheelchair access, you may combine those facts. Do not require the event listing itself to repeat the access fields.
-- OPEN-NOW NON-FOOD: shopping-centre hours do not establish an individual shop/pharmacy is open. Retail-store hours do not establish the pharmacy counter is open. Exact pharmacy/retail service hours must come from that exact branch/service. Do not call anything nearest/closest without verified location/distance evidence.
+- OPEN-NOW NON-FOOD: shopping-centre hours do not establish an individual shop/pharmacy is open. Retail-store hours do not establish the pharmacy counter is open. Exact pharmacy/retail service hours must come from that exact branch/service. Do not call anything nearest/closest without verified location/distance evidence. If an exact branch/service is verified open but nearest ranking is not, give it as a verified open option and say you cannot confirm it is the nearest.
+- EVENT PRICE DETAIL: exact event-detail pages outrank aggregate listings for price/free status. A price range containing any non-zero amount is not generally free. For a free-only request, remove every event that is paid, variable-price, concession-only, or unverified.
 - DOG FRIENDLY: outdoor seating is not evidence dogs are permitted. Only retain general dog-friendly claims explicitly supported for that exact venue. Assistance-dog access alone is not a general dog-friendly claim. If the user says today/this afternoon/tonight, also verify the venue is open during that requested period.
 - DIETARY + OPEN: for an open-today/open-now dietary request, retain a venue only when evidence supports both the requested dietary need and the relevant current opening window. If Corarima opens only in the evening on the requested weekday, it is not a lunch option.
 - CHILD / FAMILY TIME: enforce the requested day and time-of-day. A 10:00-12:00 event is not an afternoon event. Respect age guidance where published.
@@ -1565,6 +1972,7 @@ Rules:
 - PARKING / CLOSURES: parking availability does not prove a route avoids road closures. Never guarantee closure avoidance without explicit current closure-route evidence.
 - CLUBS / ACTIVITIES: the activity type, day and time must all match. Do not substitute walking for running or Sunday for Saturday. A parkrun is a running event, not a traditional running club; label it as a close alternative if appropriate. If an official club page explicitly gives Tuesday/Thursday evening training, do not tell the user to contact that club to discover a Saturday-morning session; state that the published schedule does not match Saturday morning.
 - RESPONSE ORDER: for multi-part questions, answer the parts in the same order the user asked them unless safety requires otherwise.
+- COMPLEX PLAN: if one constraint such as closure-free parking cannot be verified, do not abandon the whole answer. State that specific limitation and continue with the smallest verified plan for the remaining constraints.
 - Do not add a new named venue, event, club, address, postcode, timetable or current fact unless supported by the evidence.
 - Keep the answer concise, useful and natural. Return only the corrected user-facing answer, with no audit notes or FINAL_RESPONSE marker.
 
@@ -1690,11 +2098,33 @@ Rules:
 
 function stripInternalProcessLeakage(reply) {
   if (!reply) return reply;
-  return String(reply)
+  let out = String(reply);
+  const rewriteMarker = out.toLowerCase().lastIndexOf('recommended rewrite:');
+  if (rewriteMarker !== -1) out = out.slice(rewriteMarker + 'recommended rewrite:'.length).trim();
+  const finalMarker = out.lastIndexOf('FINAL_RESPONSE:');
+  if (finalMarker !== -1) out = out.slice(finalMarker + 'FINAL_RESPONSE:'.length).trim();
+  return out
     .split('\n')
-    .filter(line => !/^\s*(?:---\s*)?(?:change made|changes? made|removed because|validator|validation note|audit note|draft note|internal note)\s*:/i.test(line))
+    .filter(line => !/^\s*(?:---\s*)?(?:change made|changes? made|removed because|validator|validation note|audit note|draft note|internal note|recommended rewrite)\s*:/i.test(line))
     .filter(line => !/trusted evidence supplied/i.test(line))
     .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function deterministicallySanitiseRouteAnswer(reply, messages) {
+  if (!reply || !isCathedralToYspRouteQuery(messages)) return reply;
+  const userAskedTrain = /\btrain|rail\b/i.test(lastUserText(messages));
+  if (userAskedTrain) return reply;
+  const blocks = String(reply).split(/\n\s*\n/);
+  const kept = blocks.filter(block => {
+    const b = block.toLowerCase();
+    if (/wakefield westgate|\btrain\b|railway station/.test(b) && !/\b96\s+bus\b/.test(b)) return false;
+    if (/travel to barnsley/.test(b) && /connect/.test(b)) return false;
+    return true;
+  });
+  return kept.join('\n\n')
+    .replace(/\bthe best public-transport option\b/gi, 'the verified public-transport option')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -1752,21 +2182,39 @@ export default async function handler(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, userUrlContext] = await Promise.all([
+  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, routeContexts, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
     fetchAccessibilityFirstPartyContexts(messages),
     fetchRunningFirstPartyContexts(messages),
     fetchFoodConstraintFirstPartyContexts(messages),
+    fetchBusinessFirstPartyContexts(messages),
+    fetchRouteFirstPartyContexts(messages),
     fetchTrustedUserUrlContext(messages)
   ]);
 
-  // If current event snapshots are available, answer from those first-party
-  // sources instead of triggering another broad search. This cuts latency and
-  // prevents generic attractions/search snippets from being mixed into events.
+  // Price/free follow-ups need event-level evidence. Resolve the events already
+  // named in the previous answer to their own Experience Wakefield detail pages
+  // instead of trusting neighbouring labels on the aggregate listings page.
+  const eventDetailContexts = await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext);
+
+  // If strong first-party snapshots/direct pages are available, prefer those over
+  // another broad search. This is both more reliable and materially faster for
+  // multi-constraint day plans.
   const hasEventSnapshots = Boolean(wxContext || experienceEventsContext || cathedralContext);
-  const needsEventPriceSearch = isCurrentEventsQuery(messages) && eventCostWasRequested(messages);
-  const needsSpecificEventSearch = isNamedEventDetailQuery(messages);
-  const useSearch = needsLiveSearch(messages) && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
+  const hasEventDetailEvidence = eventDetailContexts.length > 0;
+  const hasFoodConstraintEvidence = Object.values(foodConstraintContexts || {}).some(Boolean);
+  const hasBusinessEvidence = Object.values(businessContexts || {}).some(Boolean);
+  const hasRouteEvidence = Object.values(routeContexts || {}).some(Boolean);
+  const needsEventPriceSearch = isCurrentEventsQuery(messages) && eventCostWasRequested(messages) && !hasEventDetailEvidence;
+  const needsSpecificEventSearch = isNamedEventDetailQuery(messages) && !Boolean(namedEventContexts?.parade || namedEventContexts?.festival);
+  const directlyResolved = (isDogFriendlyVenueQuery(messages) && hasFoodConstraintEvidence)
+    || (isDietaryOpenQuery(messages) && hasFoodConstraintEvidence)
+    || (isWakefieldCathedralPharmacyQuery(messages) && hasBusinessEvidence)
+    || (isCathedralToYspRouteQuery(messages) && hasRouteEvidence)
+    || isComplexSaturdayDayPlanQuery(messages);
+  const useSearch = needsLiveSearch(messages)
+    && !directlyResolved
+    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
 
   const wxDirectContext = wxContext
     ? `\n\nFIRST-PARTY WX CURRENT LISTING SNAPSHOT:\nSource: https://wxwakefield.co.uk/whats-on\nToday = ${wxContext.dates.today}. Tomorrow = ${wxContext.dates.tomorrow}. This weekend = ${wxContext.dates.saturday} and ${wxContext.dates.sunday}.\nUse only the listing text below for WX event titles, dates, times and prices. Match the user's requested date exactly. For this weekend, check BOTH dates. Do not replace exact event titles with category labels.\n\n${wxContext.text}`
@@ -1795,6 +2243,21 @@ ${cathedralContext.text}`
     ? `\n\nTRUSTED USER-SUPPLIED PAGE SNAPSHOT:\nThe user supplied one or more trusted URLs and the server fetched them. Use this content directly where relevant. Do not claim you cannot access the link.\n\n${userUrlContext.text}`
     : '';
 
+  const eventDetailDirectContext = eventDetailContexts.length
+    ? `\n\nEXACT EVENT-DETAIL PRICE EVIDENCE:\n${eventDetailContexts.map(item => `EVENT: ${item.title}\nSOURCE: ${item.context.source?.url || ''}\n${item.context.text}`).join('\n\n---\n\n')}\nFor price/free follow-ups, this exact event-detail evidence outranks labels on aggregate listings. Treat a range containing any non-zero price as not generally free. If a detail page says Tag Free or Free event for the exact event, that event may be called free.`
+    : '';
+
+  const businessFirstPartyDirectContext = businessContexts?.bootsKirkgate?.text
+    ? `\n\nEXACT PHARMACY FIRST-PARTY EVIDENCE:\nSOURCE: ${businessContexts.bootsKirkgate.source?.url || ''}\n${businessContexts.bootsKirkgate.text}\nUse the Pharmacy hours, not merely Store hours. If the current London time is inside today's pharmacy window, you may say this branch is open now. Because the user's location is approximate, do not call it nearest unless route evidence exists; say it is a verified open city-centre option instead.`
+    : '';
+
+  const routeFirstPartyDirectContext = routeContexts?.yspGettingHere?.text
+    ? `\n\nYSP OFFICIAL GETTING-HERE EVIDENCE:\nSOURCE: ${routeContexts.yspGettingHere.source?.url || ''}\n${routeContexts.yspGettingHere.text}\nFor Wakefield Cathedral/city centre to YSP without a car, keep the verified 96 bus fact. Do not invent an extra rail leg. If the exact Cathedral-to-stop connection is not verified, say the user should use Metro for the precise boarding stop.`
+    : '';
+
+  const complexPlanContext = isComplexSaturdayDayPlanQuery(messages)
+    ? `\n\nCOMPLEX SATURDAY DAY-PLAN MODE: Build the smallest useful plan from the supplied first-party venue evidence. The user needs wheelchair access, independent coffee, culture, lunch and parking/closure awareness. Do not abandon the answer because one element cannot be guaranteed. If no current official road-closure evidence proves a car park is unaffected, state that you cannot guarantee closure-free parking and continue with the verified coffee/culture/lunch plan. Never claim the route between venues is step-free unless verified.`
+    : '';
 
   const namedEventFirstPartyDirectContext = (namedEventContexts?.parade?.text || namedEventContexts?.festival?.text)
     ? `
@@ -1919,9 +2382,9 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${foodConstraintDirectContext}${businessStatusContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${routeFirstPartyDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
 
-  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext)
+  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
     : '';
 
@@ -1980,6 +2443,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       runningContexts?.harriers,
       runningContexts?.thornes,
       ...Object.values(foodConstraintContexts || {}),
+      ...Object.values(businessContexts || {}),
+      ...Object.values(routeContexts || {}),
+      ...eventDetailContexts.map(item => item?.context).filter(Boolean),
       freeVenueContexts?.ysp,
       freeVenueContexts?.ncm,
       freeVenueContexts?.wxWeekly
@@ -1994,7 +2460,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }
     const mergedSources = Array.from(mergedSourceMap.values()).slice(0, 5);
 
-    if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages)) {
+    if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages) && !shouldUseOpenAIFailsafe(messages)) {
       return res.status(200).json({
         reply: verificationFallback(messages),
         sources: [],
@@ -2002,42 +2468,120 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       });
     }
 
-    const eventValidatedReply = await validateEventAnswer(reply, messages, {
-      wxContext,
-      experienceEventsContext,
-      cathedralContext,
-      namedEventContexts,
-      freeVenueContexts,
-      searchEvidence
-    });
+    const openAIFailsafe = shouldUseOpenAIFailsafe(messages);
+
+    // When the independent OpenAI fail-safe is active, avoid stacking several
+    // sequential Anthropic validator calls. This keeps the high-risk path to two
+    // model calls: primary Claude answer + independent OpenAI evidence check.
+    const eventValidatedReply = openAIFailsafe
+      ? reply
+      : await validateEventAnswer(reply, messages, {
+          wxContext,
+          experienceEventsContext,
+          cathedralContext,
+          namedEventContexts,
+          freeVenueContexts,
+          eventDetailContexts,
+          searchEvidence
+        });
     const eventSafeReply = deterministicallySanitiseEventAnswer(eventValidatedReply, messages, {
       wxContext,
       experienceEventsContext,
       cathedralContext,
       namedEventContexts,
       freeVenueContexts,
+      eventDetailContexts,
       searchEvidence
     });
-    const reliabilityWasNeeded = needsReliabilityValidation(messages);
-    const reliabilityValidatedReply = await validateReliabilityAnswer(eventSafeReply, messages, {
-      wxContext,
-      experienceEventsContext,
-      cathedralContext,
-      namedEventContexts,
-      accessibilityContexts,
-      runningContexts,
-      foodConstraintContexts,
-      searchEvidence
-    });
-    const validatedReply = (reliabilityWasNeeded && !isCurrentFoodStatusQuery(messages))
+
+    const skipSecondPassForComplexPlan = isComplexSaturdayDayPlanQuery(messages);
+    const reliabilityWasNeeded = !openAIFailsafe && needsReliabilityValidation(messages) && !skipSecondPassForComplexPlan;
+    const reliabilityValidatedReply = reliabilityWasNeeded
+      ? await validateReliabilityAnswer(eventSafeReply, messages, {
+          wxContext,
+          experienceEventsContext,
+          cathedralContext,
+          namedEventContexts,
+          accessibilityContexts,
+          runningContexts,
+          foodConstraintContexts,
+          businessContexts,
+          routeContexts,
+          eventDetailContexts,
+          searchEvidence
+        })
+      : eventSafeReply;
+
+    const validatedReply = (openAIFailsafe || skipSecondPassForComplexPlan)
       ? reliabilityValidatedReply
-      : await validateFoodAnswer(reliabilityValidatedReply, messages);
-    const safeReply = stripInternalProcessLeakage(deterministicallySanitiseFoodAnswer(validatedReply, messages));
+      : ((reliabilityWasNeeded && !isCurrentFoodStatusQuery(messages))
+          ? reliabilityValidatedReply
+          : await validateFoodAnswer(reliabilityValidatedReply, messages));
+
+    const primarySafeReply = stripInternalProcessLeakage(
+      deterministicallySanitiseRouteAnswer(
+        deterministicallySanitiseFoodAnswer(validatedReply, messages),
+        messages
+      )
+    );
+
+    const openAIResult = openAIFailsafe
+      ? await verifyWithOpenAI(primarySafeReply, messages, {
+          wxContext,
+          experienceEventsContext,
+          cathedralContext,
+          namedEventContexts,
+          accessibilityContexts,
+          runningContexts,
+          foodConstraintContexts,
+          businessContexts,
+          routeContexts,
+          eventDetailContexts,
+          searchEvidence
+        })
+      : null;
+
+    let finalReply = openAIResult?.reply || primarySafeReply;
+    // Deterministic safety rules always get the last word, whichever model
+    // produced the prose.
+    finalReply = stripInternalProcessLeakage(
+      deterministicallySanitiseRouteAnswer(
+        deterministicallySanitiseFoodAnswer(
+          deterministicallySanitiseEventAnswer(finalReply, messages, {
+            wxContext,
+            experienceEventsContext,
+            cathedralContext,
+            namedEventContexts,
+            freeVenueContexts,
+            eventDetailContexts,
+            searchEvidence
+          }),
+          messages
+        ),
+        messages
+      )
+    );
+
+    for (const source of openAIResult?.sources || []) {
+      if (source?.url) mergedSourceMap.set(source.url, source);
+    }
+    const finalSources = Array.from(mergedSourceMap.values()).slice(0, 8);
+
+    // If a current/high-risk query still has no trusted evidence after both
+    // systems have had a chance, fail safely rather than manufacture certainty.
+    if (requiresVerifiedSource(messages) && finalSources.length === 0 && !isGeneralRecommendationQuery(messages)) {
+      return res.status(200).json({
+        reply: verificationFallback(messages),
+        sources: [],
+        live: false
+      });
+    }
 
     return res.status(200).json({
-      reply: safeReply || "I'm sorry, I couldn't generate a response. Please try again.",
-      sources: mergedSources,
-      live: searched || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly)
+      reply: finalReply || "I'm sorry, I couldn't generate a response. Please try again.",
+      sources: finalSources,
+      live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
+      verification: openAIResult?.verified ? 'dual-source' : 'primary'
     });
   } catch (error) {
     console.error('Handler error:', error);

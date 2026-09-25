@@ -46,6 +46,7 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **PHARMACY DISCOVERY, NOT BRAND LOOKUP:** When the user asks for a pharmacy or chemist that is open now/later, do not default to Boots. Search across verified local community pharmacies, supermarket pharmacies and hospital/outpatient pharmacies whose public-facing service hours are available. Distinguish retail-store hours from pharmacy-counter hours. If you cannot prove which option is nearest, give verified open options and say that proximity/ranking is not confirmed. Treat phrases such as "after 6pm" as a live late-opening pharmacy request even when the word "open" is omitted.
 - **PHARMACY FOLLOW-UP CONTINUITY:** If the user follows a pharmacy question with a short place or brand such as "City centre?", "Denby Dale?", "Asda Pharmacy" or "Sainsbury's has a pharmacy", keep the pharmacy intent. Do not restart the conversation or ask for information that a named exact branch can resolve. "Denby Dale" is ambiguous between Denby Dale village and Denby Dale Road/Durkar in Wakefield; ask which one only when the branch is not otherwise clear. Never invent a "Denby Dale Asda".
 - **FALSE PREMISE — SUPERMARKET PHARMACY:** Do not agree that a supermarket currently has a pharmacy merely because the supermarket is open or because it historically had one. The exact current store/service page must list a pharmacy. If the current Sainsbury's Wakefield store page does not list Pharmacy as a service, say that rather than agreeing with the premise.
+- **HARD LOCALITY:** When the user names Pontefract, Castleford, Ossett, Horbury or another specific district area, that area is a hard first-pass constraint. Do not replace it with Wakefield city-centre results merely because the city has better-known venues. Offer wider-district results only after clearly stating no exact local match was verified, or when the user explicitly asks to widen the search.
 - **SERVICE INTENT IS NOT VENUE CATEGORY:** If a user wants coffee, dessert or a hot drink in the evening, do not restrict candidates to venues categorised as cafes. Restaurants, dessert venues, hotel lounges, bars and food halls may be valid when a current source explicitly confirms they are open at the requested time and serve the requested item/service. Never infer coffee/dessert availability merely because a venue is a restaurant. A venue with an explicit coffee-and-dessert menu and verified evening hours is a stronger match than a late-opening bakery with only sweet snacks.
 - **WAKEFIELD MEANS THE DISTRICT:** Unless the user explicitly says Wakefield city centre or names a smaller place, interpret "Wakefield" as the Wakefield metropolitan district, not just the city centre. Discovery searches should cover Wakefield city plus the district towns and communities, including Ossett, Horbury, Normanton, Castleford, Pontefract, Featherstone, Knottingley, Hemsworth, South Elmsall and nearby district communities. If the user gives a specific starting area, search that area first and expand district-wide only when the exact requirement is not well served locally.
 - **PLACES DISCOVERY VS VERIFICATION:** Google Places may be used to discover current local businesses, addresses and opening-hours candidates across the district. Treat exact official/first-party pages as stronger evidence for pharmacy-counter hours, event facts, access claims and specialised services. Do not infer a service such as coffee, dessert, dog-friendly access or pharmacy provision solely from a broad venue category when the Places evidence does not explicitly support it.
@@ -257,7 +258,13 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 // changing or multi-constraint questions. The primary Ask Wakefield voice and
 // first answer still come from Claude.
 const OPENAI_VERIFY_MODEL = process.env.OPENAI_VERIFY_MODEL || 'gpt-5.6-terra';
+// V11 transition: full-answer second-model rewriting is OFF by default.
+// If temporarily re-enabled for debugging, failures must fail closed rather than
+// silently releasing an unchecked draft.
 const OPENAI_FAILSAFE_ENABLED = process.env.OPENAI_FAILSAFE_ENABLED !== 'false';
+const FULL_ANSWER_OPENAI_VERIFY_ENABLED = process.env.FULL_ANSWER_OPENAI_VERIFY_ENABLED === 'true';
+const LEGACY_LLM_VALIDATORS_ENABLED = process.env.LEGACY_LLM_VALIDATORS_ENABLED === 'true';
+const STRUCTURED_CORE_ENABLED = process.env.STRUCTURED_CORE_ENABLED !== 'false';
 const OPENAI_FAILSAFE_TIMEOUT_MS = Math.max(4000, Math.min(Number(process.env.OPENAI_FAILSAFE_TIMEOUT_MS || 12000), 18000));
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
 const GOOGLE_PLACES_ENABLED = process.env.GOOGLE_PLACES_ENABLED !== 'false';
@@ -292,6 +299,11 @@ const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 3000;
 const MAX_TOTAL_CHARS = 14000;
 const RATE_LIMIT_PER_MINUTE = 20;
+const MAX_STATE_CARDS = 16;
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://askwakefield.co.uk',
+  'https://www.askwakefield.co.uk'
+];
 
 const TRUSTED_DOMAINS = [
   'wakefield.gov.uk',
@@ -390,12 +402,28 @@ function sanitiseMessages(messages) {
   return bounded;
 }
 
+function looksLikeContextDependentFollowUp(text) {
+  const value = String(text || '').trim().toLowerCase();
+  if (!value) return false;
+  const words = value.split(/\s+/).filter(Boolean);
+  if (/\b(those|them|these|that one|the first one|the second one|which of|what about|how about|instead|the free ones|the ones|same place|same area)\b/i.test(value)) return true;
+  if (/^(?:city centre|town centre|pontefract|castleford|ossett|horbury|normanton|featherstone|knottingley|hemsworth|south elmsall|denby dale|tileyard north|westgate|kirkgate|asda(?: pharmacy)?|sainsbury(?:'|’)s(?: pharmacy)?|boots)\??$/i.test(value)) return true;
+  if (/^(?:what time|how much|where are they|which are free|which ones|what about that|and that one)\??$/i.test(value)) return true;
+  return false;
+}
+
 function recentUserContext(messages, maxUserMessages = 3) {
   if (!Array.isArray(messages)) return '';
-  return messages
+  const userMessages = messages
     .filter(m => m?.role === 'user' && typeof m.content === 'string')
-    .slice(-maxUserMessages)
-    .map(m => m.content)
+    .map(m => m.content);
+  if (!userMessages.length) return '';
+  const last = userMessages[userMessages.length - 1];
+  // V11: intent is no longer sticky by default. Older user turns are pulled in
+  // only when the latest turn is clearly a short/referring follow-up.
+  if (maxUserMessages <= 1 || !looksLikeContextDependentFollowUp(last)) return last.toLowerCase();
+  return userMessages
+    .slice(-Math.min(maxUserMessages, 2))
     .join('\n')
     .toLowerCase();
 }
@@ -411,6 +439,119 @@ function recentAssistantContext(messages, maxAssistantMessages = 2) {
 
 function hasRecentAssistantAnswer(messages) {
   return recentAssistantContext(messages, 1).trim().length > 0;
+}
+
+function parseCookieHeader(header) {
+  const out = {};
+  for (const part of String(header || '').split(';')) {
+    const idx = part.indexOf('=');
+    if (idx < 1) continue;
+    out[part.slice(0, idx).trim()] = part.slice(idx + 1).trim();
+  }
+  return out;
+}
+
+function encodeStateCookie(state) {
+  try {
+    const compact = {
+      version: 1,
+      lastIntent: state?.lastIntent || null,
+      area: state?.area || null,
+      constraints: state?.constraints || null,
+      resultCards: (state?.resultCards || []).slice(0, 8).map(card => ({
+        id: card?.id || null, entityType: card?.entityType || null,
+        title: card?.title || card?.name || null,
+        name: card?.name || null, url: card?.url || null,
+        date: card?.date || null, start: card?.start || null, end: card?.end || null,
+        venue: card?.venue || null, priceStatus: card?.priceStatus || null
+      }))
+    };
+    const encoded = Buffer.from(JSON.stringify(compact), 'utf8').toString('base64url');
+    return encoded.length <= 3600 ? encoded : null;
+  } catch { return null; }
+}
+
+function stateFromCookie(req) {
+  try {
+    const raw = parseCookieHeader(req.headers?.cookie || '').aw_state;
+    if (!raw) return null;
+    const decoded = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    return normaliseClientState(decoded);
+  } catch { return null; }
+}
+
+function attachStateCookie(res, state) {
+  const value = encodeStateCookie(state);
+  if (!value) return;
+  res.setHeader('Set-Cookie', `aw_state=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=1800`);
+}
+
+function normaliseClientState(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { version: 1, lastIntent: null, resultCards: [], constraints: null, area: null };
+  const cards = Array.isArray(raw.resultCards) ? raw.resultCards.slice(0, MAX_STATE_CARDS) : [];
+  return {
+    version: 1,
+    lastIntent: typeof raw.lastIntent === 'string' ? raw.lastIntent.slice(0, 80) : null,
+    resultCards: cards.map(card => ({
+      id: typeof card?.id === 'string' ? card.id.slice(0, 300) : null,
+      entityType: typeof card?.entityType === 'string' ? card.entityType.slice(0, 40) : null,
+      title: typeof card?.title === 'string' ? card.title.slice(0, 180) : null,
+      name: typeof card?.name === 'string' ? card.name.slice(0, 180) : null,
+      url: (() => { if (typeof card?.url !== 'string') return null; try { const u = new URL(card.url); return trustedHostname(u.hostname) ? u.toString().slice(0, 700) : null; } catch { return null; } })(),
+      date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
+      start: typeof card?.start === 'string' ? card.start.slice(0, 40) : null,
+      end: typeof card?.end === 'string' ? card.end.slice(0, 40) : null,
+      venue: typeof card?.venue === 'string' ? card.venue.slice(0, 180) : null,
+      priceStatus: typeof card?.priceStatus === 'string' ? card.priceStatus.slice(0, 30) : null,
+      address: typeof card?.address === 'string' ? card.address.slice(0, 260) : null,
+      serviceVerified: typeof card?.serviceVerified === 'boolean' ? card.serviceVerified : null,
+      timeMatch: typeof card?.timeMatch === 'boolean' ? card.timeMatch : null
+    })).filter(card => card.id || card.title || card.name),
+    constraints: raw.constraints && typeof raw.constraints === 'object' ? raw.constraints : null,
+    area: typeof raw.area === 'string' ? raw.area.slice(0, 120) : null
+  };
+}
+
+function classifyRequest(messages, state = null) {
+  const last = lastUserText(messages).trim().toLowerCase();
+  const context = recentUserContext(messages, 2);
+  const refersToPrevious = looksLikeContextDependentFollowUp(last);
+  let intent = 'other';
+  if ((/\b(which|what)\b.*\bfree\b|\bfree ones?\b/i.test(last) || /\bwhat time\b.*\bfree\b/i.test(last))
+      && hasRecentAssistantAnswer(messages)
+      && (state?.lastIntent?.startsWith('events.') || /\b(events?|what(?:'|’)s on|weekend)\b/i.test(context))) intent = 'events.filter_existing';
+  else if (isCurrentEventsQuery(messages)) intent = 'events.whats_on';
+  else if (isPharmacyOpenQuery(messages)) intent = 'pharmacy.open';
+  else if (isEveningCoffeeDessertQuery(messages) || isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages)) intent = 'food.open_at';
+  else if (isNamedEventDetailQuery(messages)) intent = 'events.detail';
+  else if (isPropertySpecificCouncilQuery(messages)) intent = 'civic.property';
+  else if (isLiveTransportTimesQuery(messages) || isRoutePlanningQuery(messages)) intent = 'transport';
+  else if (isGeneralAccessibilityQuery(messages)) intent = 'accessibility';
+  else if (isTimedLocalActivityQuery(messages)) intent = 'activity';
+
+  return {
+    intent,
+    operation: refersToPrevious ? 'refine' : 'new',
+    area: detectWakefieldArea(messages) || state?.area || null,
+    timeConstraint: requestedPlaceTimeConstraint(messages),
+    refersToPrevious
+  };
+}
+
+function allowedOrigins() {
+  const extra = String(process.env.ALLOWED_ORIGINS || '').split(',').map(v => v.trim()).filter(Boolean);
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...extra]);
+}
+
+function applyCors(req, res) {
+  const origin = String(req.headers?.origin || '');
+  const allowed = allowedOrigins();
+  const vercelPreview = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+  if (allowed.has(origin) || vercelPreview) res.setHeader('Access-Control-Allow-Origin', origin);
+  else if (!origin) res.setHeader('Access-Control-Allow-Origin', 'https://www.askwakefield.co.uk');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 function isEventCostFollowUp(messages) {
@@ -560,6 +701,169 @@ function detectWakefieldArea(messages) {
   return null;
 }
 
+
+function districtAreaQueryLabel(area) {
+  if (!area) return null;
+  const map = {
+    'Tileyard North Wakefield': 'Tileyard North',
+    'Bull Ring Wakefield': 'Bull Ring',
+    'Wood Street Wakefield': 'Wood Street',
+    'Wakefield Westgate station': 'Wakefield Westgate',
+    'Wakefield Cathedral': 'Wakefield Cathedral',
+    'Wakefield city centre': 'Wakefield city centre',
+    'Denby Dale Road Durkar Wakefield': 'Denby Dale Road, Durkar',
+    'Sandal Wakefield': 'Sandal',
+    'Horbury Wakefield': 'Horbury',
+    'Ossett Wakefield': 'Ossett',
+    'Normanton Wakefield': 'Normanton',
+    'Castleford Wakefield': 'Castleford',
+    'Pontefract Wakefield': 'Pontefract',
+    'Featherstone Wakefield': 'Featherstone',
+    'Knottingley Wakefield': 'Knottingley',
+    'Hemsworth Wakefield': 'Hemsworth',
+    'South Elmsall Wakefield': 'South Elmsall',
+    'South Kirkby Wakefield': 'South Kirkby',
+    'Ackworth Wakefield': 'Ackworth'
+  };
+  return map[area] || area.replace(/\s+Wakefield$/i, '');
+}
+
+function isCoreWakefieldArea(area) {
+  if (!area) return false;
+  return /^(?:Tileyard North Wakefield|Bull Ring Wakefield|Wood Street Wakefield|Wakefield Westgate station|Wakefield Cathedral|Wakefield city centre|Denby Dale Road Durkar Wakefield|Sandal Wakefield)$/i.test(area);
+}
+
+
+function coffeeSweetRequirements(messages) {
+  const context = recentUserContext(messages, 5);
+  return {
+    wantsCoffee: /\b(coffee|hot drink|hot drinks|tea)\b/i.test(context),
+    wantsSweet: /\b(dessert|desserts|cake|cakes|pudding|sweet treat|sweet treats|something sweet)\b/i.test(context)
+  };
+}
+
+function requiresIndependentVenue(messages) {
+  return /\bindependent\b/i.test(recentUserContext(messages, 5));
+}
+
+function buildDistrictPlacesSearchSpecs(messages) {
+  const context = recentUserContext(messages, 5);
+  if (isPharmacyOpenQuery(messages)) {
+    return [{
+      textQuery: 'pharmacy',
+      includedType: 'pharmacy',
+      strictTypeFiltering: true,
+      richFields: []
+    }];
+  }
+
+  const coffeeSweet = coffeeSweetRequirements(messages);
+  if (isEveningCoffeeDessertQuery(messages)
+      || ((isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages))
+          && coffeeSweet.wantsCoffee && coffeeSweet.wantsSweet)) {
+    const { wantsCoffee, wantsSweet } = coffeeSweet;
+    const richFields = ['servesCoffee', 'servesDessert', 'dineIn'];
+    if (wantsCoffee && wantsSweet) {
+      return [
+        { textQuery: 'dessert', richFields },
+        { textQuery: 'restaurant', richFields }
+      ];
+    }
+    if (wantsSweet) return [{ textQuery: 'dessert', richFields }];
+    return [{ textQuery: 'coffee', richFields: ['servesCoffee', 'dineIn'] }];
+  }
+
+  if (isDogFriendlyVenueQuery(messages)) {
+    return [
+      { textQuery: 'cafe', richFields: ['allowsDogs', 'servesCoffee'] },
+      { textQuery: 'restaurant', richFields: ['allowsDogs', 'servesCoffee'] }
+    ];
+  }
+
+  if (isGeneralAccessibilityQuery(messages) && /\b(cafe|coffee|restaurant|venue|place|somewhere)\b/i.test(context)) {
+    return [
+      { textQuery: 'cafe restaurant', richFields: ['accessibilityOptions'] }
+    ];
+  }
+
+  if (isDietaryOpenQuery(messages)) {
+    return [{ textQuery: 'restaurant cafe', richFields: ['servesVegetarianFood'] }];
+  }
+
+  const display = buildDistrictPlacesServiceQuery(messages);
+  return [{ textQuery: display, richFields: [] }];
+}
+
+function placeServiceConstraintStatus(place, messages) {
+  const context = recentUserContext(messages, 5);
+  if (isPharmacyOpenQuery(messages)) {
+    const types = Array.isArray(place?.types) ? place.types : [];
+    return place?.primaryType === 'pharmacy' || types.includes('pharmacy');
+  }
+
+  const coffeeSweet = coffeeSweetRequirements(messages);
+  if (isEveningCoffeeDessertQuery(messages)
+      || ((isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages))
+          && coffeeSweet.wantsCoffee && coffeeSweet.wantsSweet)) {
+    const { wantsCoffee, wantsSweet } = coffeeSweet;
+    const coffee = place?.servesCoffee;
+    const dessert = place?.servesDessert;
+    if (wantsCoffee && wantsSweet) {
+      if (coffee === true && dessert === true) return true;
+      if (coffee === false || dessert === false) return false;
+      return null;
+    }
+    if (wantsCoffee) return coffee === true ? true : (coffee === false ? false : null);
+    if (wantsSweet) return dessert === true ? true : (dessert === false ? false : null);
+  }
+
+  if (requiresIndependentVenue(messages)) {
+    // Google Places does not provide a reliable "independent business" field.
+    // Keep the candidate discoverable, but require first-party/web verification
+    // before it can count as an exact match.
+    return null;
+  }
+
+  if (isDogFriendlyVenueQuery(messages)) {
+    return place?.allowsDogs === true ? true : (place?.allowsDogs === false ? false : null);
+  }
+
+  if (isGeneralAccessibilityQuery(messages) && /\b(cafe|coffee|restaurant|venue|place|somewhere)\b/i.test(context)) {
+    const a = place?.accessibilityOptions;
+    if (!a) return null;
+    if (a.wheelchairAccessibleEntrance === true) return true;
+    if (a.wheelchairAccessibleEntrance === false) return false;
+    return null;
+  }
+
+  return true;
+}
+
+function placeWithinDistrictViewport(place) {
+  const lat = Number(place?.location?.latitude);
+  const lng = Number(place?.location?.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return true;
+  return lat >= WAKEFIELD_DISTRICT_VIEWPORT.low.latitude
+    && lat <= WAKEFIELD_DISTRICT_VIEWPORT.high.latitude
+    && lng >= WAKEFIELD_DISTRICT_VIEWPORT.low.longitude
+    && lng <= WAKEFIELD_DISTRICT_VIEWPORT.high.longitude;
+}
+
+function placeMatchesRequestedScope(place, messages) {
+  const time = placeOpenAtConstraint(place, requestedPlaceTimeConstraint(messages));
+  const service = placeServiceConstraintStatus(place, messages);
+  return {
+    time,
+    service,
+    exact: time !== false && service === true
+  };
+}
+
+function verifiedPlacesCount(context) {
+  const requiresTime = Boolean(context?.constraint);
+  return (context?.places || []).filter(place => place?.serviceVerified === true && (requiresTime ? place?.timeMatch === true : place?.timeMatch !== false)).length;
+}
+
 function buildDistrictPlacesServiceQuery(messages) {
   const context = recentUserContext(messages, 5);
   if (isPharmacyOpenQuery(messages)) return 'pharmacy';
@@ -659,24 +963,44 @@ function placeOpenAtConstraint(place, constraint) {
   return false;
 }
 
-function compactPlace(place) {
+function compactPlace(place, meta = {}) {
   return {
     id: place?.id || null,
     name: place?.displayName?.text || place?.displayName || '',
     address: place?.formattedAddress || place?.shortFormattedAddress || '',
     primaryType: place?.primaryType || '',
-    types: Array.isArray(place?.types) ? place.types.slice(0, 8) : [],
+    types: Array.isArray(place?.types) ? place.types.slice(0, 10) : [],
+    businessStatus: place?.businessStatus || null,
     openNow: place?.currentOpeningHours?.openNow,
     weekdayDescriptions: Array.isArray(place?.currentOpeningHours?.weekdayDescriptions)
       ? place.currentOpeningHours.weekdayDescriptions.slice(0, 7)
       : [],
     websiteUri: place?.websiteUri || null,
     googleMapsUri: place?.googleMapsUri || null,
-    location: place?.location || null
+    nationalPhoneNumber: place?.nationalPhoneNumber || null,
+    location: place?.location || null,
+    servesCoffee: typeof place?.servesCoffee === 'boolean' ? place.servesCoffee : null,
+    servesDessert: typeof place?.servesDessert === 'boolean' ? place.servesDessert : null,
+    dineIn: typeof place?.dineIn === 'boolean' ? place.dineIn : null,
+    allowsDogs: typeof place?.allowsDogs === 'boolean' ? place.allowsDogs : null,
+    goodForChildren: typeof place?.goodForChildren === 'boolean' ? place.goodForChildren : null,
+    accessibilityOptions: place?.accessibilityOptions || null,
+    sourceZone: meta.sourceZone || place?._sourceZone || null,
+    serviceVerified: typeof meta.serviceVerified === 'boolean' ? meta.serviceVerified : null,
+    timeMatch: typeof meta.timeMatch === 'boolean' ? meta.timeMatch : null
   };
 }
 
-async function googlePlacesTextSearch(textQuery, { pageSize = 6, openNow = false } = {}) {
+async function googlePlacesTextSearch(textQuery, {
+  pageSize = 6,
+  openNow = false,
+  locationBias = null,
+  includedType = null,
+  strictTypeFiltering = false,
+  richFields = [],
+  rankPreference = null,
+  districtRestriction = true
+} = {}) {
   if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return [];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), GOOGLE_PLACES_TIMEOUT_MS);
@@ -685,17 +1009,53 @@ async function googlePlacesTextSearch(textQuery, { pageSize = 6, openNow = false
       textQuery,
       pageSize,
       languageCode: 'en',
-      regionCode: 'GB',
-      locationRestriction: { rectangle: WAKEFIELD_DISTRICT_VIEWPORT }
+      regionCode: 'GB'
     };
+
+    if (locationBias) {
+      body.locationBias = locationBias;
+    } else if (districtRestriction) {
+      body.locationRestriction = { rectangle: WAKEFIELD_DISTRICT_VIEWPORT };
+    }
+
     if (openNow) body.openNow = true;
+    if (includedType) body.includedType = includedType;
+    if (includedType && strictTypeFiltering) body.strictTypeFiltering = true;
+    if (rankPreference) body.rankPreference = rankPreference;
+
+    const baseFields = [
+      'places.id',
+      'places.displayName',
+      'places.formattedAddress',
+      'places.location',
+      'places.primaryType',
+      'places.types',
+      'places.businessStatus',
+      'places.currentOpeningHours',
+      'places.websiteUri',
+      'places.googleMapsUri',
+      'places.nationalPhoneNumber'
+    ];
+    const richMap = {
+      servesCoffee: 'places.servesCoffee',
+      servesDessert: 'places.servesDessert',
+      dineIn: 'places.dineIn',
+      allowsDogs: 'places.allowsDogs',
+      goodForChildren: 'places.goodForChildren',
+      accessibilityOptions: 'places.accessibilityOptions',
+      servesVegetarianFood: 'places.servesVegetarianFood'
+    };
+    const fields = [...baseFields];
+    for (const key of richFields || []) {
+      if (richMap[key] && !fields.includes(richMap[key])) fields.push(richMap[key]);
+    }
 
     const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.primaryType,places.types,places.currentOpeningHours,places.websiteUri,places.googleMapsUri'
+        'X-Goog-FieldMask': fields.join(',')
       },
       body: JSON.stringify(body),
       signal: controller.signal
@@ -707,11 +1067,42 @@ async function googlePlacesTextSearch(textQuery, { pageSize = 6, openNow = false
       return [];
     }
     const data = await response.json();
-    return Array.isArray(data?.places) ? data.places : [];
+    return (Array.isArray(data?.places) ? data.places : []).filter(placeWithinDistrictViewport);
   } catch (error) {
     if (error?.name === 'AbortError') console.warn('Google Places Text Search timed out:', textQuery);
     else console.warn('Google Places Text Search error:', error?.message || error);
     return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function googlePlacesAnchorSearch(area) {
+  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY || !area) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.min(GOOGLE_PLACES_TIMEOUT_MS, 5000));
+  try {
+    const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location'
+      },
+      body: JSON.stringify({
+        textQuery: districtAreaQueryLabel(area),
+        pageSize: 1,
+        languageCode: 'en',
+        regionCode: 'GB',
+        locationRestriction: { rectangle: WAKEFIELD_DISTRICT_VIEWPORT }
+      }),
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.places?.[0]?.location || null;
+  } catch {
+    return null;
   } finally {
     clearTimeout(timer);
   }
@@ -736,56 +1127,154 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
   const area = detectWakefieldArea(messages);
   const constraint = requestedPlaceTimeConstraint(messages);
   const openNow = constraint?.mode === 'now';
+  const specs = buildDistrictPlacesSearchSpecs(messages);
+  const widenExplicitly = /\b(anywhere|across (?:the )?district|whole district|wider district|elsewhere in wakefield)\b/i.test(lastUserText(messages));
 
-  const runQueries = async zones => {
-    const batches = await Promise.all(zones.map(zone =>
-      googlePlacesTextSearch(`${service} ${zone}`, { pageSize: area ? 10 : 5, openNow })
-    ));
+  const enrich = (place, sourceZone) => {
+    if (sourceZone && !place._sourceZone) place._sourceZone = sourceZone;
+    return place;
+  };
+
+  const runLocalSpecs = async () => {
+    const anchor = await googlePlacesAnchorSearch(area);
+    const label = districtAreaQueryLabel(area);
+    const batches = await Promise.all(specs.map(spec => {
+      const opts = {
+        pageSize: 12,
+        openNow,
+        includedType: spec.includedType || null,
+        strictTypeFiltering: Boolean(spec.strictTypeFiltering),
+        richFields: spec.richFields || []
+      };
+      if (anchor?.latitude != null && anchor?.longitude != null) {
+        opts.locationBias = {
+          circle: {
+            center: { latitude: anchor.latitude, longitude: anchor.longitude },
+            radius: 4000.0
+          }
+        };
+        opts.rankPreference = 'DISTANCE';
+        opts.districtRestriction = false;
+        return googlePlacesTextSearch(spec.textQuery, opts)
+          .then(items => items.map(place => enrich(place, label)));
+      }
+      return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
+        .then(items => items.map(place => enrich(place, label)));
+    }));
     return dedupePlaces(batches.flat());
   };
 
-  let scope = area ? 'local-first' : 'district';
-  let places = area ? await runQueries([area]) : [];
-  let matching = places.filter(place => placeOpenAtConstraint(place, constraint) !== false);
+  const runZoneSpecs = async (zones, searchSpecs = specs.slice(0, 1), pageSize = 5) => {
+    const jobs = [];
+    for (const zone of zones) {
+      const zoneLabel = districtAreaQueryLabel(zone);
+      for (const spec of searchSpecs) {
+        jobs.push(
+          googlePlacesTextSearch(`${spec.textQuery} in ${zoneLabel}`, {
+            pageSize,
+            openNow,
+            includedType: spec.includedType || null,
+            strictTypeFiltering: Boolean(spec.strictTypeFiltering),
+            richFields: spec.richFields || []
+          }).then(items => items.map(place => enrich(place, zoneLabel)))
+        );
+      }
+    }
+    return dedupePlaces((await Promise.all(jobs)).flat());
+  };
 
-  // A specific area is a preference, not a trap. If it produces too few viable
-  // results, expand across the Wakefield district automatically.
-  if (!area || matching.length < 3) {
-    const districtPlaces = await runQueries(WAKEFIELD_DISTRICT_SEARCH_ZONES);
-    places = dedupePlaces([...places, ...districtPlaces]);
-    matching = places.filter(place => placeOpenAtConstraint(place, constraint) !== false);
-    scope = area ? 'local-first-then-district' : 'district';
+  const evaluate = places => places.map(place => {
+    const timeMatch = placeOpenAtConstraint(place, constraint);
+    const serviceMatch = placeServiceConstraintStatus(place, messages);
+    return { place, timeMatch, serviceMatch };
+  }).filter(item => item.timeMatch !== false && item.serviceMatch !== false);
+
+  let scope = area ? 'local' : 'district';
+  let evaluated = [];
+
+  if (area) {
+    const localPlaces = await runLocalSpecs();
+    evaluated = evaluate(localPlaces);
+
+    // A named area is a hard preference. Do not silently replace Pontefract,
+    // Castleford, Horbury, Tileyard, Westgate, etc. with Wakefield city-centre
+    // options just because only one or two local matches were found.
+    const exactLocal = evaluated.filter(item => item.serviceMatch === true);
+    if (!exactLocal.length && widenExplicitly) {
+      const districtPlaces = await runZoneSpecs(WAKEFIELD_DISTRICT_SEARCH_ZONES, specs.slice(0, 1), 4);
+      evaluated = evaluate(dedupePlaces([...localPlaces, ...districtPlaces]));
+      scope = 'local-then-district';
+    }
+  } else {
+    let districtPlaces = await runZoneSpecs(WAKEFIELD_DISTRICT_SEARCH_ZONES, specs.slice(0, 1), 4);
+    evaluated = evaluate(districtPlaces);
+
+    // If the primary service query did not produce enough exact service matches,
+    // run one secondary service query. This is materially cheaper than launching
+    // every query variant across every town on every request.
+    if (evaluated.filter(item => item.serviceMatch === true).length < 4 && specs.length > 1) {
+      const secondary = await runZoneSpecs(WAKEFIELD_DISTRICT_SEARCH_ZONES, specs.slice(1, 2), 3);
+      districtPlaces = dedupePlaces([...districtPlaces, ...secondary]);
+      evaluated = evaluate(districtPlaces);
+    }
+
+    if (evaluated.filter(item => item.serviceMatch === true).length < 3) {
+      const secondaryZones = await runZoneSpecs(WAKEFIELD_DISTRICT_SECONDARY_ZONES, specs.slice(0, 1), 3);
+      evaluated = evaluate(dedupePlaces([...districtPlaces, ...secondaryZones]));
+      scope = 'full-district';
+    }
   }
 
-  // Fill quieter/rural parts of the district only when the main district sweep
-  // has not produced enough viable options. This broadens coverage without
-  // paying for every village-level query on every request.
-  if (matching.length < 5) {
-    const secondaryPlaces = await runQueries(WAKEFIELD_DISTRICT_SECONDARY_ZONES);
-    places = dedupePlaces([...places, ...secondaryPlaces]);
-    matching = places.filter(place => placeOpenAtConstraint(place, constraint) !== false);
-    scope = area ? 'local-first-then-full-district' : 'full-district';
-  }
+  const exact = evaluated.filter(item => item.serviceMatch === true);
+  const unknown = evaluated.filter(item => item.serviceMatch == null);
 
-  const scored = matching.map(place => {
-    const status = placeOpenAtConstraint(place, constraint);
-    let score = status === true ? 4 : 0;
-    const name = place?.displayName?.text || '';
-    const address = place?.formattedAddress || '';
-    if (area && `${name} ${address}`.toLowerCase().includes(area.split(' ')[0].toLowerCase())) score += 2;
-    return { place, score };
-  }).sort((a, b) => b.score - a.score);
+  // Exact service matches always outrank merely plausible category matches.
+  // Preserve Google ordering for local searches (DISTANCE-biased) and spread
+  // district-wide results across their source zones.
+  const spreadDistrict = items => {
+    if (area) return items;
+    const groups = new Map();
+    for (const item of items) {
+      const zone = item.place?._sourceZone || 'Wakefield district';
+      if (!groups.has(zone)) groups.set(zone, []);
+      groups.get(zone).push(item);
+    }
+    const out = [];
+    let added = true;
+    while (added && out.length < 14) {
+      added = false;
+      for (const list of groups.values()) {
+        if (list.length) {
+          out.push(list.shift());
+          added = true;
+          if (out.length >= 14) break;
+        }
+      }
+    }
+    return out;
+  };
 
-  const selected = scored.slice(0, 14).map(({ place }) => compactPlace(place));
+  const selectedItems = spreadDistrict([...exact, ...unknown]).slice(0, 14);
+  const selected = selectedItems.map(({ place, timeMatch, serviceMatch }) =>
+    compactPlace(place, {
+      sourceZone: place?._sourceZone || null,
+      serviceVerified: serviceMatch === true,
+      timeMatch: timeMatch === true ? true : (timeMatch === false ? false : null)
+    })
+  );
+
   if (!selected.length) return null;
+
+  console.info(`Google Places district discovery: ${selected.length} candidates (${scope}); verified service matches=${selected.filter(p => p.serviceVerified).length}.`);
 
   return {
     service,
     area,
     scope,
     constraint,
+    verifiedCount: selected.filter(place => place.serviceVerified === true && (constraint ? place.timeMatch === true : place.timeMatch !== false)).length,
     places: selected,
-    sources: selected.filter(p => p.googleMapsUri).slice(0, 8).map(p => ({
+    sources: selected.filter(p => p.googleMapsUri).slice(0, 10).map(p => ({
       title: `${p.name} — Google Places`,
       url: p.googleMapsUri
     }))
@@ -944,12 +1433,29 @@ function hasStrongFirstPartyEvidence(messages, evidence = {}) {
   const routes = evidence.routeContexts || {};
   const evening = evidence.eveningServiceContexts || {};
   const eventDetails = evidence.eventDetailContexts || [];
+  const area = detectWakefieldArea(messages);
+  const coreArea = isCoreWakefieldArea(area);
+  const placeVerified = verifiedPlacesCount(evidence.districtPlacesContext);
 
-  if (isPharmacyOpenQuery(messages) && [business.bootsKirkgate, business.kingfisher, business.pinderfields, business.asdaWakefield, business.sainsburysMarshWay].filter(Boolean).length >= 2) return true;
-  if (isEveningCoffeeDessertQuery(messages) && evening.dolceVita) return true;
-  if (isDogFriendlyVenueQuery(messages) && Object.values(food).filter(Boolean).length >= 2) return true;
-  if (isDietaryOpenQuery(messages) && Object.values(food).filter(Boolean).length >= 2) return true;
-  if ((isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages)) && evidence.districtPlacesContext?.places?.length >= 3) return true;
+  // Rich Google Places evidence is enough to skip a second model call for
+  // ordinary local-business discovery when it directly verifies both the
+  // requested service and time constraint.
+  if ((isPharmacyOpenQuery(messages)
+      || isEveningCoffeeDessertQuery(messages)
+      || isDogFriendlyVenueQuery(messages)
+      || isCurrentFoodStatusQuery(messages)
+      || isTimedFoodAvailabilityQuery(messages))
+      && placeVerified >= 1) return true;
+
+  // Fixed Wakefield-city first-party pages are strong only when the user is
+  // actually asking about the Wakefield city/core area. They must not make a
+  // Pontefract, Castleford, Ossett or Horbury query look "resolved".
+  if (coreArea && isPharmacyOpenQuery(messages)
+      && [business.bootsKirkgate, business.kingfisher, business.pinderfields, business.asdaWakefield, business.sainsburysMarshWay].filter(Boolean).length >= 2) return true;
+  if (coreArea && isEveningCoffeeDessertQuery(messages) && evening.dolceVita) return true;
+  if (coreArea && isDogFriendlyVenueQuery(messages) && Object.values(food).filter(Boolean).length >= 2) return true;
+  if (coreArea && isDietaryOpenQuery(messages) && Object.values(food).filter(Boolean).length >= 2) return true;
+
   if (isCathedralToYspRouteQuery(messages) && routes.yspGettingHere) return true;
   if ((isEventCostFollowUp(messages) || isFreeCurrentLeisureQuery(messages)) && eventDetails.length > 0) return true;
   return false;
@@ -986,23 +1492,32 @@ function shouldUseOpenAIFailsafe(messages, evidence = {}) {
     || /\b(open now|right now|currently|free|price|cost|ticket|road closures?|parking|wheelchair|step[- ]?free|last train|next train|last bus|next bus)\b/i.test(context);
 }
 
-function openAIDomainsForQuery(messages) {
+function openAIDomainsForQuery(messages, evidence = {}) {
+  const candidateDomains = [];
+  for (const place of evidence?.districtPlacesContext?.places || []) {
+    if (!place?.websiteUri) continue;
+    try {
+      const host = new URL(place.websiteUri).hostname.toLowerCase().replace(/^www\./, '');
+      if (host && !candidateDomains.includes(host)) candidateDomains.push(host);
+    } catch {}
+  }
+
+  let base;
   if (isPharmacyOpenQuery(messages)) {
-    return ['nhs.uk','midyorks.nhs.uk','boots.com','kingfisherpharmacy.co.uk','pharmacyplushealth.co.uk','pharmacy-express.co.uk','storelocator.asda.com','stores.sainsburys.co.uk'];
+    base = ['nhs.uk','midyorks.nhs.uk','boots.com','kingfisherpharmacy.co.uk','pharmacyplushealth.co.uk','pharmacy-express.co.uk','storelocator.asda.com','stores.sainsburys.co.uk'];
+  } else if (isCathedralToYspRouteQuery(messages) || isRoutePlanningQuery(messages) || isLiveTransportTimesQuery(messages)) {
+    base = ['ysp.org.uk','wymetro.com','nationalrail.co.uk','northernrailway.co.uk','lner.co.uk','westyorks-ca.gov.uk'];
+  } else if (isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages) || isEventCostFollowUp(messages)) {
+    base = ['experiencewakefield.co.uk','wxwakefield.co.uk','wakefieldcathedral.org.uk','hepworthwakefield.org','ysp.org.uk','nationaltrust.org.uk','theatreroyalwakefield.co.uk'];
+  } else if (isDogFriendlyVenueQuery(messages) || isDietaryOpenQuery(messages) || isEveningCoffeeDessertQuery(messages) || isTimedFoodAvailabilityQuery(messages)) {
+    base = ['experiencewakefield.co.uk','the-arthouse.org.uk','recent.coffee','bakesbyvanillabean.co.uk','dinerustico.co.uk','robatary.co.uk','tileyardnorth.co.uk','dolcevitawakefield.co.uk','rassams.co.uk'];
+  } else if (isGeneralAccessibilityQuery(messages)) {
+    base = ['experiencewakefield.co.uk','hepworthwakefield.org','wxwakefield.co.uk','ysp.org.uk','nationaltrust.org.uk'];
+  } else {
+    base = TRUSTED_DOMAINS.slice(0, 24);
   }
-  if (isCathedralToYspRouteQuery(messages) || isRoutePlanningQuery(messages) || isLiveTransportTimesQuery(messages)) {
-    return ['ysp.org.uk','wymetro.com','nationalrail.co.uk','northernrailway.co.uk','lner.co.uk','westyorks-ca.gov.uk'];
-  }
-  if (isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages) || isEventCostFollowUp(messages)) {
-    return ['experiencewakefield.co.uk','wxwakefield.co.uk','wakefieldcathedral.org.uk','hepworthwakefield.org','ysp.org.uk','nationaltrust.org.uk','theatreroyalwakefield.co.uk'];
-  }
-  if (isDogFriendlyVenueQuery(messages) || isDietaryOpenQuery(messages) || isEveningCoffeeDessertQuery(messages) || isTimedFoodAvailabilityQuery(messages)) {
-    return ['experiencewakefield.co.uk','the-arthouse.org.uk','recent.coffee','bakesbyvanillabean.co.uk','dinerustico.co.uk','robatary.co.uk','tileyardnorth.co.uk','dolcevitawakefield.co.uk','rassams.co.uk'];
-  }
-  if (isGeneralAccessibilityQuery(messages)) {
-    return ['experiencewakefield.co.uk','hepworthwakefield.org','wxwakefield.co.uk','ysp.org.uk','nationaltrust.org.uk'];
-  }
-  return TRUSTED_DOMAINS.slice(0, 24);
+
+  return [...new Set([...candidateDomains, ...base])].slice(0, 20);
 }
 
 function openAIVerificationEvidenceBundle(evidence = {}) {
@@ -1043,6 +1558,11 @@ function openAIVerificationEvidenceBundle(evidence = {}) {
       `Address: ${place.address}`,
       typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
       place.weekdayDescriptions?.length ? `Hours: ${place.weekdayDescriptions.join(' | ')}` : '',
+      place.sourceZone ? `Search zone: ${place.sourceZone}` : '',
+      place.serviceVerified === true ? 'Requested service verified by Places attributes: yes' : (place.serviceVerified === false ? 'Requested service verified by Places attributes: no' : 'Requested service verified by Places attributes: unknown'),
+      typeof place.servesCoffee === 'boolean' ? `Serves coffee: ${place.servesCoffee ? 'yes' : 'no'}` : '',
+      typeof place.servesDessert === 'boolean' ? `Serves dessert: ${place.servesDessert ? 'yes' : 'no'}` : '',
+      typeof place.allowsDogs === 'boolean' ? `Allows dogs: ${place.allowsDogs ? 'yes' : 'no'}` : '',
       place.websiteUri ? `Website: ${place.websiteUri}` : ''
     ].filter(Boolean).join('\n')).join('\n\n'));
   }
@@ -1149,7 +1669,7 @@ STRICT RULES:
         tools: [{
           type: 'web_search',
           search_context_size: 'low',
-          filters: { allowed_domains: openAIDomainsForQuery(messages) },
+          filters: { allowed_domains: openAIDomainsForQuery(messages, evidence) },
           user_location: {
             type: 'approximate',
             country: 'GB',
@@ -1177,7 +1697,7 @@ STRICT RULES:
     return { ...extracted, verified: true };
   } catch (error) {
     if (error?.name !== 'AbortError') console.error('OpenAI fail-safe request failed:', error?.message || error);
-    else console.warn(`OpenAI fail-safe timed out after ${Date.now() - verifyStartedAt}ms; using primary answer.`);
+    else console.warn(`OpenAI fail-safe timed out after ${Date.now() - verifyStartedAt}ms; failing closed.`);
     return null;
   } finally {
     clearTimeout(timer);
@@ -1329,6 +1849,112 @@ function decodeBasicEntities(value) {
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>');
+}
+
+function extractJsonLdNodes(html) {
+  const source = String(html || '');
+  const nodes = [];
+  const re = /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  const pushNode = value => {
+    if (!value) return;
+    if (Array.isArray(value)) { value.forEach(pushNode); return; }
+    if (typeof value !== 'object') return;
+    if (Array.isArray(value['@graph'])) value['@graph'].forEach(pushNode);
+    if (Array.isArray(value.itemListElement)) {
+      for (const item of value.itemListElement) pushNode(item?.item || item);
+    }
+    nodes.push(value);
+  };
+  while ((match = re.exec(source))) {
+    try { pushNode(JSON.parse(decodeBasicEntities(match[1]).trim())); } catch {}
+  }
+  return nodes;
+}
+
+function jsonLdTypeIncludes(node, wanted) {
+  const raw = node?.['@type'];
+  const types = Array.isArray(raw) ? raw : [raw];
+  return types.filter(Boolean).some(type => String(type).toLowerCase() === String(wanted).toLowerCase());
+}
+
+function normaliseIsoDateTime(value) {
+  if (!value) return null;
+  const s = String(value).trim();
+  return s.length <= 80 ? s : s.slice(0, 80);
+}
+
+function priceStatusFromOffers(offers) {
+  const list = Array.isArray(offers) ? offers : (offers ? [offers] : []);
+  const nums = [];
+  for (const offer of list) {
+    const candidates = [offer?.price, offer?.lowPrice, offer?.highPrice];
+    for (const value of candidates) {
+      if (value == null || value === '') continue;
+      const n = Number(String(value).replace(/[^0-9.]/g, ''));
+      if (Number.isFinite(n)) nums.push(n);
+    }
+  }
+  if (!nums.length) return { type: 'unknown', min: null, max: null };
+  const min = Math.min(...nums), max = Math.max(...nums);
+  if (min === 0 && max === 0) return { type: 'free', min, max };
+  if (min === 0 && max > 0) return { type: 'variable', min, max };
+  return { type: 'paid', min, max };
+}
+
+function eventCardFromJsonLd(node, sourceUrl) {
+  if (!jsonLdTypeIncludes(node, 'Event')) return null;
+  const location = node?.location;
+  const venue = typeof location === 'string' ? location : (location?.name || null);
+  const addressObj = location?.address;
+  const address = typeof addressObj === 'string'
+    ? addressObj
+    : [addressObj?.streetAddress, addressObj?.addressLocality, addressObj?.postalCode].filter(Boolean).join(', ') || null;
+  const price = priceStatusFromOffers(node?.offers);
+  const url = node?.url || sourceUrl || null;
+  const title = node?.name || null;
+  if (!title) return null;
+  return {
+    id: String(node?.['@id'] || url || `${title}|${node?.startDate || ''}`).slice(0, 500),
+    entityType: 'event',
+    title: String(title).slice(0, 220),
+    url: url ? String(url).slice(0, 800) : null,
+    date: normaliseIsoDateTime(node?.startDate),
+    start: normaliseIsoDateTime(node?.startDate),
+    end: normaliseIsoDateTime(node?.endDate),
+    venue: venue ? String(venue).slice(0, 220) : null,
+    address: address ? String(address).slice(0, 300) : null,
+    priceStatus: price.type,
+    priceMin: price.min,
+    priceMax: price.max,
+    sourceTier: 'structured-first-party'
+  };
+}
+
+function extractStructuredPageData(html, text, url) {
+  const nodes = extractJsonLdNodes(html);
+  const eventCards = nodes.map(node => eventCardFromJsonLd(node, url)).filter(Boolean);
+  return { eventCards };
+}
+
+function extractRelevantFirstPartyText(text, title, maxChars = 9000) {
+  const source = String(text || '').replace(/\s+/g, ' ').trim();
+  if (source.length <= maxChars) return source;
+  const needles = [
+    title,
+    'Opening hours', 'Pharmacy', 'Accessibility', 'Access facilities',
+    'Dog Friendly', 'Gluten Free', 'Coffee', 'Dessert', 'Price', 'Free',
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const chunks = [source.slice(0, 1400)];
+  const lower = source.toLowerCase();
+  for (const needle of needles) {
+    const idx = lower.indexOf(needle);
+    if (idx < 0) continue;
+    chunks.push(source.slice(Math.max(0, idx - 700), Math.min(source.length, idx + 1800)));
+    if (chunks.join('\n---\n').length >= maxChars) break;
+  }
+  return [...new Set(chunks.map(v => v.trim()).filter(Boolean))].join('\n---\n').slice(0, maxChars);
 }
 
 function htmlToPlainText(html) {
@@ -1528,11 +2154,10 @@ function extractExperienceEventLinks(html) {
   return Array.from(found.values()).slice(0, 120);
 }
 
-function eventTitlesFromRecentAssistant(messages) {
-  const text = recentAssistantContext(messages, 1);
+function eventTitlesFromText(text) {
   if (!text) return [];
   const titles = [];
-  for (const rawLine of text.split('\n')) {
+  for (const rawLine of String(text).split('\n')) {
     const line = rawLine.replace(/^\s*[-*•]+\s*/, '').replace(/\*\*/g, '').trim();
     if (!line || /^(saturday|sunday|monday|tuesday|wednesday|thursday|friday|free options?|events? this weekend|this weekend)/i.test(line)) continue;
     if (!/[A-Za-z]/.test(line)) continue;
@@ -1540,10 +2165,14 @@ function eventTitlesFromRecentAssistant(messages) {
     title = title.split(/\s+at\s+/i)[0].trim();
     title = title.replace(/\s*\([^)]*(?:\d{1,2}:\d{2}|am|pm|september|october|november|december)[^)]*\)\s*$/i, '').trim();
     if (title.length < 5 || title.length > 120) continue;
-    if (/^(would any|if you|from this|here are|all three|i can|i cannot|i couldn't)/i.test(title)) continue;
+    if (/^(would any|if you|from this|here are|all three|i can|i cannot|i couldn't|these are|the verified)/i.test(title)) continue;
     if (!titles.some(t => normaliseEventTitle(t) === normaliseEventTitle(title))) titles.push(title);
   }
   return titles.slice(0, 10);
+}
+
+function eventTitlesFromRecentAssistant(messages) {
+  return eventTitlesFromText(recentAssistantContext(messages, 1));
 }
 
 function matchEventLinkForTitle(title, links = []) {
@@ -1568,22 +2197,29 @@ function matchEventLinkForTitle(title, links = []) {
   return bestScore >= 30 ? best : null;
 }
 
-async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext) {
-  if (!eventCostWasRequested(messages) || !experienceEventsContext?.eventLinks?.length) return [];
-  const titles = eventTitlesFromRecentAssistant(messages);
+async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, sessionState = null) {
+  if (!eventCostWasRequested(messages)) return [];
+  const stateEvents = hasRecentAssistantAnswer(messages) ? (sessionState?.resultCards || []).filter(card => card?.entityType === 'event' && card?.title) : [];
+  const titles = stateEvents.length ? stateEvents.map(card => card.title) : eventTitlesFromRecentAssistant(messages);
   if (!titles.length) return [];
   const matched = [];
   const used = new Set();
   for (const title of titles) {
-    const link = matchEventLinkForTitle(title, experienceEventsContext.eventLinks);
-    if (!link || used.has(link.url)) continue;
+    const stateCard = stateEvents.find(card => normaliseEventTitle(card.title) === normaliseEventTitle(title));
+    let link = stateCard?.url ? { url: stateCard.url, label: stateCard.title } : null;
+    if (!link && experienceEventsContext?.eventLinks?.length) link = matchEventLinkForTitle(title, experienceEventsContext.eventLinks);
+    if (!link?.url || used.has(link.url)) continue;
     used.add(link.url);
     matched.push({ title, link });
   }
   const values = await Promise.all(matched.slice(0, 8).map(item =>
     fetchSimpleFirstPartyContext(item.link.url, `Experience Wakefield — ${item.title}`)
   ));
-  return matched.slice(0, 8).map((item, i) => ({ title: item.title, context: values[i] || null })).filter(item => item.context);
+  return matched.slice(0, 8).map((item, i) => {
+    const context = values[i] || null;
+    const canonicalTitle = context?.structured?.eventCards?.[0]?.title || item.title;
+    return { title: canonicalTitle, context };
+  }).filter(item => item.context);
 }
 
 async function fetchExperienceWakefieldEventsContext() {
@@ -1602,10 +2238,13 @@ async function fetchExperienceWakefieldEventsContext() {
     const text = htmlToPlainText(html);
     if (!text) return null;
     const dates = eventDateState();
+    const structured = extractStructuredPageData(html, text, url);
     return {
       text: extractRelevantEventSegments(text, dates),
       dates,
       eventLinks: extractExperienceEventLinks(html),
+      eventCards: structured.eventCards || [],
+      structured,
       source: {
         title: "Experience Wakefield — What's On",
         url
@@ -1634,8 +2273,10 @@ async function fetchSimpleFirstPartyContext(url, title) {
     const html = await response.text();
     const text = htmlToPlainText(html);
     if (!text) return null;
+    const structured = extractStructuredPageData(html, text, url);
     return {
-      text: text.slice(0, 9000),
+      text: extractRelevantFirstPartyText(text, title, 9000),
+      structured,
       source: { title, url }
     };
   } catch (error) {
@@ -1727,6 +2368,8 @@ async function fetchRunningFirstPartyContexts(messages) {
 }
 
 async function fetchFoodConstraintFirstPartyContexts(messages) {
+  const area = detectWakefieldArea(messages);
+  if (area && !isCoreWakefieldArea(area)) return { kraft: null, bakes: null, marmalade: null, recent: null, corarima: null, rustico: null, tet: null };
   const dog = isDogFriendlyVenueQuery(messages);
   const dietary = isDietaryOpenQuery(messages);
   if (!dog && !dietary) return { kraft: null, bakes: null, marmalade: null, recent: null, corarima: null, rustico: null, tet: null };
@@ -1754,6 +2397,8 @@ async function fetchFoodConstraintFirstPartyContexts(messages) {
 }
 
 async function fetchBusinessFirstPartyContexts(messages) {
+  const area = detectWakefieldArea(messages);
+  if (area && !isCoreWakefieldArea(area)) return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
   if (!isCurrentBusinessStatusQuery(messages) && !isPharmacyOpenQuery(messages)) {
     return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
   }
@@ -1788,6 +2433,8 @@ async function fetchBusinessFirstPartyContexts(messages) {
 }
 
 async function fetchEveningServiceFirstPartyContexts(messages) {
+  const area = detectWakefieldArea(messages);
+  if (area && !isCoreWakefieldArea(area)) return { dolceVita: null, clubHouse: null, rassams: null };
   if (!isEveningCoffeeDessertQuery(messages)) {
     return { dolceVita: null, clubHouse: null, rassams: null };
   }
@@ -2222,8 +2869,23 @@ function exactEventDetailForTitle(title, evidence = {}) {
 
 function exactEventPriceStatus(title, evidence = {}) {
   const ctx = exactEventDetailForTitle(title, evidence);
-  if (!ctx?.text) return null;
-  const text = String(ctx.text).slice(0, 3500);
+  if (!ctx) return null;
+  const structuredCards = ctx?.structured?.eventCards || [];
+  const target = normaliseEventTitle(title);
+  const structured = structuredCards.find(card => normaliseEventTitle(card?.title) === target) || structuredCards[0];
+  if (structured?.priceStatus && structured.priceStatus !== 'unknown') {
+    if (structured.priceStatus === 'free') return { type: 'free', raw: 'Free' };
+    if (structured.priceStatus === 'variable') {
+      const raw = structured.priceMin != null && structured.priceMax != null ? `£${structured.priceMin}–£${structured.priceMax}` : null;
+      return { type: 'variable', raw };
+    }
+    if (structured.priceStatus === 'paid') {
+      const raw = structured.priceMin != null ? `£${structured.priceMin}` : null;
+      return { type: 'paid', raw };
+    }
+  }
+  if (!ctx?.text) return { type: 'unknown', raw: null };
+  const text = String(ctx.text).slice(0, 5000);
   const tagRange = text.match(/\bTag\s+£\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*[-–]\s*£?\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
   if (tagRange) {
     const a = Number(tagRange[1].replace(',', '.'));
@@ -2413,6 +3075,11 @@ function combinedReliabilityEvidence(evidence = {}) {
       `Address: ${place.address}`,
       typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
       place.weekdayDescriptions?.length ? `Hours: ${place.weekdayDescriptions.join(' | ')}` : '',
+      place.sourceZone ? `Search zone: ${place.sourceZone}` : '',
+      place.serviceVerified === true ? 'Requested service verified by Places attributes: yes' : (place.serviceVerified === false ? 'Requested service verified by Places attributes: no' : 'Requested service verified by Places attributes: unknown'),
+      typeof place.servesCoffee === 'boolean' ? `Serves coffee: ${place.servesCoffee ? 'yes' : 'no'}` : '',
+      typeof place.servesDessert === 'boolean' ? `Serves dessert: ${place.servesDessert ? 'yes' : 'no'}` : '',
+      typeof place.allowsDogs === 'boolean' ? `Allows dogs: ${place.allowsDogs ? 'yes' : 'no'}` : '',
       place.websiteUri ? `Website: ${place.websiteUri}` : ''
     ].filter(Boolean).join('\n')).join('\n\n')}`);
   }
@@ -2591,9 +3258,15 @@ function stripInternalProcessLeakage(reply) {
   if (rewriteMarker !== -1) out = out.slice(rewriteMarker + 'recommended rewrite:'.length).trim();
   const finalMarker = out.lastIndexOf('FINAL_RESPONSE:');
   if (finalMarker !== -1) out = out.slice(finalMarker + 'FINAL_RESPONSE:'.length).trim();
+
+  // Validators occasionally append an audit block after the real answer.
+  // Remove the entire block rather than trying to clean it line by line.
+  const validationBlock = out.search(/\n\s*---\s*\n+\s*validated(?:[.:]|\b)/i);
+  if (validationBlock !== -1) out = out.slice(0, validationBlock).trim();
+
   return out
     .split('\n')
-    .filter(line => !/^\s*(?:---\s*)?(?:change made|changes? made|removed because|validator|validation note|audit note|draft note|internal note|recommended rewrite)\s*:/i.test(line))
+    .filter(line => !/^\s*(?:---\s*)?(?:validated|change made|changes? made|removed because|validator|validation note|audit note|draft note|internal note|recommended rewrite)\s*(?::|\.|\b)/i.test(line))
     .filter(line => !/trusted evidence supplied/i.test(line))
     .filter(line => !/^\s*(?:i(?:'|’)ll|i will|i need to|let me)\s+(?:carry out a live search|search|check live sources)\b/i.test(line))
     .join('\n')
@@ -2620,6 +3293,22 @@ function deterministicallySanitiseRouteAnswer(reply, messages) {
 
 
 function eventDetailMetaFromContext(context) {
+  const structured = context?.structured?.eventCards?.[0];
+  if (structured?.start || structured?.date) {
+    const formatDate = value => {
+      if (!value) return null;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+    };
+    const formatTime = value => {
+      if (!value) return null;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return null;
+      return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+    };
+    return { date: formatDate(structured.start || structured.date), start: formatTime(structured.start), end: formatTime(structured.end), venue: structured.venue || null };
+  }
   const text = String(context?.text || '');
   const dateMatch = text.match(/Calendar(?:\s+Icon)?\s+((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})/i);
   const timeMatch = text.match(/Clock(?:\s+icon)?\s*(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/i);
@@ -2655,6 +3344,129 @@ function buildDeterministicFreeFollowUpAnswer(messages, evidence = {}) {
   return `From the events I listed, ${freeItems.length === 1 ? 'the only one I can verify as free is' : 'these are the ones I can verify as free'}:\n\n${lines.join('\n')}`;
 }
 
+function placeCardFromCompactPlace(place) {
+  return {
+    id: place?.id ? `place:${place.id}` : `place:${String(place?.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+    entityType: 'place',
+    name: place?.name || null,
+    title: place?.name || null,
+    address: place?.address || null,
+    url: place?.websiteUri || place?.googleMapsUri || null,
+    sourceUrl: place?.googleMapsUri || place?.websiteUri || null,
+    openNow: typeof place?.openNow === 'boolean' ? place.openNow : null,
+    weekdayDescriptions: Array.isArray(place?.weekdayDescriptions) ? place.weekdayDescriptions : [],
+    serviceVerified: place?.serviceVerified === true,
+    timeMatch: typeof place?.timeMatch === 'boolean' ? place.timeMatch : null,
+    servesCoffee: typeof place?.servesCoffee === 'boolean' ? place.servesCoffee : null,
+    servesDessert: typeof place?.servesDessert === 'boolean' ? place.servesDessert : null,
+    allowsDogs: typeof place?.allowsDogs === 'boolean' ? place.allowsDogs : null,
+    accessibilityOptions: place?.accessibilityOptions || null,
+    phone: place?.nationalPhoneNumber || null,
+    sourceZone: place?.sourceZone || null
+  };
+}
+
+function verifiedPlaceCards(context) {
+  if (!context?.places?.length) return [];
+  const requiresTime = Boolean(context.constraint);
+  return context.places
+    .filter(place => place?.serviceVerified === true && (requiresTime ? place?.timeMatch === true : place?.timeMatch !== false))
+    .slice(0, 6)
+    .map(placeCardFromCompactPlace);
+}
+
+function structuredFallbackFromCards(route, cards) {
+  if (!cards?.length) return null;
+  if (route.intent === 'pharmacy.open') {
+    const lines = cards.map(card => {
+      const hours = card.weekdayDescriptions?.find(Boolean);
+      return `- ${card.name}${card.address ? ` — ${card.address}` : ''}${hours ? `\n  ${hours}` : ''}`;
+    });
+    return `These are the pharmacy matches I can verify against the requested time:\n\n${lines.join('\n')}\n\nI have not ranked them as nearest unless a distance calculation is available.`;
+  }
+  if (route.intent === 'food.open_at') {
+    const lines = cards.map(card => {
+      const services = [card.servesCoffee === true ? 'coffee' : null, card.servesDessert === true ? 'dessert' : null].filter(Boolean).join(' + ');
+      return `- ${card.name}${card.address ? ` — ${card.address}` : ''}${services ? ` (${services})` : ''}`;
+    });
+    return `These are the matches that meet the verified service/time filters:\n\n${lines.join('\n')}`;
+  }
+  return null;
+}
+
+async function writeFromEvidenceCards(messages, route, cards) {
+  if (!cards?.length) return null;
+  const question = lastUserText(messages);
+  const system = `You are Ask Wakefield, an independent local guide for the Wakefield district. Write a concise, natural answer using ONLY the supplied evidence cards. Do not search, infer, rank by proximity, or add venues. Hard constraints have already been applied in code. If a field is null/unknown, do not invent it. For pharmacy answers, do not confuse shop hours with a pharmacy service and do not claim nearest unless the card contains a verified distance. For food/service answers, describe the service actually verified rather than the venue category. Do not mention internal cards, models or validation. Use plain British English and a warm local tone.`;
+  const body = {
+    model: MODEL,
+    max_tokens: 650,
+    system,
+    messages: [{ role: 'user', content: `Question: ${question}\n\nVerified evidence cards:\n${JSON.stringify(cards, null, 2)}` }]
+  };
+  try {
+    const { response, data } = await callAnthropic(body);
+    if (!response.ok) return structuredFallbackFromCards(route, cards);
+    const reply = extractAnswer(data).reply?.trim();
+    return reply || structuredFallbackFromCards(route, cards);
+  } catch {
+    return structuredFallbackFromCards(route, cards);
+  }
+}
+
+function eventCardsFromEvidence(finalReply, evidence = {}) {
+  const replyNorm = String(finalReply || '').toLowerCase();
+  const out = [];
+  const seen = new Set();
+  const candidates = [];
+  for (const card of evidence.experienceEventsContext?.eventCards || []) candidates.push(card);
+  for (const item of evidence.eventDetailContexts || []) {
+    for (const card of item?.context?.structured?.eventCards || []) candidates.push(card);
+  }
+  for (const link of evidence.experienceEventsContext?.eventLinks || []) {
+    const title = htmlToPlainText(link?.label || '').trim();
+    if (!title) continue;
+    candidates.push({ id: link.url, entityType: 'event', title, url: link.url, priceStatus: 'unknown' });
+  }
+  for (const card of candidates) {
+    const title = String(card?.title || '').trim();
+    if (!title || !replyNorm.includes(title.toLowerCase())) continue;
+    const key = card.id || card.url || title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      id: String(key).slice(0, 500), entityType: 'event', title: title.slice(0, 220),
+      url: card.url || null, date: card.date || null, start: card.start || null,
+      end: card.end || null, venue: card.venue || null, priceStatus: card.priceStatus || 'unknown'
+    });
+    if (out.length >= MAX_STATE_CARDS) break;
+  }
+  if (!out.length && evidence.experienceEventsContext?.eventLinks?.length) {
+    for (const title of eventTitlesFromText(finalReply)) {
+      const link = matchEventLinkForTitle(title, evidence.experienceEventsContext.eventLinks);
+      if (!link?.url || seen.has(link.url)) continue;
+      seen.add(link.url);
+      out.push({ id: link.url, entityType: 'event', title, url: link.url, date: null, start: null, end: null, venue: null, priceStatus: 'unknown' });
+      if (out.length >= MAX_STATE_CARDS) break;
+    }
+  }
+  return out;
+}
+
+function buildResponseState(route, finalReply, evidence = {}, districtPlacesContext = null, priorState = null) {
+  let resultCards = [];
+  if (route.intent.startsWith('events.')) resultCards = eventCardsFromEvidence(finalReply, evidence);
+  else if (route.intent === 'pharmacy.open' || route.intent === 'food.open_at') resultCards = verifiedPlaceCards(districtPlacesContext).slice(0, MAX_STATE_CARDS);
+  if (!resultCards.length && route.operation === 'refine' && Array.isArray(priorState?.resultCards)) resultCards = priorState.resultCards.slice(0, MAX_STATE_CARDS);
+  return {
+    version: 1,
+    lastIntent: route.intent,
+    area: route.area || priorState?.area || null,
+    constraints: { time: route.timeConstraint || null },
+    resultCards
+  };
+}
+
 function deterministicallySanitiseApproximateLocation(reply, messages) {
   if (!reply || !hasApproximateLocationOnly(messages)) return reply;
   return String(reply)
@@ -2669,8 +3481,11 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
   return String(reply)
     .replace(/\s*proper Yorkshire quality[.!]?/gi, '')
     .replace(/\s*roughly\s+\d+\s*[- ]?minutes?['’]?\s+walk\s+apart[.!]?/gi, '')
+    .replace(/\s*(?:it'?s|it is|they are|the venues are)?\s*a reasonable walk[^.!?]*[.!?]/gi, '')
+    .replace(/\s*central Wakefield has historic street terrain[.!]?/gi, '')
     .replace(/\s*The three venues form a natural loop:[^.!?]*[.!?]/gi, '')
     .replace(/\s*All three are genuinely independent and child-friendly[.!]?/gi, '')
+    .replace(/\s*Three independent, verified-accessible venues[^.!?]*[.!?]/gi, '')
     .replace(/\b(?:your|the) safest bet\b/gi, 'an available option')
     .replace(/\bthe nearest 96 stop\b/gi, 'a current 96 boarding stop')
     .replace(/\n{3,}/g, '\n\n')
@@ -2679,9 +3494,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -2698,6 +3511,10 @@ export default async function handler(req, res) {
 
   const messages = sanitiseMessages(req.body?.messages);
   if (!messages) return res.status(400).json({ error: 'invalid_request', reply: 'Please enter a valid question.' });
+  const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
+  const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
+  const route = classifyRequest(messages, clientState);
+  console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   if (isAmbiguousDenbyDalePharmacyFollowUp(messages)) {
     return res.status(200).json({
@@ -2754,7 +3571,42 @@ export default async function handler(req, res) {
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
   // instead of trusting neighbouring labels on the aggregate listings page.
-  const eventDetailContexts = await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext);
+  const eventDetailContexts = await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, clientState);
+
+  const earlyEvidence = { experienceEventsContext, eventDetailContexts };
+  if (STRUCTURED_CORE_ENABLED && route.intent === 'events.filter_existing') {
+    const deterministic = buildDeterministicFreeFollowUpAnswer(messages, earlyEvidence);
+    if (deterministic) {
+      const state = buildResponseState(route, deterministic, earlyEvidence, null, clientState);
+      attachStateCookie(res, state);
+      const sourceMap = new Map();
+      for (const item of eventDetailContexts) {
+        const source = item?.context?.source;
+        if (source?.url) sourceMap.set(source.url, source);
+      }
+      return res.status(200).json({ reply: deterministic, sources: Array.from(sourceMap.values()).slice(0, 8), live: true, verification: 'structured', state });
+    }
+  }
+
+  const structuredPlaceCards = STRUCTURED_CORE_ENABLED ? verifiedPlaceCards(districtPlacesContext) : [];
+  if (STRUCTURED_CORE_ENABLED && structuredPlaceCards.length && (route.intent === 'pharmacy.open' || route.intent === 'food.open_at')) {
+    const reply = await writeFromEvidenceCards(messages, route, structuredPlaceCards);
+    const state = buildResponseState(route, reply, {}, districtPlacesContext, clientState);
+    attachStateCookie(res, state);
+    const sourceMap = new Map();
+    for (const source of districtPlacesContext?.sources || []) if (source?.url) sourceMap.set(source.url, source);
+    for (const card of structuredPlaceCards) {
+      if (card.url) sourceMap.set(card.url, { title: card.name || card.url, url: card.url });
+      if (card.sourceUrl) sourceMap.set(card.sourceUrl, { title: `${card.name || 'Place'} — source`, url: card.sourceUrl });
+    }
+    return res.status(200).json({
+      reply: stripInternalProcessLeakage(reply || structuredFallbackFromCards(route, structuredPlaceCards) || verificationFallback(messages)),
+      sources: Array.from(sourceMap.values()).slice(0, 8),
+      live: true,
+      verification: 'structured',
+      state
+    });
+  }
 
   // If strong first-party snapshots/direct pages are available, prefer those over
   // another broad search. This is both more reliable and materially faster for
@@ -2768,12 +3620,15 @@ export default async function handler(req, res) {
   const hasDistrictPlacesEvidence = Boolean(districtPlacesContext?.places?.length);
   const needsEventPriceSearch = isCurrentEventsQuery(messages) && eventCostWasRequested(messages) && !hasEventDetailEvidence;
   const needsSpecificEventSearch = isNamedEventDetailQuery(messages) && !Boolean(namedEventContexts?.parade || namedEventContexts?.festival);
-  const directlyResolved = (isDogFriendlyVenueQuery(messages) && hasFoodConstraintEvidence)
-    || (isDietaryOpenQuery(messages) && hasFoodConstraintEvidence)
-    || (isPharmacyOpenQuery(messages) && hasBusinessEvidence)
-    || (isEveningCoffeeDessertQuery(messages) && hasEveningServiceEvidence)
+  const requestedArea = detectWakefieldArea(messages);
+  const coreAreaRequested = isCoreWakefieldArea(requestedArea);
+  const verifiedPlaceCount = verifiedPlacesCount(districtPlacesContext);
+  const directlyResolved = (isDogFriendlyVenueQuery(messages) && coreAreaRequested && hasFoodConstraintEvidence)
+    || (isDietaryOpenQuery(messages) && coreAreaRequested && hasFoodConstraintEvidence)
+    || (isPharmacyOpenQuery(messages) && coreAreaRequested && hasBusinessEvidence)
+    || (isEveningCoffeeDessertQuery(messages) && coreAreaRequested && hasEveningServiceEvidence)
     || (isCathedralToYspRouteQuery(messages) && hasRouteEvidence)
-    || (shouldUseDistrictPlaces(messages) && hasDistrictPlacesEvidence)
+    || (shouldUseDistrictPlaces(messages) && verifiedPlaceCount > 0)
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
@@ -2952,7 +3807,7 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
         place.weekdayDescriptions?.length ? `Published hours: ${place.weekdayDescriptions.join(' | ')}` : '',
         place.websiteUri ? `Website: ${place.websiteUri}` : '',
         place.googleMapsUri ? `Google Maps: ${place.googleMapsUri}` : ''
-      ].filter(Boolean).join('\n')).join('\n\n')}\n\nUse this as district-wide discovery evidence. If the user says only "Wakefield", do not silently narrow to the city centre. If a specific area was given, prefer matching local candidates but district-wide candidates may be offered when the exact requirement is not met locally. Opening-hours data may support current/time matching. For pharmacies, exact official pharmacy-counter hours from first-party evidence outrank Google Places. For specialised claims such as serves coffee + dessert, dog friendly, gluten free or wheelchair access, do not infer the service from a broad category alone unless other supplied evidence confirms it.`
+      ].filter(Boolean).join('\n')).join('\n\n')}\n\nUse this as district-wide discovery evidence. If the user says only "Wakefield", do not silently narrow to the city centre. If a specific area was given, prefer matching local candidates but district-wide candidates may be offered when the exact requirement is not met locally. Opening-hours data may support current/time matching. For pharmacies, exact official pharmacy-counter hours from first-party evidence outrank Google Places. For specialised claims such as serves coffee + dessert, dog friendly or wheelchair access, a Places attribute explicitly marked yes is verification evidence. A null/unknown attribute is NOT verification. If the user named a specific town/area, do not silently substitute Wakefield city-centre venues when local exact matches exist; give the local exact matches first. If no exact local service match is verified, say that clearly before offering any wider-district alternative.`
     : '';
 
   const routePlanningContext = isRoutePlanningQuery(messages)
@@ -3061,7 +3916,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
 
     const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, eventDetailContexts, searchEvidence };
 
-    if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages) && !shouldUseOpenAIFailsafe(messages, reliabilityEvidence)) {
+    if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages) && !(FULL_ANSWER_OPENAI_VERIFY_ENABLED && shouldUseOpenAIFailsafe(messages, reliabilityEvidence))) {
       return res.status(200).json({
         reply: verificationFallback(messages),
         sources: [],
@@ -3069,7 +3924,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       });
     }
 
-    const openAIFailsafe = shouldUseOpenAIFailsafe(messages, reliabilityEvidence);
+    const openAIFailsafe = FULL_ANSWER_OPENAI_VERIFY_ENABLED && shouldUseOpenAIFailsafe(messages, reliabilityEvidence);
     if (!openAIFailsafe && OPENAI_FAILSAFE_ENABLED && process.env.OPENAI_API_KEY && hasStrongFirstPartyEvidence(messages, reliabilityEvidence)) {
       console.info('OpenAI fail-safe skipped: strong first-party evidence available.');
     }
@@ -3077,7 +3932,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     // When the independent OpenAI fail-safe is active, avoid stacking several
     // sequential Anthropic validator calls. This keeps the high-risk path to two
     // model calls: primary Claude answer + independent OpenAI evidence check.
-    const eventValidatedReply = openAIFailsafe
+    const eventValidatedReply = (!LEGACY_LLM_VALIDATORS_ENABLED || openAIFailsafe)
       ? reply
       : await validateEventAnswer(reply, messages, {
           wxContext,
@@ -3099,7 +3954,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     });
 
     const skipSecondPassForComplexPlan = isComplexSaturdayDayPlanQuery(messages);
-    const reliabilityWasNeeded = !openAIFailsafe && needsReliabilityValidation(messages) && !skipSecondPassForComplexPlan;
+    const reliabilityWasNeeded = LEGACY_LLM_VALIDATORS_ENABLED && !openAIFailsafe && needsReliabilityValidation(messages) && !skipSecondPassForComplexPlan;
     const reliabilityValidatedReply = reliabilityWasNeeded
       ? await validateReliabilityAnswer(eventSafeReply, messages, {
           wxContext,
@@ -3118,7 +3973,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
         })
       : eventSafeReply;
 
-    const validatedReply = (openAIFailsafe || skipSecondPassForComplexPlan)
+    const validatedReply = (!LEGACY_LLM_VALIDATORS_ENABLED || openAIFailsafe || skipSecondPassForComplexPlan)
       ? reliabilityValidatedReply
       : ((reliabilityWasNeeded && !isCurrentFoodStatusQuery(messages))
           ? reliabilityValidatedReply
@@ -3155,7 +4010,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
         })
       : null;
 
-    let finalReply = openAIResult?.reply || primarySafeReply;
+    let finalReply = openAIFailsafe ? (openAIResult?.reply || verificationFallback(messages)) : primarySafeReply;
     // Deterministic safety rules always get the last word, whichever model
     // produced the prose.
     finalReply = stripInternalProcessLeakage(
@@ -3200,11 +4055,14 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       });
     }
 
+    const responseState = buildResponseState(route, finalReply, reliabilityEvidence, districtPlacesContext, clientState);
+    attachStateCookie(res, responseState);
     return res.status(200).json({
       reply: finalReply || "I'm sorry, I couldn't generate a response. Please try again.",
       sources: finalSources,
       live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
-      verification: openAIResult?.verified ? 'dual-source' : 'primary'
+      verification: openAIResult?.verified ? 'dual-source' : (LEGACY_LLM_VALIDATORS_ENABLED ? 'primary+legacy-validator' : 'primary'),
+      state: responseState
     });
   } catch (error) {
     console.error('Handler error:', error);

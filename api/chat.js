@@ -265,6 +265,7 @@ const OPENAI_FAILSAFE_ENABLED = process.env.OPENAI_FAILSAFE_ENABLED !== 'false';
 const FULL_ANSWER_OPENAI_VERIFY_ENABLED = process.env.FULL_ANSWER_OPENAI_VERIFY_ENABLED === 'true';
 const LEGACY_LLM_VALIDATORS_ENABLED = process.env.LEGACY_LLM_VALIDATORS_ENABLED === 'true';
 const STRUCTURED_CORE_ENABLED = process.env.STRUCTURED_CORE_ENABLED !== 'false';
+const EVENT_CARDS_FIRST_ENABLED = process.env.EVENT_CARDS_FIRST_ENABLED !== 'false';
 const OPENAI_FAILSAFE_TIMEOUT_MS = Math.max(4000, Math.min(Number(process.env.OPENAI_FAILSAFE_TIMEOUT_MS || 12000), 18000));
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
 const GOOGLE_PLACES_ENABLED = process.env.GOOGLE_PLACES_ENABLED !== 'false';
@@ -454,16 +455,26 @@ function parseCookieHeader(header) {
 function encodeStateCookie(state) {
   try {
     const compact = {
-      version: 1,
+      version: 2,
       lastIntent: state?.lastIntent || null,
+      lastFilter: state?.lastFilter || null,
+      viewIds: (state?.viewIds || []).slice(0, 8),
       area: state?.area || null,
       constraints: state?.constraints || null,
       resultCards: (state?.resultCards || []).slice(0, 8).map(card => ({
-        id: card?.id || null, entityType: card?.entityType || null,
+        id: card?.id || null,
+        entityType: card?.entityType || null,
         title: card?.title || card?.name || null,
-        name: card?.name || null, url: card?.url || null,
-        date: card?.date || null, start: card?.start || null, end: card?.end || null,
-        venue: card?.venue || null, priceStatus: card?.priceStatus || null
+        url: card?.sourceUrl || card?.url || null,
+        source: card?.source || null,
+        dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
+        startDate: card?.startDate || null,
+        endDate: card?.endDate || null,
+        start: card?.start || card?.startTime || null,
+        end: card?.end || card?.endTime || null,
+        venue: card?.venue || null,
+        priceStatus: card?.priceStatus || null,
+        priceRaw: card?.priceRaw || null
       }))
     };
     const encoded = Buffer.from(JSON.stringify(compact), 'utf8').toString('base64url');
@@ -487,26 +498,50 @@ function attachStateCookie(res, state) {
 }
 
 function normaliseClientState(raw) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { version: 1, lastIntent: null, resultCards: [], constraints: null, area: null };
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { version: 2, lastIntent: null, resultCards: [], viewIds: [], lastFilter: null, constraints: null, area: null };
   const cards = Array.isArray(raw.resultCards) ? raw.resultCards.slice(0, MAX_STATE_CARDS) : [];
+  const safeUrl = value => {
+    if (typeof value !== 'string') return null;
+    try { const u = new URL(value); return trustedHostname(u.hostname) ? u.toString().slice(0, 700) : null; } catch { return null; }
+  };
+  const resultCards = cards.map(card => ({
+    id: typeof card?.id === 'string' ? card.id.slice(0, 300) : null,
+    sourceId: typeof card?.sourceId === 'string' ? card.sourceId.slice(0, 300) : null,
+    canonId: typeof card?.canonId === 'string' ? card.canonId.slice(0, 300) : null,
+    entityType: typeof card?.entityType === 'string' ? card.entityType.slice(0, 40) : null,
+    title: typeof card?.title === 'string' ? card.title.slice(0, 180) : null,
+    name: typeof card?.name === 'string' ? card.name.slice(0, 180) : null,
+    kind: typeof card?.kind === 'string' ? card.kind.slice(0, 40) : null,
+    url: safeUrl(card?.url),
+    sourceUrl: safeUrl(card?.sourceUrl),
+    source: typeof card?.source === 'string' ? card.source.slice(0, 40) : null,
+    sourceTier: typeof card?.sourceTier === 'string' ? card.sourceTier.slice(0, 60) : null,
+    date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
+    dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
+    startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
+    endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
+    start: typeof card?.start === 'string' ? card.start.slice(0, 40) : null,
+    end: typeof card?.end === 'string' ? card.end.slice(0, 40) : null,
+    startTime: typeof card?.startTime === 'string' ? card.startTime.slice(0, 40) : null,
+    endTime: typeof card?.endTime === 'string' ? card.endTime.slice(0, 40) : null,
+    venue: typeof card?.venue === 'string' ? card.venue.slice(0, 180) : null,
+    venueId: typeof card?.venueId === 'string' ? card.venueId.slice(0, 160) : null,
+    priceStatus: typeof card?.priceStatus === 'string' ? card.priceStatus.slice(0, 30) : null,
+    priceRaw: typeof card?.priceRaw === 'string' ? card.priceRaw.slice(0, 80) : null,
+    address: typeof card?.address === 'string' ? card.address.slice(0, 260) : null,
+    serviceVerified: typeof card?.serviceVerified === 'boolean' ? card.serviceVerified : null,
+    timeMatch: typeof card?.timeMatch === 'boolean' ? card.timeMatch : null
+  })).filter(card => card.id || card.title || card.name);
+  const validIds = new Set(resultCards.map(card => card.id).filter(Boolean));
+  const viewIds = Array.isArray(raw.viewIds)
+    ? raw.viewIds.filter(id => typeof id === 'string' && validIds.has(id)).slice(0, MAX_STATE_CARDS)
+    : [];
   return {
-    version: 1,
+    version: 2,
     lastIntent: typeof raw.lastIntent === 'string' ? raw.lastIntent.slice(0, 80) : null,
-    resultCards: cards.map(card => ({
-      id: typeof card?.id === 'string' ? card.id.slice(0, 300) : null,
-      entityType: typeof card?.entityType === 'string' ? card.entityType.slice(0, 40) : null,
-      title: typeof card?.title === 'string' ? card.title.slice(0, 180) : null,
-      name: typeof card?.name === 'string' ? card.name.slice(0, 180) : null,
-      url: (() => { if (typeof card?.url !== 'string') return null; try { const u = new URL(card.url); return trustedHostname(u.hostname) ? u.toString().slice(0, 700) : null; } catch { return null; } })(),
-      date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
-      start: typeof card?.start === 'string' ? card.start.slice(0, 40) : null,
-      end: typeof card?.end === 'string' ? card.end.slice(0, 40) : null,
-      venue: typeof card?.venue === 'string' ? card.venue.slice(0, 180) : null,
-      priceStatus: typeof card?.priceStatus === 'string' ? card.priceStatus.slice(0, 30) : null,
-      address: typeof card?.address === 'string' ? card.address.slice(0, 260) : null,
-      serviceVerified: typeof card?.serviceVerified === 'boolean' ? card.serviceVerified : null,
-      timeMatch: typeof card?.timeMatch === 'boolean' ? card.timeMatch : null
-    })).filter(card => card.id || card.title || card.name),
+    resultCards,
+    viewIds,
+    lastFilter: typeof raw.lastFilter === 'string' ? raw.lastFilter.slice(0, 40) : null,
     constraints: raw.constraints && typeof raw.constraints === 'object' ? raw.constraints : null,
     area: typeof raw.area === 'string' ? raw.area.slice(0, 120) : null
   };
@@ -517,7 +552,11 @@ function classifyRequest(messages, state = null) {
   const context = recentUserContext(messages, 2);
   const refersToPrevious = looksLikeContextDependentFollowUp(last);
   let intent = 'other';
-  if ((/\b(which|what)\b.*\bfree\b|\bfree ones?\b/i.test(last) || /\bwhat time\b.*\bfree\b/i.test(last))
+  const eventSubsetFollowUp = state?.lastIntent?.startsWith('events.')
+    && Array.isArray(state?.resultCards) && state.resultCards.some(card => card?.entityType === 'event')
+    && (/\b(which|what)\b.*\bfree\b|\bfree ones?\b|\bwhat time\b.*\bfree\b|\bwhat time do (?:they|those|these|the ones?)\b|\bwhen do (?:they|those|these|the ones?)\b/i.test(last)
+      || (state?.lastFilter === 'free' && /\b(what time|when|start|starts|starting)\b/i.test(last)));
+  if (eventSubsetFollowUp
       && hasRecentAssistantAnswer(messages)
       && (state?.lastIntent?.startsWith('events.') || /\b(events?|what(?:'|’)s on|weekend)\b/i.test(context))) intent = 'events.filter_existing';
   else if (isCurrentEventsQuery(messages)) intent = 'events.whats_on';
@@ -2389,6 +2428,345 @@ function extractExperienceEventLinks(html) {
   return Array.from(found.values()).slice(0, 120);
 }
 
+
+function parseLooseExperienceDateRange(text, todayIso = null) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!value) return { startDate: null, endDate: null };
+
+  const nowRange = value.match(/\bNow\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+  if (nowRange) return { startDate: todayIso || null, endDate: shortEventDateToIso(nowRange[1]) };
+
+  const range = value.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+(?:\s+\d{4})?)\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+  if (range) {
+    const endDate = shortEventDateToIso(range[2]);
+    const endYear = range[2].match(/(\d{4})\s*$/)?.[1] || null;
+    const firstLabel = /\d{4}\s*$/.test(range[1]) ? range[1] : `${range[1]} ${endYear || ''}`.trim();
+    return { startDate: shortEventDateToIso(firstLabel), endDate };
+  }
+
+  const single = value.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+  const date = shortEventDateToIso(single?.[1] || '');
+  return { startDate: date, endDate: date };
+}
+
+function extractExperienceListingEventCards(html, todayIso = null) {
+  const source = String(html || '');
+  const headingRe = /<h[1-6]\b[^>]*>[\s\S]*?<a\b[^>]*href=["']([^"']*\/event\/[^"'#?]+\/?)['"][^>]*>([\s\S]*?)<\/a>[\s\S]*?<\/h[1-6]>/gi;
+  const matches = [];
+  let match;
+  while ((match = headingRe.exec(source))) {
+    let url = match[1];
+    try { url = new URL(url, 'https://experiencewakefield.co.uk').toString(); } catch { continue; }
+    if (!isSpecificExperienceEventUrl(url)) continue;
+    const title = htmlToPlainText(match[2]).trim();
+    if (!title) continue;
+    matches.push({ index: match.index, end: headingRe.lastIndex, url, title });
+  }
+
+  const cards = [];
+  const seen = new Set();
+  for (let i = 0; i < matches.length; i++) {
+    const item = matches[i];
+    const segmentEnd = matches[i + 1]?.index ?? Math.min(source.length, item.index + 5000);
+    const segment = htmlToPlainText(source.slice(item.index, segmentEnd));
+    if (!segment) continue;
+    const { startDate, endDate } = parseLooseExperienceDateRange(segment, todayIso);
+    const time = segment.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+    let venue = null;
+    if (time) {
+      const afterTime = segment.slice((time.index || 0) + time[0].length);
+      const venueChunk = afterTime.split(/\b(?:Read more|Book now|Free event|About)\b|£\s*\d/i)[0]
+        .replace(/\b(?:Image:?\s*Map pin|Map pin|Image:?\s*Clock icon|Clock icon|Calendar Icon|Calendar)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (venueChunk && venueChunk.length <= 220) venue = venueChunk;
+    }
+    const slug = (() => { try { return new URL(item.url).pathname.split('/event/')[1]?.replace(/\/$/, '') || normaliseEventTitle(item.title).replace(/\s+/g, '-'); } catch { return normaliseEventTitle(item.title).replace(/\s+/g, '-'); } })();
+    const sourceId = `experience:${slug}:${startDate || 'undated'}`;
+    const key = sourceId;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    cards.push({
+      id: sourceId,
+      sourceId,
+      canonId: sourceId,
+      entityType: 'event',
+      title: item.title,
+      url: item.url,
+      sourceUrl: item.url,
+      startDate,
+      endDate: endDate || startDate,
+      startTime: time?.[1] || null,
+      endTime: time?.[2] || null,
+      venue,
+      priceStatus: 'unknown',
+      priceRaw: null,
+      source: 'experience',
+      sourceTier: 'first-party-listing'
+    });
+  }
+  return cards;
+}
+
+function canonicaliseEventCardV16(card) {
+  if (!card?.title) return null;
+  const source = card.source || (isSpecificWxEventUrl(card.url || card.sourceUrl) ? 'wx' : (isSpecificExperienceEventUrl(card.url || card.sourceUrl) ? 'experience' : 'unknown'));
+  const sourceUrl = card.sourceUrl || card.url || null;
+  let slug = '';
+  try {
+    const parsed = sourceUrl ? new URL(sourceUrl) : null;
+    slug = parsed?.searchParams?.get('event') || parsed?.pathname?.split('/event/')[1]?.replace(/\/$/, '') || '';
+  } catch {}
+  if (!slug) slug = normaliseEventTitle(card.title).replace(/\s+/g, '-');
+  const sourceId = card.sourceId || `${source}:${slug}:${card.startDate || card.date || 'undated'}`;
+  return {
+    id: String(card.id || sourceId).slice(0, 300),
+    sourceId: String(sourceId).slice(0, 300),
+    canonId: String(card.canonId || sourceId).slice(0, 300),
+    entityType: 'event',
+    title: String(card.title).slice(0, 180),
+    kind: card.kind || (card.startDate && card.endDate && card.startDate !== card.endDate ? 'run' : 'scheduled'),
+    url: sourceUrl,
+    sourceUrl,
+    source,
+    sourceTier: card.sourceTier || null,
+    startDate: card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
+    endDate: card.endDate || card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
+    start: card.start || card.startTime || null,
+    end: card.end || card.endTime || null,
+    startTime: card.startTime || card.start || null,
+    endTime: card.endTime || card.end || null,
+    venue: card.venue || null,
+    venueId: card.venueId || (card.venue ? `venue:${normaliseEventTitle(card.venue).replace(/\s+/g, '-')}` : null),
+    priceStatus: ['free','paid','variable','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
+    priceRaw: card.priceRaw || null,
+    dates: Array.isArray(card.dates) ? card.dates.slice(0, 3) : []
+  };
+}
+
+function mergeExactEventCardsV16(cards = []) {
+  const merged = new Map();
+  for (const raw of cards) {
+    const card = canonicaliseEventCardV16(raw);
+    if (!card) continue;
+    // Exact structured identity only: same normalised title + same start date + same start time.
+    // No fuzzy title matching is allowed on the request path.
+    const key = [normaliseEventTitle(card.title), card.startDate || '', card.start || ''].join('|');
+    const existing = merged.get(key);
+    if (!existing) {
+      merged.set(key, card);
+      continue;
+    }
+    const priceStatuses = new Set([existing.priceStatus, card.priceStatus].filter(v => v && v !== 'unknown'));
+    let priceStatus = existing.priceStatus;
+    let priceRaw = existing.priceRaw;
+    if (priceStatuses.size > 1) {
+      priceStatus = 'conflict';
+      priceRaw = null;
+    } else if (existing.priceStatus === 'unknown' && card.priceStatus !== 'unknown') {
+      priceStatus = card.priceStatus;
+      priceRaw = card.priceRaw;
+    }
+    const preferred = existing.sourceTier === 'first-party-detail' ? existing : (card.sourceTier === 'first-party-detail' ? card : existing);
+    merged.set(key, {
+      ...existing,
+      ...preferred,
+      id: existing.id,
+      canonId: existing.canonId,
+      sourceId: existing.sourceId,
+      sourceUrl: preferred.sourceUrl || existing.sourceUrl || card.sourceUrl,
+      url: preferred.url || existing.url || card.url,
+      priceStatus,
+      priceRaw,
+      venue: preferred.venue || existing.venue || card.venue,
+      start: preferred.start || existing.start || card.start,
+      end: preferred.end || existing.end || card.end
+    });
+  }
+  return Array.from(merged.values());
+}
+
+function weekendDatesForCardV16(card, saturdayIso, sundayIso) {
+  const start = card?.startDate;
+  const end = card?.endDate || start;
+  if (!start || !end) return [];
+  const dates = [];
+  const single = start === end;
+  if (single) {
+    if (start === saturdayIso) dates.push(saturdayIso);
+    if (start === sundayIso) dates.push(sundayIso);
+    return dates;
+  }
+  // For multi-day ranges, treat a range that begins on this weekend as active
+  // across the weekend. Older long-running ranges are deliberately not assumed
+  // to occur daily until a dedicated occurrence calendar exists.
+  if (start === saturdayIso || start === sundayIso || card.source === 'wx') {
+    if (start <= saturdayIso && end >= saturdayIso) dates.push(saturdayIso);
+    if (start <= sundayIso && end >= sundayIso) dates.push(sundayIso);
+  }
+  return dates;
+}
+
+function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
+  const weekend = eventDateState();
+  const saturdayIso = londonDateLabelToIso(weekend.saturday);
+  const sundayIso = londonDateLabelToIso(weekend.sunday);
+  if (!saturdayIso || !sundayIso) return { weekend, cards: [] };
+  const raw = [
+    ...(wxContext?.eventCards || []),
+    ...(experienceEventsContext?.listingEventCards || []),
+    ...(experienceEventsContext?.eventCards || [])
+  ];
+  const cards = mergeExactEventCardsV16(raw)
+    .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso) }))
+    .filter(card => card.dates.length > 0);
+
+  cards.sort((a, b) => {
+    const ad = a.dates[0] || '9999';
+    const bd = b.dates[0] || '9999';
+    if (ad !== bd) return ad.localeCompare(bd);
+    const at = a.start || '99:99';
+    const bt = b.start || '99:99';
+    if (at !== bt) return at.localeCompare(bt);
+    return a.title.localeCompare(b.title);
+  });
+
+  // Keep a compact, deterministic shortlist and preserve a mix across the two days.
+  const selected = [];
+  const add = card => { if (!selected.some(x => x.id === card.id || x.canonId === card.canonId)) selected.push(card); };
+  for (const date of [saturdayIso, sundayIso]) {
+    for (const card of cards.filter(c => c.dates.includes(date)).slice(0, 4)) add(card);
+  }
+  for (const card of cards) {
+    if (selected.length >= 8) break;
+    add(card);
+  }
+  return { weekend, cards: selected.slice(0, 8) };
+}
+
+function eventTimeLabelV16(card) {
+  if (card?.start && card?.end) return `${card.start}–${card.end}`;
+  return card?.start || card?.end || null;
+}
+
+function formatWeekendCardsV16(cards, weekend) {
+  const saturdayIso = londonDateLabelToIso(weekend.saturday);
+  const sundayIso = londonDateLabelToIso(weekend.sunday);
+  const sat = cards.filter(card => card.dates?.length === 1 && card.dates[0] === saturdayIso);
+  const sun = cards.filter(card => card.dates?.length === 1 && card.dates[0] === sundayIso);
+  const both = cards.filter(card => card.dates?.includes(saturdayIso) && card.dates?.includes(sundayIso));
+  const lines = ['This weekend in Wakefield:'];
+  const addSection = (label, list) => {
+    if (!list.length) return;
+    lines.push('', label, '');
+    for (const card of list) {
+      const meta = [eventTimeLabelV16(card), card.venue].filter(Boolean).join(', ');
+      lines.push(`- ${card.title}${meta ? ` — ${meta}` : ''}`);
+    }
+  };
+  addSection(weekend.saturday.replace(/\s+2026$/, ''), sat);
+  addSection(weekend.sunday.replace(/\s+2026$/, ''), sun);
+  addSection('Running across the weekend', both);
+  if (lines.length === 1) return null;
+  return lines.join('\n').trim();
+}
+
+function buildEventStateV16(cards, previous = null, viewIds = null, lastFilter = null) {
+  const safeCards = (cards || []).slice(0, MAX_STATE_CARDS).map(canonicaliseEventCardV16).filter(Boolean);
+  const ids = new Set(safeCards.map(card => card.id));
+  const safeViewIds = Array.isArray(viewIds) ? viewIds.filter(id => ids.has(id)).slice(0, MAX_STATE_CARDS) : safeCards.map(card => card.id);
+  return {
+    version: 2,
+    lastIntent: 'events.whats_on',
+    area: previous?.area || null,
+    constraints: previous?.constraints || null,
+    resultCards: safeCards,
+    viewIds: safeViewIds,
+    lastFilter: lastFilter || null
+  };
+}
+
+async function refreshEventCardsForPriceV16(cards) {
+  const targets = (cards || []).filter(card => card?.priceStatus === 'unknown' && isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
+  const refreshed = new Map();
+  await Promise.all(targets.map(async card => {
+    const url = card.sourceUrl || card.url;
+    const context = await fetchEventDetailContextByUrl(url, card.title);
+    const direct = context?.eventDetailCard || null;
+    if (!direct) return;
+    refreshed.set(card.id, {
+      ...card,
+      priceStatus: direct.priceStatus || card.priceStatus || 'unknown',
+      priceRaw: direct.priceRaw || card.priceRaw || null,
+      start: direct.startTime || card.start || null,
+      end: direct.endTime || card.end || null,
+      startTime: direct.startTime || card.startTime || null,
+      endTime: direct.endTime || card.endTime || null,
+      startDate: direct.startDate || card.startDate || null,
+      endDate: direct.endDate || card.endDate || null,
+      venue: direct.venue || card.venue || null,
+      sourceTier: 'first-party-detail'
+    });
+  }));
+  return (cards || []).map(card => refreshed.get(card.id) || card);
+}
+
+function formatFreeCardsV16(cards) {
+  if (!cards.length) return 'None of the events in that list are currently verified as generally free.';
+  const lines = cards.map(card => {
+    const date = card.dates?.length === 1 ? formatEventCardDate(card.dates[0]) : (card.dates?.length > 1 ? 'this weekend' : formatEventCardDate(card.startDate));
+    const meta = [date, eventTimeLabelV16(card), card.venue].filter(Boolean).join(', ');
+    return `- ${card.title}${meta ? ` — ${meta}` : ''}`;
+  });
+  return `${cards.length === 1 ? 'The event from that list I can verify as free is:' : 'The events from that list I can verify as free are:'}\n\n${lines.join('\n')}`;
+}
+
+function formatEventStartTimesV16(cards) {
+  if (!cards.length) return 'There are no verified free events in the current result set.';
+  const lines = cards.map(card => {
+    const date = card.dates?.length === 1 ? formatEventCardDate(card.dates[0]) : (card.dates?.length > 1 ? 'this weekend' : formatEventCardDate(card.startDate));
+    const meta = [date, card.start ? `starts at ${card.start}` : null, card.venue].filter(Boolean).join(', ');
+    return `- ${card.title}${meta ? ` — ${meta}` : ''}`;
+  });
+  return `${cards.length === 1 ? 'The verified free event starts at:' : 'The verified free events start at:'}\n\n${lines.join('\n')}`;
+}
+
+async function handleStoredEventFollowUpV16(state, lastText) {
+  const allCards = (state?.resultCards || []).filter(card => card?.entityType === 'event');
+  if (!allCards.length) return null;
+  const asksFree = /\bfree\b/i.test(lastText);
+  const asksTime = /\bwhat time\b|\bwhen\b|\bstart(?:s|ing)?\b/i.test(lastText);
+  let updated = allCards;
+  let viewCards = [];
+  let lastFilter = state?.lastFilter || null;
+
+  if (asksFree) {
+    updated = await refreshEventCardsForPriceV16(allCards);
+    viewCards = updated.filter(card => card.priceStatus === 'free');
+    lastFilter = 'free';
+  } else if (state?.lastFilter === 'free' && asksTime) {
+    const ids = new Set(state.viewIds || []);
+    viewCards = updated.filter(card => ids.has(card.id) && card.priceStatus === 'free');
+  } else {
+    const ids = new Set(state.viewIds || []);
+    viewCards = ids.size ? updated.filter(card => ids.has(card.id)) : updated;
+  }
+
+  const nextState = buildEventStateV16(updated, state, viewCards.map(card => card.id), lastFilter);
+  nextState.lastIntent = 'events.filter_existing';
+  const reply = asksTime ? formatEventStartTimesV16(viewCards) : (asksFree ? formatFreeCardsV16(viewCards) : null);
+  if (!reply) return null;
+  const sources = [];
+  const seen = new Set();
+  for (const card of viewCards) {
+    const url = card.sourceUrl || card.url;
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    sources.push({ title: `${card.title} — official event page`, url });
+  }
+  return { reply, state: nextState, sources };
+}
+
 function eventTitlesFromText(text) {
   if (!text) return [];
   const titles = [];
@@ -2502,10 +2880,13 @@ async function fetchExperienceWakefieldEventsContext() {
     if (!text) return null;
     const dates = eventDateState();
     const structured = extractStructuredPageData(html, text, url);
+    const eventLinks = extractExperienceEventLinks(html);
+    const listingEventCards = extractExperienceListingEventCards(html, londonDateLabelToIso(dates.today));
     return {
       text: extractRelevantEventSegments(text, dates),
       dates,
-      eventLinks: extractExperienceEventLinks(html),
+      eventLinks,
+      listingEventCards,
       eventCards: structured.eventCards || [],
       structured,
       source: {
@@ -3741,7 +4122,7 @@ function eventDetailMetaFromContext(context, title = '') {
 }
 
 function londonDateLabelToIso(label) {
-  const m = String(label || '').match(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/i);
+  const m = String(label || '').match(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/i);
   if (!m) return null;
   const months = { january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12 };
   const month = months[m[2].toLowerCase()];
@@ -4035,6 +4416,22 @@ export default async function handler(req, res) {
   const route = classifyRequest(messages, clientState);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
+  // V16 event invariant: follow-ups operate only on the persisted event IDs.
+  // Never reconstruct event membership from the assistant's previous prose.
+  if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.filter_existing' && clientState?.resultCards?.some(card => card?.entityType === 'event')) {
+    const handled = await handleStoredEventFollowUpV16(clientState, lastUserText(messages));
+    if (handled) {
+      attachStateCookie(res, handled.state);
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(handled.reply),
+        sources: handled.sources.slice(0, 8),
+        live: true,
+        verification: 'cards-first',
+        state: handled.state
+      });
+    }
+  }
+
   if (isAmbiguousDenbyDalePharmacyFollowUp(messages)) {
     return res.status(200).json({
       reply: 'Do you mean Denby Dale village, or the Denby Dale Road / Durkar side of Wakefield? I can check late-opening pharmacies for the right area.',
@@ -4069,6 +4466,34 @@ export default async function handler(req, res) {
     ]);
   } else if (isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
+  }
+
+  // V16 cards-first path for a new current-events request. The deterministic
+  // result set is created and persisted BEFORE any prose is generated.
+  if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.whats_on' && route.operation === 'new' && /\bweekend\b/i.test(lastUserText(messages))) {
+    const collected = collectWeekendEventCardsV16(experienceEventsContext, wxContext);
+    if (collected.cards.length) {
+      const reply = formatWeekendCardsV16(collected.cards, collected.weekend);
+      const state = buildEventStateV16(collected.cards, clientState);
+      state.lastIntent = 'events.whats_on';
+      attachStateCookie(res, state);
+      const sources = [];
+      const seen = new Set();
+      for (const card of collected.cards) {
+        const url = card.sourceUrl || card.url;
+        if (!url || seen.has(url)) continue;
+        seen.add(url);
+        sources.push({ title: `${card.title} — official event page`, url });
+      }
+      console.info(`Cards-first weekend events: ${collected.cards.length} persisted before presentation.`);
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(reply),
+        sources: sources.slice(0, 8),
+        live: true,
+        verification: 'cards-first',
+        state
+      });
+    }
   }
 
   const freeVenueContexts = isFreeCurrentLeisureQuery(messages)

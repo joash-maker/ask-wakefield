@@ -2101,6 +2101,158 @@ function extractRelevantDateSegments(text, dates) {
   return (unique.length ? unique.join('\n---\n') : text.slice(0, 14000)).slice(0, 16000);
 }
 
+
+function extractWxEventLinks(html) {
+  const source = String(html || '');
+  const found = new Map();
+  const re = /<a\b[^>]*href=["']([^"']*\/Whats-On\/Details\?event=[^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+  while ((match = re.exec(source))) {
+    let url = match[1];
+    try { url = new URL(url, 'https://wxwakefield.co.uk').toString(); } catch { continue; }
+    if (!/^https:\/\/(?:www\.)?wxwakefield\.co\.uk\/Whats-On\/Details\?event=/i.test(url)) continue;
+
+    const before = source.slice(Math.max(0, match.index - 1800), match.index);
+    const headings = [...before.matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi)]
+      .map(m => htmlToPlainText(m[1]).trim())
+      .filter(Boolean);
+    let heading = headings.length ? headings[headings.length - 1] : '';
+    if (/^(what'?s on|featured event|more at wx)$/i.test(heading)) heading = '';
+
+    let slug = '';
+    try { slug = new URL(url).searchParams.get('event') || ''; } catch {}
+    const slugLabel = slug.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const innerText = htmlToPlainText(match[2]).trim();
+    const label = heading || (/^(more|more info|details|read more)$/i.test(innerText) ? '' : innerText) || slugLabel;
+    if (!label) continue;
+
+    const existing = found.get(url);
+    if (!existing || label.length > existing.label.length) {
+      found.set(url, { url, label: label.slice(0, 220), source: 'wx' });
+    }
+  }
+  return Array.from(found.values()).slice(0, 160);
+}
+
+function eventLinkSlug(url) {
+  const raw = String(url || '');
+  try {
+    const parsed = new URL(raw);
+    const wxEvent = parsed.searchParams.get('event');
+    if (wxEvent) return normaliseEventTitle(wxEvent.replace(/[-_]+/g, ' '));
+  } catch {}
+  return normaliseEventTitle(raw.split('/event/')[1] || '');
+}
+
+function isSpecificWxEventUrl(url) {
+  return /^https:\/\/(?:www\.)?wxwakefield\.co\.uk\/Whats-On\/Details\?event=[^&#]+/i.test(String(url || ''));
+}
+
+function clockLabelTo24(value) {
+  const raw = String(value || '').trim().replace(/\./g, ':');
+  if (!raw) return null;
+  const m = raw.match(/^(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)?$/i);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = Number(m[2] || 0);
+  const ap = (m[3] || '').toLowerCase();
+  if (ap === 'am' && h === 12) h = 0;
+  if (ap === 'pm' && h < 12) h += 12;
+  if (h > 23 || min > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function wxEventDetailFromHtml(html, url, expectedTitle = '') {
+  const source = String(html || '');
+  const text = htmlToPlainText(source);
+  if (!text) return null;
+
+  const h1 = source.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+  const pageTitle = h1 ? htmlToPlainText(h1[1]).trim() : String(expectedTitle || '').trim();
+  if (expectedTitle && pageTitle && !titlesLikelySame(pageTitle, expectedTitle)) return null;
+
+  const titleNeedle = pageTitle || expectedTitle;
+  let start = titleNeedle ? text.toLowerCase().indexOf(String(titleNeedle).toLowerCase()) : 0;
+  if (start < 0) start = 0;
+  let scoped = text.slice(start, start + 5000);
+  const boundaryMatch = scoped.match(/\bMore at WX\b|\bPlan your visit\b/i);
+  if (boundaryMatch?.index != null && boundaryMatch.index > 0) scoped = scoped.slice(0, boundaryMatch.index);
+
+  const dateMatch = scoped.match(/\b((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+  const timeMatch = scoped.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
+  const price = priceStatusFromEventDetailText(scoped);
+
+  return {
+    id: String(url || `${pageTitle}|${dateMatch?.[1] || ''}`).slice(0, 500),
+    entityType: 'event',
+    title: pageTitle || expectedTitle || null,
+    url: url || null,
+    startDate: shortEventDateToIso(dateMatch?.[1] || ''),
+    endDate: shortEventDateToIso(dateMatch?.[1] || ''),
+    startTime: clockLabelTo24(timeMatch?.[1]) || null,
+    endTime: clockLabelTo24(timeMatch?.[2]) || null,
+    venue: 'WX Wakefield Exchange',
+    priceStatus: price.type,
+    priceRaw: price.raw || null,
+    sourceTier: 'first-party-detail',
+    detailText: scoped.trim()
+  };
+}
+
+
+function extractWxListingEventCards(html, links = []) {
+  const source = String(html || '');
+  const lower = source.toLowerCase();
+  const cards = [];
+  const seen = new Set();
+
+  for (const link of links) {
+    let slug = '';
+    try { slug = new URL(link.url).searchParams.get('event') || ''; } catch {}
+    if (!slug) continue;
+    const needle = `event=${slug}`.toLowerCase();
+    const idx = lower.indexOf(needle);
+    if (idx < 0) continue;
+
+    const windowStart = Math.max(0, idx - 2600);
+    const before = source.slice(windowStart, idx);
+    const headingMatches = [...before.matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi)];
+    const lastHeading = headingMatches.length ? headingMatches[headingMatches.length - 1] : null;
+    const segmentStart = lastHeading?.index != null ? windowStart + lastHeading.index : windowStart;
+    const anchorEnd = source.toLowerCase().indexOf('</a>', idx);
+    const segmentEnd = anchorEnd >= 0 ? anchorEnd + 4 : Math.min(source.length, idx + 300);
+    const segment = htmlToPlainText(source.slice(segmentStart, segmentEnd));
+    if (!segment) continue;
+
+    const title = htmlToPlainText(lastHeading?.[1] || '').trim() || link.label || slug.replace(/[-_]+/g, ' ');
+    if (!title || !titlesLikelySame(title, link.label || title)) continue;
+
+    const dateMatch = segment.match(/\b((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+    const timeMatch = segment.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
+    const price = priceStatusFromEventDetailText(segment);
+    const key = normaliseEventTitle(title);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+
+    cards.push({
+      id: link.url,
+      entityType: 'event',
+      title,
+      url: link.url,
+      startDate: shortEventDateToIso(dateMatch?.[1] || ''),
+      endDate: shortEventDateToIso(dateMatch?.[1] || ''),
+      startTime: clockLabelTo24(timeMatch?.[1]) || null,
+      endTime: clockLabelTo24(timeMatch?.[2]) || null,
+      venue: 'WX Wakefield Exchange',
+      priceStatus: price.type,
+      priceRaw: price.raw || null,
+      source: 'wx',
+      sourceTier: 'first-party-listing'
+    });
+  }
+  return cards;
+}
+
 async function fetchWxWhatsOnContext() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5_500);
@@ -2116,9 +2268,13 @@ async function fetchWxWhatsOnContext() {
     const text = htmlToPlainText(html);
     if (!text) return null;
     const dates = eventDateState();
+    const eventLinks = extractWxEventLinks(html);
+    const eventCards = extractWxListingEventCards(html, eventLinks);
     return {
       text: extractRelevantEventSegments(text, dates),
       dates,
+      eventLinks,
+      eventCards,
       source: {
         title: "Wakefield Exchange — What's On",
         url: 'https://wxwakefield.co.uk/whats-on'
@@ -2208,6 +2364,7 @@ function normaliseEventTitle(value) {
   return String(value || '')
     .toLowerCase()
     .replace(/&amp;/g, ' and ')
+    .replace(/&/g, ' and ')
     .replace(/[’']/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
@@ -2260,7 +2417,7 @@ function matchEventLinkForTitle(title, links = []) {
   let bestScore = 0;
   for (const link of links) {
     const label = normaliseEventTitle(link?.label);
-    const slug = normaliseEventTitle(String(link?.url || '').split('/event/')[1] || '');
+    const slug = eventLinkSlug(link?.url);
     let score = 0;
     if (label === target || slug === target) score = 100;
     else if (label.includes(target) || target.includes(label)) score = 80;
@@ -2279,7 +2436,11 @@ function isSpecificExperienceEventUrl(url) {
   return /^https:\/\/(?:www\.)?experiencewakefield\.co\.uk\/event\/[^/?#]+\/?(?:[?#].*)?$/i.test(String(url || ''));
 }
 
-async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, sessionState = null) {
+function isSpecificEventDetailUrl(url) {
+  return isSpecificExperienceEventUrl(url) || isSpecificWxEventUrl(url);
+}
+
+async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, wxContext, sessionState = null) {
   if (!eventCostWasRequested(messages)) return [];
   const stateEvents = hasRecentAssistantAnswer(messages) ? (sessionState?.resultCards || []).filter(card => card?.entityType === 'event' && card?.title) : [];
   // During the V13 transition the stored result set could be incomplete. Merge
@@ -2294,24 +2455,26 @@ async function fetchEventDetailContextsForFollowUp(messages, experienceEventsCon
   if (!titles.length) return [];
   const matched = [];
   const used = new Set();
+  const allLinks = [
+    ...(experienceEventsContext?.eventLinks || []),
+    ...(wxContext?.eventLinks || [])
+  ];
   for (const title of titles) {
     const stateCard = stateEvents.find(card => normaliseEventTitle(card.title) === normaliseEventTitle(title));
 
-    // Prefer the exact detail-page link matched by title. A JSON-LD Event on an
-    // aggregate page may omit its own URL, so the old code could store /whats-on/
-    // as if it were the event page and later re-fetch mixed neighbouring events.
-    let link = experienceEventsContext?.eventLinks?.length
-      ? matchEventLinkForTitle(title, experienceEventsContext.eventLinks)
+    // Preserve the exact source that produced the event. WX events do not all
+    // appear on the Experience Wakefield aggregate page, so resolving follow-ups
+    // only against Experience Wakefield silently dropped valid WX events.
+    let link = isSpecificEventDetailUrl(stateCard?.url)
+      ? { url: stateCard.url, label: stateCard.title, source: stateCard.source || null }
       : null;
-    if (!link && isSpecificExperienceEventUrl(stateCard?.url)) {
-      link = { url: stateCard.url, label: stateCard.title };
-    }
+    if (!link && allLinks.length) link = matchEventLinkForTitle(title, allLinks);
     if (!link?.url || used.has(link.url)) continue;
     used.add(link.url);
     matched.push({ title, link });
   }
-  const values = await Promise.all(matched.slice(0, 8).map(item =>
-    fetchExperienceEventDetailContext(item.link.url, item.title)
+  const values = await Promise.all(matched.slice(0, 10).map(item =>
+    fetchEventDetailContextByUrl(item.link.url, item.title)
   ));
   return matched.slice(0, 8).map((item, i) => {
     const context = values[i] || null;
@@ -2396,6 +2559,40 @@ async function fetchExperienceEventDetailContext(url, expectedTitle) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+
+async function fetchWxEventDetailContext(url, expectedTitle) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_500);
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)' },
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const direct = wxEventDetailFromHtml(html, url, expectedTitle);
+    if (!direct) return null;
+    return {
+      text: direct.detailText,
+      eventDetailText: direct.detailText,
+      eventDetailCard: direct,
+      structured: { eventCards: [direct] },
+      source: { title: `Wakefield Exchange — ${direct.title || expectedTitle}`, url }
+    };
+  } catch (error) {
+    console.error(`WX event detail fetch failed: ${expectedTitle}`, error?.message || error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchEventDetailContextByUrl(url, expectedTitle) {
+  if (isSpecificWxEventUrl(url)) return fetchWxEventDetailContext(url, expectedTitle);
+  if (isSpecificExperienceEventUrl(url)) return fetchExperienceEventDetailContext(url, expectedTitle);
+  return null;
 }
 
 async function fetchSimpleFirstPartyContext(url, title) {
@@ -3574,18 +3771,67 @@ function eventMetaForRequestedWindow(context, title, messages) {
   return base;
 }
 
+function formatEventCardDate(value) {
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+    const d = new Date(`${value}T12:00:00Z`);
+    if (!Number.isNaN(d.getTime())) {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      }).format(d);
+    }
+  }
+  return String(value);
+}
+
 function buildDeterministicFreeFollowUpAnswer(messages, evidence = {}) {
   const last = lastUserText(messages);
   if (!/\bfree\b/i.test(last)) return null;
   const details = evidence.eventDetailContexts || [];
-  if (!details.length) return null;
   const freeItems = [];
+  const seen = new Set();
+
+  // Exact detail pages outrank listing/state cards.
   for (const item of details) {
     if (!item?.title || !item?.context?.text) continue;
     const status = exactEventPriceStatus(item.title, evidence);
     if (status?.type !== 'free') continue;
+    const key = normaliseEventTitle(item.title);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
     freeItems.push({ title: item.title, ...eventMetaForRequestedWindow(item.context, item.title, messages) });
   }
+
+  // WX publishes explicit price/free status on its own event listing. Keep that
+  // structured status as a fail-safe for WX events even if a detail-page fetch
+  // is slow or unavailable. Only cards from the user's previous result set or
+  // the current WX first-party listing are considered.
+  const fallbackCards = [
+    ...(evidence.priorState?.resultCards || []),
+    ...(evidence.wxContext?.eventCards || [])
+  ].filter(card => card?.entityType === 'event' && card?.title && card?.priceStatus === 'free');
+
+  const priorTitles = new Set((evidence.priorState?.resultCards || [])
+    .filter(card => card?.entityType === 'event' && card?.title)
+    .map(card => normaliseEventTitle(card.title)));
+
+  for (const card of fallbackCards) {
+    const key = normaliseEventTitle(card.title);
+    if (!key || seen.has(key)) continue;
+    // On the initial free follow-up, only return events that were actually in
+    // the previous answer. On later free/time refinements the prior state is the
+    // authoritative result set as well.
+    if (priorTitles.size && !priorTitles.has(key)) continue;
+    seen.add(key);
+    freeItems.push({
+      title: card.title,
+      date: formatEventCardDate(card.date || card.startDate),
+      start: card.start || card.startTime || null,
+      end: card.end || card.endTime || null,
+      venue: card.venue || null
+    });
+  }
+
   if (!freeItems.length) return 'From the events I listed, I could not verify any as generally free from their individual official event pages.';
   const asksTime = /\bwhat time\b|\bwhen\b|\bstart(?:s|ing)?\b/i.test(last);
   if (asksTime) {
@@ -3677,8 +3923,15 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
   const out = [];
   const seen = new Set();
   const candidates = [];
-  const links = evidence.experienceEventsContext?.eventLinks || [];
+  const links = [
+    ...(evidence.experienceEventsContext?.eventLinks || []),
+    ...(evidence.wxContext?.eventLinks || [])
+  ];
   for (const card of evidence.experienceEventsContext?.eventCards || []) candidates.push(card);
+  for (const card of evidence.wxContext?.eventCards || []) candidates.push(card);
+  for (const card of evidence.priorState?.resultCards || []) {
+    if (card?.entityType === 'event') candidates.push(card);
+  }
   for (const item of evidence.eventDetailContexts || []) {
     if (item?.context?.eventDetailCard) candidates.push(item.context.eventDetailCard);
     for (const card of item?.context?.structured?.eventCards || []) candidates.push(card);
@@ -3692,14 +3945,15 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
     const title = String(card?.title || '').trim();
     if (!title || !replyNorm.includes(title.toLowerCase())) continue;
     const exactLink = matchEventLinkForTitle(title, links);
-    const detailUrl = exactLink?.url || (isSpecificExperienceEventUrl(card?.url) ? card.url : null);
+    const detailUrl = exactLink?.url || (isSpecificEventDetailUrl(card?.url) ? card.url : null);
     const key = detailUrl || normaliseEventTitle(title);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push({
       id: String(detailUrl || card.id || key).slice(0, 500), entityType: 'event', title: title.slice(0, 220),
       url: detailUrl, date: card.date || card.startDate || null, start: card.start || card.startTime || null,
-      end: card.end || card.endTime || null, venue: card.venue || null, priceStatus: card.priceStatus || 'unknown'
+      end: card.end || card.endTime || null, venue: card.venue || null, priceStatus: card.priceStatus || 'unknown',
+      priceRaw: card.priceRaw || null, source: exactLink?.source || card.source || (isSpecificWxEventUrl(detailUrl) ? 'wx' : (isSpecificExperienceEventUrl(detailUrl) ? 'experience' : null))
     });
     if (out.length >= MAX_STATE_CARDS) break;
   }
@@ -3711,7 +3965,7 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
       const link = matchEventLinkForTitle(title, links);
       if (!link?.url || seen.has(link.url)) continue;
       seen.add(link.url);
-      out.push({ id: link.url, entityType: 'event', title, url: link.url, date: null, start: null, end: null, venue: null, priceStatus: 'unknown' });
+      out.push({ id: link.url, entityType: 'event', title, url: link.url, date: null, start: null, end: null, venue: null, priceStatus: 'unknown', priceRaw: null, source: link.source || (isSpecificWxEventUrl(link.url) ? 'wx' : 'experience') });
       if (out.length >= MAX_STATE_CARDS) break;
     }
   }
@@ -3720,7 +3974,7 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
 
 function buildResponseState(route, finalReply, evidence = {}, districtPlacesContext = null, priorState = null) {
   let resultCards = [];
-  if (route.intent.startsWith('events.')) resultCards = eventCardsFromEvidence(finalReply, evidence);
+  if (route.intent.startsWith('events.')) resultCards = eventCardsFromEvidence(finalReply, { ...evidence, priorState });
   else if (route.intent === 'pharmacy.open' || route.intent === 'food.open_at') resultCards = verifiedPlaceCards(districtPlacesContext).slice(0, MAX_STATE_CARDS);
   if (!resultCards.length && route.operation === 'refine' && Array.isArray(priorState?.resultCards)) resultCards = priorState.resultCards.slice(0, MAX_STATE_CARDS);
   return {
@@ -3836,9 +4090,9 @@ export default async function handler(req, res) {
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
   // instead of trusting neighbouring labels on the aggregate listings page.
-  const eventDetailContexts = await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, clientState);
+  const eventDetailContexts = await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, wxContext, clientState);
 
-  const earlyEvidence = { experienceEventsContext, eventDetailContexts };
+  const earlyEvidence = { experienceEventsContext, wxContext, eventDetailContexts, priorState: clientState };
   if (STRUCTURED_CORE_ENABLED && route.intent === 'events.filter_existing') {
     const deterministic = buildDeterministicFreeFollowUpAnswer(messages, earlyEvidence);
     if (deterministic) {

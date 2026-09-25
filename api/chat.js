@@ -106,11 +106,11 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - If a changing fact that is essential to the user's question cannot be verified, say so plainly and point the user to the relevant official source. Do not apply this as a blanket rule to ordinary recommendations that can be answered from stable curated knowledge.
 - For council services, schools, benefits, health, safety and legal matters, be neutral, factual and cautious.
 - **NEVER open a response with a time-based greeting** (Good morning/afternoon/evening). The page already greets the user on load. Go straight into answering. You may use warm openers like "A fine question" or "Splendid choice" but never lead with a time-of-day greeting.
-- **Never use ALL CAPS for section headers** in responses. Use bold (**text**) instead.
+- **Never use ALL CAPS for section headers** in responses. Use short plain-text labels instead. Do not emit Markdown bold markers such as ** or __.
 - **When answering questions about council services** (bins, council tax, road closures, planning, housing, schools admissions, benefits) always end your response with this line: *For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*
 
 ### FORMAT
-Short paragraphs (2-3 sentences). Bold key venue names with **bold**. Bullet points for lists of 3+. No markdown headers. Mobile-friendly — keep it scannable. Do not append generic follow-up questions; the interface handles those separately.
+Short paragraphs (2-3 sentences). Plain text only: do not use Markdown bold markers, Markdown headings, code fences or decorative formatting. Simple hyphen bullets are fine for lists of 3+. Mobile-friendly — keep it scannable. Do not append generic follow-up questions; the interface handles those separately.
 
 ### KNOWLEDGE BASE
 
@@ -2867,12 +2867,73 @@ function exactEventDetailForTitle(title, evidence = {}) {
   return bestScore >= 30 ? best : null;
 }
 
+function primaryEventDetailText(context, title = '') {
+  const text = String(context?.text || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  const target = String(title || '').trim();
+  let start = 0;
+  if (target) {
+    const idx = text.toLowerCase().indexOf(target.toLowerCase());
+    if (idx >= 0) start = idx;
+  }
+  let scoped = text.slice(start, start + 3500);
+  // Experience Wakefield puts the event's own date/time/venue/price before the
+  // About / venue / related-event sections. Stop there so a "Free event" label
+  // from a neighbouring "More at..." card can never contaminate this event.
+  const boundaries = [
+    /\sAbout\s/i,
+    /\sVenue opening hours\s/i,
+    /\sAccess facilities\s/i,
+    /\sVenue Details\s/i,
+    /\sMore at\s/i,
+    /\sMore events\s/i,
+  ];
+  let cut = scoped.length;
+  for (const re of boundaries) {
+    const m = re.exec(scoped);
+    if (m && m.index > 0) cut = Math.min(cut, m.index);
+  }
+  return scoped.slice(0, cut).trim();
+}
+
+function priceStatusFromEventDetailText(text) {
+  const scoped = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!scoped) return { type: 'unknown', raw: null };
+
+  const range = scoped.match(/£\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*[-–]\s*£?\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  if (range) {
+    const a = Number(range[1].replace(',', '.'));
+    const b = Number(range[2].replace(',', '.'));
+    if (a === 0 && b === 0) return { type: 'free', raw: range[0] };
+    if (a === 0 || b === 0) return { type: 'variable', raw: range[0] };
+    return { type: 'paid', raw: range[0] };
+  }
+
+  const money = scoped.match(/£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  if (money) {
+    const value = Number(money[1].replace(',', '.'));
+    return value === 0 ? { type: 'free', raw: money[0] } : { type: 'paid', raw: money[0] };
+  }
+
+  // On an exact event page this scoped header is the event's own metadata, so
+  // a standalone Free / Free event marker is safe once related-event sections
+  // have been cut away.
+  if (/\bFree event\b/i.test(scoped) || /(?:^|\s)Free(?:\s|$)/i.test(scoped)) {
+    return { type: 'free', raw: 'Free' };
+  }
+  return { type: 'unknown', raw: null };
+}
+
 function exactEventPriceStatus(title, evidence = {}) {
   const ctx = exactEventDetailForTitle(title, evidence);
   if (!ctx) return null;
   const structuredCards = ctx?.structured?.eventCards || [];
   const target = normaliseEventTitle(title);
-  const structured = structuredCards.find(card => normaliseEventTitle(card?.title) === target) || structuredCards[0];
+
+  // Never use an unrelated first JSON-LD Event on the page. Some event pages
+  // also expose related-event schema. Only a title-matched structured record is
+  // allowed to supply the target event's price.
+  const structured = structuredCards.find(card => normaliseEventTitle(card?.title) === target) || null;
   if (structured?.priceStatus && structured.priceStatus !== 'unknown') {
     if (structured.priceStatus === 'free') return { type: 'free', raw: 'Free' };
     if (structured.priceStatus === 'variable') {
@@ -2884,24 +2945,8 @@ function exactEventPriceStatus(title, evidence = {}) {
       return { type: 'paid', raw };
     }
   }
-  if (!ctx?.text) return { type: 'unknown', raw: null };
-  const text = String(ctx.text).slice(0, 5000);
-  const tagRange = text.match(/\bTag\s+£\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*[-–]\s*£?\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
-  if (tagRange) {
-    const a = Number(tagRange[1].replace(',', '.'));
-    const b = Number(tagRange[2].replace(',', '.'));
-    if (a === 0 && b === 0) return { type: 'free', raw: tagRange[0] };
-    return { type: 'variable', raw: tagRange[0] };
-  }
-  const tagPrice = text.match(/\bTag\s+£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
-  if (tagPrice) {
-    const value = Number(tagPrice[1].replace(',', '.'));
-    return value === 0 ? { type: 'free', raw: tagPrice[0] } : { type: 'paid', raw: `£${tagPrice[1]}` };
-  }
-  if (/\bTag\s+Free\b/i.test(text) || /\bFree event\b/i.test(text)) return { type: 'free', raw: 'Free' };
-  const admission = text.match(/\b(?:General Admission|Tickets?|Entry|Admission)\s*:?\s*£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
-  if (admission) return { type: Number(admission[1].replace(',', '.')) === 0 ? 'free' : 'paid', raw: `£${admission[1]}` };
-  return { type: 'unknown', raw: null };
+
+  return priceStatusFromEventDetailText(primaryEventDetailText(ctx, title));
 }
 
 function stripUnsupportedEventPriceClaims(reply, evidence = {}, options = {}) {
@@ -2963,8 +3008,14 @@ function stripUnrequestedEventPrices(reply) {
   return String(reply)
     .split('\n')
     .map(line => line
+      // Numeric admission/price clauses.
       .replace(/\s*[—–-]?\s*(?:entry|admission|tickets?|price)\s*(?:from\s*)?£\s*\d+(?:[.,]\d{1,2})?(?:\s*[–-]\s*£?\s*\d+(?:[.,]\d{1,2})?)?\s*(?:per person|pp)?\b/gi, '')
       .replace(/\s*[—–-]?\s*£\s*\d+(?:[.,]\d{1,2})?(?:\s*[–-]\s*£?\s*\d+(?:[.,]\d{1,2})?)?\s*(?:entry|admission|per person|pp)?\b/gi, '')
+      // Generic trailing free-status clauses. Keep the word Free when it is part
+      // of the event title itself; these patterns require punctuation/metadata
+      // context rather than deleting every occurrence of the word.
+      .replace(/\s*[—–-]\s*Free(?:\s+(?:entry|admission|event|performance|activity|exhibition|show))?\b[.;]?/gi, '')
+      .replace(/\s*\((?:free|free entry|free admission|free event)\)\s*/gi, ' ')
       .replace(/\s*[—–-]?\s*(?:free\s+(?:entry|admission|event)|(?:entry|admission)\s+(?:is\s+)?free)\b/gi, '')
       .replace(/\s*[;,.]?\s*free\s+for\s+[^.;]{0,100}\b(?:residents?|under[- ]?18s?|members?|children)\b[^.;]*/gi, '')
       .replace(/\s+([,.!?])/g, '$1')
@@ -3274,6 +3325,25 @@ function stripInternalProcessLeakage(reply) {
     .trim();
 }
 
+
+function stripMarkdownPresentation(reply) {
+  if (!reply) return reply;
+  return String(reply)
+    // The current Ask Wakefield frontend renders plain text. Remove Markdown
+    // decoration so ** markers never leak around venue names.
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s*```[^\n]*\n?/gm, '')
+    .replace(/\n?\s*```\s*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function finaliseUserFacingReply(reply) {
+  return stripMarkdownPresentation(stripInternalProcessLeakage(reply));
+}
+
 function deterministicallySanitiseRouteAnswer(reply, messages) {
   if (!reply || !isCathedralToYspRouteQuery(messages)) return reply;
   const userAskedTrain = /\btrain|rail\b/i.test(lastUserText(messages));
@@ -3292,8 +3362,10 @@ function deterministicallySanitiseRouteAnswer(reply, messages) {
 }
 
 
-function eventDetailMetaFromContext(context) {
-  const structured = context?.structured?.eventCards?.[0];
+function eventDetailMetaFromContext(context, title = '') {
+  const target = normaliseEventTitle(title);
+  const structuredCards = context?.structured?.eventCards || [];
+  const structured = structuredCards.find(card => normaliseEventTitle(card?.title) === target) || null;
   if (structured?.start || structured?.date) {
     const formatDate = value => {
       if (!value) return null;
@@ -3309,11 +3381,22 @@ function eventDetailMetaFromContext(context) {
     };
     return { date: formatDate(structured.start || structured.date), start: formatTime(structured.start), end: formatTime(structured.end), venue: structured.venue || null };
   }
-  const text = String(context?.text || '');
-  const dateMatch = text.match(/Calendar(?:\s+Icon)?\s+((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})/i);
-  const timeMatch = text.match(/Clock(?:\s+icon)?\s*(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/i);
-  const venueMatch = text.match(/Map\s+Pin\s+(.+?)(?=\s+(?:Image:|Tag\b|Visit\b|Book\b|Free event\b|About\b|Website\b|Venue opening hours\b|Access facilities\b))/i);
-  return { date: dateMatch?.[1] || null, start: timeMatch?.[1] || null, end: timeMatch?.[2] || null, venue: venueMatch?.[1]?.trim() || null };
+
+  const text = primaryEventDetailText(context, title) || String(context?.text || '');
+  const dateMatch = text.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})(?:\s*[-–]\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})?/i);
+  const timeMatch = text.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+
+  // Venue is normally between the time and the price marker in the event header.
+  let venue = null;
+  if (timeMatch) {
+    const afterTime = text.slice((timeMatch.index || 0) + timeMatch[0].length);
+    const venueChunk = afterTime.split(/£\s*\d|\bFree\b|\bAbout\b/i)[0]
+      .replace(/\b(?:Calendar|Clock|Map Pin|Tag|Image)\b/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (venueChunk && venueChunk.length <= 220) venue = venueChunk;
+  }
+  return { date: dateMatch?.[1] || null, start: timeMatch?.[1] || null, end: timeMatch?.[2] || null, venue };
 }
 
 function buildDeterministicFreeFollowUpAnswer(messages, evidence = {}) {
@@ -3326,7 +3409,7 @@ function buildDeterministicFreeFollowUpAnswer(messages, evidence = {}) {
     if (!item?.title || !item?.context?.text) continue;
     const status = exactEventPriceStatus(item.title, evidence);
     if (status?.type !== 'free') continue;
-    freeItems.push({ title: item.title, ...eventDetailMetaFromContext(item.context) });
+    freeItems.push({ title: item.title, ...eventDetailMetaFromContext(item.context, item.title) });
   }
   if (!freeItems.length) return 'From the events I listed, I could not verify any as generally free from their individual official event pages.';
   const asksTime = /\bwhat time\b|\bwhen\b|\bstart(?:s|ing)?\b/i.test(last);
@@ -3397,7 +3480,7 @@ function structuredFallbackFromCards(route, cards) {
 async function writeFromEvidenceCards(messages, route, cards) {
   if (!cards?.length) return null;
   const question = lastUserText(messages);
-  const system = `You are Ask Wakefield, an independent local guide for the Wakefield district. Write a concise, natural answer using ONLY the supplied evidence cards. Do not search, infer, rank by proximity, or add venues. Hard constraints have already been applied in code. If a field is null/unknown, do not invent it. For pharmacy answers, do not confuse shop hours with a pharmacy service and do not claim nearest unless the card contains a verified distance. For food/service answers, describe the service actually verified rather than the venue category. Do not mention internal cards, models or validation. Use plain British English and a warm local tone.`;
+  const system = `You are Ask Wakefield, an independent local guide for the Wakefield district. Write a concise, natural answer using ONLY the supplied evidence cards. Do not search, infer, rank by proximity, or add venues. Hard constraints have already been applied in code. If a field is null/unknown, do not invent it. For pharmacy answers, do not confuse shop hours with a pharmacy service and do not claim nearest unless the card contains a verified distance. For food/service answers, describe the service actually verified rather than the venue category. Do not mention internal cards, models or validation. Use plain British English and a warm local tone. Output plain text only. Do not use Markdown bold markers such as ** or __, headings, code fences or tables.`;
   const body = {
     model: MODEL,
     max_tokens: 650,
@@ -3584,7 +3667,7 @@ export default async function handler(req, res) {
         const source = item?.context?.source;
         if (source?.url) sourceMap.set(source.url, source);
       }
-      return res.status(200).json({ reply: deterministic, sources: Array.from(sourceMap.values()).slice(0, 8), live: true, verification: 'structured', state });
+      return res.status(200).json({ reply: finaliseUserFacingReply(deterministic), sources: Array.from(sourceMap.values()).slice(0, 8), live: true, verification: 'structured', state });
     }
   }
 
@@ -3600,7 +3683,7 @@ export default async function handler(req, res) {
       if (card.sourceUrl) sourceMap.set(card.sourceUrl, { title: `${card.name || 'Place'} — source`, url: card.sourceUrl });
     }
     return res.status(200).json({
-      reply: stripInternalProcessLeakage(reply || structuredFallbackFromCards(route, structuredPlaceCards) || verificationFallback(messages)),
+      reply: finaliseUserFacingReply(reply || structuredFallbackFromCards(route, structuredPlaceCards) || verificationFallback(messages)),
       sources: Array.from(sourceMap.values()).slice(0, 8),
       live: true,
       verification: 'structured',
@@ -4058,7 +4141,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     const responseState = buildResponseState(route, finalReply, reliabilityEvidence, districtPlacesContext, clientState);
     attachStateCookie(res, responseState);
     return res.status(200).json({
-      reply: finalReply || "I'm sorry, I couldn't generate a response. Please try again.",
+      reply: finaliseUserFacingReply(finalReply || "I'm sorry, I couldn't generate a response. Please try again."),
       sources: finalSources,
       live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
       verification: openAIResult?.verified ? 'dual-source' : (LEGACY_LLM_VALIDATORS_ENABLED ? 'primary+legacy-validator' : 'primary'),

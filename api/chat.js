@@ -1937,6 +1937,84 @@ function extractStructuredPageData(html, text, url) {
   return { eventCards };
 }
 
+
+function titlesLikelySame(a, b) {
+  const aa = normaliseEventTitle(a);
+  const bb = normaliseEventTitle(b);
+  if (!aa || !bb) return false;
+  if (aa === bb || aa.includes(bb) || bb.includes(aa)) return true;
+  const aw = aa.split(' ').filter(w => w.length > 2);
+  const bw = bb.split(' ').filter(w => w.length > 2);
+  if (!aw.length || !bw.length) return false;
+  const overlap = aw.filter(w => bw.includes(w)).length;
+  return overlap >= Math.min(3, Math.min(aw.length, bw.length));
+}
+
+function shortEventDateToIso(label) {
+  const m = String(label || '').match(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/i);
+  if (!m) return null;
+  const months = { january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12,
+    jan:1, feb:2, mar:3, apr:4, jun:6, jul:7, aug:8, sep:9, sept:9, oct:10, nov:11, dec:12 };
+  const month = months[m[2].toLowerCase()];
+  if (!month) return null;
+  return `${m[3]}-${String(month).padStart(2, '0')}-${String(Number(m[1])).padStart(2, '0')}`;
+}
+
+function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
+  const source = String(html || '');
+  const h1 = source.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+  const pageTitle = h1 ? htmlToPlainText(h1[1]).trim() : String(expectedTitle || '').trim();
+  if (expectedTitle && pageTitle && !titlesLikelySame(pageTitle, expectedTitle)) return null;
+
+  let scopedHtml = source;
+  if (h1?.index != null) scopedHtml = source.slice(h1.index);
+  const boundaries = [
+    />\s*About\s*</i,
+    />\s*Venue opening hours\s*</i,
+    />\s*Access facilities\s*</i,
+    />\s*Venue Details\s*</i,
+    />\s*More at\s*</i,
+    />\s*More events\s*</i,
+  ];
+  let cut = Math.min(scopedHtml.length, 12000);
+  for (const re of boundaries) {
+    const m = scopedHtml.match(re);
+    if (m?.index != null && m.index > 0) cut = Math.min(cut, m.index);
+  }
+  const detailText = htmlToPlainText(scopedHtml.slice(0, cut));
+  if (!detailText) return null;
+
+  const dateRange = detailText.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+  const timeRange = detailText.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+  const price = priceStatusFromEventDetailText(detailText);
+
+  let venue = null;
+  if (timeRange) {
+    const after = detailText.slice((timeRange.index || 0) + timeRange[0].length);
+    const chunk = after.split(/£\s*\d|\bFree\b|\bVisit the website\b|\bBook now\b|\bAbout\b/i)[0]
+      .replace(/\s+/g, ' ').trim();
+    if (chunk && chunk.length <= 220) venue = chunk;
+  }
+
+  const startDate = shortEventDateToIso(dateRange?.[1] || '');
+  const endDate = shortEventDateToIso(dateRange?.[2] || dateRange?.[1] || '');
+  return {
+    id: String(url || `${pageTitle}|${startDate || ''}`).slice(0, 500),
+    entityType: 'event',
+    title: pageTitle || expectedTitle || null,
+    url: url || null,
+    startDate,
+    endDate,
+    startTime: timeRange?.[1] || null,
+    endTime: timeRange?.[2] || null,
+    venue,
+    priceStatus: price.type,
+    priceRaw: price.raw || null,
+    sourceTier: 'first-party-detail',
+    detailText
+  };
+}
+
 function extractRelevantFirstPartyText(text, title, maxChars = 9000) {
   const source = String(text || '').replace(/\s+/g, ' ').trim();
   if (source.length <= maxChars) return source;
@@ -2204,7 +2282,15 @@ function isSpecificExperienceEventUrl(url) {
 async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, sessionState = null) {
   if (!eventCostWasRequested(messages)) return [];
   const stateEvents = hasRecentAssistantAnswer(messages) ? (sessionState?.resultCards || []).filter(card => card?.entityType === 'event' && card?.title) : [];
-  const titles = stateEvents.length ? stateEvents.map(card => card.title) : eventTitlesFromRecentAssistant(messages);
+  // During the V13 transition the stored result set could be incomplete. Merge
+  // stored IDs with titles from the immediately preceding answer, rather than
+  // letting one partial state card hide the other events the user actually saw.
+  const titleMap = new Map();
+  for (const title of [...stateEvents.map(card => card.title), ...eventTitlesFromRecentAssistant(messages)]) {
+    const key = normaliseEventTitle(title);
+    if (key && !titleMap.has(key)) titleMap.set(key, title);
+  }
+  const titles = Array.from(titleMap.values()).slice(0, 10);
   if (!titles.length) return [];
   const matched = [];
   const used = new Set();
@@ -2225,15 +2311,14 @@ async function fetchEventDetailContextsForFollowUp(messages, experienceEventsCon
     matched.push({ title, link });
   }
   const values = await Promise.all(matched.slice(0, 8).map(item =>
-    fetchSimpleFirstPartyContext(item.link.url, `Experience Wakefield — ${item.title}`)
+    fetchExperienceEventDetailContext(item.link.url, item.title)
   ));
   return matched.slice(0, 8).map((item, i) => {
     const context = values[i] || null;
     if (!context) return null;
-    const exactCard = (context?.structured?.eventCards || []).find(
-      card => normaliseEventTitle(card?.title) === normaliseEventTitle(item.title)
-    );
-    return { title: exactCard?.title || item.title, context };
+    const direct = context.eventDetailCard;
+    const exactCard = (context?.structured?.eventCards || []).find(card => titlesLikelySame(card?.title, item.title));
+    return { title: direct?.title || exactCard?.title || item.title, context };
   }).filter(Boolean);
 }
 
@@ -2273,6 +2358,45 @@ async function fetchExperienceWakefieldEventsContext() {
   }
 }
 
+
+async function fetchExperienceEventDetailContext(url, expectedTitle) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_500);
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)' },
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const text = htmlToPlainText(html);
+    if (!text) return null;
+    const structured = extractStructuredPageData(html, text, url);
+    const direct = experienceEventDetailFromHtml(html, url, expectedTitle);
+    if (direct) {
+      const cards = Array.isArray(structured?.eventCards) ? structured.eventCards : [];
+      const existing = cards.find(card => titlesLikelySame(card?.title, direct.title));
+      if (existing) {
+        existing.priceStatus = direct.priceStatus;
+        existing.priceRaw = direct.priceRaw;
+      } else {
+        structured.eventCards = [direct, ...cards];
+      }
+    }
+    return {
+      text: direct?.detailText || extractRelevantFirstPartyText(text, expectedTitle, 9000),
+      eventDetailText: direct?.detailText || null,
+      eventDetailCard: direct || null,
+      structured,
+      source: { title: `Experience Wakefield — ${direct?.title || expectedTitle}`, url }
+    };
+  } catch (error) {
+    console.error(`Experience Wakefield event detail fetch failed: ${expectedTitle}`, error?.message || error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 async function fetchSimpleFirstPartyContext(url, title) {
   const controller = new AbortController();
@@ -2942,6 +3066,10 @@ function priceStatusFromEventDetailText(text) {
 function exactEventPriceStatus(title, evidence = {}) {
   const ctx = exactEventDetailForTitle(title, evidence);
   if (!ctx) return null;
+  const direct = ctx?.eventDetailCard;
+  if (direct && titlesLikelySame(direct.title, title) && direct.priceStatus && direct.priceStatus !== 'unknown') {
+    return { type: direct.priceStatus, raw: direct.priceRaw || (direct.priceStatus === 'free' ? 'Free' : null) };
+  }
   const structuredCards = ctx?.structured?.eventCards || [];
   const target = normaliseEventTitle(title);
 
@@ -3374,6 +3502,11 @@ function deterministicallySanitiseRouteAnswer(reply, messages) {
 
 
 function eventDetailMetaFromContext(context, title = '') {
+  const direct = context?.eventDetailCard;
+  if (direct && titlesLikelySame(direct.title, title)) {
+    const label = direct.startDate ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${direct.startDate}T12:00:00Z`)) : null;
+    return { date: label, start: direct.startTime || null, end: direct.endTime || null, venue: direct.venue || null };
+  }
   const target = normaliseEventTitle(title);
   const structuredCards = context?.structured?.eventCards || [];
   const structured = structuredCards.find(card => normaliseEventTitle(card?.title) === target) || null;
@@ -3424,14 +3557,13 @@ function eventMetaForRequestedWindow(context, title, messages) {
   if (!/\bweekend\b/i.test(recentUserContext(messages, 4))) return base;
 
   const target = normaliseEventTitle(title);
+  const direct = context?.eventDetailCard && titlesLikelySame(context.eventDetailCard.title, title) ? context.eventDetailCard : null;
   const structured = (context?.structured?.eventCards || []).find(card => normaliseEventTitle(card?.title) === target);
-  if (!structured?.start) return base;
-
   const weekend = eventDateState();
   const satIso = londonDateLabelToIso(weekend.saturday);
   const sunIso = londonDateLabelToIso(weekend.sunday);
-  const startIso = String(structured.start).slice(0, 10);
-  const endIso = String(structured.end || structured.start).slice(0, 10);
+  const startIso = direct?.startDate || (structured?.start ? String(structured.start).slice(0, 10) : null);
+  const endIso = direct?.endDate || (structured?.end || structured?.start ? String(structured.end || structured.start).slice(0, 10) : null);
   if (!satIso || !sunIso || !/^\d{4}-\d{2}-\d{2}$/.test(startIso) || !/^\d{4}-\d{2}-\d{2}$/.test(endIso)) return base;
 
   const activeSat = startIso <= satIso && endIso >= satIso;
@@ -3548,6 +3680,7 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
   const links = evidence.experienceEventsContext?.eventLinks || [];
   for (const card of evidence.experienceEventsContext?.eventCards || []) candidates.push(card);
   for (const item of evidence.eventDetailContexts || []) {
+    if (item?.context?.eventDetailCard) candidates.push(item.context.eventDetailCard);
     for (const card of item?.context?.structured?.eventCards || []) candidates.push(card);
   }
   for (const link of links) {
@@ -3565,12 +3698,15 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
     seen.add(key);
     out.push({
       id: String(detailUrl || card.id || key).slice(0, 500), entityType: 'event', title: title.slice(0, 220),
-      url: detailUrl, date: card.date || null, start: card.start || null,
-      end: card.end || null, venue: card.venue || null, priceStatus: 'unknown'
+      url: detailUrl, date: card.date || card.startDate || null, start: card.start || card.startTime || null,
+      end: card.end || card.endTime || null, venue: card.venue || null, priceStatus: card.priceStatus || 'unknown'
     });
     if (out.length >= MAX_STATE_CARDS) break;
   }
-  if (!out.length && links.length) {
+  // Always supplement the state from the titles the user actually saw. V13 only
+  // did this when zero cards had been found; a single partial card therefore
+  // caused every other listed event to disappear from the follow-up state.
+  if (links.length && out.length < MAX_STATE_CARDS) {
     for (const title of eventTitlesFromText(finalReply)) {
       const link = matchEventLinkForTitle(title, links);
       if (!link?.url || seen.has(link.url)) continue;

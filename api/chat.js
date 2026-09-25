@@ -2197,6 +2197,10 @@ function matchEventLinkForTitle(title, links = []) {
   return bestScore >= 30 ? best : null;
 }
 
+function isSpecificExperienceEventUrl(url) {
+  return /^https:\/\/(?:www\.)?experiencewakefield\.co\.uk\/event\/[^/?#]+\/?(?:[?#].*)?$/i.test(String(url || ''));
+}
+
 async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, sessionState = null) {
   if (!eventCostWasRequested(messages)) return [];
   const stateEvents = hasRecentAssistantAnswer(messages) ? (sessionState?.resultCards || []).filter(card => card?.entityType === 'event' && card?.title) : [];
@@ -2206,8 +2210,16 @@ async function fetchEventDetailContextsForFollowUp(messages, experienceEventsCon
   const used = new Set();
   for (const title of titles) {
     const stateCard = stateEvents.find(card => normaliseEventTitle(card.title) === normaliseEventTitle(title));
-    let link = stateCard?.url ? { url: stateCard.url, label: stateCard.title } : null;
-    if (!link && experienceEventsContext?.eventLinks?.length) link = matchEventLinkForTitle(title, experienceEventsContext.eventLinks);
+
+    // Prefer the exact detail-page link matched by title. A JSON-LD Event on an
+    // aggregate page may omit its own URL, so the old code could store /whats-on/
+    // as if it were the event page and later re-fetch mixed neighbouring events.
+    let link = experienceEventsContext?.eventLinks?.length
+      ? matchEventLinkForTitle(title, experienceEventsContext.eventLinks)
+      : null;
+    if (!link && isSpecificExperienceEventUrl(stateCard?.url)) {
+      link = { url: stateCard.url, label: stateCard.title };
+    }
     if (!link?.url || used.has(link.url)) continue;
     used.add(link.url);
     matched.push({ title, link });
@@ -2217,9 +2229,12 @@ async function fetchEventDetailContextsForFollowUp(messages, experienceEventsCon
   ));
   return matched.slice(0, 8).map((item, i) => {
     const context = values[i] || null;
-    const canonicalTitle = context?.structured?.eventCards?.[0]?.title || item.title;
-    return { title: canonicalTitle, context };
-  }).filter(item => item.context);
+    if (!context) return null;
+    const exactCard = (context?.structured?.eventCards || []).find(
+      card => normaliseEventTitle(card?.title) === normaliseEventTitle(item.title)
+    );
+    return { title: exactCard?.title || item.title, context };
+  }).filter(Boolean);
 }
 
 async function fetchExperienceWakefieldEventsContext() {
@@ -3007,51 +3022,43 @@ function eventCostWasRequested(messages) {
 function stripUnrequestedEventPrices(reply) {
   return String(reply)
     .split('\n')
-    .map(line => line
-      // Numeric admission/price clauses.
-      .replace(/\s*[—–-]?\s*(?:entry|admission|tickets?|price)\s*(?:from\s*)?£\s*\d+(?:[.,]\d{1,2})?(?:\s*[–-]\s*£?\s*\d+(?:[.,]\d{1,2})?)?\s*(?:per person|pp)?\b/gi, '')
-      .replace(/\s*[—–-]?\s*£\s*\d+(?:[.,]\d{1,2})?(?:\s*[–-]\s*£?\s*\d+(?:[.,]\d{1,2})?)?\s*(?:entry|admission|per person|pp)?\b/gi, '')
-      // Generic trailing free-status clauses. Keep the word Free when it is part
-      // of the event title itself; these patterns require punctuation/metadata
-      // context rather than deleting every occurrence of the word.
-      .replace(/\s*[—–-]\s*Free(?:\s+(?:entry|admission|event|performance|activity|exhibition|show))?\b[.;]?/gi, '')
-      .replace(/\s*\((?:free|free entry|free admission|free event)\)\s*/gi, ' ')
-      .replace(/\s*[—–-]?\s*(?:free\s+(?:entry|admission|event)|(?:entry|admission)\s+(?:is\s+)?free)\b/gi, '')
-      .replace(/\s*[;,.]?\s*free\s+for\s+[^.;]{0,100}\b(?:residents?|under[- ]?18s?|members?|children)\b[^.;]*/gi, '')
-      .replace(/\s+([,.!?])/g, '$1')
-      .replace(/\.{2,}/g, '.')
-      .replace(/\s{2,}/g, ' ')
-      .replace(/\s+$/g, ''))
+    .map(line => {
+      let next = String(line || '');
+
+      next = next
+        .replace(/\s*[—–-]?\s*(?:entry|admission|tickets?|price)\s*(?:from\s*)?£\s*\d+(?:[.,]\d{1,2})?(?:\s*[–-]\s*£?\s*\d+(?:[.,]\d{1,2})?)?\s*(?:per person|pp)?\b/gi, '')
+        .replace(/\s*[—–-]?\s*£\s*\d+(?:[.,]\d{1,2})?(?:\s*[–-]\s*£?\s*\d+(?:[.,]\d{1,2})?)?\s*(?:entry|admission|per person|pp)?\b/gi, '');
+
+      // Keep "Free" if it is genuinely part of an event title, but remove any
+      // free/admission metadata that appears after the event's published time.
+      const time = /\b(?:[01]?\d|2[0-3]):[0-5]\d\b|\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i.exec(next);
+      if (time) {
+        const cut = time.index + time[0].length;
+        const head = next.slice(0, cut);
+        let tail = next.slice(cut);
+        tail = tail
+          .replace(/\bfree\b(?:\s+(?:entry|admission|event|performance|activity|exhibition|show))?(?:\s+but\s+bookable)?/gi, '')
+          .replace(/\((?:\s*free(?:\s+(?:entry|admission|event))?\s*)\)/gi, ' ')
+          .replace(/\b(?:entry|admission)\s+(?:is\s+)?free\b/gi, '')
+          .replace(/\s*[;,.]?\s*free\s+for\s+[^.;]{0,100}\b(?:residents?|under[- ]?18s?|members?|children)\b[^.;]*/gi, '');
+        next = head + tail;
+      } else {
+        next = next
+          .replace(/\s*[—–-]\s*Free(?:\s+(?:entry|admission|event|performance|activity|exhibition|show))?\b[.;]?/gi, '')
+          .replace(/\s*\((?:free|free entry|free admission|free event)\)\s*/gi, ' ')
+          .replace(/\s*[—–-]?\s*(?:free\s+(?:entry|admission|event)|(?:entry|admission)\s+(?:is\s+)?free)\b/gi, '');
+      }
+
+      return next
+        .replace(/\s*;\s*[.;,]+/g, ';')
+        .replace(/,\s*\./g, '.')
+        .replace(/;\s*\./g, '.')
+        .replace(/\s+([,.!?])/g, '$1')
+        .replace(/\.{2,}/g, '.')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\s+$/g, '');
+    })
     .join('\n');
-}
-
-function filterFreeOnlyEventLines(reply, evidence = {}) {
-  const evidenceText = combinedEventEvidenceText(evidence);
-  if (!evidenceText) return reply;
-  const lowerEvidence = evidenceText.toLowerCase();
-  const lines = String(reply).split('\n');
-  const kept = [];
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) { kept.push(line); continue; }
-    if (/^(saturday|sunday|monday|tuesday|wednesday|thursday|friday)\b/i.test(trimmed)) { kept.push(line); continue; }
-    if (/^(from|the free|free events?|here are|these are|i could|i can|i couldn)/i.test(trimmed)) { kept.push(line); continue; }
-
-    const title = eventLineTitleCandidate(line);
-    const knownEvent = title && title.length >= 5 && lowerEvidence.includes(title.toLowerCase());
-    if (!knownEvent) { kept.push(line); continue; }
-
-    const exactStatus = exactEventPriceStatus(title, evidence);
-    const supportedFree = exactStatus
-      ? exactStatus.type === 'free'
-      : (evidence.eventDetailContexts?.length ? false : eventClaimSupportedNearTitle(title, { type: 'free' }, evidenceText));
-    if (supportedFree) kept.push(line);
-  }
-
-  let out = kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  out = out.replace(/(^|\n)(Saturday|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday)([^\n]*)\n\s*\n(?=(Saturday|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday)\b|$)/gim, '$1');
-  return out.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
@@ -3336,6 +3343,10 @@ function stripMarkdownPresentation(reply) {
     .replace(/^\s{0,3}#{1,6}\s+/gm, '')
     .replace(/^\s*```[^\n]*\n?/gm, '')
     .replace(/\n?\s*```\s*$/gm, '')
+    // Repair punctuation orphaned onto its own line by model formatting.
+    .replace(/\n\s*([.,;:!?])/g, '$1')
+    .replace(/,\s*\./g, '.')
+    .replace(/;\s*\./g, '.')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -3399,6 +3410,38 @@ function eventDetailMetaFromContext(context, title = '') {
   return { date: dateMatch?.[1] || null, start: timeMatch?.[1] || null, end: timeMatch?.[2] || null, venue };
 }
 
+function londonDateLabelToIso(label) {
+  const m = String(label || '').match(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/i);
+  if (!m) return null;
+  const months = { january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12 };
+  const month = months[m[2].toLowerCase()];
+  if (!month) return null;
+  return `${m[3]}-${String(month).padStart(2, '0')}-${String(Number(m[1])).padStart(2, '0')}`;
+}
+
+function eventMetaForRequestedWindow(context, title, messages) {
+  const base = eventDetailMetaFromContext(context, title);
+  if (!/\bweekend\b/i.test(recentUserContext(messages, 4))) return base;
+
+  const target = normaliseEventTitle(title);
+  const structured = (context?.structured?.eventCards || []).find(card => normaliseEventTitle(card?.title) === target);
+  if (!structured?.start) return base;
+
+  const weekend = eventDateState();
+  const satIso = londonDateLabelToIso(weekend.saturday);
+  const sunIso = londonDateLabelToIso(weekend.sunday);
+  const startIso = String(structured.start).slice(0, 10);
+  const endIso = String(structured.end || structured.start).slice(0, 10);
+  if (!satIso || !sunIso || !/^\d{4}-\d{2}-\d{2}$/.test(startIso) || !/^\d{4}-\d{2}-\d{2}$/.test(endIso)) return base;
+
+  const activeSat = startIso <= satIso && endIso >= satIso;
+  const activeSun = startIso <= sunIso && endIso >= sunIso;
+  if (activeSat && activeSun) return { ...base, date: `${weekend.saturday} and ${weekend.sunday}` };
+  if (activeSat) return { ...base, date: weekend.saturday };
+  if (activeSun) return { ...base, date: weekend.sunday };
+  return base;
+}
+
 function buildDeterministicFreeFollowUpAnswer(messages, evidence = {}) {
   const last = lastUserText(messages);
   if (!/\bfree\b/i.test(last)) return null;
@@ -3409,7 +3452,7 @@ function buildDeterministicFreeFollowUpAnswer(messages, evidence = {}) {
     if (!item?.title || !item?.context?.text) continue;
     const status = exactEventPriceStatus(item.title, evidence);
     if (status?.type !== 'free') continue;
-    freeItems.push({ title: item.title, ...eventDetailMetaFromContext(item.context, item.title) });
+    freeItems.push({ title: item.title, ...eventMetaForRequestedWindow(item.context, item.title, messages) });
   }
   if (!freeItems.length) return 'From the events I listed, I could not verify any as generally free from their individual official event pages.';
   const asksTime = /\bwhat time\b|\bwhen\b|\bstart(?:s|ing)?\b/i.test(last);
@@ -3502,11 +3545,12 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
   const out = [];
   const seen = new Set();
   const candidates = [];
+  const links = evidence.experienceEventsContext?.eventLinks || [];
   for (const card of evidence.experienceEventsContext?.eventCards || []) candidates.push(card);
   for (const item of evidence.eventDetailContexts || []) {
     for (const card of item?.context?.structured?.eventCards || []) candidates.push(card);
   }
-  for (const link of evidence.experienceEventsContext?.eventLinks || []) {
+  for (const link of links) {
     const title = htmlToPlainText(link?.label || '').trim();
     if (!title) continue;
     candidates.push({ id: link.url, entityType: 'event', title, url: link.url, priceStatus: 'unknown' });
@@ -3514,19 +3558,21 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
   for (const card of candidates) {
     const title = String(card?.title || '').trim();
     if (!title || !replyNorm.includes(title.toLowerCase())) continue;
-    const key = card.id || card.url || title.toLowerCase();
-    if (seen.has(key)) continue;
+    const exactLink = matchEventLinkForTitle(title, links);
+    const detailUrl = exactLink?.url || (isSpecificExperienceEventUrl(card?.url) ? card.url : null);
+    const key = detailUrl || normaliseEventTitle(title);
+    if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push({
-      id: String(key).slice(0, 500), entityType: 'event', title: title.slice(0, 220),
-      url: card.url || null, date: card.date || null, start: card.start || null,
-      end: card.end || null, venue: card.venue || null, priceStatus: card.priceStatus || 'unknown'
+      id: String(detailUrl || card.id || key).slice(0, 500), entityType: 'event', title: title.slice(0, 220),
+      url: detailUrl, date: card.date || null, start: card.start || null,
+      end: card.end || null, venue: card.venue || null, priceStatus: 'unknown'
     });
     if (out.length >= MAX_STATE_CARDS) break;
   }
-  if (!out.length && evidence.experienceEventsContext?.eventLinks?.length) {
+  if (!out.length && links.length) {
     for (const title of eventTitlesFromText(finalReply)) {
-      const link = matchEventLinkForTitle(title, evidence.experienceEventsContext.eventLinks);
+      const link = matchEventLinkForTitle(title, links);
       if (!link?.url || seen.has(link.url)) continue;
       seen.add(link.url);
       out.push({ id: link.url, entityType: 'event', title, url: link.url, date: null, start: null, end: null, venue: null, priceStatus: 'unknown' });

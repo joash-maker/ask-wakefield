@@ -1,3 +1,5 @@
+import { buildCuratedKnowledgeContext } from '../lib/experience-wakefield-knowledge-v1.js';
+
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -4496,6 +4498,8 @@ export default async function handler(req, res) {
   const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
   const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
+  const curatedKnowledgeDirectContext =
+    buildCuratedKnowledgeContext(lastUserText(messages));
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   // V16.2 weekend-events invariant: once the cards-first path is enabled,

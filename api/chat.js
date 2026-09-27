@@ -1362,11 +1362,69 @@ function isFamilyBudgetNoCarPlanQuery(messages) {
   return family && noCar && budget && timing && activity;
 }
 
+function extractChildAges(messages) {
+  if (!Array.isArray(messages)) return [];
+  const userMessages = messages
+    .filter(m => m?.role === 'user' && typeof m.content === 'string')
+    .map(m => m.content.trim())
+    .filter(Boolean);
+  if (!userMessages.length) return [];
+
+  const plausible = values => values.length >= 2
+    && values.slice(0, 2).every(n => Number.isInteger(n) && n >= 0 && n <= 17);
+
+  const parsePair = text => {
+    const patterns = [
+      /\b(?:ages?|aged)\s*(\d{1,2})\s*(?:and|&|,)\s*(\d{1,2})\b/i,
+      /\b(?:children|kids|they)(?:'re| are| are aged)?\s*(\d{1,2})\s*(?:and|&|,)\s*(\d{1,2})\b/i,
+      /\b(\d{1,2})\s*[- ]?year[- ]?old\b[\s\S]{0,80}\b(\d{1,2})\s*[- ]?year[- ]?old\b/i
+    ];
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (!match) continue;
+      const values = [Number(match[1]), Number(match[2])];
+      if (plausible(values)) return values;
+    }
+    const both = text.match(/\bboth\s+(?:aged?\s*)?(\d{1,2})\b/i);
+    if (both) {
+      const age = Number(both[1]);
+      if (plausible([age, age])) return [age, age];
+    }
+    return [];
+  };
+
+  // Prefer an explicit age phrase anywhere in the recent family-plan context.
+  for (const text of [...userMessages].reverse().slice(0, 4)) {
+    const ages = parsePair(text);
+    if (ages.length) return ages;
+  }
+
+  // A clarification reply is often naturally terse: "Wakefield city centre, 7 and 4".
+  // Only interpret a bare numeric pair as child ages when the immediately preceding
+  // assistant turn explicitly asked for the children's ages. This prevents unrelated
+  // numbers such as budgets, dates or route numbers from being treated as ages.
+  const last = userMessages[userMessages.length - 1];
+  const priorAssistant = recentAssistantContext(messages, 1);
+  const awaitingAges = /children(?:'s|’s)? ages|ages? of (?:the )?(?:children|kids)|need .*ages/i.test(priorAssistant);
+  if (awaitingAges) {
+    const bare = last.match(/(?:^|[,;:]\s*|\s)(\d{1,2})\s*(?:and|&|,)\s*(\d{1,2})(?:\s|$)/i);
+    if (bare) {
+      const values = [Number(bare[1]), Number(bare[2])];
+      if (plausible(values)) return values;
+    }
+  }
+
+  return [];
+}
+
 function hasExplicitChildAges(messages) {
+  return extractChildAges(messages).length >= 2;
+}
+
+function familyBudgetAmount(messages) {
   const context = familyBudgetNoCarContext(messages);
-  return /\b(?:ages?|aged)\s*\d{1,2}\s*(?:and|&|,)\s*\d{1,2}\b/i.test(context)
-    || /\b\d{1,2}\s*[- ]?year[- ]?old\b[\s\S]{0,80}\b\d{1,2}\s*[- ]?year[- ]?old\b/i.test(context)
-    || /\b(?:children|kids|they)(?:'re| are)\s*\d{1,2}\s*(?:and|&|,)\s*\d{1,2}\b/i.test(context);
+  const match = context.match(/£\s*(\d+(?:[.,]\d{1,2})?)/i);
+  return match ? `£${match[1].replace(',', '.')}` : 'the stated budget';
 }
 
 function familyPlanNeedsClarification(messages) {
@@ -4551,7 +4609,7 @@ export default async function handler(req, res) {
       ? 'where in the Wakefield district you are starting from, and the children\'s ages'
       : (needsArea ? 'where in the Wakefield district you are starting from' : 'the children\'s ages');
     return res.status(200).json({
-      reply: `I can narrow this properly, but because “no car” and the £40 budget are hard constraints, I need ${detailText} before I recommend paid options. I can use Experience Wakefield\'s family and public-transport guides to shortlist candidates, but I will not guess a route or child ticket price. For example: “Wakefield city centre; ages 8 and 11.”`,
+      reply: `I can narrow this properly, but because “no car” and ${familyBudgetAmount(messages)} are hard constraints, I need ${detailText} before I recommend paid options. I can use Experience Wakefield's family and public-transport guides to shortlist candidates, but I will not guess a route or child ticket price. For example: “Wakefield city centre; ages 8 and 11.”`,
       sources: [],
       live: false,
       verification: 'family-plan-needs-details',

@@ -569,6 +569,7 @@ function classifyRequest(messages, state = null) {
   else if (isPropertySpecificCouncilQuery(messages)) intent = 'civic.property';
   else if (isLiveTransportTimesQuery(messages) || isRoutePlanningQuery(messages)) intent = 'transport';
   else if (isGeneralAccessibilityQuery(messages)) intent = 'accessibility';
+  else if (isFamilyBudgetNoCarPlanQuery(messages)) intent = 'activity';
   else if (isTimedLocalActivityQuery(messages)) intent = 'activity';
 
   return {
@@ -1341,6 +1342,41 @@ function isComplexSaturdayDayPlanQuery(messages) {
   return plan && saturday && access && food && culture && parking;
 }
 
+function familyBudgetNoCarContext(messages) {
+  if (!Array.isArray(messages)) return '';
+  return messages
+    .filter(m => m?.role === 'user' && typeof m.content === 'string')
+    .slice(-3)
+    .map(m => m.content)
+    .join('\n')
+    .toLowerCase();
+}
+
+function isFamilyBudgetNoCarPlanQuery(messages) {
+  const context = familyBudgetNoCarContext(messages);
+  const family = /\b(child|children|kid|kids|family)\b/i.test(context);
+  const noCar = /\b(no car|without a car|don'?t drive|do not drive|public transport|by bus|by train)\b/i.test(context);
+  const budget = /£\s*\d+(?:[.,]\d{1,2})?|\bbudget\b/i.test(context);
+  const timing = /\b(today|tomorrow|this weekend|weekend|saturday|sunday|afternoon|morning|evening)\b/i.test(context);
+  const activity = /\b(things? to do|something to do|what can (?:we|i) do|day out|outing|suggest|recommend|activity|activities)\b/i.test(context);
+  return family && noCar && budget && timing && activity;
+}
+
+function hasExplicitChildAges(messages) {
+  const context = familyBudgetNoCarContext(messages);
+  return /\b(?:ages?|aged)\s*\d{1,2}\s*(?:and|&|,)\s*\d{1,2}\b/i.test(context)
+    || /\b\d{1,2}\s*[- ]?year[- ]?old\b[\s\S]{0,80}\b\d{1,2}\s*[- ]?year[- ]?old\b/i.test(context)
+    || /\b(?:children|kids|they)(?:'re| are)\s*\d{1,2}\s*(?:and|&|,)\s*\d{1,2}\b/i.test(context);
+}
+
+function familyPlanNeedsClarification(messages) {
+  if (!isFamilyBudgetNoCarPlanQuery(messages)) return null;
+  const missing = [];
+  if (!detectWakefieldArea(messages)) missing.push('starting area');
+  if (!hasExplicitChildAges(messages)) missing.push('children ages');
+  return missing.length ? missing : null;
+}
+
 function isDogFriendlyVenueQuery(messages) {
   const context = recentUserContext(messages, 5);
   return /\b(dog|dogs|dog-friendly|dog friendly|with our dog|with my dog|bring (?:a|our|my) dog)\b/i.test(context)
@@ -1530,6 +1566,7 @@ function shouldUseOpenAIFailsafe(messages, evidence = {}) {
     || isTimedFoodAvailabilityQuery(messages)
     || isRoutePlanningQuery(messages)
     || isWaterAccessQuery(messages)
+    || isFamilyBudgetNoCarPlanQuery(messages)
     || isComplexSaturdayDayPlanQuery(messages)
     || /\b(open now|right now|currently|free|price|cost|ticket|road closures?|parking|wheelchair|step[- ]?free|last train|next train|last bus|next bus)\b/i.test(context);
 }
@@ -1549,6 +1586,8 @@ function openAIDomainsForQuery(messages, evidence = {}) {
     base = ['nhs.uk','midyorks.nhs.uk','boots.com','kingfisherpharmacy.co.uk','pharmacyplushealth.co.uk','pharmacy-express.co.uk','storelocator.asda.com','stores.sainsburys.co.uk'];
   } else if (isCathedralToYspRouteQuery(messages) || isRoutePlanningQuery(messages) || isLiveTransportTimesQuery(messages)) {
     base = ['ysp.org.uk','wymetro.com','nationalrail.co.uk','northernrailway.co.uk','lner.co.uk','westyorks-ca.gov.uk'];
+  } else if (isFamilyBudgetNoCarPlanQuery(messages)) {
+    base = ['experiencewakefield.co.uk','wakefield.gov.uk','wymetro.com','westyorks-ca.gov.uk','ysp.org.uk','hepworthwakefield.org','nationaltrust.org.uk','diggerland.com','tenpin.co.uk','ncm.org.uk'];
   } else if (isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages) || isEventCostFollowUp(messages)) {
     base = ['experiencewakefield.co.uk','wxwakefield.co.uk','wakefieldcathedral.org.uk','hepworthwakefield.org','ysp.org.uk','nationaltrust.org.uk','theatreroyalwakefield.co.uk'];
   } else if (isDogFriendlyVenueQuery(messages) || isDietaryOpenQuery(messages) || isEveningCoffeeDessertQuery(messages) || isTimedFoodAvailabilityQuery(messages)) {
@@ -1693,6 +1732,7 @@ STRICT RULES:
 - For transport, do not assemble an unverified multi-leg route. Prefer the direct official route if one is verified.
 - For transport, do not use words such as nearest/closest for a boarding stop unless that ranking is verified. Say to use the current journey planner to identify the correct boarding stop.
 - For complex itineraries, do not invent walking minutes, distance, terrain, a "natural loop", or claims that all venues are independent/child-friendly unless each claim is directly supported. If the independent-coffee requirement is explicit, only use a café explicitly described as independent to satisfy it.
+- For family + budget + no-car plans, treat date/daypart, total budget and public transport as hard filters. Check the arithmetic. Do not derive a family total from a per-person 'from' price unless ages and party composition are known. Do not call a venue a confirmed fit when the route or total cost is unverified.
 - Avoid promotional flourishes such as "proper Yorkshire quality". Keep verified facts separate from opinion.
 - If an exact property/service lookup cannot be completed, ask for or direct to the minimum official lookup rather than inventing the result.
 - If one part of a multi-part question cannot be verified, answer the verified parts and clearly mark the unresolved part instead of failing the whole response.
@@ -1768,6 +1808,7 @@ function needsLiveSearch(messages) {
   if (isTimedFoodAvailabilityQuery(messages)) return true;
   if (isRoutePlanningQuery(messages)) return true;
   if (isWaterAccessQuery(messages)) return true;
+  if (isFamilyBudgetNoCarPlanQuery(messages)) return true;
 
   const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|parade|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|bins?|bin collection|collection day|collection date|running club|run club|parkrun|wheelchair|accessibility|step[- ]?free|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming)\b/i;
   if (liveTerms.test(context)) return true;
@@ -1799,6 +1840,7 @@ function requiresVerifiedSource(messages) {
   if (isTimedFoodAvailabilityQuery(messages)) return true;
   if (isRoutePlanningQuery(messages)) return true;
   if (isWaterAccessQuery(messages)) return true;
+  if (isFamilyBudgetNoCarPlanQuery(messages)) return true;
   return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open now|right now|currently|current|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost)\b/i.test(context);
 }
 
@@ -4499,7 +4541,24 @@ export default async function handler(req, res) {
   const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
   const curatedKnowledgeDirectContext =
-    buildCuratedKnowledgeContext(lastUserText(messages));
+    buildCuratedKnowledgeContext(familyBudgetNoCarContext(messages) || lastUserText(messages));
+
+  const familyPlanMissing = familyPlanNeedsClarification(messages);
+  if (familyPlanMissing) {
+    const needsArea = familyPlanMissing.includes('starting area');
+    const needsAges = familyPlanMissing.includes('children ages');
+    const detailText = needsArea && needsAges
+      ? 'where in the Wakefield district you are starting from, and the children\'s ages'
+      : (needsArea ? 'where in the Wakefield district you are starting from' : 'the children\'s ages');
+    return res.status(200).json({
+      reply: `I can narrow this properly, but because “no car” and the £40 budget are hard constraints, I need ${detailText} before I recommend paid options. I can use Experience Wakefield\'s family and public-transport guides to shortlist candidates, but I will not guess a route or child ticket price. For example: “Wakefield city centre; ages 8 and 11.”`,
+      sources: [],
+      live: false,
+      verification: 'family-plan-needs-details',
+      state: clientState
+    });
+  }
+
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
@@ -4691,7 +4750,7 @@ export default async function handler(req, res) {
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
-    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
+    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isFamilyBudgetNoCarPlanQuery(messages));
 
   if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
     console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
@@ -4750,6 +4809,23 @@ ${cathedralContext.text}`
 
   const complexPlanContext = isComplexSaturdayDayPlanQuery(messages)
     ? `\n\nCOMPLEX SATURDAY DAY-PLAN MODE: Build the smallest useful plan from the supplied first-party venue evidence. The user needs wheelchair access, independent coffee, culture, lunch and parking/closure awareness. Treat independent as a hard constraint for the coffee stop: use only a café explicitly described in first-party evidence as independent; do not infer independence from local branding or support for independent suppliers. Do not abandon the answer because one element cannot be guaranteed. If no current official road-closure evidence proves a car park is unaffected, say clearly that closure-free parking cannot be guaranteed and continue with the verified coffee/culture/lunch plan. Never claim the route between venues is step-free unless verified. Never invent walking minutes, distance, terrain, a natural loop, or that every stop is child-friendly.`
+    : '';
+
+
+  const familyBudgetNoCarDirectContext = isFamilyBudgetNoCarPlanQuery(messages)
+    ? `\n\nFAMILY BUDGET + NO-CAR PLAN MODE:
+This is a constrained planning request, not a generic attractions list. Treat the user's date/daypart, no-car requirement and total budget as HARD FILTERS.
+- Resolve the requested day to the exact date using the server-supplied RELATIVE DATE MAP and state that date once.
+- The curated Experience Wakefield layer is DISCOVERY ONLY. It can nominate candidates, but it cannot prove current opening, Saturday availability, current price, child pricing, transport or route feasibility.
+- A FINAL recommendation may be presented as fitting the brief only when current trusted evidence supports: (1) available/open during the requested daypart, (2) suitable for children, (3) total known admission/activity cost is within the stated budget for the known party/ages, and (4) a workable public-transport basis from the user's stated starting area.
+- Do not calculate a family total from a per-person 'from' price unless the exact party composition and relevant age bands are known. Never write arithmetic such as '£25.95 each, so a family of three is £30–£35'.
+- Do not use parking, included parking or driving convenience as evidence for a no-car user.
+- 'Accessible by public transport' is not enough for a route claim. Use current official bus/train evidence for the relevant origin and destination, or say the exact route still needs checking.
+- Do not invent or relocate an attraction. Keep venue identity and locality tied to the exact source record.
+- If a candidate is promising but one hard constraint remains unverified, label it as a possible candidate and say exactly what is unverified; do not present it as a confirmed fit.
+- Prefer 2–3 verified fits over a longer list. If only one option is fully verified, give one.
+- Never soften a budget breach. If the verified total exceeds the user's budget, exclude it from the main recommendations.
+- If transport cannot be fully verified because the exact starting point is still too broad, say so rather than inventing a journey.`
     : '';
 
   const namedEventFirstPartyDirectContext = (namedEventContexts?.parade?.text || namedEventContexts?.festival?.text)
@@ -4891,7 +4967,7 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${curatedKnowledgeDirectContext}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
+  const directContext = `${curatedKnowledgeDirectContext}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${familyBudgetNoCarDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -4908,7 +4984,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
+      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || isFamilyBudgetNoCarPlanQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',

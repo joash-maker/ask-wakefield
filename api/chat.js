@@ -1,7 +1,4 @@
-import { buildCuratedKnowledgeContext } from '../lib/experience-wakefield-knowledge-v1.js';
-import { buildGoogleGroundedVerificationContext } from '../lib/google-grounded-verifier-v1.js';
-import { buildEntityIntegrityContext, deterministicallySanitiseEntityIntegrityAnswer, isStrictCityCentreItineraryQuery } from '../lib/entity-integrity-v1.js';
-
+import { buildTrustedPlacesContext } from '../lib/askwakefield-places.js';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -32,7 +29,6 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - Direct people to official sources for legal, binding, eligibility or safety-critical matters.
 - Never invent current facts, opening times, prices, event dates, transport times, closures, deadlines, availability or eligibility rules.
 - **EVIDENCE HIERARCHY:** For changing/local facts, prefer sources in this order: (1) Wakefield Council and other official public bodies, (2) Experience Wakefield and official event/venue pages, (3) the official website of the named venue, club or organisation, (4) trusted transport/mapping/event sources, then (5) other reputable sources only when a primary source does not answer the question.
-- **ENTITY FACT LOCK:** Treat each place as a canonical entity. A name, address, locality, opening time, price, facility, tenant relationship or programme may only be stated for the exact entity whose evidence supports it. Never move a street, postcode, town, opening time, facility or descriptive fact from one venue to another. If the entity cannot be resolved confidently, omit the fact or the venue.
 - **NO PLAUSIBLE GUESSING:** A fluent answer is not more important than a correct one. Never fill a missing fact with a likely postcode, likely time, typical schedule, assumed route or nearby-looking alternative. Clearly separate VERIFIED FACTS, reasonable ALTERNATIVES and UNVERIFIED details in the wording without using those labels mechanically.
 - **MULTI-PART COMPLETENESS:** Before answering, identify every distinct part of the user's question. Answer each part, mark it as unverified, or ask for the one piece of information needed. Never silently replace an unanswered part with a different activity, day, place or service.
 - **APPROXIMATE LOCATION IS NOT AN ADDRESS:** Words such as "near", "close to", "around", "by" and "staying near" do not identify an exact property, postcode or collection schedule. Never convert a landmark into the user's address. If a property-specific service needs an address, ask only for the minimum required detail while still answering any other parts of the question.
@@ -162,7 +158,7 @@ FOOD & DRINK — CURATED WAKEFIELD DISCOVERY POOL:
 Use this as stable candidate knowledge, not as a live ranking. Do not repeat ratings, review quotes, "best" claims or changing opening hours from discovery sources. Match venues to the user's job, area and service style. Current opening, branch presence, menu, prices and availability should be verified when they matter.
 
 **Wakefield city centre / central Wakefield:**
-- **KRA:FT Wakefield**, 12 Wood Street — coffee shop / light food; useful for coffee and informal daytime food.
+- **KRA:FT Wakefield**, 14 Wood Street — coffee shop / light food; useful for coffee and informal daytime food.
 - **Munchiz Wakefield**, 16 Wood Street — fast-food / quick-meal option.
 - **Cafe 19**, 7 Cross Square — cafe; useful for breakfast, lunch, sandwiches and coffee-style requests.
 - **Create Cafe Wakefield**, Burton Street — community cafe; useful for daytime cafe/lunch requests.
@@ -572,7 +568,6 @@ function classifyRequest(messages, state = null) {
   else if (isPropertySpecificCouncilQuery(messages)) intent = 'civic.property';
   else if (isLiveTransportTimesQuery(messages) || isRoutePlanningQuery(messages)) intent = 'transport';
   else if (isGeneralAccessibilityQuery(messages)) intent = 'accessibility';
-  else if (isFamilyBudgetNoCarPlanQuery(messages)) intent = 'activity';
   else if (isTimedLocalActivityQuery(messages)) intent = 'activity';
 
   return {
@@ -699,7 +694,6 @@ function isEveningCoffeeDessertQuery(messages) {
 
 function shouldUseDistrictPlaces(messages) {
   if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return false;
-  if (isStrictCityCentreItineraryQuery(messages)) return true;
   if (isPharmacyOpenQuery(messages)) return true;
   if (isEveningCoffeeDessertQuery(messages)) return true;
   if (isCurrentFoodStatusQuery(messages)) return true;
@@ -795,23 +789,6 @@ function requiresIndependentVenue(messages) {
 
 function buildDistrictPlacesSearchSpecs(messages) {
   const context = recentUserContext(messages, 5);
-
-  if (isStrictCityCentreItineraryQuery(messages)) {
-    // Broad discovery, narrow verification: intentionally search across several
-    // hospitality modes and the two city-centre shopping centres before the
-    // entity/geography gates decide what is safe to recommend.
-    return [
-      { textQuery: 'speciality coffee', bucket: 'coffee-speciality', richFields: ['servesCoffee', 'dineIn'], pageSize: 10 },
-      { textQuery: 'cafe coffee', bucket: 'coffee-cafe', richFields: ['servesCoffee', 'dineIn'], pageSize: 12 },
-      { textQuery: 'bakery cafe', bucket: 'bakery', richFields: ['servesCoffee', 'servesDessert', 'dineIn'], pageSize: 8 },
-      { textQuery: 'restaurant lunch cafe', bucket: 'food', richFields: ['servesCoffee', 'dineIn'], pageSize: 10 },
-      { textQuery: 'food drink Trinity Walk Wakefield', bucket: 'trinity-food', richFields: ['servesCoffee', 'servesDessert', 'dineIn'], pageSize: 12 },
-      { textQuery: 'food drink The Ridings Wakefield', bucket: 'ridings-food', richFields: ['servesCoffee', 'servesDessert', 'dineIn'], pageSize: 12 },
-      { textQuery: 'book store', bucket: 'books', includedType: 'book_store', strictTypeFiltering: true, richFields: [], pageSize: 8 },
-      { textQuery: 'art gallery museum', bucket: 'art', richFields: [], pageSize: 8 }
-    ];
-  }
-
   if (isPharmacyOpenQuery(messages)) {
     return [{
       textQuery: 'pharmacy',
@@ -911,22 +888,6 @@ function placeWithinDistrictViewport(place) {
     && lat <= WAKEFIELD_DISTRICT_VIEWPORT.high.latitude
     && lng >= WAKEFIELD_DISTRICT_VIEWPORT.low.longitude
     && lng <= WAKEFIELD_DISTRICT_VIEWPORT.high.longitude;
-}
-
-function distanceMetres(a, b) {
-  const lat1 = Number(a?.latitude);
-  const lon1 = Number(a?.longitude);
-  const lat2 = Number(b?.latitude);
-  const lon2 = Number(b?.longitude);
-  if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return null;
-  const toRad = value => value * Math.PI / 180;
-  const R = 6371000;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const s1 = Math.sin(dLat / 2);
-  const s2 = Math.sin(dLon / 2);
-  const h = s1 * s1 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * s2 * s2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
 function placeMatchesRequestedScope(place, messages) {
@@ -1066,7 +1027,6 @@ function compactPlace(place, meta = {}) {
     goodForChildren: typeof place?.goodForChildren === 'boolean' ? place.goodForChildren : null,
     accessibilityOptions: place?.accessibilityOptions || null,
     sourceZone: meta.sourceZone || place?._sourceZone || null,
-    discoveryBuckets: Array.isArray(place?._discoveryBuckets) ? place._discoveryBuckets.slice(0, 8) : [],
     serviceVerified: typeof meta.serviceVerified === 'boolean' ? meta.serviceVerified : null,
     timeMatch: typeof meta.timeMatch === 'boolean' ? meta.timeMatch : null
   };
@@ -1190,23 +1150,15 @@ async function googlePlacesAnchorSearch(area) {
 }
 
 function dedupePlaces(places) {
-  const byKey = new Map();
+  const seen = new Set();
+  const out = [];
   for (const place of places || []) {
     const key = place?.id || `${place?.displayName?.text || ''}|${place?.formattedAddress || ''}`.toLowerCase();
-    if (!key) continue;
-    const incomingBuckets = Array.isArray(place?._discoveryBuckets) ? place._discoveryBuckets : [];
-    if (!byKey.has(key)) {
-      place._discoveryBuckets = [...new Set(incomingBuckets.filter(Boolean))];
-      byKey.set(key, place);
-      continue;
-    }
-    const existing = byKey.get(key);
-    existing._discoveryBuckets = [...new Set([
-      ...(Array.isArray(existing?._discoveryBuckets) ? existing._discoveryBuckets : []),
-      ...incomingBuckets
-    ].filter(Boolean))];
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(place);
   }
-  return Array.from(byKey.values());
+  return out;
 }
 
 async function fetchWakefieldDistrictPlacesContext(messages) {
@@ -1219,11 +1171,8 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
   const specs = buildDistrictPlacesSearchSpecs(messages);
   const widenExplicitly = /\b(anywhere|across (?:the )?district|whole district|wider district|elsewhere in wakefield)\b/i.test(lastUserText(messages));
 
-  const enrich = (place, sourceZone, bucket = null) => {
+  const enrich = (place, sourceZone) => {
     if (sourceZone && !place._sourceZone) place._sourceZone = sourceZone;
-    if (bucket) {
-      place._discoveryBuckets = [...new Set([...(place._discoveryBuckets || []), bucket])];
-    }
     return place;
   };
 
@@ -1232,7 +1181,7 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
     const label = districtAreaQueryLabel(area);
     const batches = await Promise.all(specs.map(spec => {
       const opts = {
-        pageSize: spec.pageSize || 12,
+        pageSize: 12,
         openNow,
         includedType: spec.includedType || null,
         strictTypeFiltering: Boolean(spec.strictTypeFiltering),
@@ -1248,21 +1197,12 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
         opts.rankPreference = 'DISTANCE';
         opts.districtRestriction = false;
         return googlePlacesTextSearch(spec.textQuery, opts)
-          .then(items => items.map(place => enrich(place, label, spec.bucket || null)));
+          .then(items => items.map(place => enrich(place, label)));
       }
       return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
-        .then(items => items.map(place => enrich(place, label, spec.bucket || null)));
+        .then(items => items.map(place => enrich(place, label)));
     }));
-    const deduped = dedupePlaces(batches.flat());
-    if (isStrictCityCentreItineraryQuery(messages) && anchor?.latitude != null && anchor?.longitude != null) {
-      // Conservative city-centre radius: plans must not leak district-wide
-      // guide members from Horbury, Ossett, Walton or other towns/villages.
-      return deduped.filter(place => {
-        const metres = distanceMetres(anchor, place?.location);
-        return metres == null ? false : metres <= 1800;
-      });
-    }
-    return deduped;
+    return dedupePlaces(batches.flat());
   };
 
   const runZoneSpecs = async (zones, searchSpecs = specs.slice(0, 1), pageSize = 5) => {
@@ -1277,7 +1217,7 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
             includedType: spec.includedType || null,
             strictTypeFiltering: Boolean(spec.strictTypeFiltering),
             richFields: spec.richFields || []
-          }).then(items => items.map(place => enrich(place, zoneLabel, spec.bucket || null)))
+          }).then(items => items.map(place => enrich(place, zoneLabel)))
         );
       }
     }
@@ -1355,47 +1295,7 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
     return out;
   };
 
-  const selectStrictItinerary = items => {
-    const selected = [];
-    const seen = new Set();
-    const pushFrom = (bucket, limit) => {
-      let added = 0;
-      for (const item of items) {
-        const key = item?.place?.id || `${item?.place?.displayName?.text || ''}|${item?.place?.formattedAddress || ''}`.toLowerCase();
-        const buckets = Array.isArray(item?.place?._discoveryBuckets) ? item.place._discoveryBuckets : [];
-        if (!key || seen.has(key) || !buckets.includes(bucket)) continue;
-        selected.push(item);
-        seen.add(key);
-        added += 1;
-        if (added >= limit) break;
-      }
-    };
-
-    // Hospitality gets the largest share, but force coverage of both shopping
-    // centres plus genuine book/art candidates so one broad coffee query cannot
-    // crowd the other interests out of the prompt.
-    pushFrom('coffee-speciality', 4);
-    pushFrom('coffee-cafe', 4);
-    pushFrom('bakery', 2);
-    pushFrom('food', 2);
-    pushFrom('trinity-food', 3);
-    pushFrom('ridings-food', 3);
-    pushFrom('books', 3);
-    pushFrom('art', 3);
-
-    for (const item of items) {
-      if (selected.length >= 24) break;
-      const key = item?.place?.id || `${item?.place?.displayName?.text || ''}|${item?.place?.formattedAddress || ''}`.toLowerCase();
-      if (!key || seen.has(key)) continue;
-      selected.push(item);
-      seen.add(key);
-    }
-    return selected.slice(0, 24);
-  };
-
-  const selectedItems = isStrictCityCentreItineraryQuery(messages)
-    ? selectStrictItinerary([...exact, ...unknown])
-    : spreadDistrict([...exact, ...unknown]).slice(0, 14);
+  const selectedItems = spreadDistrict([...exact, ...unknown]).slice(0, 14);
   const selected = selectedItems.map(({ place, timeMatch, serviceMatch }) =>
     compactPlace(place, {
       sourceZone: place?._sourceZone || null,
@@ -1438,99 +1338,6 @@ function isComplexSaturdayDayPlanQuery(messages) {
   const culture = /\b(cultural|culture|art|gallery|museum)\b/i.test(context);
   const parking = /\b(parking|road closures?|closures?)\b/i.test(context);
   return plan && saturday && access && food && culture && parking;
-}
-
-function familyBudgetNoCarContext(messages) {
-  if (!Array.isArray(messages)) return '';
-  return messages
-    .filter(m => m?.role === 'user' && typeof m.content === 'string')
-    .slice(-3)
-    .map(m => m.content)
-    .join('\n')
-    .toLowerCase();
-}
-
-function isFamilyBudgetNoCarPlanQuery(messages) {
-  const context = familyBudgetNoCarContext(messages);
-  const family = /\b(child|children|kid|kids|family)\b/i.test(context);
-  const noCar = /\b(no car|without a car|don'?t drive|do not drive|public transport|by bus|by train)\b/i.test(context);
-  const budget = /£\s*\d+(?:[.,]\d{1,2})?|\bbudget\b/i.test(context);
-  const timing = /\b(today|tomorrow|this weekend|weekend|saturday|sunday|afternoon|morning|evening)\b/i.test(context);
-  const activity = /\b(things? to do|something to do|what can (?:we|i) do|day out|outing|suggest|recommend|activity|activities)\b/i.test(context);
-  return family && noCar && budget && timing && activity;
-}
-
-function extractChildAges(messages) {
-  if (!Array.isArray(messages)) return [];
-  const userMessages = messages
-    .filter(m => m?.role === 'user' && typeof m.content === 'string')
-    .map(m => m.content.trim())
-    .filter(Boolean);
-  if (!userMessages.length) return [];
-
-  const plausible = values => values.length >= 2
-    && values.slice(0, 2).every(n => Number.isInteger(n) && n >= 0 && n <= 17);
-
-  const parsePair = text => {
-    const patterns = [
-      /\b(?:ages?|aged)\s*(\d{1,2})\s*(?:and|&|,)\s*(\d{1,2})\b/i,
-      /\b(?:children|kids|they)(?:'re| are| are aged)?\s*(\d{1,2})\s*(?:and|&|,)\s*(\d{1,2})\b/i,
-      /\b(\d{1,2})\s*[- ]?year[- ]?old\b[\s\S]{0,80}\b(\d{1,2})\s*[- ]?year[- ]?old\b/i
-    ];
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (!match) continue;
-      const values = [Number(match[1]), Number(match[2])];
-      if (plausible(values)) return values;
-    }
-    const both = text.match(/\bboth\s+(?:aged?\s*)?(\d{1,2})\b/i);
-    if (both) {
-      const age = Number(both[1]);
-      if (plausible([age, age])) return [age, age];
-    }
-    return [];
-  };
-
-  // Prefer an explicit age phrase anywhere in the recent family-plan context.
-  for (const text of [...userMessages].reverse().slice(0, 4)) {
-    const ages = parsePair(text);
-    if (ages.length) return ages;
-  }
-
-  // A clarification reply is often naturally terse: "Wakefield city centre, 7 and 4".
-  // Only interpret a bare numeric pair as child ages when the immediately preceding
-  // assistant turn explicitly asked for the children's ages. This prevents unrelated
-  // numbers such as budgets, dates or route numbers from being treated as ages.
-  const last = userMessages[userMessages.length - 1];
-  const priorAssistant = recentAssistantContext(messages, 1);
-  const awaitingAges = /children(?:'s|’s)? ages|ages? of (?:the )?(?:children|kids)|need .*ages/i.test(priorAssistant);
-  if (awaitingAges) {
-    const bare = last.match(/(?:^|[,;:]\s*|\s)(\d{1,2})\s*(?:and|&|,)\s*(\d{1,2})(?:\s|$)/i);
-    if (bare) {
-      const values = [Number(bare[1]), Number(bare[2])];
-      if (plausible(values)) return values;
-    }
-  }
-
-  return [];
-}
-
-function hasExplicitChildAges(messages) {
-  return extractChildAges(messages).length >= 2;
-}
-
-function familyBudgetAmount(messages) {
-  const context = familyBudgetNoCarContext(messages);
-  const match = context.match(/£\s*(\d+(?:[.,]\d{1,2})?)/i);
-  return match ? `£${match[1].replace(',', '.')}` : 'the stated budget';
-}
-
-function familyPlanNeedsClarification(messages) {
-  if (!isFamilyBudgetNoCarPlanQuery(messages)) return null;
-  const missing = [];
-  if (!detectWakefieldArea(messages)) missing.push('starting area');
-  if (!hasExplicitChildAges(messages)) missing.push('children ages');
-  return missing.length ? missing : null;
 }
 
 function isDogFriendlyVenueQuery(messages) {
@@ -1722,7 +1529,6 @@ function shouldUseOpenAIFailsafe(messages, evidence = {}) {
     || isTimedFoodAvailabilityQuery(messages)
     || isRoutePlanningQuery(messages)
     || isWaterAccessQuery(messages)
-    || isFamilyBudgetNoCarPlanQuery(messages)
     || isComplexSaturdayDayPlanQuery(messages)
     || /\b(open now|right now|currently|free|price|cost|ticket|road closures?|parking|wheelchair|step[- ]?free|last train|next train|last bus|next bus)\b/i.test(context);
 }
@@ -1742,8 +1548,6 @@ function openAIDomainsForQuery(messages, evidence = {}) {
     base = ['nhs.uk','midyorks.nhs.uk','boots.com','kingfisherpharmacy.co.uk','pharmacyplushealth.co.uk','pharmacy-express.co.uk','storelocator.asda.com','stores.sainsburys.co.uk'];
   } else if (isCathedralToYspRouteQuery(messages) || isRoutePlanningQuery(messages) || isLiveTransportTimesQuery(messages)) {
     base = ['ysp.org.uk','wymetro.com','nationalrail.co.uk','northernrailway.co.uk','lner.co.uk','westyorks-ca.gov.uk'];
-  } else if (isFamilyBudgetNoCarPlanQuery(messages)) {
-    base = ['experiencewakefield.co.uk','wakefield.gov.uk','wymetro.com','westyorks-ca.gov.uk','ysp.org.uk','hepworthwakefield.org','nationaltrust.org.uk','diggerland.com','tenpin.co.uk','ncm.org.uk'];
   } else if (isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages) || isEventCostFollowUp(messages)) {
     base = ['experiencewakefield.co.uk','wxwakefield.co.uk','wakefieldcathedral.org.uk','hepworthwakefield.org','ysp.org.uk','nationaltrust.org.uk','theatreroyalwakefield.co.uk'];
   } else if (isDogFriendlyVenueQuery(messages) || isDietaryOpenQuery(messages) || isEveningCoffeeDessertQuery(messages) || isTimedFoodAvailabilityQuery(messages)) {
@@ -1888,7 +1692,6 @@ STRICT RULES:
 - For transport, do not assemble an unverified multi-leg route. Prefer the direct official route if one is verified.
 - For transport, do not use words such as nearest/closest for a boarding stop unless that ranking is verified. Say to use the current journey planner to identify the correct boarding stop.
 - For complex itineraries, do not invent walking minutes, distance, terrain, a "natural loop", or claims that all venues are independent/child-friendly unless each claim is directly supported. If the independent-coffee requirement is explicit, only use a café explicitly described as independent to satisfy it.
-- For family + budget + no-car plans, treat date/daypart, child-age suitability, total budget and public transport as hard filters. Check the arithmetic. Do not derive a family total from a per-person 'from' price unless ages and party composition are known. FINAL VERIFIED-FIT RULE: return ONLY options for which all four hard checks are supported by current trusted evidence: (1) requested date/daypart, (2) suitability for the known child ages, (3) total admission/activity cost for the known party within budget, and (4) a workable public-transport basis from the stated starting area. If any one of those remains unknown, omit that venue entirely rather than naming it as an alternative, possible option, 'if budget stretches' choice, or something the user should check. One fully verified option is better than several partially verified ones.
 - Avoid promotional flourishes such as "proper Yorkshire quality". Keep verified facts separate from opinion.
 - If an exact property/service lookup cannot be completed, ask for or direct to the minimum official lookup rather than inventing the result.
 - If one part of a multi-part question cannot be verified, answer the verified parts and clearly mark the unresolved part instead of failing the whole response.
@@ -1964,7 +1767,6 @@ function needsLiveSearch(messages) {
   if (isTimedFoodAvailabilityQuery(messages)) return true;
   if (isRoutePlanningQuery(messages)) return true;
   if (isWaterAccessQuery(messages)) return true;
-  if (isFamilyBudgetNoCarPlanQuery(messages)) return true;
 
   const liveTerms = /\b(today|tonight|tomorrow|this week|this weekend|weekend|next saturday|next sunday|right now|currently|current|latest|live|open now|open today|open tonight|open tomorrow|is .* open|closed|close[sd]?|opening days?|opening hours?|closing time|what'?s on|wots on|happening|events?|parade|tickets?|prices?|price|costs?|cost|admission|entry fee|road closures?|traffic|last train|first train|train times?|bus times?|timetable|delays?|cancelled|availability|school holidays?|term dates?|tram|route|directions|journey|travel|planning permission|permitted development|building regulations?|two[- ]storey|extension|michelin|bib gourmand|parking|free parking|bins?|bin collection|collection day|collection date|running club|run club|parkrun|wheelchair|accessibility|step[- ]?free|tk\s?maxx?|store|shop|canoe|canoeing|kayak|kayaking|paddleboard|paddleboarding|water sports?|watersports|canal|swim|swimming)\b/i;
   if (liveTerms.test(context)) return true;
@@ -1996,7 +1798,6 @@ function requiresVerifiedSource(messages) {
   if (isTimedFoodAvailabilityQuery(messages)) return true;
   if (isRoutePlanningQuery(messages)) return true;
   if (isWaterAccessQuery(messages)) return true;
-  if (isFamilyBudgetNoCarPlanQuery(messages)) return true;
   return /\b(last train|first train|train times?|bus times?|timetable|delays?|cancelled|road closures?|planning permission|permitted development|building regulations?|open now|right now|currently|current|open (today|tonight|tomorrow)|is .* open|closed|opening hours?|what'?s on|wots on|happening|this weekend|weekend|michelin|bib gourmand|parking|free parking|canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|tk\s?maxx?|admission|entry fee|price|cost)\b/i.test(context);
 }
 
@@ -3286,59 +3087,6 @@ async function fetchSimpleFirstPartyContext(url, title) {
   }
 }
 
-
-async function fetchCityCentreShoppingDirectoryContext(messages) {
-  if (!isStrictCityCentreItineraryQuery(messages)) return null;
-  const [trinity, ridings] = await Promise.all([
-    fetchSimpleFirstPartyContext(
-      'https://trinitywalk.com/whats-here/?_stores=food-drink',
-      'Trinity Walk official Food & Drink directory'
-    ),
-    fetchSimpleFirstPartyContext(
-      'https://www.ridingscentre.com/shop-with-us/fooddrink/',
-      'The Ridings official Food & Drink directory'
-    )
-  ]);
-  if (!trinity && !ridings) return null;
-  return { trinity, ridings };
-}
-
-function buildCityCentreShoppingDirectoryDirectContext(context) {
-  if (!context) return '';
-  const parts = [];
-  if (context.trinity?.text) {
-    parts.push(`TRINITY WALK — OFFICIAL CURRENT FOOD & DRINK DIRECTORY:
-${String(context.trinity.text).slice(0, 5200)}`);
-  }
-  if (context.ridings?.text) {
-    parts.push(`THE RIDINGS — OFFICIAL CURRENT FOOD & DRINK DIRECTORY:
-${String(context.ridings.text).slice(0, 5200)}`);
-  }
-  if (!parts.length) return '';
-  return `
-
-CITY-CENTRE SHOPPING-CENTRE DISCOVERY:
-${parts.join('\n\n---\n\n')}
-
-DIRECTORY RULES:
-- Directory membership is discovery evidence that a venue is listed by that centre; it does NOT by itself prove the individual tenant is open at the requested time.
-- Use the exact tenant name. Verify the individual venue with Google Places or its own current page before stating opening hours or a live operational claim.
-- Do not invent a tenant, address, menu, price or facility that the directory does not show.`;
-}
-
-function buildPlacesCandidateContextForGoogle(context) {
-  if (!context?.places?.length) return '';
-  return `
-GOOGLE PLACES CANDIDATE CARDS:
-${context.places.map((place, index) => [
-    `${index + 1}. ${place.name}`,
-    `Address: ${place.address}`,
-    place.primaryType ? `Type: ${place.primaryType}` : '',
-    place.discoveryBuckets?.length ? `Discovery buckets: ${place.discoveryBuckets.join(', ')}` : '',
-    place.businessStatus ? `Business status: ${place.businessStatus}` : '',
-    place.websiteUri ? `Website: ${place.websiteUri}` : ''
-  ].filter(Boolean).join('\n')).join('\n\n')}`;
-}
 
 async function fetchNamedEventFirstPartyContexts(messages) {
   if (!isNamedEventDetailQuery(messages)) return { parade: null, festival: null };
@@ -4728,44 +4476,6 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
     .trim();
 }
 
-
-function deterministicallySanitiseFamilyBudgetNoCarAnswer(reply, messages) {
-  if (!reply || !isFamilyBudgetNoCarPlanQuery(messages)) return reply;
-
-  const uncertainty = /\b(?:couldn'?t verify|could not verify|haven'?t verified|have not verified|not verified|unverified|needs? checking|need to check|would need to check|you(?:'|’)d need to check|check (?:the |it |their |current )?[^.]{0,100}\bconfirm|if (?:the |your )?budget stretches|if (?:the |your )?budget allows|possible candidate|possible option|might fit|may fit|route still needs|price still needs|cost still needs|fare still needs|exact route .*check|worth checking)\b/i;
-  const unresolvedHeading = /^\s*(?:alternative|other option|possible option|possible candidate|if (?:the |your )?budget stretches)\b/i;
-  const genericResearchHeading = /^\s*(?:getting there|transport|other candidates|other options)\s*(?::|-)?\s*$/i;
-
-  const rawBlocks = String(reply).split(/\n\s*\n/).map(block => block.trim()).filter(Boolean);
-  const kept = [];
-
-  for (const block of rawBlocks) {
-    if (unresolvedHeading.test(block) || uncertainty.test(block)) {
-      // If the immediately preceding block is only a short research/alternative
-      // heading, remove that too so the final answer cannot leave an orphaned
-      // section after an unverified candidate is filtered out.
-      if (kept.length && (unresolvedHeading.test(kept[kept.length - 1]) || genericResearchHeading.test(kept[kept.length - 1]))) {
-        kept.pop();
-      }
-      continue;
-    }
-    kept.push(block);
-  }
-
-  // A short generic transport heading can become orphaned after the candidate
-  // beneath it is removed. Drop it rather than leaving an unfinished section.
-  const cleaned = kept.filter((block, index) => {
-    if (!genericResearchHeading.test(block)) return true;
-    const next = kept[index + 1] || '';
-    return Boolean(next) && /\b(bus|train|walk|station|stop|route|transport)\b/i.test(next);
-  });
-
-  return cleaned.join('\n\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/\s+([,.!?])/g, '$1')
-    .trim();
-}
-
 export default async function handler(req, res) {
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
@@ -4787,25 +4497,7 @@ export default async function handler(req, res) {
   const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
   const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
-  const curatedKnowledgeDirectContext =
-    buildCuratedKnowledgeContext(familyBudgetNoCarContext(messages) || lastUserText(messages));
-
-  const familyPlanMissing = familyPlanNeedsClarification(messages);
-  if (familyPlanMissing) {
-    const needsArea = familyPlanMissing.includes('starting area');
-    const needsAges = familyPlanMissing.includes('children ages');
-    const detailText = needsArea && needsAges
-      ? 'where in the Wakefield district you are starting from, and the children\'s ages'
-      : (needsArea ? 'where in the Wakefield district you are starting from' : 'the children\'s ages');
-    return res.status(200).json({
-      reply: `I can narrow this properly, but because “no car” and ${familyBudgetAmount(messages)} are hard constraints, I need ${detailText} before I recommend paid options. I can use Experience Wakefield's family and public-transport guides to shortlist candidates, but I will not guess a route or child ticket price. For example: “Wakefield city centre; ages 8 and 11.”`,
-      sources: [],
-      live: false,
-      verification: 'family-plan-needs-details',
-      state: clientState
-    });
-  }
-
+  const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages));
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
@@ -4921,7 +4613,7 @@ export default async function handler(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, userUrlContext, cityCentreShoppingDirectoryContext] = await Promise.all([
+  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
     fetchAccessibilityFirstPartyContexts(messages),
     fetchRunningFirstPartyContexts(messages),
@@ -4930,19 +4622,8 @@ export default async function handler(req, res) {
     fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
     fetchWakefieldDistrictPlacesContext(messages),
-    fetchTrustedUserUrlContext(messages),
-    fetchCityCentreShoppingDirectoryContext(messages)
+    fetchTrustedUserUrlContext(messages)
   ]);
-
-  const entityIntegrityDirectContext = buildEntityIntegrityContext({
-    messages,
-    placesContext: districtPlacesContext
-  });
-  const cityCentreShoppingDirectoryDirectContext = buildCityCentreShoppingDirectoryDirectContext(cityCentreShoppingDirectoryContext);
-  const googleGroundedVerification = await buildGoogleGroundedVerificationContext({
-    messages,
-    curatedContext: `${buildPlacesCandidateContextForGoogle(districtPlacesContext)}${cityCentreShoppingDirectoryDirectContext}${entityIntegrityDirectContext}${curatedKnowledgeDirectContext}`
-  });
 
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
@@ -5008,7 +4689,7 @@ export default async function handler(req, res) {
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
-    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isFamilyBudgetNoCarPlanQuery(messages));
+    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
 
   if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
     console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
@@ -5018,13 +4699,6 @@ export default async function handler(req, res) {
   }
   if (hasDistrictPlacesEvidence) {
     console.info(`Google Places district discovery: ${districtPlacesContext.places.length} candidates (${districtPlacesContext.scope}).`);
-    if (isStrictCityCentreItineraryQuery(messages)) {
-      const bucketCounts = {};
-      for (const place of districtPlacesContext.places) {
-        for (const bucket of place.discoveryBuckets || []) bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1;
-      }
-      console.info(`[city-centre-discovery] total=${districtPlacesContext.places.length} buckets=${JSON.stringify(bucketCounts)}`);
-    }
   }
 
   const wxDirectContext = wxContext
@@ -5074,24 +4748,6 @@ ${cathedralContext.text}`
 
   const complexPlanContext = isComplexSaturdayDayPlanQuery(messages)
     ? `\n\nCOMPLEX SATURDAY DAY-PLAN MODE: Build the smallest useful plan from the supplied first-party venue evidence. The user needs wheelchair access, independent coffee, culture, lunch and parking/closure awareness. Treat independent as a hard constraint for the coffee stop: use only a café explicitly described in first-party evidence as independent; do not infer independence from local branding or support for independent suppliers. Do not abandon the answer because one element cannot be guaranteed. If no current official road-closure evidence proves a car park is unaffected, say clearly that closure-free parking cannot be guaranteed and continue with the verified coffee/culture/lunch plan. Never claim the route between venues is step-free unless verified. Never invent walking minutes, distance, terrain, a natural loop, or that every stop is child-friendly.`
-    : '';
-
-
-  const familyBudgetNoCarDirectContext = isFamilyBudgetNoCarPlanQuery(messages)
-    ? `\n\nFAMILY BUDGET + NO-CAR PLAN MODE:
-This is a constrained planning request, not a generic attractions list. Treat the user's date/daypart, no-car requirement and total budget as HARD FILTERS.
-- Resolve the requested day to the exact date using the server-supplied RELATIVE DATE MAP and state that date once.
-- The curated Experience Wakefield layer is DISCOVERY ONLY. It can nominate candidates, but it cannot prove current opening, Saturday availability, current price, child pricing, transport or route feasibility.
-- A FINAL recommendation may be presented as fitting the brief only when current trusted evidence supports: (1) available/open during the requested daypart, (2) suitable for children, (3) total known admission/activity cost is within the stated budget for the known party/ages, and (4) a workable public-transport basis from the user's stated starting area.
-- Do not calculate a family total from a per-person 'from' price unless the exact party composition and relevant age bands are known. Never write arithmetic such as '£25.95 each, so a family of three is £30–£35'.
-- Do not use parking, included parking or driving convenience as evidence for a no-car user.
-- 'Accessible by public transport' is not enough for a route claim. Use current official bus/train evidence for the relevant origin and destination, or say the exact route still needs checking.
-- Do not invent or relocate an attraction. Keep venue identity and locality tied to the exact source record.
-- FINAL VERIFIED-FIT FILTER: do not name a candidate in the recommendation list unless ALL four hard checks are verified for that exact option: requested date/daypart, suitability for the known child ages, total admission/activity cost for the known party within budget, and a workable public-transport basis from the stated starting area.
-- If even one hard check remains unknown, OMIT that candidate entirely from the user-facing recommendations. Do not include an 'alternative', 'possible candidate', 'if the budget stretches', 'worth checking' or 'you could check' section naming it. The user asked for recommendations, not a research backlog.
-- Prefer 2–3 verified fits over a longer list. If only one option is fully verified, give one. If none are fully verified, say that plainly and explain which hard check prevented a safe recommendation without padding the answer with unverified venues.
-- Never soften a budget breach. If the verified total exceeds the user's budget, exclude it from the main recommendations.
-- If transport cannot be fully verified because the exact starting point is still too broad, say so rather than inventing a journey.`
     : '';
 
   const namedEventFirstPartyDirectContext = (namedEventContexts?.parade?.text || namedEventContexts?.festival?.text)
@@ -5204,7 +4860,6 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
         `${index + 1}. ${place.name}`,
         `Address: ${place.address}`,
         place.primaryType ? `Type: ${place.primaryType}` : '',
-        place.discoveryBuckets?.length ? `Discovery buckets: ${place.discoveryBuckets.join(', ')}` : '',
         typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
         place.weekdayDescriptions?.length ? `Published hours: ${place.weekdayDescriptions.join(' | ')}` : '',
         place.websiteUri ? `Website: ${place.websiteUri}` : '',
@@ -5234,11 +4889,9 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const googleGroundedDirectContext = googleGroundedVerification?.context || '';
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}`;
 
-  const directContext = `${curatedKnowledgeDirectContext}${entityIntegrityDirectContext}${cityCentreShoppingDirectoryDirectContext}${googleGroundedDirectContext}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${familyBudgetNoCarDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
-
-  const liveOutputContract = (useSearch || googleGroundedVerification || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
+  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
     : '';
 
@@ -5253,7 +4906,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     baseBody.tools = [{
       type: 'web_search_20250305',
       name: 'web_search',
-      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || isFamilyBudgetNoCarPlanQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
+      max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
       allowed_domains: TRUSTED_DOMAINS,
       user_location: {
         type: 'approximate',
@@ -5310,13 +4963,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     for (const source of districtPlacesContext?.sources || []) {
       if (source?.url) mergedSourceMap.set(source.url, source);
     }
-    for (const shoppingContext of [cityCentreShoppingDirectoryContext?.trinity, cityCentreShoppingDirectoryContext?.ridings]) {
-      if (shoppingContext?.source?.url) mergedSourceMap.set(shoppingContext.source.url, shoppingContext.source);
-    }
     for (const source of userUrlContext?.sources || []) {
-      if (source?.url) mergedSourceMap.set(source.url, source);
-    }
-    for (const source of googleGroundedVerification?.sources || []) {
       if (source?.url) mergedSourceMap.set(source.url, source);
     }
     for (const source of sources) {
@@ -5324,7 +4971,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }
     const mergedSources = Array.from(mergedSourceMap.values()).slice(0, 5);
 
-    const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, eventDetailContexts, searchEvidence, googleGroundedVerification };
+    const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, eventDetailContexts, searchEvidence };
 
     if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages) && !(FULL_ANSWER_OPENAI_VERIFY_ENABLED && shouldUseOpenAIFailsafe(messages, reliabilityEvidence))) {
       return res.status(200).json({
@@ -5389,23 +5036,17 @@ Use these only to establish whether a long-running attraction/exhibition is actu
           ? reliabilityValidatedReply
           : await validateFoodAnswer(reliabilityValidatedReply, messages));
 
-    const primarySafeReply = deterministicallySanitiseEntityIntegrityAnswer(
-      deterministicallySanitiseFamilyBudgetNoCarAnswer(
-        stripInternalProcessLeakage(
-          deterministicallySanitiseComplexPlan(
-            deterministicallySanitiseApproximateLocation(
-              deterministicallySanitiseRouteAnswer(
-                deterministicallySanitiseFoodAnswer(validatedReply, messages),
-                messages
-              ),
-              messages
-            ),
+    const primarySafeReply = stripInternalProcessLeakage(
+      deterministicallySanitiseComplexPlan(
+        deterministicallySanitiseApproximateLocation(
+          deterministicallySanitiseRouteAnswer(
+            deterministicallySanitiseFoodAnswer(validatedReply, messages),
             messages
-          )
+          ),
+          messages
         ),
         messages
-      ),
-      messages
+      )
     );
 
     const openAIResult = openAIFailsafe
@@ -5429,34 +5070,28 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     let finalReply = openAIFailsafe ? (openAIResult?.reply || verificationFallback(messages)) : primarySafeReply;
     // Deterministic safety rules always get the last word, whichever model
     // produced the prose.
-    finalReply = deterministicallySanitiseEntityIntegrityAnswer(
-      deterministicallySanitiseFamilyBudgetNoCarAnswer(
-        stripInternalProcessLeakage(
-          deterministicallySanitiseComplexPlan(
-            deterministicallySanitiseApproximateLocation(
-              deterministicallySanitiseRouteAnswer(
-                deterministicallySanitiseFoodAnswer(
-                  deterministicallySanitiseEventAnswer(finalReply, messages, {
-                    wxContext,
-                    experienceEventsContext,
-                    cathedralContext,
-                    namedEventContexts,
-                    freeVenueContexts,
-                    eventDetailContexts,
-                    searchEvidence
-                  }),
-                  messages
-                ),
-                messages
-              ),
+    finalReply = stripInternalProcessLeakage(
+      deterministicallySanitiseComplexPlan(
+        deterministicallySanitiseApproximateLocation(
+          deterministicallySanitiseRouteAnswer(
+            deterministicallySanitiseFoodAnswer(
+              deterministicallySanitiseEventAnswer(finalReply, messages, {
+                wxContext,
+                experienceEventsContext,
+                cathedralContext,
+                namedEventContexts,
+                freeVenueContexts,
+                eventDetailContexts,
+                searchEvidence
+              }),
               messages
             ),
             messages
-          )
+          ),
+          messages
         ),
         messages
-      ),
-      messages
+      )
     );
 
     const deterministicFreeFollowUp = buildDeterministicFreeFollowUpAnswer(messages, { eventDetailContexts });
@@ -5482,8 +5117,8 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     return res.status(200).json({
       reply: finaliseUserFacingReply(finalReply || "I'm sorry, I couldn't generate a response. Please try again."),
       sources: finalSources,
-      live: searched || Boolean(googleGroundedVerification) || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
-      verification: openAIResult?.verified ? 'dual-source' : (googleGroundedVerification ? 'primary+google-grounding' : (LEGACY_LLM_VALIDATORS_ENABLED ? 'primary+legacy-validator' : 'primary')),
+      live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
+      verification: openAIResult?.verified ? 'dual-source' : (LEGACY_LLM_VALIDATORS_ENABLED ? 'primary+legacy-validator' : 'primary'),
       state: responseState
     });
   } catch (error) {

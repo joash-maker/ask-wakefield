@@ -3318,11 +3318,7 @@ ${String(context.ridings.text).slice(0, 5200)}`);
   return `
 
 CITY-CENTRE SHOPPING-CENTRE DISCOVERY:
-${parts.join('
-
----
-
-')}
+${parts.join('\n\n---\n\n')}
 
 DIRECTORY RULES:
 - Directory membership is discovery evidence that a venue is listed by that centre; it does NOT by itself prove the individual tenant is open at the requested time.

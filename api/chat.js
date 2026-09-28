@@ -1790,7 +1790,7 @@ STRICT RULES:
 - For transport, do not assemble an unverified multi-leg route. Prefer the direct official route if one is verified.
 - For transport, do not use words such as nearest/closest for a boarding stop unless that ranking is verified. Say to use the current journey planner to identify the correct boarding stop.
 - For complex itineraries, do not invent walking minutes, distance, terrain, a "natural loop", or claims that all venues are independent/child-friendly unless each claim is directly supported. If the independent-coffee requirement is explicit, only use a café explicitly described as independent to satisfy it.
-- For family + budget + no-car plans, treat date/daypart, total budget and public transport as hard filters. Check the arithmetic. Do not derive a family total from a per-person 'from' price unless ages and party composition are known. Do not call a venue a confirmed fit when the route or total cost is unverified.
+- For family + budget + no-car plans, treat date/daypart, child-age suitability, total budget and public transport as hard filters. Check the arithmetic. Do not derive a family total from a per-person 'from' price unless ages and party composition are known. FINAL VERIFIED-FIT RULE: return ONLY options for which all four hard checks are supported by current trusted evidence: (1) requested date/daypart, (2) suitability for the known child ages, (3) total admission/activity cost for the known party within budget, and (4) a workable public-transport basis from the stated starting area. If any one of those remains unknown, omit that venue entirely rather than naming it as an alternative, possible option, 'if budget stretches' choice, or something the user should check. One fully verified option is better than several partially verified ones.
 - Avoid promotional flourishes such as "proper Yorkshire quality". Keep verified facts separate from opinion.
 - If an exact property/service lookup cannot be completed, ask for or direct to the minimum official lookup rather than inventing the result.
 - If one part of a multi-part question cannot be verified, answer the verified parts and clearly mark the unresolved part instead of failing the whole response.
@@ -4577,6 +4577,44 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
     .trim();
 }
 
+
+function deterministicallySanitiseFamilyBudgetNoCarAnswer(reply, messages) {
+  if (!reply || !isFamilyBudgetNoCarPlanQuery(messages)) return reply;
+
+  const uncertainty = /\b(?:couldn'?t verify|could not verify|haven'?t verified|have not verified|not verified|unverified|needs? checking|need to check|would need to check|you(?:'|’)d need to check|check (?:the |it |their |current )?[^.]{0,100}\bconfirm|if (?:the |your )?budget stretches|if (?:the |your )?budget allows|possible candidate|possible option|might fit|may fit|route still needs|price still needs|cost still needs|fare still needs|exact route .*check|worth checking)\b/i;
+  const unresolvedHeading = /^\s*(?:alternative|other option|possible option|possible candidate|if (?:the |your )?budget stretches)\b/i;
+  const genericResearchHeading = /^\s*(?:getting there|transport|other candidates|other options)\s*(?::|-)?\s*$/i;
+
+  const rawBlocks = String(reply).split(/\n\s*\n/).map(block => block.trim()).filter(Boolean);
+  const kept = [];
+
+  for (const block of rawBlocks) {
+    if (unresolvedHeading.test(block) || uncertainty.test(block)) {
+      // If the immediately preceding block is only a short research/alternative
+      // heading, remove that too so the final answer cannot leave an orphaned
+      // section after an unverified candidate is filtered out.
+      if (kept.length && (unresolvedHeading.test(kept[kept.length - 1]) || genericResearchHeading.test(kept[kept.length - 1]))) {
+        kept.pop();
+      }
+      continue;
+    }
+    kept.push(block);
+  }
+
+  // A short generic transport heading can become orphaned after the candidate
+  // beneath it is removed. Drop it rather than leaving an unfinished section.
+  const cleaned = kept.filter((block, index) => {
+    if (!genericResearchHeading.test(block)) return true;
+    const next = kept[index + 1] || '';
+    return Boolean(next) && /\b(bus|train|walk|station|stop|route|transport)\b/i.test(next);
+  });
+
+  return cleaned.join('\n\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s+([,.!?])/g, '$1')
+    .trim();
+}
+
 export default async function handler(req, res) {
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
@@ -4880,8 +4918,9 @@ This is a constrained planning request, not a generic attractions list. Treat th
 - Do not use parking, included parking or driving convenience as evidence for a no-car user.
 - 'Accessible by public transport' is not enough for a route claim. Use current official bus/train evidence for the relevant origin and destination, or say the exact route still needs checking.
 - Do not invent or relocate an attraction. Keep venue identity and locality tied to the exact source record.
-- If a candidate is promising but one hard constraint remains unverified, label it as a possible candidate and say exactly what is unverified; do not present it as a confirmed fit.
-- Prefer 2–3 verified fits over a longer list. If only one option is fully verified, give one.
+- FINAL VERIFIED-FIT FILTER: do not name a candidate in the recommendation list unless ALL four hard checks are verified for that exact option: requested date/daypart, suitability for the known child ages, total admission/activity cost for the known party within budget, and a workable public-transport basis from the stated starting area.
+- If even one hard check remains unknown, OMIT that candidate entirely from the user-facing recommendations. Do not include an 'alternative', 'possible candidate', 'if the budget stretches', 'worth checking' or 'you could check' section naming it. The user asked for recommendations, not a research backlog.
+- Prefer 2–3 verified fits over a longer list. If only one option is fully verified, give one. If none are fully verified, say that plainly and explain which hard check prevented a safe recommendation without padding the answer with unverified venues.
 - Never soften a budget breach. If the verified total exceeds the user's budget, exclude it from the main recommendations.
 - If transport cannot be fully verified because the exact starting point is still too broad, say so rather than inventing a journey.`
     : '';
@@ -5172,17 +5211,20 @@ Use these only to establish whether a long-running attraction/exhibition is actu
           ? reliabilityValidatedReply
           : await validateFoodAnswer(reliabilityValidatedReply, messages));
 
-    const primarySafeReply = stripInternalProcessLeakage(
-      deterministicallySanitiseComplexPlan(
-        deterministicallySanitiseApproximateLocation(
-          deterministicallySanitiseRouteAnswer(
-            deterministicallySanitiseFoodAnswer(validatedReply, messages),
+    const primarySafeReply = deterministicallySanitiseFamilyBudgetNoCarAnswer(
+      stripInternalProcessLeakage(
+        deterministicallySanitiseComplexPlan(
+          deterministicallySanitiseApproximateLocation(
+            deterministicallySanitiseRouteAnswer(
+              deterministicallySanitiseFoodAnswer(validatedReply, messages),
+              messages
+            ),
             messages
           ),
           messages
-        ),
-        messages
-      )
+        )
+      ),
+      messages
     );
 
     const openAIResult = openAIFailsafe
@@ -5206,28 +5248,31 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     let finalReply = openAIFailsafe ? (openAIResult?.reply || verificationFallback(messages)) : primarySafeReply;
     // Deterministic safety rules always get the last word, whichever model
     // produced the prose.
-    finalReply = stripInternalProcessLeakage(
-      deterministicallySanitiseComplexPlan(
-        deterministicallySanitiseApproximateLocation(
-          deterministicallySanitiseRouteAnswer(
-            deterministicallySanitiseFoodAnswer(
-              deterministicallySanitiseEventAnswer(finalReply, messages, {
-                wxContext,
-                experienceEventsContext,
-                cathedralContext,
-                namedEventContexts,
-                freeVenueContexts,
-                eventDetailContexts,
-                searchEvidence
-              }),
+    finalReply = deterministicallySanitiseFamilyBudgetNoCarAnswer(
+      stripInternalProcessLeakage(
+        deterministicallySanitiseComplexPlan(
+          deterministicallySanitiseApproximateLocation(
+            deterministicallySanitiseRouteAnswer(
+              deterministicallySanitiseFoodAnswer(
+                deterministicallySanitiseEventAnswer(finalReply, messages, {
+                  wxContext,
+                  experienceEventsContext,
+                  cathedralContext,
+                  namedEventContexts,
+                  freeVenueContexts,
+                  eventDetailContexts,
+                  searchEvidence
+                }),
+                messages
+              ),
               messages
             ),
             messages
           ),
           messages
-        ),
-        messages
-      )
+        )
+      ),
+      messages
     );
 
     const deterministicFreeFollowUp = buildDeterministicFreeFollowUpAnswer(messages, { eventDetailContexts });

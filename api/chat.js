@@ -1,4 +1,6 @@
 import { buildCuratedKnowledgeContext } from '../lib/experience-wakefield-knowledge-v1.js';
+import { buildGoogleGroundedVerificationContext } from '../lib/google-grounded-verifier-v1.js';
+import { buildEntityIntegrityContext, deterministicallySanitiseEntityIntegrityAnswer, isStrictCityCentreItineraryQuery } from '../lib/entity-integrity-v1.js';
 
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
@@ -30,6 +32,7 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - Direct people to official sources for legal, binding, eligibility or safety-critical matters.
 - Never invent current facts, opening times, prices, event dates, transport times, closures, deadlines, availability or eligibility rules.
 - **EVIDENCE HIERARCHY:** For changing/local facts, prefer sources in this order: (1) Wakefield Council and other official public bodies, (2) Experience Wakefield and official event/venue pages, (3) the official website of the named venue, club or organisation, (4) trusted transport/mapping/event sources, then (5) other reputable sources only when a primary source does not answer the question.
+- **ENTITY FACT LOCK:** Treat each place as a canonical entity. A name, address, locality, opening time, price, facility, tenant relationship or programme may only be stated for the exact entity whose evidence supports it. Never move a street, postcode, town, opening time, facility or descriptive fact from one venue to another. If the entity cannot be resolved confidently, omit the fact or the venue.
 - **NO PLAUSIBLE GUESSING:** A fluent answer is not more important than a correct one. Never fill a missing fact with a likely postcode, likely time, typical schedule, assumed route or nearby-looking alternative. Clearly separate VERIFIED FACTS, reasonable ALTERNATIVES and UNVERIFIED details in the wording without using those labels mechanically.
 - **MULTI-PART COMPLETENESS:** Before answering, identify every distinct part of the user's question. Answer each part, mark it as unverified, or ask for the one piece of information needed. Never silently replace an unanswered part with a different activity, day, place or service.
 - **APPROXIMATE LOCATION IS NOT AN ADDRESS:** Words such as "near", "close to", "around", "by" and "staying near" do not identify an exact property, postcode or collection schedule. Never convert a landmark into the user's address. If a property-specific service needs an address, ask only for the minimum required detail while still answering any other parts of the question.
@@ -159,7 +162,7 @@ FOOD & DRINK — CURATED WAKEFIELD DISCOVERY POOL:
 Use this as stable candidate knowledge, not as a live ranking. Do not repeat ratings, review quotes, "best" claims or changing opening hours from discovery sources. Match venues to the user's job, area and service style. Current opening, branch presence, menu, prices and availability should be verified when they matter.
 
 **Wakefield city centre / central Wakefield:**
-- **KRA:FT Wakefield**, 14 Wood Street — coffee shop / light food; useful for coffee and informal daytime food.
+- **KRA:FT Wakefield**, 12 Wood Street — coffee shop / light food; useful for coffee and informal daytime food.
 - **Munchiz Wakefield**, 16 Wood Street — fast-food / quick-meal option.
 - **Cafe 19**, 7 Cross Square — cafe; useful for breakfast, lunch, sandwiches and coffee-style requests.
 - **Create Cafe Wakefield**, Burton Street — community cafe; useful for daytime cafe/lunch requests.
@@ -696,6 +699,7 @@ function isEveningCoffeeDessertQuery(messages) {
 
 function shouldUseDistrictPlaces(messages) {
   if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return false;
+  if (isStrictCityCentreItineraryQuery(messages)) return true;
   if (isPharmacyOpenQuery(messages)) return true;
   if (isEveningCoffeeDessertQuery(messages)) return true;
   if (isCurrentFoodStatusQuery(messages)) return true;
@@ -791,6 +795,23 @@ function requiresIndependentVenue(messages) {
 
 function buildDistrictPlacesSearchSpecs(messages) {
   const context = recentUserContext(messages, 5);
+
+  if (isStrictCityCentreItineraryQuery(messages)) {
+    // Broad discovery, narrow verification: intentionally search across several
+    // hospitality modes and the two city-centre shopping centres before the
+    // entity/geography gates decide what is safe to recommend.
+    return [
+      { textQuery: 'speciality coffee', bucket: 'coffee-speciality', richFields: ['servesCoffee', 'dineIn'], pageSize: 10 },
+      { textQuery: 'cafe coffee', bucket: 'coffee-cafe', richFields: ['servesCoffee', 'dineIn'], pageSize: 12 },
+      { textQuery: 'bakery cafe', bucket: 'bakery', richFields: ['servesCoffee', 'servesDessert', 'dineIn'], pageSize: 8 },
+      { textQuery: 'restaurant lunch cafe', bucket: 'food', richFields: ['servesCoffee', 'dineIn'], pageSize: 10 },
+      { textQuery: 'food drink Trinity Walk Wakefield', bucket: 'trinity-food', richFields: ['servesCoffee', 'servesDessert', 'dineIn'], pageSize: 12 },
+      { textQuery: 'food drink The Ridings Wakefield', bucket: 'ridings-food', richFields: ['servesCoffee', 'servesDessert', 'dineIn'], pageSize: 12 },
+      { textQuery: 'book store', bucket: 'books', includedType: 'book_store', strictTypeFiltering: true, richFields: [], pageSize: 8 },
+      { textQuery: 'art gallery museum', bucket: 'art', richFields: [], pageSize: 8 }
+    ];
+  }
+
   if (isPharmacyOpenQuery(messages)) {
     return [{
       textQuery: 'pharmacy',
@@ -890,6 +911,22 @@ function placeWithinDistrictViewport(place) {
     && lat <= WAKEFIELD_DISTRICT_VIEWPORT.high.latitude
     && lng >= WAKEFIELD_DISTRICT_VIEWPORT.low.longitude
     && lng <= WAKEFIELD_DISTRICT_VIEWPORT.high.longitude;
+}
+
+function distanceMetres(a, b) {
+  const lat1 = Number(a?.latitude);
+  const lon1 = Number(a?.longitude);
+  const lat2 = Number(b?.latitude);
+  const lon2 = Number(b?.longitude);
+  if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return null;
+  const toRad = value => value * Math.PI / 180;
+  const R = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const s1 = Math.sin(dLat / 2);
+  const s2 = Math.sin(dLon / 2);
+  const h = s1 * s1 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * s2 * s2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
 function placeMatchesRequestedScope(place, messages) {
@@ -1029,6 +1066,7 @@ function compactPlace(place, meta = {}) {
     goodForChildren: typeof place?.goodForChildren === 'boolean' ? place.goodForChildren : null,
     accessibilityOptions: place?.accessibilityOptions || null,
     sourceZone: meta.sourceZone || place?._sourceZone || null,
+    discoveryBuckets: Array.isArray(place?._discoveryBuckets) ? place._discoveryBuckets.slice(0, 8) : [],
     serviceVerified: typeof meta.serviceVerified === 'boolean' ? meta.serviceVerified : null,
     timeMatch: typeof meta.timeMatch === 'boolean' ? meta.timeMatch : null
   };
@@ -1152,15 +1190,23 @@ async function googlePlacesAnchorSearch(area) {
 }
 
 function dedupePlaces(places) {
-  const seen = new Set();
-  const out = [];
+  const byKey = new Map();
   for (const place of places || []) {
     const key = place?.id || `${place?.displayName?.text || ''}|${place?.formattedAddress || ''}`.toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(place);
+    if (!key) continue;
+    const incomingBuckets = Array.isArray(place?._discoveryBuckets) ? place._discoveryBuckets : [];
+    if (!byKey.has(key)) {
+      place._discoveryBuckets = [...new Set(incomingBuckets.filter(Boolean))];
+      byKey.set(key, place);
+      continue;
+    }
+    const existing = byKey.get(key);
+    existing._discoveryBuckets = [...new Set([
+      ...(Array.isArray(existing?._discoveryBuckets) ? existing._discoveryBuckets : []),
+      ...incomingBuckets
+    ].filter(Boolean))];
   }
-  return out;
+  return Array.from(byKey.values());
 }
 
 async function fetchWakefieldDistrictPlacesContext(messages) {
@@ -1173,8 +1219,11 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
   const specs = buildDistrictPlacesSearchSpecs(messages);
   const widenExplicitly = /\b(anywhere|across (?:the )?district|whole district|wider district|elsewhere in wakefield)\b/i.test(lastUserText(messages));
 
-  const enrich = (place, sourceZone) => {
+  const enrich = (place, sourceZone, bucket = null) => {
     if (sourceZone && !place._sourceZone) place._sourceZone = sourceZone;
+    if (bucket) {
+      place._discoveryBuckets = [...new Set([...(place._discoveryBuckets || []), bucket])];
+    }
     return place;
   };
 
@@ -1183,7 +1232,7 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
     const label = districtAreaQueryLabel(area);
     const batches = await Promise.all(specs.map(spec => {
       const opts = {
-        pageSize: 12,
+        pageSize: spec.pageSize || 12,
         openNow,
         includedType: spec.includedType || null,
         strictTypeFiltering: Boolean(spec.strictTypeFiltering),
@@ -1199,12 +1248,21 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
         opts.rankPreference = 'DISTANCE';
         opts.districtRestriction = false;
         return googlePlacesTextSearch(spec.textQuery, opts)
-          .then(items => items.map(place => enrich(place, label)));
+          .then(items => items.map(place => enrich(place, label, spec.bucket || null)));
       }
       return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
-        .then(items => items.map(place => enrich(place, label)));
+        .then(items => items.map(place => enrich(place, label, spec.bucket || null)));
     }));
-    return dedupePlaces(batches.flat());
+    const deduped = dedupePlaces(batches.flat());
+    if (isStrictCityCentreItineraryQuery(messages) && anchor?.latitude != null && anchor?.longitude != null) {
+      // Conservative city-centre radius: plans must not leak district-wide
+      // guide members from Horbury, Ossett, Walton or other towns/villages.
+      return deduped.filter(place => {
+        const metres = distanceMetres(anchor, place?.location);
+        return metres == null ? false : metres <= 1800;
+      });
+    }
+    return deduped;
   };
 
   const runZoneSpecs = async (zones, searchSpecs = specs.slice(0, 1), pageSize = 5) => {
@@ -1219,7 +1277,7 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
             includedType: spec.includedType || null,
             strictTypeFiltering: Boolean(spec.strictTypeFiltering),
             richFields: spec.richFields || []
-          }).then(items => items.map(place => enrich(place, zoneLabel)))
+          }).then(items => items.map(place => enrich(place, zoneLabel, spec.bucket || null)))
         );
       }
     }
@@ -1297,7 +1355,47 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
     return out;
   };
 
-  const selectedItems = spreadDistrict([...exact, ...unknown]).slice(0, 14);
+  const selectStrictItinerary = items => {
+    const selected = [];
+    const seen = new Set();
+    const pushFrom = (bucket, limit) => {
+      let added = 0;
+      for (const item of items) {
+        const key = item?.place?.id || `${item?.place?.displayName?.text || ''}|${item?.place?.formattedAddress || ''}`.toLowerCase();
+        const buckets = Array.isArray(item?.place?._discoveryBuckets) ? item.place._discoveryBuckets : [];
+        if (!key || seen.has(key) || !buckets.includes(bucket)) continue;
+        selected.push(item);
+        seen.add(key);
+        added += 1;
+        if (added >= limit) break;
+      }
+    };
+
+    // Hospitality gets the largest share, but force coverage of both shopping
+    // centres plus genuine book/art candidates so one broad coffee query cannot
+    // crowd the other interests out of the prompt.
+    pushFrom('coffee-speciality', 4);
+    pushFrom('coffee-cafe', 4);
+    pushFrom('bakery', 2);
+    pushFrom('food', 2);
+    pushFrom('trinity-food', 3);
+    pushFrom('ridings-food', 3);
+    pushFrom('books', 3);
+    pushFrom('art', 3);
+
+    for (const item of items) {
+      if (selected.length >= 24) break;
+      const key = item?.place?.id || `${item?.place?.displayName?.text || ''}|${item?.place?.formattedAddress || ''}`.toLowerCase();
+      if (!key || seen.has(key)) continue;
+      selected.push(item);
+      seen.add(key);
+    }
+    return selected.slice(0, 24);
+  };
+
+  const selectedItems = isStrictCityCentreItineraryQuery(messages)
+    ? selectStrictItinerary([...exact, ...unknown])
+    : spreadDistrict([...exact, ...unknown]).slice(0, 14);
   const selected = selectedItems.map(({ place, timeMatch, serviceMatch }) =>
     compactPlace(place, {
       sourceZone: place?._sourceZone || null,
@@ -3189,6 +3287,63 @@ async function fetchSimpleFirstPartyContext(url, title) {
 }
 
 
+async function fetchCityCentreShoppingDirectoryContext(messages) {
+  if (!isStrictCityCentreItineraryQuery(messages)) return null;
+  const [trinity, ridings] = await Promise.all([
+    fetchSimpleFirstPartyContext(
+      'https://trinitywalk.com/whats-here/?_stores=food-drink',
+      'Trinity Walk official Food & Drink directory'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://www.ridingscentre.com/shop-with-us/fooddrink/',
+      'The Ridings official Food & Drink directory'
+    )
+  ]);
+  if (!trinity && !ridings) return null;
+  return { trinity, ridings };
+}
+
+function buildCityCentreShoppingDirectoryDirectContext(context) {
+  if (!context) return '';
+  const parts = [];
+  if (context.trinity?.text) {
+    parts.push(`TRINITY WALK — OFFICIAL CURRENT FOOD & DRINK DIRECTORY:
+${String(context.trinity.text).slice(0, 5200)}`);
+  }
+  if (context.ridings?.text) {
+    parts.push(`THE RIDINGS — OFFICIAL CURRENT FOOD & DRINK DIRECTORY:
+${String(context.ridings.text).slice(0, 5200)}`);
+  }
+  if (!parts.length) return '';
+  return `
+
+CITY-CENTRE SHOPPING-CENTRE DISCOVERY:
+${parts.join('
+
+---
+
+')}
+
+DIRECTORY RULES:
+- Directory membership is discovery evidence that a venue is listed by that centre; it does NOT by itself prove the individual tenant is open at the requested time.
+- Use the exact tenant name. Verify the individual venue with Google Places or its own current page before stating opening hours or a live operational claim.
+- Do not invent a tenant, address, menu, price or facility that the directory does not show.`;
+}
+
+function buildPlacesCandidateContextForGoogle(context) {
+  if (!context?.places?.length) return '';
+  return `
+GOOGLE PLACES CANDIDATE CARDS:
+${context.places.map((place, index) => [
+    `${index + 1}. ${place.name}`,
+    `Address: ${place.address}`,
+    place.primaryType ? `Type: ${place.primaryType}` : '',
+    place.discoveryBuckets?.length ? `Discovery buckets: ${place.discoveryBuckets.join(', ')}` : '',
+    place.businessStatus ? `Business status: ${place.businessStatus}` : '',
+    place.websiteUri ? `Website: ${place.websiteUri}` : ''
+  ].filter(Boolean).join('\n')).join('\n\n')}`;
+}
+
 async function fetchNamedEventFirstPartyContexts(messages) {
   if (!isNamedEventDetailQuery(messages)) return { parade: null, festival: null };
 
@@ -4770,7 +4925,7 @@ export default async function handler(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, userUrlContext] = await Promise.all([
+  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, userUrlContext, cityCentreShoppingDirectoryContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
     fetchAccessibilityFirstPartyContexts(messages),
     fetchRunningFirstPartyContexts(messages),
@@ -4779,8 +4934,19 @@ export default async function handler(req, res) {
     fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
     fetchWakefieldDistrictPlacesContext(messages),
-    fetchTrustedUserUrlContext(messages)
+    fetchTrustedUserUrlContext(messages),
+    fetchCityCentreShoppingDirectoryContext(messages)
   ]);
+
+  const entityIntegrityDirectContext = buildEntityIntegrityContext({
+    messages,
+    placesContext: districtPlacesContext
+  });
+  const cityCentreShoppingDirectoryDirectContext = buildCityCentreShoppingDirectoryDirectContext(cityCentreShoppingDirectoryContext);
+  const googleGroundedVerification = await buildGoogleGroundedVerificationContext({
+    messages,
+    curatedContext: `${buildPlacesCandidateContextForGoogle(districtPlacesContext)}${cityCentreShoppingDirectoryDirectContext}${entityIntegrityDirectContext}${curatedKnowledgeDirectContext}`
+  });
 
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
@@ -4856,6 +5022,13 @@ export default async function handler(req, res) {
   }
   if (hasDistrictPlacesEvidence) {
     console.info(`Google Places district discovery: ${districtPlacesContext.places.length} candidates (${districtPlacesContext.scope}).`);
+    if (isStrictCityCentreItineraryQuery(messages)) {
+      const bucketCounts = {};
+      for (const place of districtPlacesContext.places) {
+        for (const bucket of place.discoveryBuckets || []) bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1;
+      }
+      console.info(`[city-centre-discovery] total=${districtPlacesContext.places.length} buckets=${JSON.stringify(bucketCounts)}`);
+    }
   }
 
   const wxDirectContext = wxContext
@@ -5035,6 +5208,7 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
         `${index + 1}. ${place.name}`,
         `Address: ${place.address}`,
         place.primaryType ? `Type: ${place.primaryType}` : '',
+        place.discoveryBuckets?.length ? `Discovery buckets: ${place.discoveryBuckets.join(', ')}` : '',
         typeof place.openNow === 'boolean' ? `Open now: ${place.openNow ? 'yes' : 'no'}` : '',
         place.weekdayDescriptions?.length ? `Published hours: ${place.weekdayDescriptions.join(' | ')}` : '',
         place.websiteUri ? `Website: ${place.websiteUri}` : '',
@@ -5064,9 +5238,11 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${curatedKnowledgeDirectContext}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${familyBudgetNoCarDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
+  const googleGroundedDirectContext = googleGroundedVerification?.context || '';
 
-  const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
+  const directContext = `${curatedKnowledgeDirectContext}${entityIntegrityDirectContext}${cityCentreShoppingDirectoryDirectContext}${googleGroundedDirectContext}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${familyBudgetNoCarDirectContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}`;
+
+  const liveOutputContract = (useSearch || googleGroundedVerification || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
     : '';
 
@@ -5138,7 +5314,13 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     for (const source of districtPlacesContext?.sources || []) {
       if (source?.url) mergedSourceMap.set(source.url, source);
     }
+    for (const shoppingContext of [cityCentreShoppingDirectoryContext?.trinity, cityCentreShoppingDirectoryContext?.ridings]) {
+      if (shoppingContext?.source?.url) mergedSourceMap.set(shoppingContext.source.url, shoppingContext.source);
+    }
     for (const source of userUrlContext?.sources || []) {
+      if (source?.url) mergedSourceMap.set(source.url, source);
+    }
+    for (const source of googleGroundedVerification?.sources || []) {
       if (source?.url) mergedSourceMap.set(source.url, source);
     }
     for (const source of sources) {
@@ -5146,7 +5328,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }
     const mergedSources = Array.from(mergedSourceMap.values()).slice(0, 5);
 
-    const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, eventDetailContexts, searchEvidence };
+    const reliabilityEvidence = { wxContext, experienceEventsContext, cathedralContext, namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, eventDetailContexts, searchEvidence, googleGroundedVerification };
 
     if (requiresVerifiedSource(messages) && mergedSources.length === 0 && !isGeneralRecommendationQuery(messages) && !(FULL_ANSWER_OPENAI_VERIFY_ENABLED && shouldUseOpenAIFailsafe(messages, reliabilityEvidence))) {
       return res.status(200).json({
@@ -5211,18 +5393,21 @@ Use these only to establish whether a long-running attraction/exhibition is actu
           ? reliabilityValidatedReply
           : await validateFoodAnswer(reliabilityValidatedReply, messages));
 
-    const primarySafeReply = deterministicallySanitiseFamilyBudgetNoCarAnswer(
-      stripInternalProcessLeakage(
-        deterministicallySanitiseComplexPlan(
-          deterministicallySanitiseApproximateLocation(
-            deterministicallySanitiseRouteAnswer(
-              deterministicallySanitiseFoodAnswer(validatedReply, messages),
+    const primarySafeReply = deterministicallySanitiseEntityIntegrityAnswer(
+      deterministicallySanitiseFamilyBudgetNoCarAnswer(
+        stripInternalProcessLeakage(
+          deterministicallySanitiseComplexPlan(
+            deterministicallySanitiseApproximateLocation(
+              deterministicallySanitiseRouteAnswer(
+                deterministicallySanitiseFoodAnswer(validatedReply, messages),
+                messages
+              ),
               messages
             ),
             messages
-          ),
-          messages
-        )
+          )
+        ),
+        messages
       ),
       messages
     );
@@ -5248,29 +5433,32 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     let finalReply = openAIFailsafe ? (openAIResult?.reply || verificationFallback(messages)) : primarySafeReply;
     // Deterministic safety rules always get the last word, whichever model
     // produced the prose.
-    finalReply = deterministicallySanitiseFamilyBudgetNoCarAnswer(
-      stripInternalProcessLeakage(
-        deterministicallySanitiseComplexPlan(
-          deterministicallySanitiseApproximateLocation(
-            deterministicallySanitiseRouteAnswer(
-              deterministicallySanitiseFoodAnswer(
-                deterministicallySanitiseEventAnswer(finalReply, messages, {
-                  wxContext,
-                  experienceEventsContext,
-                  cathedralContext,
-                  namedEventContexts,
-                  freeVenueContexts,
-                  eventDetailContexts,
-                  searchEvidence
-                }),
+    finalReply = deterministicallySanitiseEntityIntegrityAnswer(
+      deterministicallySanitiseFamilyBudgetNoCarAnswer(
+        stripInternalProcessLeakage(
+          deterministicallySanitiseComplexPlan(
+            deterministicallySanitiseApproximateLocation(
+              deterministicallySanitiseRouteAnswer(
+                deterministicallySanitiseFoodAnswer(
+                  deterministicallySanitiseEventAnswer(finalReply, messages, {
+                    wxContext,
+                    experienceEventsContext,
+                    cathedralContext,
+                    namedEventContexts,
+                    freeVenueContexts,
+                    eventDetailContexts,
+                    searchEvidence
+                  }),
+                  messages
+                ),
                 messages
               ),
               messages
             ),
             messages
-          ),
-          messages
-        )
+          )
+        ),
+        messages
       ),
       messages
     );
@@ -5298,8 +5486,8 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     return res.status(200).json({
       reply: finaliseUserFacingReply(finalReply || "I'm sorry, I couldn't generate a response. Please try again."),
       sources: finalSources,
-      live: searched || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
-      verification: openAIResult?.verified ? 'dual-source' : (LEGACY_LLM_VALIDATORS_ENABLED ? 'primary+legacy-validator' : 'primary'),
+      live: searched || Boolean(googleGroundedVerification) || Boolean(openAIResult?.verified) || Boolean(wxContext) || Boolean(experienceEventsContext) || Boolean(cathedralContext) || Boolean(userUrlContext) || Boolean(namedEventContexts?.parade) || Boolean(namedEventContexts?.festival) || Object.values(accessibilityContexts || {}).some(Boolean) || Boolean(runningContexts?.harriers) || Boolean(runningContexts?.thornes) || Object.values(foodConstraintContexts || {}).some(Boolean) || Object.values(businessContexts || {}).some(Boolean) || Object.values(routeContexts || {}).some(Boolean) || Boolean(districtPlacesContext?.places?.length) || eventDetailContexts.length > 0 || Boolean(freeVenueContexts?.ysp) || Boolean(freeVenueContexts?.ncm) || Boolean(freeVenueContexts?.wxWeekly),
+      verification: openAIResult?.verified ? 'dual-source' : (googleGroundedVerification ? 'primary+google-grounding' : (LEGACY_LLM_VALIDATORS_ENABLED ? 'primary+legacy-validator' : 'primary')),
       state: responseState
     });
   } catch (error) {

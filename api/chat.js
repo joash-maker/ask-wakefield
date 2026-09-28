@@ -1,4 +1,4 @@
-import { buildTrustedPlacesContext } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, regularHoursFollowUp, undatedCityCentreCoffeeBooksArtPlan } from '../lib/askwakefield-places.js';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -4497,7 +4497,28 @@ export default async function handler(req, res) {
   const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
   const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
-  const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages));
+  const stableCityPlan = undatedCityCentreCoffeeBooksArtPlan(lastUserText(messages));
+  if (stableCityPlan) {
+    return res.status(200).json({
+      reply: stableCityPlan.reply,
+      sources: stableCityPlan.sources.map(url => ({ url, title: 'Venue information' })),
+      live: false,
+      verification: 'curated-itinerary',
+      state: clientState
+    });
+  }
+  const previousAssistant = recentAssistantContext(messages, 1);
+  const publishedHoursFollowUp = regularHoursFollowUp(lastUserText(messages), previousAssistant);
+  if (publishedHoursFollowUp) {
+    return res.status(200).json({
+      reply: publishedHoursFollowUp.reply,
+      sources: publishedHoursFollowUp.sources.map(url => ({ url, title: 'Published venue information' })),
+      live: false,
+      verification: 'published-hours-only',
+      state: clientState
+    });
+  }
+  const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), previousAssistant);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   // V16.2 weekend-events invariant: once the cards-first path is enabled,

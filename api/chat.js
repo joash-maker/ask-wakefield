@@ -2751,10 +2751,54 @@ function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
     for (const card of cards.filter(c => c.dates.includes(date)).slice(0, 4)) add(card);
   }
   for (const card of cards) {
-    if (selected.length >= 8) break;
+    if (selected.length >= 10) break;
     add(card);
   }
-  return { weekend, cards: selected.slice(0, 8) };
+  return { weekend, cards: selected.slice(0, 10) };
+}
+
+// A small dated discovery supplement for the 3–4 October demonstration. Each
+// card is admitted only after its exact official detail page responds and the
+// page's parsed date range covers the weekend. It expires automatically.
+async function verifiedOctoberWeekendSupplementV16(weekend) {
+  if (londonDateLabelToIso(weekend.saturday) !== '2026-10-03') return [];
+  const seeds = [
+    ['Caphouse Tabletop Gaming Day', 'https://experiencewakefield.co.uk/event/caphouse-tabletop-gaming-day/'],
+    ['Pumpkin Picking & Painting', 'https://experiencewakefield.co.uk/event/blackerween/'],
+    ['Farmer Copleys’ Pumpkin Festival', 'https://experiencewakefield.co.uk/event/pumpkin-festival/'],
+    ['Tom Puddings at Stanley Ferry', 'https://experiencewakefield.co.uk/event/tom-puddings-at-stanley-ferry-wakefield-railway-modellers-society/']
+  ];
+  const contexts = await Promise.all(seeds.map(([title, url]) => fetchExperienceEventDetailContext(url, title)));
+  const cards = contexts.flatMap((context, index) => {
+    const card = context?.eventDetailCard;
+    if (!card || !titlesLikelySame(card.title, seeds[index][0])) return [];
+    const canonical = canonicaliseEventCardV16(card);
+    if (!canonical?.startDate || !canonical?.endDate || canonical.startDate > '2026-10-04' || canonical.endDate < '2026-10-03') return [];
+    // The festival lists a daily 10:00–16:00 programme across its date range.
+    // The model railway page gives different Sunday session hours from its
+    // headline, so preserve two dated cards with the exact session times.
+    if (index === 3) {
+      const full = context.fullText || '';
+      if (!/3rd October 2026\s+10:00\s*[-–]\s*17:00/i.test(full) || !/4th October 2026\s+10:30\s*[-–]\s*16:00/i.test(full)) return [];
+      return [
+        { ...canonical, id: `${canonical.id}:sat`, canonId: `${canonical.canonId}:sat`, startDate: '2026-10-03', endDate: '2026-10-03', start: '10:00', end: '17:00' },
+        { ...canonical, id: `${canonical.id}:sun`, canonId: `${canonical.canonId}:sun`, startDate: '2026-10-04', endDate: '2026-10-04', start: '10:30', end: '16:00' }
+      ];
+    }
+    if (index === 2) return [{ ...canonical, startDate: '2026-10-03', endDate: '2026-10-04' }];
+    return [canonical];
+  });
+  const comedyUrl = 'https://www.theatreroyalwakefield.co.uk/events/chuckl-wakefield-ft-reginald-d-hunter-2026';
+  try {
+    const response = await fetch(comedyUrl, { signal: AbortSignal.timeout(5_500) });
+    if (response.ok) {
+      const plain = htmlToPlainText(await response.text());
+      if (/Chuckl\. Wakefield ft\. Reginald D\. Hunter/i.test(plain) && /Saturday 3 October 2026,?\s*19:30/i.test(plain) && /book now/i.test(plain)) {
+        cards.push({ id: 'theatre:chuckl-reginald-hunter:2026-10-03', title: 'Chuckl. Wakefield ft. Reginald D. Hunter', url: comedyUrl, sourceUrl: comedyUrl, source: 'theatre', startDate: '2026-10-03', endDate: '2026-10-03', start: '19:30', venue: 'Theatre Royal Wakefield', priceStatus: 'paid', sourceTier: 'first-party-detail' });
+      }
+    }
+  } catch {}
+  return cards;
 }
 
 function eventTimeLabelV16(card) {
@@ -2800,7 +2844,7 @@ function buildEventStateV16(cards, previous = null, viewIds = null, lastFilter =
 }
 
 async function refreshEventCardsForPriceV16(cards) {
-  const targets = (cards || []).filter(card => isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
+  const targets = (cards || []).filter(card => isSpecificEventDetailUrl(card?.sourceUrl || card?.url) && !/:sat$|:sun$/.test(card.id || '')).slice(0, 8);
   const refreshed = new Map();
   await Promise.all(targets.map(async card => {
     const url = card.sourceUrl || card.url;
@@ -3065,6 +3109,7 @@ async function fetchExperienceEventDetailContext(url, expectedTitle) {
     }
     return {
       text: direct?.detailText || extractRelevantFirstPartyText(text, expectedTitle, 9000),
+      fullText: text,
       eventDetailText: direct?.detailText || null,
       eventDetailCard: direct || null,
       structured,
@@ -4656,7 +4701,8 @@ export default async function handler(req, res) {
   // and persisted BEFORE presentation. If harvesting fails, fail closed here;
   // do not fall through to the legacy prose-first event machinery.
   if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.whats_on' && route.operation === 'new' && /\bweekend\b/i.test(lastUserText(messages)) && !isWeekendPerformanceQuery(messages)) {
-    const collected = collectWeekendEventCardsV16(experienceEventsContext, wxContext);
+    const supplement = await verifiedOctoberWeekendSupplementV16(eventDateState());
+    const collected = collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
     if (!collected.cards.length) {
       return res.status(200).json({
         reply: 'I could not verify a reliable weekend event set from the current official listings just now.',

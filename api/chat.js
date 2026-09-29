@@ -1,5 +1,6 @@
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
+import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -456,51 +457,98 @@ function parseCookieHeader(header) {
   return out;
 }
 
-function encodeStateCookie(state) {
+// V17: conversation state is a signed, compressed token. The server returns it
+// in the JSON body (so cross-origin widgets work without cookies) and also sets
+// it as a same-site cookie. Unsigned or tampered state is ignored, and state
+// older than STATE_MAX_AGE_MS is discarded.
+const STATE_TOKEN_PREFIX = 's3';
+const STATE_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const STATE_TOKEN_MAX_CHARS = 3600;
+
+function stateSigningKey() {
+  if (process.env.STATE_SIGNING_SECRET) return process.env.STATE_SIGNING_SECRET;
+  // Stable across serverless instances without extra setup. Set
+  // STATE_SIGNING_SECRET in production so rotating the API key does not
+  // invalidate live conversations.
+  return createHash('sha256').update(`aw-state-v3:${process.env.ANTHROPIC_API_KEY || 'dev-only'}`).digest('hex');
+}
+
+function signStatePayload(payload) {
+  return createHmac('sha256', stateSigningKey()).update(payload).digest('base64url').slice(0, 32);
+}
+
+function compactStateCard(card) {
+  return {
+    id: card?.id || null,
+    entityType: card?.entityType || null,
+    title: card?.title || card?.name || null,
+    url: card?.sourceUrl || card?.url || null,
+    source: card?.source || null,
+    sourceTier: card?.sourceTier || null,
+    dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
+    startDate: card?.startDate || null,
+    endDate: card?.endDate || null,
+    start: card?.start || card?.startTime || null,
+    end: card?.end || card?.endTime || null,
+    performanceStart: card?.performanceStart || null,
+    venue: card?.venue || null,
+    priceStatus: card?.priceStatus || null,
+    priceRaw: card?.priceRaw || null
+  };
+}
+
+function encodeStateToken(state) {
   try {
-    const compact = {
-      version: 2,
-      lastIntent: state?.lastIntent || null,
-      lastFilter: state?.lastFilter || null,
-      viewIds: (state?.viewIds || []).slice(0, 10),
-      area: state?.area || null,
-      constraints: state?.constraints || null,
-      resultCards: (state?.resultCards || []).slice(0, 10).map(card => ({
-        id: card?.id || null,
-        entityType: card?.entityType || null,
-        title: card?.title || card?.name || null,
-        url: card?.sourceUrl || card?.url || null,
-        source: card?.source || null,
-        sourceTier: card?.sourceTier || null,
-        dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
-        startDate: card?.startDate || null,
-        start: card?.start || card?.startTime || null,
-        end: card?.end || card?.endTime || null,
-        performanceStart: card?.performanceStart || null,
-        venue: card?.venue || null,
-        priceStatus: card?.priceStatus || null
-      }))
-    };
-    const encoded = `z.${deflateRawSync(Buffer.from(JSON.stringify(compact), 'utf8')).toString('base64url')}`;
-    return encoded.length <= 3600 ? encoded : null;
+    for (const maxCards of [10, 8, 6, 4]) {
+      const cards = (state?.resultCards || []).slice(0, maxCards).map(compactStateCard);
+      const kept = new Set(cards.map(card => card.id).filter(Boolean));
+      const compact = {
+        version: 3,
+        iat: Date.now(),
+        lastIntent: state?.lastIntent || null,
+        lastFilter: state?.lastFilter || null,
+        viewIds: (state?.viewIds || []).filter(id => kept.has(id)),
+        area: state?.area || null,
+        constraints: state?.constraints || null,
+        resultCards: cards
+      };
+      const payload = deflateRawSync(Buffer.from(JSON.stringify(compact), 'utf8')).toString('base64url');
+      const token = `${STATE_TOKEN_PREFIX}.${payload}.${signStatePayload(payload)}`;
+      if (token.length <= STATE_TOKEN_MAX_CHARS) return token;
+    }
+    return null;
   } catch { return null; }
 }
 
-function stateFromCookie(req) {
+function decodeStateToken(raw) {
   try {
-    const raw = parseCookieHeader(req.headers?.cookie || '').aw_state;
-    if (!raw) return null;
-    const decoded = JSON.parse(raw.startsWith('z.')
-      ? inflateRawSync(Buffer.from(raw.slice(2), 'base64url'), { maxOutputLength: 30000 }).toString('utf8')
-      : Buffer.from(raw, 'base64url').toString('utf8'));
+    if (typeof raw !== 'string' || raw.length > STATE_TOKEN_MAX_CHARS + 100) return null;
+    const match = raw.match(/^s3\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]{32})$/);
+    if (!match) return null;
+    const expected = Buffer.from(signStatePayload(match[1]));
+    const given = Buffer.from(match[2]);
+    if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
+    const decoded = JSON.parse(inflateRawSync(Buffer.from(match[1], 'base64url'), { maxOutputLength: 30000 }).toString('utf8'));
+    if (!decoded?.iat || Date.now() - Number(decoded.iat) > STATE_MAX_AGE_MS) return null;
     return normaliseClientState(decoded);
   } catch { return null; }
 }
 
+function stateFromCookie(req) {
+  return decodeStateToken(parseCookieHeader(req.headers?.cookie || '').aw_state);
+}
+
 function attachStateCookie(res, state) {
-  const value = encodeStateCookie(state);
-  if (!value) return;
-  res.setHeader('Set-Cookie', `aw_state=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=1800`);
+  const token = encodeStateToken(state);
+  if (!token) {
+    // Never leave an older result set behind: a stale cookie would make the
+    // next "which of those…" filter the wrong list.
+    res.setHeader('Set-Cookie', 'aw_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    res.__awStateToken = '';
+    return;
+  }
+  res.setHeader('Set-Cookie', `aw_state=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=1800`);
+  res.__awStateToken = token;
 }
 
 function normaliseClientState(raw) {
@@ -559,13 +607,10 @@ function classifyRequest(messages, state = null) {
   const context = recentUserContext(messages, 2);
   const refersToPrevious = looksLikeContextDependentFollowUp(last);
   let intent = 'other';
-  const eventSubsetFollowUp = state?.lastIntent?.startsWith('events.')
-    && Array.isArray(state?.resultCards) && state.resultCards.some(card => card?.entityType === 'event')
-    && (/\b(which|what)\b.*\bfree\b|\bfree ones?\b|\bwhat time\b.*\bfree\b|\bwhat time do (?:they|those|these|the ones?)\b|\bwhen do (?:they|those|these|the ones?)\b/i.test(last)
-      || (state?.lastFilter === 'free' && /^(?:\s*(?:what time|when)\s+(?:do\s+)?(?:they|those|these|the events?|the free ones?)\s+(?:start|begin)|\s*(?:start|begin)\s+times?\??\s*$)/i.test(last)));
-  if (eventSubsetFollowUp
-      && hasRecentAssistantAnswer(messages)
-      && (state?.lastIntent?.startsWith('events.') || /\b(events?|what(?:'|’)s on|weekend)\b/i.test(context))) intent = 'events.filter_existing';
+  // V17: one parser decides whether this is an operation on the stored event
+  // list. It refuses messages that bring in a new topic, area or date window.
+  const eventFollowUp = hasRecentAssistantAnswer(messages) ? parseEventFollowUp(last, state) : null;
+  if (eventFollowUp) intent = 'events.filter_existing';
   else if (isCurrentEventsQuery(messages)) intent = 'events.whats_on';
   else if (isPharmacyOpenQuery(messages)) intent = 'pharmacy.open';
   else if (isEveningCoffeeDessertQuery(messages) || isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages)) intent = 'food.open_at';
@@ -577,6 +622,7 @@ function classifyRequest(messages, state = null) {
 
   return {
     intent,
+    eventFollowUp,
     operation: refersToPrevious ? 'refine' : 'new',
     area: detectWakefieldArea(messages) || state?.area || null,
     timeConstraint: requestedPlaceTimeConstraint(messages),
@@ -592,8 +638,7 @@ function allowedOrigins() {
 function applyCors(req, res) {
   const origin = String(req.headers?.origin || '');
   const allowed = allowedOrigins();
-  const vercelPreview = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
-  if (allowed.has(origin) || vercelPreview) res.setHeader('Access-Control-Allow-Origin', origin);
+  if (allowed.has(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
   else if (!origin) res.setHeader('Access-Control-Allow-Origin', 'https://www.askwakefield.co.uk');
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -1893,6 +1938,11 @@ function isWxCurrentEventsQuery(messages) {
 function isCurrentEventsQuery(messages) {
   const context = recentUserContext(messages, 4);
   if (isCurrentFoodStatusQuery(messages)) return false;
+  // V17: "where can I get lunch near them?" after an event list is a food
+  // question. Do not let the previous turn's "what's on" drag it into events.
+  const latest = lastUserText(messages);
+  if (EVENT_FOLLOWUP_TOPIC_SHIFT.test(latest)
+      && !/\b(what(?:'|’)s on|events?|gigs?|concerts?|festival|exhibition|show|market)\b/i.test(latest)) return false;
   if (isEventCostFollowUp(messages)) return true;
   const directWhatsOn = /\b(what(?:'|’)s on|wots on|anything on|what is happening|what(?:'|’)s happening|anything happening)\b/i.test(context);
   const eventIntent = /\b(events?|things to do|something to do|anything to do|what can (?:we|i) do|free to do|live music|gig|gigs|concert|show|shows|theatre|comedy|festival|market|exhibition|workshop|family event|heritage open days?)\b/i.test(context);
@@ -2112,7 +2162,9 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
     const m = scopedHtml.match(re);
     if (m?.index != null && m.index > 0) cut = Math.min(cut, m.index);
   }
-  const detailText = htmlToPlainText(scopedHtml.slice(0, cut));
+  // Cut points land just after "<h2" etc.; drop the half tag so it cannot leak
+  // into the venue name.
+  const detailText = htmlToPlainText(scopedHtml.slice(0, cut).replace(/<[^>]*$/, ''));
   if (!detailText) return null;
 
   const dateRange = detailText.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
@@ -2732,8 +2784,9 @@ function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
     ...(wxContext?.eventCards || []),
     ...(experienceEventsContext?.listingEventCards || [])
   ];
+  const todayIso = londonDateLabelToIso(weekend.today);
   const cards = mergeExactEventCardsV16(raw)
-    .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso) }))
+    .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => !todayIso || iso >= todayIso) }))
     .filter(card => card.dates.length > 0);
 
   cards.sort((a, b) => {
@@ -2848,7 +2901,7 @@ function buildEventStateV16(cards, previous = null, viewIds = null, lastFilter =
 async function refreshEventCardsForPriceV16(cards) {
   const targets = (cards || []).filter(card => isSpecificEventDetailUrl(card?.sourceUrl || card?.url)
     && !/:sat$|:sun$/.test(card.id || '')
-    && (card.priceStatus === 'unknown' || !card.priceStatus || card.sourceTier !== 'first-party-detail')).slice(0, 5);
+    && (card.priceStatus === 'unknown' || !card.priceStatus || card.sourceTier !== 'first-party-detail')).slice(0, 10);
   const refreshed = new Map();
   await Promise.all(targets.map(async card => {
     const url = card.sourceUrl || card.url;
@@ -2895,58 +2948,307 @@ function formatEventStartTimesV16(cards) {
   return `${cards.length === 1 ? 'The verified free event starts at:' : 'The verified free events start at:'}\n\n${lines.join('\n')}`;
 }
 
-async function handleStoredEventFollowUpV16(state, lastText) {
-  const allCards = (state?.resultCards || []).filter(card => card?.entityType === 'event');
-  if (!allCards.length) return null;
-  const asksFree = /\bfree\b/i.test(lastText);
-  const asksTime = /\bwhat time\b|\bwhen\b|\bstart(?:s|ing)?\b/i.test(lastText);
-  let updated = allCards;
-  let viewCards = [];
-  let lastFilter = state?.lastFilter || null;
+// ---------------------------------------------------------------------------
+// V17 event follow-ups
+//
+// One parser decides whether the latest message is an operation on the event
+// list we already showed. It only claims a message when it clearly refers to
+// that list and does not introduce a new topic, area or date window. Anything
+// it does not claim goes to the normal routes, so a new question is never
+// answered with the old list.
+//
+// Filters persist in state.lastFilter as "price:free|day:sunday", so
+// "which are free?" then "what about Sunday?" narrows correctly, and
+// "show the full list again" resets.
+// ---------------------------------------------------------------------------
 
-  if (asksFree) {
-    updated = await refreshEventCardsForPriceV16(allCards);
-    viewCards = updated.filter(card => card.priceStatus === 'free');
-    lastFilter = 'free';
-  } else if (state?.lastFilter === 'free' && asksTime) {
-    const ids = new Set(state.viewIds || []);
-    viewCards = updated.filter(card => ids.has(card.id) && card.priceStatus === 'free');
-  } else {
-    const ids = new Set(state.viewIds || []);
-    viewCards = ids.size ? updated.filter(card => ids.has(card.id)) : updated;
+const EVENT_FOLLOWUP_TOPIC_SHIFT = /\b(lunch|dinner|breakfast|brunch|eat|eating|food|restaurants?|caf[eé]s?|coffee|pubs?|drinks?|pharmac\w*|chemists?|bus(?:es)?|trains?|parking|car parks?|bins?|weather|hotels?|stay|swim\w*|gyms?|running|walks?|walking|shops?|shopping)\b/i;
+const EVENT_FOLLOWUP_NEW_WINDOW = /\b(next (?:week|weekend|month|saturday|sunday|friday)|tomorrow|tonight|today|this week(?!end)|half[- ]?term|christmas|january|february|march|april|may|june|july|august|september|november|december)\b/i;
+const EVENT_FOLLOWUP_AREA = /\b(pontefract|castleford|ossett|horbury|normanton|featherstone|knottingley|hemsworth|south elmsall|south kirkby|denby dale|sandal|outwood|stanley|crigglestone|wrenthorpe|ackworth|walton|newmillerdam|city centre|town centre)\b/i;
+const EVENT_FOLLOWUP_REFERENCE = /\b(those|these|them|they|they're|theyre|the ones?|ones|any of|which of|of the(?:m|se)?|that list|the list|the events?|the others|each|all of|either)\b/i;
+
+function storedEventCards(state) {
+  return (state?.resultCards || []).filter(card => card?.entityType === 'event' && (card.title || card.name));
+}
+
+function parseEventFilters(value) {
+  const out = { price: null, day: null };
+  for (const part of String(value || '').split('|')) {
+    const [key, val] = part.split(':');
+    if (key === 'price' && ['free', 'paid'].includes(val)) out.price = val;
+    if (key === 'day' && ['saturday', 'sunday'].includes(val)) out.day = val;
+    // Backwards compatibility with V16 state.
+    if (key === 'free' && !val) out.price = 'free';
   }
+  return out;
+}
 
-  // A listing can establish an event and its price without publishing a start
-  // time. Recheck that event's own detail page before reporting the gap.
-  if (asksTime && viewCards.some(card => !card.start)) {
-    const refreshed = await refreshEventCardsForTimeV16(viewCards);
-    const byId = new Map(refreshed.map(card => [card.id, card]));
-    updated = updated.map(card => byId.get(card.id) || card);
-    viewCards = viewCards.map(card => byId.get(card.id) || card);
+function serialiseEventFilters(filters) {
+  return [filters?.price ? `price:${filters.price}` : null, filters?.day ? `day:${filters.day}` : null].filter(Boolean).join('|') || null;
+}
+
+function eventOpsFromText(text) {
+  const value = String(text || '').toLowerCase().replace(/[’]/g, "'");
+  const ops = {};
+  if (/\b(full list|whole list|all of them again|everything again|show (?:me )?(?:them )?all|start again|reset)\b/.test(value)) ops.reset = true;
+  if (/\bfree\b|\bno charge\b|\bcost nothing\b|\bdon'?t cost\b/.test(value)) ops.price = 'free';
+  else if (/\b(paid|ticketed|need tickets?)\b/.test(value)) ops.price = 'paid';
+  if (/\b(how much|prices?|costs?|tickets?|entry fees?|admission)\b/.test(value) && ops.price !== 'free') ops.showPrice = true;
+  const sat = /\bsat(?:urday)?\b/.test(value);
+  const sun = /\bsun(?:day)?\b/.test(value);
+  if (sat && !sun) ops.day = 'saturday';
+  else if (sun && !sat) ops.day = 'sunday';
+  else if (sat && sun) ops.day = 'both';
+  if (/\bwhat time|\bwhen (?:do|does|is|are)\b|\bstart(?:s|ing)?\b|\bbegin(?:s|ning)?\b|\bfinish(?:es)?\b|\btimes?\b/.test(value)) ops.showTime = true;
+  return ops;
+}
+
+function parseEventFollowUp(rawText, state) {
+  if (!String(state?.lastIntent || '').startsWith('events.')) return null;
+  if (!storedEventCards(state).length) return null;
+  const text = String(rawText || '').toLowerCase().replace(/[’]/g, "'").trim();
+  if (!text) return null;
+  if (EVENT_FOLLOWUP_TOPIC_SHIFT.test(text) || EVENT_FOLLOWUP_NEW_WINDOW.test(text) || EVENT_FOLLOWUP_AREA.test(text)) return null;
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const refers = EVENT_FOLLOWUP_REFERENCE.test(text);
+  if (!refers && words > 6) return null;
+  const ops = eventOpsFromText(text);
+  if (Object.keys(ops).length) return ops;
+  // A question about the list we cannot map to a filter ("are they good for
+  // kids?") is answered from the stored cards only, and only when it clearly
+  // refers to them. Short, non-referring messages go to the normal routes.
+  return refers ? { ask: true } : null;
+}
+
+const UNSUPPORTED_EVENT_CONSTRAINTS_V17 = [
+  [/\b(kids?|children|child|family|families|toddlers?|teens?)\b/i, 'suit children'],
+  [/\b(wheelchair|accessible|step[- ]free|disabled)\b/i, 'are wheelchair accessible'],
+  [/\b(dogs?|dog[- ]friendly)\b/i, 'allow dogs'],
+  [/\b(indoors?|outdoors?|rain|weather)\b/i, 'are indoors or outdoors'],
+  [/\b(cheap|budget|under £\s*\d+)\b/i, 'fit a budget'],
+  [/\b(music|comedy|theatre|art|sport|craft)\b/i, 'match a type of event']
+];
+
+function unsupportedEventConstraintsV17(text) {
+  const out = UNSUPPORTED_EVENT_CONSTRAINTS_V17.filter(([re]) => re.test(String(text || ''))).map(([, label]) => label);
+  const area = String(text || '').match(EVENT_FOLLOWUP_AREA)?.[1];
+  if (area) out.push(`are in ${area.replace(/\b\w/g, c => c.toUpperCase())}`);
+  return out;
+}
+
+function weekendIsoDates() {
+  const weekend = eventDateState();
+  return {
+    weekend,
+    todayIso: londonDateLabelToIso(weekend.today),
+    saturdayIso: londonDateLabelToIso(weekend.saturday),
+    sundayIso: londonDateLabelToIso(weekend.sunday)
+  };
+}
+
+function cardOccursOnV17(card, iso) {
+  if (!iso) return true;
+  if (Array.isArray(card?.dates) && card.dates.length) return card.dates.includes(iso);
+  const start = card?.startDate;
+  const end = card?.endDate || start;
+  return Boolean(start && start <= iso && end >= iso);
+}
+
+function eventPriceLabelV17(card) {
+  switch (card?.priceStatus) {
+    case 'free': return 'free';
+    case 'paid': return card.priceRaw ? `${card.priceRaw}` : 'ticketed (price on the event page)';
+    case 'variable': return card.priceRaw ? `${card.priceRaw} (free for some, paid for others)` : 'free for some, paid for others';
+    case 'conflict': return 'sources disagree on price';
+    default: return 'price not confirmed';
   }
+}
 
-  const nextState = buildEventStateV16(updated, state, viewCards.map(card => card.id), lastFilter);
-  nextState.lastIntent = 'events.filter_existing';
-  const reply = asksTime ? formatEventStartTimesV16(viewCards) : (asksFree ? formatFreeCardsV16(viewCards) : null);
-  if (!reply) return null;
+function eventTimeLabelV17(card) {
+  if (card?.start && card?.end) return `${card.start}–${card.end}`;
+  if (card?.start) return `from ${card.start}`;
+  return 'time not published';
+}
+
+function eventDateLabelV17(card, iso) {
+  const dates = Array.isArray(card?.dates) ? card.dates : [];
+  if (dates.length > 1) return 'Saturday and Sunday';
+  const single = dates[0] || card?.startDate;
+  if (!single) return null;
+  const label = formatEventCardDate(single);
+  return label ? label.replace(/,?\s+\d{4}$/, '') : null;
+}
+
+function dayLabelV17(day, iso) {
+  const label = iso ? formatEventCardDate(iso) : null;
+  return label ? label.replace(/,?\s+\d{4}$/, '') : (day === 'saturday' ? 'Saturday' : 'Sunday');
+}
+
+function eventFollowupChipsV17(filters, ops = {}) {
+  const chips = [];
+  if (filters.price !== 'free') chips.push('Which of those are free?');
+  if (!ops.showTime) chips.push('What time do they start?');
+  chips.push(filters.day === 'sunday' ? 'Which ones are on Saturday?' : 'Which ones are on Sunday?');
+  if (filters.price || filters.day) chips.push('Show the full list again');
+  else if (!ops.showPrice) chips.push('How much are they?');
+  return chips.slice(0, 3);
+}
+
+function eventSourcesV17(cards) {
   const sources = [];
   const seen = new Set();
-  for (const card of viewCards) {
+  for (const card of cards) {
     const url = card.sourceUrl || card.url;
     if (!url || seen.has(url)) continue;
     seen.add(url);
     sources.push({ title: `${card.title} — official event page`, url });
   }
-  return { reply, state: nextState, sources };
+  return sources;
+}
+
+// Applies filters to a card set and renders the answer. Used for the first
+// weekend answer and for every follow-up, so both behave identically.
+async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = false, unsupported = [] } = {}) {
+  const { weekend, saturdayIso, sundayIso } = weekendIsoDates();
+  const dayIso = filters.day === 'saturday' ? saturdayIso : (filters.day === 'sunday' ? sundayIso : null);
+  let cards = allCards.map(canonicaliseEventCardV16).filter(Boolean);
+
+  const needPrice = Boolean(filters.price) || Boolean(ops.showPrice);
+  if (needPrice) cards = await refreshEventCardsForPriceV16(cards);
+
+  let view = cards.filter(card => cardOccursOnV17(card, dayIso));
+  let unconfirmed = [];
+  if (filters.price === 'free') {
+    unconfirmed = view.filter(card => !['free', 'paid', 'variable'].includes(card.priceStatus));
+    view = view.filter(card => card.priceStatus === 'free');
+  } else if (filters.price === 'paid') {
+    unconfirmed = view.filter(card => !['free', 'paid', 'variable'].includes(card.priceStatus));
+    view = view.filter(card => card.priceStatus === 'paid' || card.priceStatus === 'variable');
+  }
+
+  if (ops.showTime && view.some(card => !card.start || (card.source === 'wx' && !card.performanceStart))) {
+    const refreshed = await refreshEventCardsForTimeV16(view);
+    const byId = new Map(refreshed.map(card => [card.id, card]));
+    cards = cards.map(card => byId.get(card.id) || card);
+    view = view.map(card => byId.get(card.id) || card);
+  }
+
+  const dayText = filters.day ? ` on ${dayLabelV17(filters.day, dayIso)}` : '';
+  const priceWord = filters.price === 'free' ? 'free' : (filters.price === 'paid' ? 'ticketed' : '');
+  const showPrice = Boolean(ops.showPrice) || filters.price === 'paid';
+  const lines = view.map(card => {
+    const meta = [
+      filters.day ? null : eventDateLabelV17(card),
+      ops.showTime ? (card.start ? `starts at ${card.start}` : 'start time not verified') : eventTimeLabelV17(card),
+      ops.showTime && card.performanceStart && card.performanceStart !== card.start ? `performance at ${card.performanceStart}` : null,
+      card.venue,
+      showPrice ? eventPriceLabelV17(card) : null
+    ].filter(Boolean).join(', ');
+    return `- ${card.title}${meta ? ` — ${meta}` : ''}`;
+  });
+
+  const parts = [];
+  if (unsupported.length) {
+    parts.push(`I can't yet check which events ${unsupported.join(' or ')}, so this list isn't filtered for that. Each event page says who it's for.`);
+  }
+  const scope = firstAnswer ? 'this weekend' : 'from that list';
+  if (!view.length) {
+    if (priceWord) parts.push(`None of the events ${scope}${dayText} are confirmed as ${priceWord}.`);
+    else parts.push(`None of the events ${scope} are on${dayText || ' those dates'}.`);
+  } else {
+    let intro;
+    if (ops.showTime && (priceWord || filters.day) && !firstAnswer) intro = `Times for the ${priceWord ? `${priceWord} ` : ''}event${view.length === 1 ? '' : 's'}${dayText}:`;
+    else if (priceWord) intro = `${view.length === 1 ? 'This one is' : 'These are'} confirmed as ${priceWord}${dayText}${firstAnswer ? ' this weekend' : ''}:`;
+    else if (filters.day) intro = `${firstAnswer ? 'On' : 'From that list, on'} ${dayLabelV17(filters.day, dayIso)}:`;
+    else if (ops.showPrice) intro = firstAnswer ? 'This weekend, with prices from each event page:' : 'Prices from each event page:';
+    else if (ops.showTime) intro = firstAnswer ? 'This weekend, with times:' : 'Start times from each event page:';
+    else intro = firstAnswer ? 'This weekend in Wakefield:' : 'Here is the full list again:';
+    parts.push(`${intro}\n\n${lines.join('\n')}`);
+  }
+  if (unconfirmed.length) {
+    parts.push(`I couldn't confirm the price for ${unconfirmed.map(card => card.title).join(', ')}. Worth checking ${unconfirmed.length === 1 ? 'its' : 'their'} event page before you go.`);
+  }
+  if (ops.showPrice && !filters.price && view.some(card => !['free', 'paid', 'variable'].includes(card.priceStatus))) {
+    parts.push('Where it says price not confirmed, the event page did not publish a clear price.');
+  }
+
+  const nextState = buildEventStateV16(cards, null, view.map(card => card.id), serialiseEventFilters(filters));
+  nextState.lastIntent = firstAnswer ? 'events.whats_on' : 'events.filter_existing';
+  return {
+    reply: parts.join('\n\n'),
+    state: nextState,
+    sources: eventSourcesV17(view.length ? view : cards),
+    followups: eventFollowupChipsV17(filters, ops)
+  };
+}
+
+async function handleStoredEventFollowUpV17(state, ops) {
+  const allCards = storedEventCards(state);
+  if (!allCards.length || !ops) return null;
+  if (ops.ask) return answerAboutStoredEventsV17(state, ops.question || '');
+  const filters = ops.reset ? { price: null, day: null } : parseEventFilters(state?.lastFilter);
+  if (ops.price) filters.price = ops.price;
+  else if (ops.showPrice) filters.price = null; // "how much are they?" means show prices, not keep a free-only view
+  if (ops.day) filters.day = ops.day === 'both' ? null : ops.day;
+  const result = await renderEventViewV17(allCards, filters, ops);
+  result.state.area = state?.area || null;
+  result.state.constraints = state?.constraints || null;
+  return result;
+}
+
+// Free-form questions about the stored list ("are they good for kids?"). The
+// model sees only the stored card fields, and a code check rejects any time,
+// price or bullet title that is not in those cards.
+async function answerAboutStoredEventsV17(state, question) {
+  const cards = storedEventCards(state).map(canonicaliseEventCardV16).filter(Boolean);
+  const fields = cards.map(card => ({
+    title: card.title, dates: card.dates?.length ? card.dates : [card.startDate].filter(Boolean),
+    start: card.start, end: card.end, venue: card.venue,
+    price: card.priceStatus === 'unknown' ? 'not confirmed' : eventPriceLabelV17(card), page: card.sourceUrl || card.url
+  }));
+  const fallback = {
+    reply: `I can only answer from what each event page publishes (date, time, venue and price), and that doesn't cover your question. The event pages are the best place to check:\n\n${cards.map(card => `- ${card.title}`).join('\n')}`,
+    state: { ...state, lastIntent: 'events.filter_existing' },
+    sources: eventSourcesV17(cards),
+    followups: eventFollowupChipsV17(parseEventFilters(state?.lastFilter))
+  };
+  if (!question || !process.env.ANTHROPIC_API_KEY) return fallback;
+  try {
+    const { response, data } = await callAnthropic({
+      model: MODEL,
+      max_tokens: 450,
+      system: 'You are Ask Wakefield. Answer the question using ONLY the event records supplied. Do not add events, facts, times or prices that are not in the records. If the records do not contain what is needed to answer, say so briefly and suggest checking the event page. Plain text, British English, no Markdown bold or headings. Use "- " bullets when listing events, starting each bullet with the exact event title.',
+      messages: [{ role: 'user', content: `Question: ${question}\n\nEvent records:\n${JSON.stringify(fields, null, 2)}` }]
+    });
+    if (!response.ok) return fallback;
+    const reply = String(extractAnswer(data).reply || '').trim();
+    if (!reply) return fallback;
+    const knownTimes = new Set(cards.flatMap(card => [card.start, card.end]).filter(Boolean));
+    const knownPrices = cards.map(card => String(card.priceRaw || '')).join(' ');
+    const timesOk = (reply.match(/\b\d{1,2}:\d{2}\b/g) || []).every(t => knownTimes.has(t) || knownTimes.has(t.padStart(5, '0')));
+    const pricesOk = (reply.match(/£\s*\d+(?:\.\d{2})?/g) || []).every(p => knownPrices.includes(p.replace(/\s+/g, '')) || knownPrices.includes(p));
+    const bulletsOk = reply.split('\n').filter(line => /^\s*[-•]\s+/.test(line)).every(line => {
+      const title = line.replace(/^\s*[-•]\s+/, '').split(/\s+[—–-]\s+|:\s/)[0];
+      return cards.some(card => titlesLikelySame(card.title, title));
+    });
+    if (!timesOk || !pricesOk || !bulletsOk) {
+      console.warn('Stored-event answer failed grounding check; using fallback.');
+      return fallback;
+    }
+    return { ...fallback, reply };
+  } catch {
+    return fallback;
+  }
 }
 
 async function refreshEventCardsForTimeV16(cards) {
-  const targets = (cards || []).filter(card => !card.start && isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
+  const targets = (cards || []).filter(card => (!card.start || (card.source === 'wx' && !card.performanceStart))
+    && isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
   const refreshed = new Map();
   await Promise.all(targets.map(async card => {
     const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
     const detail = context?.eventDetailCard;
-    if (detail?.startTime) refreshed.set(card.id, { ...card, start: detail.startTime, startTime: detail.startTime, end: detail.endTime || card.end, endTime: detail.endTime || card.endTime, sourceTier: 'first-party-detail' });
+    if (detail?.startTime) refreshed.set(card.id, { ...card, start: detail.startTime, startTime: detail.startTime, end: detail.endTime || card.end, endTime: detail.endTime || card.endTime, performanceStart: detail.performanceStart || card.performanceStart || null, sourceTier: 'first-party-detail' });
   }));
   return (cards || []).map(card => refreshed.get(card.id) || card);
 }
@@ -3952,6 +4254,17 @@ function stripUnrequestedEventPrices(reply) {
     .join('\n');
 }
 
+// Referenced by the legacy sanitiser but never defined before V17, which made
+// every legacy "free" events answer throw and return "Connection error".
+// Conservative: in a free-only answer, drop bullet lines that do not say free.
+function filterFreeOnlyEventLines(reply) {
+  if (!/^\s*[-*•]\s+/m.test(String(reply || ''))) return reply; // nothing to filter; idempotent across passes
+  const lines = String(reply || '').split('\n');
+  const kept = lines.filter(line => !/^\s*[-*•]\s+/.test(line) || /\bfree\b/i.test(line));
+  const out = kept.join('\n').trim();
+  return /^\s*[-*•]\s+/m.test(out) ? out : `${out}\n\nI couldn't confirm any of those as free from their event pages.`.trim();
+}
+
 function deterministicallySanitiseEventAnswer(reply, messages, evidence = {}) {
   if (!reply || !(isCurrentEventsQuery(messages) || isNamedEventDetailQuery(messages))) return reply;
   let out = String(reply);
@@ -4596,16 +4909,38 @@ export default async function handler(req, res) {
 
   const messages = sanitiseMessages(req.body?.messages);
   if (!messages) return res.status(400).json({ error: 'invalid_request', reply: 'Please enter a valid question.' });
-  const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
-  const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
+  // Every JSON response carries the latest signed state token when this turn
+  // produced one. Clients keep their previous token when the field is absent.
+  const sendJson = res.json.bind(res);
+  res.json = body => sendJson(body && typeof body === 'object' && typeof res.__awStateToken === 'string'
+    ? { ...body, stateToken: res.__awStateToken || null }
+    : body);
+
+  // Unsigned client state (req.body.state) is deliberately ignored: it could be
+  // edited to mark any event as free.
+  const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
+  const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
+  const cookieState = stateFromCookie(req);
+  const clientState = decodedToken || cookieState || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  if (suppliedToken && !decodedToken && !cookieState
+      && /\b(which of|any of|of (?:those|them|these)|those|these|them)\b/i.test(currentText)
+      && Object.keys(eventOpsFromText(currentText)).length) {
+    return res.status(200).json({
+      reply: "I no longer have the verified list from that chat, so I can't safely filter it. Please ask for the weekend events again.",
+      sources: [], followups: ["What's on this weekend?"], live: false, verification: 'no-prior-list'
+    });
+  }
   const previousUserText = messages.slice(0, -1).reverse().find(message => message.role === 'user')?.content || '';
   const retryingEventFollowUp = clientState.lastIntent?.startsWith('events.')
     && /^(?:can you tell me|please tell me|try again|can you check again|and those|yes please)[?.!\s]*$/i.test(currentText.trim())
     && /\bfree\b|\bwhat time\b|\bstart\b/i.test(previousUserText);
-  const eventFollowUpText = retryingEventFollowUp ? previousUserText : currentText;
-  if (retryingEventFollowUp) route.intent = 'events.filter_existing';
+  if (retryingEventFollowUp) {
+    const retried = parseEventFollowUp(previousUserText, clientState);
+    if (retried) { route.intent = 'events.filter_existing'; route.eventFollowUp = retried; }
+  }
+  if (route.eventFollowUp?.ask) route.eventFollowUp.question = retryingEventFollowUp ? previousUserText : currentText;
   const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), messages);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
@@ -4653,13 +4988,13 @@ export default async function handler(req, res) {
 
     let handled;
     try {
-      handled = await handleStoredEventFollowUpV16(clientState, eventFollowUpText);
+      handled = await handleStoredEventFollowUpV17(clientState, route.eventFollowUp);
     } catch (error) {
       console.error('Stored event follow-up failed:', error);
       // Keep the exact original event set and let the user retry the same
       // filter. Never drop into an unrelated prose reconstruction.
       return res.status(200).json({
-        reply: 'I still have the event list, but the admission check failed just now. Please try asking which are free again.',
+        reply: 'I still have the event list, but checking the event pages failed just now. Please ask again in a moment.',
         sources: [], live: false, verification: 'cards-first-retry', state: clientState
       });
     }
@@ -4668,8 +5003,9 @@ export default async function handler(req, res) {
       return res.status(200).json({
         reply: finaliseUserFacingReply(handled.reply),
         sources: handled.sources.slice(0, 8),
+        followups: handled.followups || [],
         live: true,
-        verification: 'cards-first-v16.2',
+        verification: 'cards-first-v17',
         state: handled.state
       });
     }
@@ -4680,6 +5016,20 @@ export default async function handler(req, res) {
       live: false,
       verification: 'cards-first-followup-unhandled',
       state: clientState
+    });
+  }
+
+  // "Which of those are free?" with no list in this conversation: say so rather
+  // than letting the model invent what "those" means.
+  if (!hasRecentAssistantAnswer(messages)
+      && /\b(which of|any of|of (?:those|them|these)|those|these|them)\b/i.test(currentText)
+      && Object.keys(eventOpsFromText(currentText)).length) {
+    return res.status(200).json({
+      reply: "I haven't shown you a list yet in this chat. Would you like to see what's on this weekend?",
+      sources: [],
+      followups: ["What's on this weekend?"],
+      live: false,
+      verification: 'no-prior-list'
     });
   }
 
@@ -4722,7 +5072,12 @@ export default async function handler(req, res) {
   // V16.2 cards-first weekend pilot. The deterministic result set is created
   // and persisted BEFORE presentation. If harvesting fails, fail closed here;
   // do not fall through to the legacy prose-first event machinery.
-  if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.whats_on' && route.operation === 'new' && /\bweekend\b/i.test(lastUserText(messages)) && !isWeekendPerformanceQuery(messages)) {
+  const weekendListRequest = EVENT_CARDS_FIRST_ENABLED
+    && route.intent === 'events.whats_on'
+    && /\bweekend\b|\b(?:on |this )?(?:saturday|sunday)\b/i.test(currentText)
+    && !/\bnext (?:weekend|week|saturday|sunday)\b/i.test(currentText)
+    && !isWeekendPerformanceQuery(messages);
+  if (weekendListRequest) {
     const supplement = await verifiedOctoberWeekendSupplementV16(eventDateState());
     const collected = collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
     if (!collected.cards.length) {
@@ -4735,25 +5090,35 @@ export default async function handler(req, res) {
       });
     }
 
-    const reply = formatWeekendCardsV16(collected.cards, collected.weekend);
-    const state = buildEventStateV16(collected.cards, clientState);
-    state.lastIntent = 'events.whats_on';
-    attachStateCookie(res, state);
-    const sources = [];
-    const seen = new Set();
-    for (const card of collected.cards) {
-      const url = card.sourceUrl || card.url;
-      if (!url || seen.has(url)) continue;
-      seen.add(url);
-      sources.push({ title: `${card.title} — official event page`, url });
+    // Constraints in the first question are applied in code, exactly as they
+    // would be in a follow-up. Constraints we cannot check yet are named in the
+    // answer rather than silently dropped.
+    const firstOps = eventOpsFromText(currentText);
+    const firstFilters = { price: firstOps.price || null, day: firstOps.day && firstOps.day !== 'both' ? firstOps.day : null };
+    const unsupported = unsupportedEventConstraintsV17(currentText);
+    let rendered;
+    if (firstFilters.price || firstFilters.day || firstOps.showPrice || firstOps.showTime || unsupported.length) {
+      rendered = await renderEventViewV17(collected.cards, firstFilters, firstOps, { firstAnswer: true, unsupported });
+    } else {
+      const state = buildEventStateV16(collected.cards, clientState);
+      state.lastIntent = 'events.whats_on';
+      rendered = {
+        reply: formatWeekendCardsV16(collected.cards, collected.weekend),
+        state,
+        sources: eventSourcesV17(collected.cards),
+        followups: eventFollowupChipsV17({ price: null, day: null })
+      };
     }
+    rendered.state.area = clientState.area || null;
+    attachStateCookie(res, rendered.state);
     console.info(`[${EVENT_CARDS_FIRST_VERSION}] ${collected.cards.length} weekend event cards persisted before presentation.`);
     return res.status(200).json({
-      reply: finaliseUserFacingReply(reply),
-      sources: sources.slice(0, 8),
+      reply: finaliseUserFacingReply(rendered.reply),
+      sources: rendered.sources.slice(0, 8),
+      followups: rendered.followups,
       live: true,
-      verification: 'cards-first-v16.2',
-      state
+      verification: 'cards-first-v17',
+      state: rendered.state
     });
   }
 
@@ -4776,7 +5141,12 @@ export default async function handler(req, res) {
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
   // instead of trusting neighbouring labels on the aggregate listings page.
-  const eventDetailContexts = await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, wxContext, clientState);
+  // V17: follow-ups on a stored list are handled above from state. The legacy
+  // path must not rebuild "those" from earlier prose, or a new question such as
+  // "free things to do in Ossett" is answered with the old list.
+  const eventDetailContexts = route.intent === 'events.filter_existing'
+    ? await fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, wxContext, clientState)
+    : [];
 
   const earlyEvidence = { experienceEventsContext, wxContext, eventDetailContexts, priorState: clientState };
   if (STRUCTURED_CORE_ENABLED && route.intent === 'events.filter_existing') {
@@ -5247,7 +5617,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       )
     );
 
-    const deterministicFreeFollowUp = buildDeterministicFreeFollowUpAnswer(messages, { eventDetailContexts });
+    const deterministicFreeFollowUp = route.intent === 'events.filter_existing'
+      ? buildDeterministicFreeFollowUpAnswer(messages, { eventDetailContexts })
+      : null;
     if (deterministicFreeFollowUp) finalReply = deterministicFreeFollowUp;
 
     for (const source of openAIResult?.sources || []) {

@@ -134,6 +134,23 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.match(results[4].reply, /Tenpin Wakefield.*Trinity Walk/s);
     assert.doesNotMatch(results[4].reply, /Xscape|four miles/);
   }
+  if (name.startsWith('Pugneys two hours')) {
+    for (const result of results.slice(1)) {
+      assert.match(result.reply, /Pugneys/);
+      assert.doesNotMatch(result.reply, /Newmillerdam|weather should be kind|late September|15-minute bus/);
+    }
+    assert.match(results[2].reply, /two hours in one location/);
+    assert.match(results[2].reply, /£7.50/);
+  }
+  if (name.startsWith('Saturday 0930')) {
+    for (const result of results.slice(1)) {
+      assert.match(result.reply, /09:30 to 12:30/);
+      assert.match(result.reply, /07:30 opening/);
+      assert.doesNotMatch(result.reply, /13:30|waiting for coffee|Both open around 10:00/);
+    }
+    assert.match(results[2].reply, /prefer books first/);
+    assert.match(results[2].reply, /Hepworth your main art stop/);
+  }
   if (name.startsWith('Hepworth Saturday')) {
     for (const result of results.slice(1)) {
       assert.match(result.reply, /Hepworth as your main art stop/);
@@ -176,6 +193,17 @@ const suites = {
     'Stay more central, in case it rains',
     'Yes, please.',
     'Is there a ten pin balling alley nearby?'
+  ]),
+  pugneys: () => conversation('Pugneys two hours', [
+    'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
+    "Near Pugney's, the kids ages are 7 and 4.",
+    'About 2 hours, and stay at one location.'
+  ]),
+  earlySaturday: () => conversation('Saturday 0930 morning', [
+    'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',
+    'This saturday, around 9:30 am',
+    'Books are fine, and we want to go to the Hepworth',
+    'Oh, yes.'
   ]),
   hepworthVisit: () => conversation('Hepworth Saturday visit', [
     'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',

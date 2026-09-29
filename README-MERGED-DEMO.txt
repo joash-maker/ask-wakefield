@@ -37,3 +37,5 @@ Known scope
 - Full offline harness and syntax checks pass. Replace api/chat.js, lib/askwakefield-places.js and tests/conversation-harness.mjs from this revision, plus this note. No new environment variables.
 
 29 September late-evening repair: retain Hepworth gallery requests without requiring brunch wording. Preserve Saturday and 10:00 start across Hepworth? and 11:00 am follow-ups. Replace lib/askwakefield-places.js and tests/conversation-harness.mjs.
+
+29 September 22:25 repair: recognise Pugneys origin and retain two-hour single-location plan. Handle Saturday 09:30 coffee/books/art follow-ups with listed early café hours, 12:30 finish, books-first and Hepworth preferences. Replace lib/askwakefield-places.js and tests/conversation-harness.mjs.

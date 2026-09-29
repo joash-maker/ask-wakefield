@@ -1,4 +1,4 @@
-import { buildTrustedPlacesContext, familyDistrictStarter, undatedCityCentreArtsPlan } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp } from '../lib/askwakefield-places.js';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -560,7 +560,7 @@ function classifyRequest(messages, state = null) {
   const eventSubsetFollowUp = state?.lastIntent?.startsWith('events.')
     && Array.isArray(state?.resultCards) && state.resultCards.some(card => card?.entityType === 'event')
     && (/\b(which|what)\b.*\bfree\b|\bfree ones?\b|\bwhat time\b.*\bfree\b|\bwhat time do (?:they|those|these|the ones?)\b|\bwhen do (?:they|those|these|the ones?)\b/i.test(last)
-      || (state?.lastFilter === 'free' && /\b(what time|when|start|starts|starting)\b/i.test(last)));
+      || (state?.lastFilter === 'free' && /^(?:\s*(?:what time|when)\s+(?:do\s+)?(?:they|those|these|the events?|the free ones?)\s+(?:start|begin)|\s*(?:start|begin)\s+times?\??\s*$)/i.test(last)));
   if (eventSubsetFollowUp
       && hasRecentAssistantAnswer(messages)
       && (state?.lastIntent?.startsWith('events.') || /\b(events?|what(?:'|’)s on|weekend)\b/i.test(context))) intent = 'events.filter_existing';
@@ -4557,14 +4557,26 @@ export default async function handler(req, res) {
   // A missing start point prevents a transport promise, but should not result
   // in a blank answer. The response carries first-party links as source chips.
   const groundedStarter = familyDistrictStarter(lastUserText(messages))
-    || undatedCityCentreArtsPlan(lastUserText(messages));
+    || undatedCityCentreArtsPlan(lastUserText(messages))
+    || familyPlanFollowUp(lastUserText(messages), clientState)
+    || cityItineraryFollowUp(lastUserText(messages), clientState);
   if (groundedStarter) {
+    const nextState = {
+      version: 2,
+      lastIntent: groundedStarter.kind,
+      lastFilter: null,
+      resultCards: [],
+      viewIds: [],
+      area: groundedStarter.area || clientState.area || null,
+      constraints: groundedStarter.constraints || clientState.constraints || null
+    };
+    attachStateCookie(res, nextState);
     return res.status(200).json({
       reply: finaliseUserFacingReply(groundedStarter.reply),
       sources: groundedStarter.sources,
       live: false,
       verification: 'canonical-place-starter',
-      state: clientState
+      state: nextState
     });
   }
 

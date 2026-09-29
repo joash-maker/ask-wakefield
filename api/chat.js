@@ -1,4 +1,4 @@
-import { buildTrustedPlacesContext } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, familyDistrictStarter, undatedCityCentreArtsPlan } from '../lib/askwakefield-places.js';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -475,6 +475,7 @@ function encodeStateCookie(state) {
         endDate: card?.endDate || null,
         start: card?.start || card?.startTime || null,
         end: card?.end || card?.endTime || null,
+        performanceStart: card?.performanceStart || null,
         venue: card?.venue || null,
         priceStatus: card?.priceStatus || null,
         priceRaw: card?.priceRaw || null
@@ -527,6 +528,7 @@ function normaliseClientState(raw) {
     end: typeof card?.end === 'string' ? card.end.slice(0, 40) : null,
     startTime: typeof card?.startTime === 'string' ? card.startTime.slice(0, 40) : null,
     endTime: typeof card?.endTime === 'string' ? card.endTime.slice(0, 40) : null,
+    performanceStart: typeof card?.performanceStart === 'string' ? card.performanceStart.slice(0, 10) : null,
     venue: typeof card?.venue === 'string' ? card.venue.slice(0, 180) : null,
     venueId: typeof card?.venueId === 'string' ? card.venueId.slice(0, 160) : null,
     priceStatus: typeof card?.priceStatus === 'string' ? card.priceStatus.slice(0, 30) : null,
@@ -2118,8 +2120,8 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
   let venue = null;
   if (timeRange) {
     const after = detailText.slice((timeRange.index || 0) + timeRange[0].length);
-    const chunk = after.split(/£\s*\d|\bFree\b|\bVisit the website\b|\bBook now\b|\bAbout\b/i)[0]
-      .replace(/\s+/g, ' ').trim();
+    const chunk = after.split(/£\s*\d|\bTag\b|\bFree\b|\bVisit the website\b|\bBook now\b|\bAbout\b/i)[0]
+      .replace(/^\s*Map Pin\s*/i, '').replace(/\s+/g, ' ').trim();
     if (chunk && chunk.length <= 220) venue = chunk;
   }
 
@@ -2307,6 +2309,7 @@ function wxEventDetailFromHtml(html, url, expectedTitle = '') {
 
   const dateMatch = scoped.match(/\b((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
   const timeMatch = scoped.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
+  const performanceMatch = scoped.match(/Performance Starts\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
   const price = priceStatusFromEventDetailText(scoped);
 
   return {
@@ -2318,6 +2321,7 @@ function wxEventDetailFromHtml(html, url, expectedTitle = '') {
     endDate: shortEventDateToIso(dateMatch?.[1] || ''),
     startTime: clockLabelTo24(timeMatch?.[1]) || null,
     endTime: clockLabelTo24(timeMatch?.[2]) || null,
+    performanceStart: clockLabelTo24(performanceMatch?.[1]) || null,
     venue: 'WX Wakefield Exchange',
     priceStatus: price.type,
     priceRaw: price.raw || null,
@@ -2645,6 +2649,7 @@ function canonicaliseEventCardV16(card) {
     end: card.end || card.endTime || null,
     startTime: card.startTime || card.start || null,
     endTime: card.endTime || card.end || null,
+    performanceStart: card.performanceStart || null,
     venue: card.venue || null,
     venueId: card.venueId || (card.venue ? `venue:${normaliseEventTitle(card.venue).replace(/\s+/g, '-')}` : null),
     priceStatus: ['free','paid','variable','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
@@ -2769,8 +2774,7 @@ function formatWeekendCardsV16(cards, weekend) {
     lines.push('', label, '');
     for (const card of list) {
       const meta = [eventTimeLabelV16(card), card.venue].filter(Boolean).join(', ');
-      const detailUrl = isSpecificEventDetailUrl(card.sourceUrl || card.url) ? (card.sourceUrl || card.url) : null;
-      lines.push(`- ${card.title}${meta ? ` — ${meta}` : ''}${detailUrl ? ` — ${detailUrl}` : ''}`);
+      lines.push(`- ${card.title}${meta ? ` — ${meta}` : ''}`);
     }
   };
   addSection(weekend.saturday.replace(/\s+\d{4}$/, ''), sat);
@@ -2796,7 +2800,7 @@ function buildEventStateV16(cards, previous = null, viewIds = null, lastFilter =
 }
 
 async function refreshEventCardsForPriceV16(cards) {
-  const targets = (cards || []).filter(card => card?.priceStatus === 'unknown' && isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
+  const targets = (cards || []).filter(card => isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
   const refreshed = new Map();
   await Promise.all(targets.map(async card => {
     const url = card.sourceUrl || card.url;
@@ -2805,12 +2809,13 @@ async function refreshEventCardsForPriceV16(cards) {
     if (!direct) return;
     refreshed.set(card.id, {
       ...card,
-      priceStatus: direct.priceStatus || card.priceStatus || 'unknown',
+      priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : (card.priceStatus || 'unknown'),
       priceRaw: direct.priceRaw || card.priceRaw || null,
       start: direct.startTime || card.start || null,
       end: direct.endTime || card.end || null,
       startTime: direct.startTime || card.startTime || null,
       endTime: direct.endTime || card.endTime || null,
+      performanceStart: direct.performanceStart || card.performanceStart || null,
       startDate: direct.startDate || card.startDate || null,
       endDate: direct.endDate || card.endDate || null,
       venue: direct.venue || card.venue || null,
@@ -2834,7 +2839,9 @@ function formatEventStartTimesV16(cards) {
   if (!cards.length) return 'There are no verified free events in the current result set.';
   const lines = cards.map(card => {
     const date = card.dates?.length === 1 ? formatEventCardDate(card.dates[0]) : (card.dates?.length > 1 ? 'this weekend' : formatEventCardDate(card.startDate));
-    const meta = [date, card.start ? `starts at ${card.start}` : null, card.venue].filter(Boolean).join(', ');
+    const start = card.start ? `starts at ${card.start}` : 'start time not verified';
+    const performance = card.performanceStart && card.performanceStart !== card.start ? `performance at ${card.performanceStart}` : null;
+    const meta = [date, start, performance, card.venue].filter(Boolean).join(', ');
     return `- ${card.title}${meta ? ` — ${meta}` : ''}`;
   });
   return `${cards.length === 1 ? 'The verified free event starts at:' : 'The verified free events start at:'}\n\n${lines.join('\n')}`;
@@ -2861,6 +2868,15 @@ async function handleStoredEventFollowUpV16(state, lastText) {
     viewCards = ids.size ? updated.filter(card => ids.has(card.id)) : updated;
   }
 
+  // A listing can establish an event and its price without publishing a start
+  // time. Recheck that event's own detail page before reporting the gap.
+  if (asksTime && viewCards.some(card => !card.start)) {
+    const refreshed = await refreshEventCardsForTimeV16(viewCards);
+    const byId = new Map(refreshed.map(card => [card.id, card]));
+    updated = updated.map(card => byId.get(card.id) || card);
+    viewCards = viewCards.map(card => byId.get(card.id) || card);
+  }
+
   const nextState = buildEventStateV16(updated, state, viewCards.map(card => card.id), lastFilter);
   nextState.lastIntent = 'events.filter_existing';
   const reply = asksTime ? formatEventStartTimesV16(viewCards) : (asksFree ? formatFreeCardsV16(viewCards) : null);
@@ -2874,6 +2890,17 @@ async function handleStoredEventFollowUpV16(state, lastText) {
     sources.push({ title: `${card.title} — official event page`, url });
   }
   return { reply, state: nextState, sources };
+}
+
+async function refreshEventCardsForTimeV16(cards) {
+  const targets = (cards || []).filter(card => !card.start && isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
+  const refreshed = new Map();
+  await Promise.all(targets.map(async card => {
+    const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
+    const detail = context?.eventDetailCard;
+    if (detail?.startTime) refreshed.set(card.id, { ...card, start: detail.startTime, startTime: detail.startTime, end: detail.endTime || card.end, endTime: detail.endTime || card.endTime, sourceTier: 'first-party-detail' });
+  }));
+  return (cards || []).map(card => refreshed.get(card.id) || card);
 }
 
 function eventTitlesFromText(text) {
@@ -4525,6 +4552,21 @@ export default async function handler(req, res) {
   const route = classifyRequest(messages, clientState);
   const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), messages);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
+
+  // These questions can be answered conservatively from named place records.
+  // A missing start point prevents a transport promise, but should not result
+  // in a blank answer. The response carries first-party links as source chips.
+  const groundedStarter = familyDistrictStarter(lastUserText(messages))
+    || undatedCityCentreArtsPlan(lastUserText(messages));
+  if (groundedStarter) {
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(groundedStarter.reply),
+      sources: groundedStarter.sources,
+      live: false,
+      verification: 'canonical-place-starter',
+      state: clientState
+    });
+  }
 
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
   // event follow-ups never fall through to the legacy prose-reconstruction path.

@@ -125,6 +125,24 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.match(results[2].reply, /Stanley Ferry Wacky Warehouse/);
     assert.doesNotMatch(results[2].reply, /Diggerland/);
   }
+  if (name.startsWith('Family town and rain')) {
+    assert.match(results[1].reply, /Wakefield city centre.*7 and 4/s);
+    assert.match(results[2].reply, /Cheeky Monkeys/);
+    assert.match(results[2].reply, /13:30/);
+    assert.doesNotMatch(results[2].reply, /£5–8|independent bookshop|five minutes/);
+    assert.match(results[3].reply, /Rainbow Playrooms.*13:30/s);
+    assert.match(results[4].reply, /Tenpin Wakefield.*Trinity Walk/s);
+    assert.doesNotMatch(results[4].reply, /Xscape|four miles/);
+  }
+  if (name.startsWith('Hepworth only')) {
+    assert.match(results[1].reply, /chosen brunch at The Hepworth/);
+    assert.doesNotMatch(results[1].reply, /Mocca Moocho|Bob & Berts/);
+  }
+  if (name.startsWith('Wood Street morning')) {
+    assert.match(results[1].reply, /KRA:FT Koffee, 12 Wood Street/);
+    assert.match(results[1].reply, /The Hepworth.*10:00/s);
+    assert.doesNotMatch(results[1].reply, /14 Wood Street|KRA:FT Wakefield|five-minute walk/);
+  }
   return results;
 }
 
@@ -144,6 +162,21 @@ const suites = {
     'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
     'Wakefield city centre, my kids are 7 and 4 years old',
     'Playcentres in Wakefield?'
+  ]),
+  familyTown: () => conversation('Family town and rain follow-ups', [
+    'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
+    'Wakefield town, near Trinity walk, Kids ages are 7 and 4.',
+    'Stay more central, in case it rains',
+    'Yes, please.',
+    'Is there a ten pin balling alley nearby?'
+  ]),
+  brunchOnly: () => conversation('Hepworth only brunch', [
+    'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',
+    'We will start around 10:00, at the Hepworth for brunch.'
+  ]),
+  woodStreet: () => conversation('Wood Street morning follow-up', [
+    'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',
+    'Starting at 9:30 am and if we can fit in a stop at the Hepworth, and check out some new bars and coffee shops on wood street?'
   ]),
   phrasing: () => conversation('Natural phrasings', [
     "What's on this weekend?",

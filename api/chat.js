@@ -1,4 +1,4 @@
-import { buildTrustedPlacesContext, regularHoursFollowUp, undatedCityCentreCoffeeBooksArtPlan } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext } from '../lib/askwakefield-places.js';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -327,6 +327,7 @@ const TRUSTED_DOMAINS = [
   'wakefield.mumbler.co.uk',
   'yorkshirefoodguide.co.uk',
   'the-arthouse.org.uk',
+  'secretgardenhorbury.com',
   'tileyardnorth.co.uk',
   'gov.uk',
   'planningportal.co.uk',
@@ -933,6 +934,18 @@ function requestedPlaceTimeConstraint(messages) {
     return { mode: 'now' };
   }
 
+  const statedClock = context.match(/\b(?:(?:the\s+)?time\s+is|it(?:'|’)s|it\s+is)\s+(\d{1,2}):(\d{2})\s*(?:(am|pm)|in\s+the\s+(morning|afternoon|evening))?\b/i);
+  if (statedClock) {
+    let hour = Number(statedClock[1]);
+    const minute = Number(statedClock[2]);
+    let period = String(statedClock[3] || statedClock[4] || '').toLowerCase();
+    if (!period && /\b(dinner|supper|tonight|this evening)\b/i.test(context)) period = 'pm';
+    if (!period && /\b(breakfast|this morning)\b/i.test(context)) period = 'am';
+    if (hour <= 12 && (period === 'pm' || period === 'afternoon' || period === 'evening') && hour !== 12) hour += 12;
+    if (hour === 12 && (period === 'am' || period === 'morning')) hour = 0;
+    if (hour < 24 && minute < 60) return { mode: 'at', hour, minute };
+  }
+
   const exact12 = context.match(/\b(?:at|around|by)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
   if (exact12) {
     let hour = Number(exact12[1]);
@@ -1374,8 +1387,8 @@ function isLiveTransportTimesQuery(messages) {
 
 function isTimedFoodAvailabilityQuery(messages) {
   const context = recentUserContext(messages, 5);
-  const food = /\b(coffee|cafe|lunch|dinner|restaurant|food|eat|drink)\b/i;
-  const timed = /\b(?:at|around|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\btonight|this evening|this afternoon\b/i;
+  const food = /\b(coffee|cafe|breakfast|lunch|dinner|restaurant|food|eat|drink)\b/i;
+  const timed = /\b(?:at|around|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b(?:(?:the\s+)?time\s+is|it(?:'|’)s|it\s+is)\s+\d{1,2}:\d{2}\b|\btonight|this evening|this afternoon\b/i;
   const decision = /\b(where|somewhere|want|need|looking for|find|recommend)\b/i;
   return food.test(context) && timed.test(context) && decision.test(context);
 }
@@ -1750,6 +1763,11 @@ function needsLiveSearch(messages) {
   const context = recentUserContext(messages);
   if (/https?:\/\//i.test(last)) return true;
 
+  // A relative time window is operational even when the user never says "today".
+  if (/\b(?:next|coming|in the next)\s+(?:\d+|one|two|three|four|few|couple of)\s+hours?\b/i.test(last)) return true;
+  if (/\b(?:need to keep|take|occupy|entertain)\b.*\b(?:kids?|children|family)\b.*\b(?:hours?|now|this afternoon)\b/i.test(last)) return true;
+  if (/\b(?:(?:the\s+)?time\s+is|it(?:'|’)s|it\s+is)\s+\d{1,2}:\d{2}\b/i.test(last)) return true;
+
   if (isNamedRetailPresenceQuery(messages)) return true;
   if (isQuickFoodQuery(messages)) return true;
   if (isGeneralAccessibilityQuery(messages)) return true;
@@ -1781,6 +1799,7 @@ function needsLiveSearch(messages) {
 
 function requiresVerifiedSource(messages) {
   const context = recentUserContext(messages);
+  if (/\b(?:next|coming|in the next)\s+(?:\d+|one|two|three|four|few|couple of)\s+hours?\b/i.test(context)) return true;
   if (isNamedRetailPresenceQuery(messages)) return true;
   if (isCurrentFoodStatusQuery(messages)) return true;
   if (isGeneralAccessibilityQuery(messages)) return true;
@@ -1875,6 +1894,12 @@ function isCurrentEventsQuery(messages) {
   const eventIntent = /\b(events?|things to do|something to do|anything to do|what can (?:we|i) do|free to do|live music|gig|gigs|concert|show|shows|theatre|comedy|festival|market|exhibition|workshop|family event|heritage open days?)\b/i.test(context);
   const currentWindow = /\b(today|tonight|tomorrow|this weekend|weekend|this week|next saturday|next sunday|later today|later tonight|right now|currently)\b/i.test(context);
   return directWhatsOn || (eventIntent && currentWindow);
+}
+
+function isWeekendPerformanceQuery(messages) {
+  const last = lastUserText(messages);
+  return /\b(?:this|next)?\s*weekend\b/i.test(last)
+    && /\b(gigs?|concerts?|comedy|stand[- ]?up|live music|music shows?)\b/i.test(last);
 }
 
 function isFreeCurrentLeisureQuery(messages) {
@@ -2744,7 +2769,8 @@ function formatWeekendCardsV16(cards, weekend) {
     lines.push('', label, '');
     for (const card of list) {
       const meta = [eventTimeLabelV16(card), card.venue].filter(Boolean).join(', ');
-      lines.push(`- ${card.title}${meta ? ` — ${meta}` : ''}`);
+      const detailUrl = isSpecificEventDetailUrl(card.sourceUrl || card.url) ? (card.sourceUrl || card.url) : null;
+      lines.push(`- ${card.title}${meta ? ` — ${meta}` : ''}${detailUrl ? ` — ${detailUrl}` : ''}`);
     }
   };
   addSection(weekend.saturday.replace(/\s+\d{4}$/, ''), sat);
@@ -4497,28 +4523,7 @@ export default async function handler(req, res) {
   const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
   const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
-  const stableCityPlan = undatedCityCentreCoffeeBooksArtPlan(lastUserText(messages));
-  if (stableCityPlan) {
-    return res.status(200).json({
-      reply: stableCityPlan.reply,
-      sources: stableCityPlan.sources.map(url => ({ url, title: 'Venue information' })),
-      live: false,
-      verification: 'curated-itinerary',
-      state: clientState
-    });
-  }
-  const previousAssistant = recentAssistantContext(messages, 1);
-  const publishedHoursFollowUp = regularHoursFollowUp(lastUserText(messages), previousAssistant);
-  if (publishedHoursFollowUp) {
-    return res.status(200).json({
-      reply: publishedHoursFollowUp.reply,
-      sources: publishedHoursFollowUp.sources.map(url => ({ url, title: 'Published venue information' })),
-      live: false,
-      verification: 'published-hours-only',
-      state: clientState
-    });
-  }
-  const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), previousAssistant);
+  const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), messages);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
@@ -4596,7 +4601,7 @@ export default async function handler(req, res) {
   // V16.2 cards-first weekend pilot. The deterministic result set is created
   // and persisted BEFORE presentation. If harvesting fails, fail closed here;
   // do not fall through to the legacy prose-first event machinery.
-  if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.whats_on' && route.operation === 'new' && /\bweekend\b/i.test(lastUserText(messages))) {
+  if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.whats_on' && route.operation === 'new' && /\bweekend\b/i.test(lastUserText(messages)) && !isWeekendPerformanceQuery(messages)) {
     const collected = collectWeekendEventCardsV16(experienceEventsContext, wxContext);
     if (!collected.cards.length) {
       return res.status(200).json({
@@ -4710,7 +4715,7 @@ export default async function handler(req, res) {
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
-    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch);
+    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
 
   if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
     console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
@@ -4910,7 +4915,10 @@ ${freeVenueContexts.wxWeekly.text}
 Use these only to establish whether a long-running attraction/exhibition is actually available on the requested weekday/date. Venue closure days override exhibition date ranges.`
     : '';
 
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}`;
+  const weekendPerformanceContext = isWeekendPerformanceQuery(messages)
+    ? `\n\nWEEKEND PERFORMANCE DISCOVERY: The user wants gigs, concerts, live music or comedy, not merely the first eight generic event cards. Search current first-party venue and organiser event pages beyond the two aggregate feeds. Include only a title, actual matching Saturday/Sunday date, venue and direct event URL supported by an exact official page. A missing ticket price must not suppress the event; omit price or say unconfirmed. If no suitable event is verified, say so rather than padding with unrelated activities.`
+    : '';
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -4928,7 +4936,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       type: 'web_search_20250305',
       name: 'web_search',
       max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
-      allowed_domains: TRUSTED_DOMAINS,
+      // A newly named local venue may have an official domain outside the
+      // curated list. Discover it, then apply the first-party evidence rule.
+      ...(trustedPlacesContext.includes('No matching place records in this batch.') ? {} : { allowed_domains: TRUSTED_DOMAINS }),
       user_location: {
         type: 'approximate',
         city: 'Wakefield',

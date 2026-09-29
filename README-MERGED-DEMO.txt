@@ -35,3 +35,5 @@ Known scope
 - Preserves a Hepworth brunch even when KRA:FT is not mentioned.
 - Uses a WX detail URL to decide whether to fetch a separate performance time, rather than relying on the card's source label.
 - Full offline harness and syntax checks pass. Replace api/chat.js, lib/askwakefield-places.js and tests/conversation-harness.mjs from this revision, plus this note. No new environment variables.
+
+29 September late-evening repair: retain Hepworth gallery requests without requiring brunch wording. Preserve Saturday and 10:00 start across Hepworth? and 11:00 am follow-ups. Replace lib/askwakefield-places.js and tests/conversation-harness.mjs.

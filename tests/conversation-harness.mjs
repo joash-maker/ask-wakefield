@@ -134,6 +134,13 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.match(results[4].reply, /Tenpin Wakefield.*Trinity Walk/s);
     assert.doesNotMatch(results[4].reply, /Xscape|four miles/);
   }
+  if (name.startsWith('Hepworth Saturday')) {
+    for (const result of results.slice(1)) {
+      assert.match(result.reply, /Hepworth as your main art stop/);
+      assert.doesNotMatch(result.reply, /five-minute|five minutes|9:00 or 10:00 breakfast/);
+    }
+    assert.match(results[3].reply, /10:00 start.*11:00/);
+  }
   if (name.startsWith('Hepworth only')) {
     assert.match(results[1].reply, /chosen brunch at The Hepworth/);
     assert.doesNotMatch(results[1].reply, /Mocca Moocho|Bob & Berts/);
@@ -169,6 +176,12 @@ const suites = {
     'Stay more central, in case it rains',
     'Yes, please.',
     'Is there a ten pin balling alley nearby?'
+  ]),
+  hepworthVisit: () => conversation('Hepworth Saturday visit', [
+    'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',
+    'This saturday at 10:00 am, we would like to visit the Hepworth too.',
+    'Hepworth?',
+    '11:00 am'
   ]),
   brunchOnly: () => conversation('Hepworth only brunch', [
     'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',

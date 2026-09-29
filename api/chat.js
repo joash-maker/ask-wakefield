@@ -3126,7 +3126,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
     view = view.filter(card => card.priceStatus === 'paid' || card.priceStatus === 'variable');
   }
 
-  if (ops.showTime && view.some(card => !card.start || (card.source === 'wx' && !card.performanceStart))) {
+  if (ops.showTime && view.some(card => !card.start || (isSpecificWxEventUrl(card.sourceUrl || card.url) && !card.performanceStart))) {
     const refreshed = await refreshEventCardsForTimeV16(view);
     const byId = new Map(refreshed.map(card => [card.id, card]));
     cards = cards.map(card => byId.get(card.id) || card);
@@ -3242,7 +3242,7 @@ async function answerAboutStoredEventsV17(state, question) {
 }
 
 async function refreshEventCardsForTimeV16(cards) {
-  const targets = (cards || []).filter(card => (!card.start || (card.source === 'wx' && !card.performanceStart))
+  const targets = (cards || []).filter(card => (!card.start || (isSpecificWxEventUrl(card.sourceUrl || card.url) && !card.performanceStart))
     && isSpecificEventDetailUrl(card?.sourceUrl || card?.url)).slice(0, 8);
   const refreshed = new Map();
   await Promise.all(targets.map(async card => {

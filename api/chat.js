@@ -1,4 +1,5 @@
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp } from '../lib/askwakefield-places.js';
+import { deflateRawSync, inflateRawSync } from 'node:zlib';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -461,27 +462,26 @@ function encodeStateCookie(state) {
       version: 2,
       lastIntent: state?.lastIntent || null,
       lastFilter: state?.lastFilter || null,
-      viewIds: (state?.viewIds || []).slice(0, 8),
+      viewIds: (state?.viewIds || []).slice(0, 10),
       area: state?.area || null,
       constraints: state?.constraints || null,
-      resultCards: (state?.resultCards || []).slice(0, 8).map(card => ({
+      resultCards: (state?.resultCards || []).slice(0, 10).map(card => ({
         id: card?.id || null,
         entityType: card?.entityType || null,
         title: card?.title || card?.name || null,
         url: card?.sourceUrl || card?.url || null,
         source: card?.source || null,
+        sourceTier: card?.sourceTier || null,
         dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
         startDate: card?.startDate || null,
-        endDate: card?.endDate || null,
         start: card?.start || card?.startTime || null,
         end: card?.end || card?.endTime || null,
         performanceStart: card?.performanceStart || null,
         venue: card?.venue || null,
-        priceStatus: card?.priceStatus || null,
-        priceRaw: card?.priceRaw || null
+        priceStatus: card?.priceStatus || null
       }))
     };
-    const encoded = Buffer.from(JSON.stringify(compact), 'utf8').toString('base64url');
+    const encoded = `z.${deflateRawSync(Buffer.from(JSON.stringify(compact), 'utf8')).toString('base64url')}`;
     return encoded.length <= 3600 ? encoded : null;
   } catch { return null; }
 }
@@ -490,7 +490,9 @@ function stateFromCookie(req) {
   try {
     const raw = parseCookieHeader(req.headers?.cookie || '').aw_state;
     if (!raw) return null;
-    const decoded = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    const decoded = JSON.parse(raw.startsWith('z.')
+      ? inflateRawSync(Buffer.from(raw.slice(2), 'base64url'), { maxOutputLength: 30000 }).toString('utf8')
+      : Buffer.from(raw, 'base64url').toString('utf8'));
     return normaliseClientState(decoded);
   } catch { return null; }
 }
@@ -2844,7 +2846,9 @@ function buildEventStateV16(cards, previous = null, viewIds = null, lastFilter =
 }
 
 async function refreshEventCardsForPriceV16(cards) {
-  const targets = (cards || []).filter(card => isSpecificEventDetailUrl(card?.sourceUrl || card?.url) && !/:sat$|:sun$/.test(card.id || '')).slice(0, 8);
+  const targets = (cards || []).filter(card => isSpecificEventDetailUrl(card?.sourceUrl || card?.url)
+    && !/:sat$|:sun$/.test(card.id || '')
+    && (card.priceStatus === 'unknown' || !card.priceStatus || card.sourceTier !== 'first-party-detail')).slice(0, 5);
   const refreshed = new Map();
   await Promise.all(targets.map(async card => {
     const url = card.sourceUrl || card.url;
@@ -4595,6 +4599,13 @@ export default async function handler(req, res) {
   const bodyState = req.body?.state ? normaliseClientState(req.body.state) : null;
   const clientState = bodyState || stateFromCookie(req) || normaliseClientState(null);
   const route = classifyRequest(messages, clientState);
+  const currentText = lastUserText(messages);
+  const previousUserText = messages.slice(0, -1).reverse().find(message => message.role === 'user')?.content || '';
+  const retryingEventFollowUp = clientState.lastIntent?.startsWith('events.')
+    && /^(?:can you tell me|please tell me|try again|can you check again|and those|yes please)[?.!\s]*$/i.test(currentText.trim())
+    && /\bfree\b|\bwhat time\b|\bstart\b/i.test(previousUserText);
+  const eventFollowUpText = retryingEventFollowUp ? previousUserText : currentText;
+  if (retryingEventFollowUp) route.intent = 'events.filter_existing';
   const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), messages);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
@@ -4640,7 +4651,18 @@ export default async function handler(req, res) {
       });
     }
 
-    const handled = await handleStoredEventFollowUpV16(clientState, lastUserText(messages));
+    let handled;
+    try {
+      handled = await handleStoredEventFollowUpV16(clientState, eventFollowUpText);
+    } catch (error) {
+      console.error('Stored event follow-up failed:', error);
+      // Keep the exact original event set and let the user retry the same
+      // filter. Never drop into an unrelated prose reconstruction.
+      return res.status(200).json({
+        reply: 'I still have the event list, but the admission check failed just now. Please try asking which are free again.',
+        sources: [], live: false, verification: 'cards-first-retry', state: clientState
+      });
+    }
     if (handled) {
       attachStateCookie(res, handled.state);
       return res.status(200).json({

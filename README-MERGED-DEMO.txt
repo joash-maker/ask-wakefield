@@ -23,3 +23,15 @@ Checks
 Known scope
 - Other intents such as pharmacy and transport still use the earlier model path. This merge focuses on the Friday three-demo flow and v17 state continuity.
 - Official venue listings can change. The mock tests prove routing and formatting, not future opening hours or event admission.
+
+29 September follow-up repair
+- 'Starting from Wakefield town, kids ages are 7 and 4' now keeps the family state and interprets the origin as the city centre.
+- 'Stay more central, in case it rains' stays in the family flow: Wakefield One indoors until 16:00, with Cheeky Monkeys as a paid play candidate. Rainbow Playrooms' published Saturday sessions end at 13:30. A bare 'Yes, please' provides the booking link and states that Saturday afternoon availability and admission are not verified.
+- A 09:30 Hepworth and Wood Street request stays in the city itinerary flow. KRA:FT Koffee is at 12 Wood Street; the gallery opens at 10:00 Tuesday to Sunday. The answer avoids an invented second KRA:FT address and unmeasured walking times.
+- The frozen conversation harness includes these exact follow-ups. Run it again after deploying the test branch; then verify the live answers and source links in Preview.
+
+29 September evening repair
+- Retains Trinity Walk as the family starting point. Recognises 'ten pin balling' and bowling follow-ups and uses the official Tenpin Wakefield record in Trinity Walk.
+- Preserves a Hepworth brunch even when KRA:FT is not mentioned.
+- Uses a WX detail URL to decide whether to fetch a separate performance time, rather than relying on the card's source label.
+- Full offline harness and syntax checks pass. Replace api/chat.js, lib/askwakefield-places.js and tests/conversation-harness.mjs from this revision, plus this note. No new environment variables.

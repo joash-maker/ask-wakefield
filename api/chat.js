@@ -1,5 +1,5 @@
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
-import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
@@ -4942,7 +4942,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.4');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.6');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -5003,6 +5003,8 @@ export default async function handler(req, res) {
   // in a blank answer. The response carries first-party links as source chips.
   const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
   const groundedStarter = isEventTopic ? null : foodSpecificFollowUp(currentText, clientState)
+    || nightlifeRecommendation(currentText, clientState)
+    || namedDiningFollowUp(currentText)
     || familyDistrictStarter(lastUserText(messages))
     || undatedCityCentreArtsPlan(lastUserText(messages))
     || familyPlanFollowUp(lastUserText(messages), clientState)

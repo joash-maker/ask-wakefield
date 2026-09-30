@@ -77,7 +77,7 @@ const fallback = await ask('Coffee and dessert on Friday after work in Wakefield
 assert.match(fallback.body.reply, /Dolce Vita/);
 assert.equal(fallback.body.live, false);
 assert.equal(fallback.body.verification, 'published-place-options');
-assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.6');
+assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.8');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
 
 const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
@@ -102,3 +102,13 @@ assert.match(namedDiningFollowUp('Vinyl Café North Saturday?').reply,/Closed/);
 assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/18:00/);
 assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/conflict/);
 assert.ok(selectTrustedPlaces('Recommend a Thai restaurant in Wakefield').some(p=>p.id==='AW-R004'));
+
+const bowlingState = horburyFollowUp('What about bowling?', {lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',origin:'Wakefield city centre',ages:[7,4]}}});
+const bowlingBudget = horburyFollowUp('Would that fit our £40, including getting there?',{lastIntent:'places.family_plan',constraints:bowlingState.constraints});
+assert.match(bowlingBudget.reply,/Tenpin Wakefield/);
+assert.match(bowlingBudget.reply,/£30/);
+assert.match(bowlingBudget.reply,/not quoted venue prices/);
+
+const neutralWeather = horburyFollowUp('Wakefield city centre, ages 7 and 4.',{lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',ages:[]}}});
+assert.doesNotMatch(neutralWeather.reply,/heavy rain|rain holds off/);
+assert.match(neutralWeather.reply,/For indoor play/);

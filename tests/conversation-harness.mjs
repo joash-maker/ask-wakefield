@@ -134,6 +134,17 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.match(results[4].reply, /Tenpin Wakefield.*Trinity Walk/s);
     assert.doesNotMatch(results[4].reply, /Xscape|four miles/);
   }
+  if (name.startsWith('Three demos topic switch')) {
+    assert.match(results[1].reply, /Starting at Wakefield city centre/);
+    assert.doesNotMatch(results[1].reply, /bus 96|taxi|ten-minute walk/);
+    assert.match(results[2].reply, /Tenpin Wakefield/);
+    assert.match(results[4].reply, /10:00 to 13:00/);
+    assert.match(results[5].reply, /Hepworth as your main art stop/);
+    for (const result of results.slice(6)) assert.doesNotMatch(result.reply, /Hepworth as your main art stop|coffee at The Hepworth/);
+    assert.match(results[6].reply, /Caphouse Tabletop Gaming Day/);
+    assert.match(results[7].reply, /Caphouse Tabletop Gaming Day/);
+    assert.match(results[8].reply, /starts at 11:00/);
+  }
   if (name.startsWith('Pugneys two hours')) {
     for (const result of results.slice(1)) {
       assert.match(result.reply, /Pugneys/);
@@ -143,7 +154,8 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.match(results[2].reply, /£7.50/);
   }
   if (name.startsWith('Saturday 0930')) {
-    for (const result of results.slice(1)) {
+    assert.match(results[3].reply, /You’re welcome/);
+    for (const result of results.slice(1, 3)) {
       assert.match(result.reply, /09:30 to 12:30/);
       assert.match(result.reply, /07:30 opening/);
       assert.doesNotMatch(result.reply, /13:30|waiting for coffee|Both open around 10:00/);
@@ -193,6 +205,17 @@ const suites = {
     'Stay more central, in case it rains',
     'Yes, please.',
     'Is there a ten pin balling alley nearby?'
+  ]),
+  topicSwitch: () => conversation('Three demos topic switch', [
+    'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
+    'From the city centre, kids ages are 7 and 4',
+    'Different shape afternoon',
+    'My wife and I have three hours in Wakefield city centre. We like good coffee, books and art. Plan us an afternoon.',
+    'Start around 10:00 am, this saturday.',
+    'Can I slot the Hepworth in there?',
+    'What’s on in the Wakefield district this weekend?',
+    'Which of those are free?',
+    'What time do they start?'
   ]),
   pugneys: () => conversation('Pugneys two hours', [
     'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',

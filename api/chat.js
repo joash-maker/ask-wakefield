@@ -4943,7 +4943,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.10');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.11');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -4989,10 +4989,13 @@ export default async function handler(req, res) {
   }
   const moreFood = /^(?:any others|any more|anything else|more options)[?.!\s]*$/i.test(currentText);
   const foodHours = /\b(?:typical|regular|usual)?\s*opening hours\b|^what time.*(?:open|close)/i.test(currentText);
-  if (clientState.lastIntent === 'food.open_at' && (moreFood || foodHours)) {
+  const dessertOnly = /\b(?:desserts? without coffee|desserts? only|no coffee|without coffee)\b/i.test(currentText);
+  const foodAcceptance = /^(?:yes|yes please|yes,? let me know|please do|go ahead)[?.!\s]*$/i.test(currentText);
+  if (clientState.lastIntent === 'food.open_at' && (moreFood || foodHours || dessertOnly || (foodAcceptance && clientState.constraints?.coffeeRequired === false))) {
+    if (dessertOnly) clientState.constraints = {...clientState.constraints, coffeeRequired:false};
     const queryContext = messages.filter(m => m.role === 'user').map(m => m.content).join('\n');
     const excluded = moreFood ? (clientState.resultCards || []).map(c => c.id) : [];
-    const published = publishedFoodRecommendation(queryContext, clientState.constraints?.time || route.timeConstraint, excluded);
+    const published = publishedFoodRecommendation(queryContext, clientState.constraints?.time || route.timeConstraint, excluded, clientState.constraints?.coffeeRequired);
     if (published) {
       attachStateCookie(res, clientState);
       return res.status(200).json({reply:finaliseUserFacingReply(published.reply),sources:published.sources,state:clientState,live:false,verification:'published-place-options'});

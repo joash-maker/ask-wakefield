@@ -219,13 +219,14 @@ const suites = {
   ]),
   indoorNearby: () => conversation('Indoor activity choices', [
     'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
-    'Starting in the City centre, my kids ages are 7 and 4.',
-    'Are there indoor activities nearby?'
+    'Wakefield city centre, ages 7 and 4.',
+    'Are there indoor activities nearby?',
+    'What about bowling?'
   ]),
   kidsWeekend: () => conversation('Children from stored weekend', [
     'What’s on in the Wakefield district this weekend?',
     'Which of those are free?',
-    'Anything for kids this weekend?',
+    'Anything for kids?',
     'What time do they start?'
   ]),
   topicSwitch: () => conversation('Three demos topic switch', [

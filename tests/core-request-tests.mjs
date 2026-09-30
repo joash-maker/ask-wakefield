@@ -77,7 +77,7 @@ const fallback = await ask('Coffee and dessert on Friday after work in Wakefield
 assert.match(fallback.body.reply, /Dolce Vita/);
 assert.equal(fallback.body.live, false);
 assert.equal(fallback.body.verification, 'published-place-options');
-assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.8');
+assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.9');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
 
 const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
@@ -112,3 +112,17 @@ assert.match(bowlingBudget.reply,/not quoted venue prices/);
 const neutralWeather = horburyFollowUp('Wakefield city centre, ages 7 and 4.',{lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',ages:[]}}});
 assert.doesNotMatch(neutralWeather.reply,/heavy rain|rain holds off/);
 assert.match(neutralWeather.reply,/For indoor play/);
+
+const afterFourQuestion = 'Can you give me a few places to go for dessert and coffee after work, anything open after 4pm?';
+const afterFourTime = requestedPlaceTimeConstraint([user(afterFourQuestion)]);
+assert.equal(afterFourTime.mode,'after');
+assert.equal(afterFourTime.hour,16);
+const wedFour = {...afterFourTime,day:3};
+const wedDessert = publishedFoodRecommendation(afterFourQuestion,wedFour);
+assert.match(wedDessert.reply,/Dolce Vita/);
+assert.doesNotMatch(wedDessert.reply,/Club House|Rassam|300|rarely cramped/);
+assert.match(wedDessert.reply,/dessert-only/);
+const afterFourResponse = await ask(afterFourQuestion);
+assert.equal(afterFourResponse.body.verification,'published-place-options');
+assert.match(afterFourResponse.body.reply,/Dolce Vita/);
+assert.doesNotMatch(afterFourResponse.body.reply,/300|rarely cramped|mocktail area/);

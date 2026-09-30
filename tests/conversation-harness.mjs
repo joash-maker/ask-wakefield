@@ -56,7 +56,7 @@ globalThis.fetch = async (url, opts = {}) => {
   const m = u.match(/experiencewakefield\.co\.uk\/event\/([^/]+)\/?$/);
   if (m && details[m[1]]) {
     const [t, meta] = details[m[1]];
-    return new Response(`<html><h1>${t}</h1><div>${meta}</div><h2>About</h2><p>Lots of free parking nearby.</p></html>`, { status: 200 });
+    return new Response(`<html><h1>${t}</h1><div>${meta}</div><h2>About</h2><p>${m[1] === "caphouse-tabletop-gaming-day" ? "A family-friendly gaming day for children and adults." : "An event for adult visitors."} Lots of free parking nearby.</p></html>`, { status: 200 });
   }
   return new Response('not found', { status: 404 });
 };
@@ -134,6 +134,17 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.match(results[4].reply, /Tenpin Wakefield.*Trinity Walk/s);
     assert.doesNotMatch(results[4].reply, /Xscape|four miles/);
   }
+  if (name.startsWith('Indoor activity choices')) {
+    assert.match(results[2].reply, /Tenpin Wakefield/);
+    assert.match(results[2].reply, /Cheeky Monkeys/);
+    assert.doesNotMatch(results[2].reply, /Art Pod|every Saturday from 11|short walk apart|Mediahubink/);
+  }
+  if (name.startsWith('Children from stored weekend')) {
+    assert.match(results[2].reply, /Caphouse Tabletop Gaming Day/);
+    assert.doesNotMatch(results[2].reply, /Quadrophenia|Blacker Hall|Mediahubink|Art Pods/);
+    assert.match(results[3].reply, /Caphouse.*starts at 11:00/s);
+    assert.doesNotMatch(results[3].reply, /Quadrophenia/);
+  }
   if (name.startsWith('Three demos topic switch')) {
     assert.match(results[1].reply, /Starting at Wakefield city centre/);
     assert.doesNotMatch(results[1].reply, /bus 96|taxi|ten-minute walk/);
@@ -205,6 +216,17 @@ const suites = {
     'Stay more central, in case it rains',
     'Yes, please.',
     'Is there a ten pin balling alley nearby?'
+  ]),
+  indoorNearby: () => conversation('Indoor activity choices', [
+    'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
+    'Starting in the City centre, my kids ages are 7 and 4.',
+    'Are there indoor activities nearby?'
+  ]),
+  kidsWeekend: () => conversation('Children from stored weekend', [
+    'What’s on in the Wakefield district this weekend?',
+    'Which of those are free?',
+    'Anything for kids this weekend?',
+    'What time do they start?'
   ]),
   topicSwitch: () => conversation('Three demos topic switch', [
     'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',

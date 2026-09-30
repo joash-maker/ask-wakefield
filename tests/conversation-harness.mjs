@@ -221,7 +221,8 @@ const suites = {
     'I’ve got two children, no car and about £40 to spend. We want something to do in the Wakefield district this Saturday afternoon. What would you suggest?',
     'Wakefield city centre, ages 7 and 4.',
     'Are there indoor activities nearby?',
-    'What about bowling?'
+    'What about bowling?',
+    'Would that fit our £40, including getting there?'
   ]),
   kidsWeekend: () => conversation('Children from stored weekend', [
     'What’s on in the Wakefield district this weekend?',

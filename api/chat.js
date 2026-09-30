@@ -4943,7 +4943,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.9');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.10');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -4986,6 +4986,17 @@ export default async function handler(req, res) {
       reply: "I no longer have the verified list from that chat, so I can't safely filter it. Please ask for the weekend events again.",
       sources: [], followups: ["What's on this weekend?"], live: false, verification: 'no-prior-list'
     });
+  }
+  const moreFood = /^(?:any others|any more|anything else|more options)[?.!\s]*$/i.test(currentText);
+  const foodHours = /\b(?:typical|regular|usual)?\s*opening hours\b|^what time.*(?:open|close)/i.test(currentText);
+  if (clientState.lastIntent === 'food.open_at' && (moreFood || foodHours)) {
+    const queryContext = messages.filter(m => m.role === 'user').map(m => m.content).join('\n');
+    const excluded = moreFood ? (clientState.resultCards || []).map(c => c.id) : [];
+    const published = publishedFoodRecommendation(queryContext, clientState.constraints?.time || route.timeConstraint, excluded);
+    if (published) {
+      attachStateCookie(res, clientState);
+      return res.status(200).json({reply:finaliseUserFacingReply(published.reply),sources:published.sources,state:clientState,live:false,verification:'published-place-options'});
+    }
   }
   const previousUserText = messages.slice(0, -1).reverse().find(message => message.role === 'user')?.content || '';
   const retryingEventFollowUp = clientState.lastIntent?.startsWith('events.')

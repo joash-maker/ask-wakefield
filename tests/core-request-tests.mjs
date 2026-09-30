@@ -77,7 +77,7 @@ const fallback = await ask('Coffee and dessert on Friday after work in Wakefield
 assert.match(fallback.body.reply, /Dolce Vita/);
 assert.equal(fallback.body.live, false);
 assert.equal(fallback.body.verification, 'published-place-options');
-assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.4');
+assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.6');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
 
 const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
@@ -85,3 +85,20 @@ const horburyReply = horburyFollowUp('Starting in Horbury, ages 7 and 4', {lastI
 assert.match(horburyReply.reply, /Secret Garden/);
 assert.match(horburyReply.reply, /£13.90/);
 assert.match(horburyFollowUp('Indoor activities nearby?', {lastIntent:'places.family_plan',constraints:horburyReply.constraints}).reply, /Secret Garden/);
+
+const {nightlifeRecommendation,selectTrustedPlaces} = await import('../lib/askwakefield-places.js');
+assert.match(nightlifeRecommendation('Recommend bars in Wakefield',{}).reply,/Good Fortunes/);
+assert.match(nightlifeRecommendation('Cocktail bars on Wood Street',{}).reply,/Hilton Lounge/);
+assert.doesNotMatch(nightlifeRecommendation('Cocktail bars on Wood Street',{}).reply,/Popworld/);
+assert.match(nightlifeRecommendation('What about Lost Cause Brewing Co?',{}).reply,/Castleford/);
+assert.match(nightlifeRecommendation('What about Journey Lounge?',{}).reply,/cannot confirm/);
+assert.equal(nightlifeRecommendation('Is a bar open now?',{}),null);
+assert.ok(selectTrustedPlaces('Recommend cocktail bars in Wakefield').some(p=>p.nightlifeStyle));
+
+const {namedDiningFollowUp} = await import('../lib/askwakefield-places.js');
+assert.match(namedDiningFollowUp('What about San Leo?').reply,/Mexican.*Italian/);
+assert.match(namedDiningFollowUp('Could we try Vera Friday?').reply,/17:00/);
+assert.match(namedDiningFollowUp('Vinyl Café North Saturday?').reply,/Closed/);
+assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/18:00/);
+assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/conflict/);
+assert.ok(selectTrustedPlaces('Recommend a Thai restaurant in Wakefield').some(p=>p.id==='AW-R004'));

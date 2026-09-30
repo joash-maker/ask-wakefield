@@ -1,41 +1,51 @@
-AskWakefield v17 merged demo build | 29 September 2026
+ASK WAKEFIELD — CORE UPDATE, 30 SEPTEMBER 2026
+Build marker: v18-core-2026-09-30
 
-This is the full site package from the supplied v17 archive, with the later family and city-centre knowledge records merged in.
+Install on the test branch first. No production deployment has been performed.
+This archive contains the full site; copy these changed/new files at their exact paths:
 
-Changes in this merged build
-- Keeps the three-hour couple itinerary: 10:00 Hepworth Café brunch, then KRA:FT at 12 Wood Street, books and The Art House. A bare Friday reply resolves to Friday 2 October 2026 when asked on Tuesday 29 September. Waterstones is a chain, Comics-616 is independent.
-- Keeps the latest family play-centre choices, including Cheeky Monkeys and Stanley Ferry Wacky Warehouse, without inventing admission or transport for unverified venues.
-- Weekend event follow-ups use signed state tokens passed by the main page and cross-origin widget. A tampered token with no valid cookie does not fall back to prose reconstruction.
-- Event start-time replies state the start, not the full duration. When the WX detail page supplies a separate performance start, that time is included. Quadrophenia lists doors and DJs at 17:00 and performance at 17:30.
-- Removed the wildcard /api CORS header from vercel.json. The chat handler now allows the two AskWakefield domains and explicit ALLOWED_ORIGINS only. Other cross-origin widget host domains must be listed in ALLOWED_ORIGINS.
+api/chat.js                         replace
+api/status.js                       add
+lib/conversation-scope.js           add
+lib/askwakefield-places.js           replace
+lib/askwakefield-places-data.js      replace
+tests/conversation-harness.mjs       replace
+tests/core-request-tests.mjs         add
+README-MERGED-DEMO.txt               replace
 
-Deployment settings
-- Set STATE_SIGNING_SECRET to a long random value in Vercel. If omitted, the server derives a signing key from ANTHROPIC_API_KEY, which makes chats expire when that key rotates.
-- For an embedded widget hosted on another domain, add its exact HTTPS origin to ALLOWED_ORIGINS (comma-separated for several). Same-origin Vercel Preview works without adding its domain. Do not set a wildcard.
-- Keep your existing API keys and other environment variables. This package is not a database migration.
+What changed
+- Shared topic boundaries run before routing, retrieval and response handling.
+- New requests drop prior event lists and itinerary state. Referring follow-ups retain their request.
+- Friday/other weekday opening checks use the requested weekday rather than the server's current day.
+- Time refinements such as 7 pm replace an earlier time.
+- Evening/after-work requests use an approximate after-17:00 search window and disclose that assumption.
+- Live Google Places discovery checks operational status and coffee/dessert service fields.
+- Closed and wrong-day candidates are excluded; overnight opening is supported.
+- If live discovery fails, researched published food options remain available with a clear snapshot label.
+- Six evening food/bar records added. Unknown coffee/dessert services remain unknown.
+- Repeated provider authentication/rate-limit/server failures back off for 30 seconds.
+- api/status shows the build and configuration flags, never secrets.
 
-Checks
-- Run: node tests/conversation-harness.mjs
-- The harness uses a frozen 29 September 2026 clock and mocked event pages. It asserts the three-demo event subset, 11:00 Caphouse start, WX doors/performance times, family follow-up, Hepworth/KRA:FT Friday sequence, widget token and tamper rejection.
-- Syntax checks pass for api/chat.js and the two local-place modules. The full mocked conversation suite passes.
-- The package has not been deployed or exercised against live Preview. After deploying to Preview, retest the three continuous chats with a fresh chat for each. Check the source links and an embedded widget on its actual host domain.
+Live data configuration
+GOOGLE_PLACES_API_KEY (or GOOGLE_MAPS_API_KEY) must contain a working key for Places API (New).
+The associated Google project needs the API enabled and billing configured.
+GOOGLE_PLACES_ENABLED defaults to true; remove a false value or set true to enable discovery.
+Retain STATE_SIGNING_SECRET and existing deployment settings.
+The status flag reports configuration presence, not that Google has accepted the key.
+Venue records and published hours are a useful fallback, not guaranteed availability or booking slots.
 
-Known scope
-- Other intents such as pharmacy and transport still use the earlier model path. This merge focuses on the Friday three-demo flow and v17 state continuity.
-- Official venue listings can change. The mock tests prove routing and formatting, not future opening hours or event admission.
+Checks performed
+node tests/conversation-harness.mjs
+node tests/core-request-tests.mjs
+JavaScript syntax checks on chat, status and new conversation module.
+These are offline tests with mocked external providers, not a deployed end-to-end verification.
 
-29 September follow-up repair
-- 'Starting from Wakefield town, kids ages are 7 and 4' now keeps the family state and interprets the origin as the city centre.
-- 'Stay more central, in case it rains' stays in the family flow: Wakefield One indoors until 16:00, with Cheeky Monkeys as a paid play candidate. Rainbow Playrooms' published Saturday sessions end at 13:30. A bare 'Yes, please' provides the booking link and states that Saturday afternoon availability and admission are not verified.
-- A 09:30 Hepworth and Wood Street request stays in the city itinerary flow. KRA:FT Koffee is at 12 Wood Street; the gallery opens at 10:00 Tuesday to Sunday. The answer avoids an invented second KRA:FT address and unmeasured walking times.
-- The frozen conversation harness includes these exact follow-ups. Run it again after deploying the test branch; then verify the live answers and source links in Preview.
+After deployment
+1. Open /api/status on the same Preview URL used for chat.
+2. Confirm build is v18-core-2026-09-30 and livePlacesConfigured is true.
+3. In one chat, run family, city itinerary, then weekend/free/start-time questions.
+4. Switch to: Friday night, coffee and dessert with friends in Wakefield. Any recommendations?
+5. Follow with: Around 7 pm. Check the time and topic stay attached to the dessert request.
 
-29 September evening repair
-- Retains Trinity Walk as the family starting point. Recognises 'ten pin balling' and bowling follow-ups and uses the official Tenpin Wakefield record in Trinity Walk.
-- Preserves a Hepworth brunch even when KRA:FT is not mentioned.
-- Uses a WX detail URL to decide whether to fetch a separate performance time, rather than relying on the card's source label.
-- Full offline harness and syntax checks pass. Replace api/chat.js, lib/askwakefield-places.js and tests/conversation-harness.mjs from this revision, plus this note. No new environment variables.
-
-29 September late-evening repair: retain Hepworth gallery requests without requiring brunch wording. Preserve Saturday and 10:00 start across Hepworth? and 11:00 am follow-ups. Replace lib/askwakefield-places.js and tests/conversation-harness.mjs.
-
-29 September 22:25 repair: recognise Pugneys origin and retain two-hour single-location plan. Handle Saturday 09:30 coffee/books/art follow-ups with listed early café hours, 12:30 finish, books-first and Hepworth preferences. Replace lib/askwakefield-places.js and tests/conversation-harness.mjs.
+Suggested commit
+Fix shared conversation routing and live weekday recommendations

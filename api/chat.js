@@ -1014,6 +1014,17 @@ function requestedPlaceClockConstraint(messages) {
     if (hour < 24 && minute < 60) return { mode: 'at', hour, minute };
   }
 
+  const after12 = context.match(/\bafter\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+  if (after12) {
+    let hour = Number(after12[1]);
+    const minute = Number(after12[2] || 0);
+    const meridiem = (after12[3] || '').toLowerCase();
+    if (meridiem === 'pm' && hour !== 12) hour += 12;
+    if (meridiem === 'am' && hour === 12) hour = 0;
+    if (!meridiem && hour >= 1 && hour <= 11 && /\b(evening|tonight|late|pharmacy)\b/i.test(context)) hour += 12;
+    return { mode: 'after', hour, minute };
+  }
+
   const exact12 = context.match(/\b(?:(?:at|around|by)\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
   if (exact12) {
     let hour = Number(exact12[1]);
@@ -1026,16 +1037,6 @@ function requestedPlaceClockConstraint(messages) {
   const exact24 = context.match(/\b(?:at|around|by)?\s*((?:1[7-9]|2[0-3])):(\d{2})\b/i);
   if (exact24) return { mode: 'at', hour: Number(exact24[1]), minute: Number(exact24[2]) };
 
-  const after12 = context.match(/\bafter\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
-  if (after12) {
-    let hour = Number(after12[1]);
-    const minute = Number(after12[2] || 0);
-    const meridiem = (after12[3] || '').toLowerCase();
-    if (meridiem === 'pm' && hour !== 12) hour += 12;
-    if (meridiem === 'am' && hour === 12) hour = 0;
-    if (!meridiem && hour >= 1 && hour <= 11 && /\b(evening|tonight|late|pharmacy)\b/i.test(context)) hour += 12;
-    return { mode: 'after', hour, minute };
-  }
   const wordAfter = context.match(/\bafter\s+(six|seven|eight|nine)\b/i);
   if (wordAfter) {
     const map = { six: 18, seven: 19, eight: 20, nine: 21 };
@@ -4942,7 +4943,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.8');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.9');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 

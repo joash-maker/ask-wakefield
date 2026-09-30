@@ -4942,7 +4942,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.6');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.8');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 

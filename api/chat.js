@@ -100,7 +100,7 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **CURRENT FOOD STATUS:** If the user asks what is "open now", "open right now", "open for lunch now/today" or otherwise makes current opening status the core question, live verification is mandatory. If the user's area is not already known from the recent conversation, ask for the area before searching or recommending venues. Once the area is known, ONLY name venues whose current opening status you can verify from the live search evidence. A venue from the curated knowledge base must NOT appear in an open-now answer unless the live evidence independently verifies its current hours. Do not use a general venue description as evidence of current opening. Do not pad the answer with unverified venues. If only one or two can be verified, give only those and say that they are the ones you could verify. Before writing the answer, perform a literal clock comparison: if the current time is between the verified opening and closing times, the venue is open; if the current time is before the closing time, NEVER say the user has missed it. Example: 13:19 is before 15:00, so a 09:00-15:00 venue is still open at 13:19.
 - **RECOMMENDATION BOUNDARY:** For a general recommendation, state stable facts and useful descriptions from the knowledge base. Do not claim a venue is open now/today, has a table available, has a particular current price/menu item, or still holds a changing award unless that specific fact has been verified. Do not turn a recommendation into an unsupported review: avoid claims such as "outstanding", "brilliant value", "genuinely good", "authentic", "excellent value", "local favourite" or "best" unless the basis is explicit and attributed. If useful, add one short line such as "Opening hours can change, so check the venue before setting off." Do not let that caveat dominate the answer.
 - **GRACEFUL DEGRADATION:** If a live lookup fails but the user's question can still be answered safely from stable knowledge, answer the stable part. Withhold only the unverified changing detail. Use a generic verification-failure response only when the core question itself depends on a fact that must be current, such as "is it open now?", "what time is the last train?", "what's on tonight?" or a live price/availability question.
-- **REVIEW-LANGUAGE DISCIPLINE:** Separate factual description from opinion. Never present an unverified quality judgement as fact. If a venue appears in MEDIAHUBINK'S FAVOURITE PLACES, you may say it is a Mediahubink or Joash personal pick when that context is useful, but do not convert that into a claim that it is objectively the best, a local favourite, excellent value, authentic, outstanding or universally recommended.
+- **REVIEW-LANGUAGE DISCIPLINE:** Separate factual description from opinion. Never present an unverified quality judgement as fact. Never expose Mediahubink or Joash personal endorsements in visitor recommendations. Use only supported venue facts.
 - **ORIGIN-AWARE ROUTING:** Consider where the user is starting. Do not recommend travelling by train to a station in the same origin city merely because that station is the nearest railway station to the destination. For Wakefield Cathedral/city centre to Yorkshire Sculpture Park, the useful verified public-transport option is the 96 bus; otherwise suggest taxi/car and direct the user to West Yorkshire Metro for exact live journey planning. Do not mention rail for that specific origin-to-destination question unless the user explicitly asks about train or rail. Do not invent a train-plus-bus route.
 - **PLANNING AND LEGAL ACCURACY:** Planning rules can depend on the property and current national/local rules. Verify planning-permission, permitted-development and building-regulation questions against official sources before giving specific limits. Never invent percentage-of-plot rules or other thresholds.
 - When giving a general overview of a place, prioritise 3–5 useful verified facts. Do not pad the answer with unverified descriptive details.
@@ -226,7 +226,7 @@ TRANSPORT — PASSES & CARDS: West Yorkshire Metro MCard season tickets (weekly,
 TRANSPORT — TAXIS / PRIVATE HIRE & LONG DISTANCE: Taxi and ride questions are supporting guidance only, not a core Ask Wakefield feature. If the user asks for a taxi or ride, give basic neutral guidance and direct them to a licensed operator or the relevant third-party app; do not offer to book, dispatch or act as an intermediary. For licensed taxi/private-hire information use wakefield.gov.uk/taxis. Treat ride-app availability as current information that should be verified rather than assumed. National Express and FlixBus may serve longer-distance journeys; verify current stops/times before giving specifics.
 
 MEDIAHUBINK'S FAVOURITE PLACES — DINING & COFFEE IN WAKEFIELD:
-These are personal picks from Joash Perera, founder of Mediahubink — the team behind Ask Wakefield. They are not objective rankings or review scores. When they are relevant, use the factual descriptions below; if you mention the personal endorsement, attribute it clearly to Joash or Mediahubink.
+These are personal picks from Joash Perera, founder of Mediahubink — the team behind Ask Wakefield. They are not objective rankings or review scores. Use factual descriptions only. Do not reveal these personal endorsements to visitors.
 
 DINING & FOOD:
 - **Gyros Bros** — Greek-style street food and informal dining. gyros-bros.com
@@ -2999,10 +2999,11 @@ function storedEventCards(state) {
 }
 
 function parseEventFilters(value) {
-  const out = { price: null, day: null };
+  const out = { price: null, day: null, family: false };
   for (const part of String(value || '').split('|')) {
     const [key, val] = part.split(':');
     if (key === 'price' && ['free', 'paid'].includes(val)) out.price = val;
+    if (key === 'family' && val === 'true') out.family = true;
     if (key === 'day' && ['saturday', 'sunday'].includes(val)) out.day = val;
     // Backwards compatibility with V16 state.
     if (key === 'free' && !val) out.price = 'free';
@@ -3011,12 +3012,13 @@ function parseEventFilters(value) {
 }
 
 function serialiseEventFilters(filters) {
-  return [filters?.price ? `price:${filters.price}` : null, filters?.day ? `day:${filters.day}` : null].filter(Boolean).join('|') || null;
+  return [filters?.price ? `price:${filters.price}` : null, filters?.day ? `day:${filters.day}` : null, filters?.family ? 'family:true' : null].filter(Boolean).join('|') || null;
 }
 
 function eventOpsFromText(text) {
   const value = String(text || '').toLowerCase().replace(/[’]/g, "'");
   const ops = {};
+  if (/\b(?:kids?|children|families|family)\b/.test(value)) ops.family = true;
   if (/\b(full list|whole list|all of them again|everything again|show (?:me )?(?:them )?all|start again|reset)\b/.test(value)) ops.reset = true;
   if (/\bfree\b|\bno charge\b|\bcost nothing\b|\bdon'?t cost\b/.test(value)) ops.price = 'free';
   else if (/\b(paid|ticketed|need tickets?)\b/.test(value)) ops.price = 'paid';
@@ -3143,6 +3145,19 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   const needPrice = Boolean(filters.price) || Boolean(ops.showPrice);
   if (needPrice) cards = await refreshEventCardsForPriceV16(cards);
 
+  let familyUnconfirmed = 0;
+  if (filters.family) {
+    cards = await Promise.all(cards.map(async card => {
+      const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
+      const text = String(context?.fullText || context?.eventDetailText || context?.text || '');
+      const titleAt = text.toLowerCase().indexOf(card.title.toLowerCase());
+      const scoped = titleAt >= 0 ? text.slice(titleAt, titleAt + 7000).split(/More at WX|Related Events|You may also|Venue Details/i)[0] : '';
+      const about = scoped.split(/\bAbout\b/i)[1] || scoped;
+      const family = /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages welcome|suitable for all ages)\b/i.test(about)
+        && !/\b(?:adults only|18\+|over[- ]18s only)\b/i.test(about);
+      return { ...card, familyVerified: family };
+    }));
+  }
   let view = cards.filter(card => cardOccursOnV17(card, dayIso));
   let unconfirmed = [];
   if (filters.price === 'free') {
@@ -3160,6 +3175,10 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
     view = view.map(card => byId.get(card.id) || card);
   }
 
+  if (filters.family) {
+    familyUnconfirmed = view.filter(card => card.familyVerified !== true).length;
+    view = view.filter(card => card.familyVerified === true);
+  }
   const dayText = filters.day ? ` on ${dayLabelV17(filters.day, dayIso)}` : '';
   const priceWord = filters.price === 'free' ? 'free' : (filters.price === 'paid' ? 'ticketed' : '');
   const showPrice = Boolean(ops.showPrice) || filters.price === 'paid';
@@ -3180,11 +3199,13 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   }
   const scope = firstAnswer ? 'this weekend' : 'from that list';
   if (!view.length) {
-    if (priceWord) parts.push(`None of the events ${scope}${dayText} are confirmed as ${priceWord}.`);
+    if (filters.family) parts.push(`I could not confirm children’s suitability for any ${priceWord ? `${priceWord} ` : ''}events ${scope}${dayText}.`);
+    else if (priceWord) parts.push(`None of the events ${scope}${dayText} are confirmed as ${priceWord}.`);
     else parts.push(`None of the events ${scope} are on${dayText || ' those dates'}.`);
   } else {
     let intro;
-    if (ops.showTime && (priceWord || filters.day) && !firstAnswer) intro = `Times for the ${priceWord ? `${priceWord} ` : ''}event${view.length === 1 ? '' : 's'}${dayText}:`;
+    if (filters.family) intro = `These ${priceWord ? `${priceWord} ` : ''}events have published family or children’s suitability${dayText}:`;
+    else if (ops.showTime && (priceWord || filters.day) && !firstAnswer) intro = `Times for the ${priceWord ? `${priceWord} ` : ''}event${view.length === 1 ? '' : 's'}${dayText}:`;
     else if (priceWord) intro = `${view.length === 1 ? 'This one is' : 'These are'} confirmed as ${priceWord}${dayText}${firstAnswer ? ' this weekend' : ''}:`;
     else if (filters.day) intro = `${firstAnswer ? 'On' : 'From that list, on'} ${dayLabelV17(filters.day, dayIso)}:`;
     else if (ops.showPrice) intro = firstAnswer ? 'This weekend, with prices from each event page:' : 'Prices from each event page:';
@@ -3192,6 +3213,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
     else intro = firstAnswer ? 'This weekend in Wakefield:' : 'Here is the full list again:';
     parts.push(`${intro}\n\n${lines.join('\n')}`);
   }
+  if (filters.family && familyUnconfirmed) parts.push('Other entries are omitted because I could not confirm children’s suitability from their event descriptions. A free entry label alone does not establish that.');
   if (unconfirmed.length) {
     parts.push(`I couldn't confirm the price for ${unconfirmed.map(card => card.title).join(', ')}. Worth checking ${unconfirmed.length === 1 ? 'its' : 'their'} event page before you go.`);
   }
@@ -3214,6 +3236,7 @@ async function handleStoredEventFollowUpV17(state, ops) {
   if (!allCards.length || !ops) return null;
   if (ops.ask) return answerAboutStoredEventsV17(state, ops.question || '');
   const filters = ops.reset ? { price: null, day: null } : parseEventFilters(state?.lastFilter);
+  if (ops.family) filters.family = true;
   if (ops.price) filters.price = ops.price;
   else if (ops.showPrice) filters.price = null; // "how much are they?" means show prices, not keep a free-only view
   if (ops.day) filters.day = ops.day === 'both' ? null : ops.day;
@@ -4919,7 +4942,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.1');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -5126,10 +5149,10 @@ export default async function handler(req, res) {
     // would be in a follow-up. Constraints we cannot check yet are named in the
     // answer rather than silently dropped.
     const firstOps = eventOpsFromText(currentText);
-    const firstFilters = { price: firstOps.price || null, day: firstOps.day && firstOps.day !== 'both' ? firstOps.day : null };
-    const unsupported = unsupportedEventConstraintsV17(currentText);
+    const firstFilters = { price: firstOps.price || null, day: firstOps.day && firstOps.day !== 'both' ? firstOps.day : null, family: Boolean(firstOps.family) };
+    const unsupported = unsupportedEventConstraintsV17(currentText).filter(label => !(firstFilters.family && label === 'suit children'));
     let rendered;
-    if (firstFilters.price || firstFilters.day || firstOps.showPrice || firstOps.showTime || unsupported.length) {
+    if (firstFilters.price || firstFilters.day || firstFilters.family || firstOps.showPrice || firstOps.showTime || unsupported.length) {
       rendered = await renderEventViewV17(collected.cards, firstFilters, firstOps, { firstAnswer: true, unsupported });
     } else {
       const state = buildEventStateV16(collected.cards, clientState);

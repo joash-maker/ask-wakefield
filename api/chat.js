@@ -1,4 +1,5 @@
-import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp } from '../lib/askwakefield-places.js';
+import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
+import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
@@ -371,7 +372,9 @@ const TRUSTED_DOMAINS = [
   'storelocator.asda.com',
   'stores.sainsburys.co.uk',
   'dolcevitawakefield.co.uk',
-  'rassams.co.uk'
+  'rassams.co.uk',
+  'smokehousewakefield.co.uk',
+  'countinghousewakefield.co.uk'
 ];
 
 const rateLimitMap = new Map();
@@ -427,9 +430,9 @@ function recentUserContext(messages, maxUserMessages = 3) {
   const last = userMessages[userMessages.length - 1];
   // V11: intent is no longer sticky by default. Older user turns are pulled in
   // only when the latest turn is clearly a short/referring follow-up.
-  if (maxUserMessages <= 1 || !looksLikeContextDependentFollowUp(last)) return last.toLowerCase();
+  if (maxUserMessages <= 1 || !(looksLikeContextDependentFollowUp(last) || isRequestRefinement(last))) return last.toLowerCase();
   return userMessages
-    .slice(-Math.min(maxUserMessages, 2))
+    .slice(-maxUserMessages)
     .join('\n')
     .toLowerCase();
 }
@@ -737,7 +740,7 @@ function isAmbiguousDenbyDalePharmacyFollowUp(messages) {
 function isEveningCoffeeDessertQuery(messages) {
   const context = recentUserContext(messages, 5);
   const service = /\b(coffee|hot drink|hot drinks|tea|dessert|desserts|cake|cakes|pudding|sweet treat|sweet treats)\b/i.test(context);
-  const evening = /\b(tonight|this evening|evening|after 5|after 6|after 7|after 8|at [5-9](?::\d{2})?\s*(?:pm)?|(?:1[7-9]|2[0-3]):\d{2}|late coffee|coffee late)\b/i.test(context);
+  const evening = /\b(tonight|this evening|evening|night|after work|after-work|after 5|after 6|after 7|after 8|at [5-9](?::\d{2})?\s*(?:pm)?|(?:1[7-9]|2[0-3]):\d{2}|late coffee|coffee late)\b/i.test(context);
   return service && evening;
 }
 
@@ -977,8 +980,24 @@ function buildDistrictPlacesServiceQuery(messages) {
   return 'restaurant cafe food';
 }
 
-function requestedPlaceTimeConstraint(messages) {
+export function requestedPlaceTimeConstraint(messages) {
   const context = recentUserContext(messages, 5);
+  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const named = [...context.matchAll(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/gi)].at(-1)?.[1]?.toLowerCase();
+  const day = named ? days.indexOf(named) : (/\btomorrow\b/i.test(context) ? (londonDayIndex() + 1) % 7 : londonDayIndex());
+  const clock = requestedPlaceClockConstraint(messages);
+  if (clock?.mode === 'now' && named && day !== londonDayIndex()) {
+    if (/\b(?:after work|evening|night)\b/i.test(context)) return { mode: 'after', hour: 17, minute: 0, day, approximate: true };
+    return { mode: 'day', day };
+  }
+  if (clock) return { ...clock, day };
+  // An evening window is a search filter, not a promised arrival time.
+  if (/\b(?:after work|after-work|evening|night|tonight)\b/i.test(context)) return { mode: 'after', hour: 17, minute: 0, day, approximate: true };
+  return null;
+}
+
+function requestedPlaceClockConstraint(messages) {
+  const context = recentUserContext(messages, 5).split('\n').reverse().join('\n');
   if (/\b(open now|open right now|right now|currently open|what(?:'|’)s open)\b/i.test(context)) {
     return { mode: 'now' };
   }
@@ -995,7 +1014,7 @@ function requestedPlaceTimeConstraint(messages) {
     if (hour < 24 && minute < 60) return { mode: 'at', hour, minute };
   }
 
-  const exact12 = context.match(/\b(?:at|around|by)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+  const exact12 = context.match(/\b(?:(?:at|around|by)\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
   if (exact12) {
     let hour = Number(exact12[1]);
     const minute = Number(exact12[2] || 0);
@@ -1034,7 +1053,8 @@ function minutesOfDay(hour, minute) {
   return Number(hour || 0) * 60 + Number(minute || 0);
 }
 
-function placeOpenAtConstraint(place, constraint) {
+export function placeOpenAtConstraint(place, constraint) {
+  if (place?.businessStatus && place.businessStatus !== 'OPERATIONAL') return false;
   if (!constraint) return true;
   const hours = place?.currentOpeningHours;
   if (!hours) return null;
@@ -1042,13 +1062,17 @@ function placeOpenAtConstraint(place, constraint) {
 
   const periods = Array.isArray(hours.periods) ? hours.periods : [];
   if (!periods.length) return null;
-  const targetDay = londonDayIndex();
+  const targetDay = Number.isInteger(constraint.day) ? constraint.day : londonDayIndex();
   const target = minutesOfDay(constraint.hour, constraint.minute);
+  if (constraint.mode === 'day') return periods.some(period => Number(period?.open?.day) === targetDay);
 
   for (const period of periods) {
     const open = period?.open;
     const close = period?.close;
-    if (!open || Number(open.day) !== targetDay) continue;
+    if (!open) continue;
+    if (Number(open.day) === (targetDay + 6) % 7 && Number(close?.day) === targetDay
+        && minutesOfDay(close.hour, close.minute) > target) return true;
+    if (Number(open.day) !== targetDay) continue;
     const openMin = minutesOfDay(open.hour, open.minute);
     if (!close) return constraint.mode === 'after' ? true : target >= openMin;
     const closeDay = Number(close.day);
@@ -1094,6 +1118,8 @@ function compactPlace(place, meta = {}) {
   };
 }
 
+let placesProviderBackoffUntil = 0;
+
 async function googlePlacesTextSearch(textQuery, {
   pageSize = 6,
   openNow = false,
@@ -1104,7 +1130,7 @@ async function googlePlacesTextSearch(textQuery, {
   rankPreference = null,
   districtRestriction = true
 } = {}) {
-  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return [];
+  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY || Date.now() < placesProviderBackoffUntil) return [];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), GOOGLE_PLACES_TIMEOUT_MS);
   try {
@@ -1166,6 +1192,7 @@ async function googlePlacesTextSearch(textQuery, {
     if (!response.ok) {
       let detail = '';
       try { detail = await response.text(); } catch {}
+      if ([401,403,429].includes(response.status) || response.status >= 500) placesProviderBackoffUntil = Date.now() + 30000;
       console.warn('Google Places Text Search failed:', response.status, detail.slice(0, 300));
       return [];
     }
@@ -4892,6 +4919,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -4907,7 +4935,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const messages = sanitiseMessages(req.body?.messages);
+  let messages = sanitiseMessages(req.body?.messages);
   if (!messages) return res.status(400).json({ error: 'invalid_request', reply: 'Please enter a valid question.' });
   // Every JSON response carries the latest signed state token when this turn
   // produced one. Clients keep their previous token when the field is absent.
@@ -4921,7 +4949,10 @@ export default async function handler(req, res) {
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
-  const clientState = decodedToken || cookieState || normaliseClientState(null);
+  const scoped = scopeConversation(messages);
+  messages = scoped.messages;
+  // A new request never inherits a previous list, itinerary or cookie-only chat.
+  const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
   if (suppliedToken && !decodedToken && !cookieState
@@ -4947,7 +4978,8 @@ export default async function handler(req, res) {
   // These questions can be answered conservatively from named place records.
   // A missing start point prevents a transport promise, but should not result
   // in a blank answer. The response carries first-party links as source chips.
-  const groundedStarter = familyDistrictStarter(lastUserText(messages))
+  const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
+  const groundedStarter = isEventTopic ? null : familyDistrictStarter(lastUserText(messages))
     || undatedCityCentreArtsPlan(lastUserText(messages))
     || familyPlanFollowUp(lastUserText(messages), clientState)
     || cityItineraryFollowUp(lastUserText(messages), clientState);
@@ -5181,6 +5213,19 @@ export default async function handler(req, res) {
       verification: 'structured',
       state
     });
+  }
+
+  // If live discovery is unavailable, still offer known published candidates.
+  // This path never labels snapshot hours or booking availability as live.
+  if (route.intent === 'food.open_at') {
+    const published = publishedFoodRecommendation(recentUserContext(messages, 5), route.timeConstraint);
+    if (published) {
+      const nextState = { ...normaliseClientState(null), lastIntent: 'food.open_at', area: route.area,
+        constraints: { time: route.timeConstraint }, resultCards: published.places.map(p => ({ id: p.id, entityType: 'place', name: p.name, title: p.name, url: p.source })) };
+      attachStateCookie(res, nextState);
+      return res.status(200).json({ reply: finaliseUserFacingReply(published.reply), sources: published.sources,
+        state: nextState, live: false, verification: 'published-place-options' });
+    }
   }
 
   // If strong first-party snapshots/direct pages are available, prefer those over

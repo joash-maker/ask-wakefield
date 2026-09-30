@@ -1,5 +1,5 @@
 ASK WAKEFIELD — CORE UPDATE, 30 SEPTEMBER 2026
-Build marker: v18-core-2026-09-30.4
+Build marker: v18-core-2026-09-30.6
 
 Install on the test branch first. No production deployment has been performed.
 This archive contains the full site; copy these changed/new files at their exact paths:
@@ -42,7 +42,7 @@ These are offline tests with mocked external providers, not a deployed end-to-en
 
 After deployment
 1. Open /api/status on the same Preview URL used for chat.
-2. Confirm build is v18-core-2026-09-30.4 and livePlacesConfigured is true.
+2. Confirm build is v18-core-2026-09-30.6 and livePlacesConfigured is true.
 3. In one chat, run family, city itinerary, then weekend/free/start-time questions.
 4. Switch to: Friday night, coffee and dessert with friends in Wakefield. Any recommendations?
 5. Follow with: Around 7 pm. Check the time and topic stay attached to the dessert request.
@@ -50,10 +50,24 @@ After deployment
 Suggested commit
 Fix shared conversation routing and live weekday recommendations
 
-Children/event follow-up update, 30 September: published family-suitability checks use exact stored event titles and About descriptions. Filters remain attached across start-time questions. Conflicting personal-endorsement instructions removed. Indoor activity requests provide grounded museum, bowling and soft-play options. Latest changes: api/chat.js, api/status.js, lib/conversation-scope.js, lib/askwakefield-places.js, tests/conversation-harness.mjs, tests/core-request-tests.mjs, README. Build marker v18-core-2026-09-30.4.
+Children/event follow-up update, 30 September: published family-suitability checks use exact stored event titles and About descriptions. Filters remain attached across start-time questions. Conflicting personal-endorsement instructions removed. Indoor activity requests provide grounded museum, bowling and soft-play options. Latest changes: api/chat.js, api/status.js, lib/conversation-scope.js, lib/askwakefield-places.js, tests/conversation-harness.mjs, tests/core-request-tests.mjs, README. Build marker v18-core-2026-09-30.6.
 
 Latest regression fix: accepts ages 7 and 4 without kids prefix, preserves Anything for kids? on the events list, and handles finish by 1 pm with travel allowance and fewer stops.
 
 Dessert update: replace lib/askwakefield-places-data.js too. Added operator-backed Legends and Sip & Dip records, named Vanilla Bean response, station clarification and desert typo handling.
 
 Horbury family origin now prioritises Secret Garden for indoor play, preserving origin on follow-ups. Regression covered.
+
+Nightlife update:
+Added 15 venue records, including a held Journey Lounge record with conflicting operating status. Good Fortunes already existed.
+Verified venue descriptions support cocktail, beer, games, gin, music and party categories. Wood Street and Tileyard stay distinct. Named Lost Cause replies correctly locate it in Castleford.
+No claims of 2026 opening dates, tonight's music, promotions, admission or live availability without current evidence.
+After Dark, Icon and The Rooftop remain research candidates. A licence is not proof of current opening or a programme.
+Replace the same eight files including lib/askwakefield-places-data.js.
+
+Dining update:
+Nine sourced records: Panda Mami, No Manches / San Leo's, Chopstix, Tet, Qubana, Robatary, Estabulo, Vera and Vinyl Cafe North.
+Name aliases support direct questions. Chopstix conflicting operator/centre hours are disclosed. Qubana kitchen and bar hours are not conflated. Vera's late closing is not given an invented clock time. Vinyl regular weekends are closed.
+Existing coffee records retained. Ratings, superlatives, live open labels, dietary guarantees, kids-eat-free promotions and 2026 launch claims were not imported.
+Pemberley's and Kredens remain research candidates pending current operating/menu evidence.
+Replace the same eight files, including lib/askwakefield-places-data.js. Build v18-core-2026-09-30.6.

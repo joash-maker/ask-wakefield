@@ -1,5 +1,5 @@
 ASK WAKEFIELD — CORE UPDATE, 30 SEPTEMBER 2026
-Build marker: v18-core-2026-09-30.1
+Build marker: v18-core-2026-09-30.4
 
 Install on the test branch first. No production deployment has been performed.
 This archive contains the full site; copy these changed/new files at their exact paths:
@@ -42,7 +42,7 @@ These are offline tests with mocked external providers, not a deployed end-to-en
 
 After deployment
 1. Open /api/status on the same Preview URL used for chat.
-2. Confirm build is v18-core-2026-09-30.1 and livePlacesConfigured is true.
+2. Confirm build is v18-core-2026-09-30.4 and livePlacesConfigured is true.
 3. In one chat, run family, city itinerary, then weekend/free/start-time questions.
 4. Switch to: Friday night, coffee and dessert with friends in Wakefield. Any recommendations?
 5. Follow with: Around 7 pm. Check the time and topic stay attached to the dessert request.
@@ -50,4 +50,10 @@ After deployment
 Suggested commit
 Fix shared conversation routing and live weekday recommendations
 
-Children/event follow-up update, 30 September: published family-suitability checks use exact stored event titles and About descriptions. Filters remain attached across start-time questions. Conflicting personal-endorsement instructions removed. Indoor activity requests provide grounded museum, bowling and soft-play options. Latest changes: api/chat.js, api/status.js, lib/conversation-scope.js, lib/askwakefield-places.js, tests/conversation-harness.mjs, tests/core-request-tests.mjs, README. Build marker v18-core-2026-09-30.1.
+Children/event follow-up update, 30 September: published family-suitability checks use exact stored event titles and About descriptions. Filters remain attached across start-time questions. Conflicting personal-endorsement instructions removed. Indoor activity requests provide grounded museum, bowling and soft-play options. Latest changes: api/chat.js, api/status.js, lib/conversation-scope.js, lib/askwakefield-places.js, tests/conversation-harness.mjs, tests/core-request-tests.mjs, README. Build marker v18-core-2026-09-30.4.
+
+Latest regression fix: accepts ages 7 and 4 without kids prefix, preserves Anything for kids? on the events list, and handles finish by 1 pm with travel allowance and fewer stops.
+
+Dessert update: replace lib/askwakefield-places-data.js too. Added operator-backed Legends and Sip & Dip records, named Vanilla Bean response, station clarification and desert typo handling.
+
+Horbury family origin now prioritises Secret Garden for indoor play, preserving origin on follow-ups. Regression covered.

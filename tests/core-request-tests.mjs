@@ -62,9 +62,9 @@ globalThis.fetch = async url => {
   if (String(url).includes('api.anthropic.com')) return new Response('{}', { status: 503 });
   return new Response('not found', { status: 404 });
 };
-async function ask(q, prior = []) {
+async function ask(q, prior = [], stateToken = null) {
   const res = { headers: {}, setHeader(k,v) { this.headers[k] = v; }, status(n) { this.statusCode = n; return this; }, json(v) { this.body = v; return this; } };
-  await handler({ method: 'POST', headers: { origin: 'https://www.askwakefield.co.uk', 'x-forwarded-for': 'core-test' }, socket: {}, body: { messages: [...prior, user(q)] } }, res);
+  await handler({ method: 'POST', headers: { origin: 'https://www.askwakefield.co.uk', 'x-forwarded-for': 'core-test' }, socket: {}, body: { messages: [...prior, user(q)], stateToken } }, res);
   return res;
 }
 const live = await ask('Friday night at 7 pm, coffee and dessert with friends in Wakefield. Any recommendations?', history);
@@ -77,7 +77,7 @@ const fallback = await ask('Coffee and dessert on Friday after work in Wakefield
 assert.match(fallback.body.reply, /Dolce Vita/);
 assert.equal(fallback.body.live, false);
 assert.equal(fallback.body.verification, 'published-place-options');
-assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.9');
+assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.10');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
 
 const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
@@ -126,3 +126,13 @@ const afterFourResponse = await ask(afterFourQuestion);
 assert.equal(afterFourResponse.body.verification,'published-place-options');
 assert.match(afterFourResponse.body.reply,/Dolce Vita/);
 assert.doesNotMatch(afterFourResponse.body.reply,/300|rarely cramped|mocktail area/);
+
+const dessertHistory = [user(afterFourQuestion), assistant(afterFourResponse.body.reply)];
+const moreDessert = await ask('Any others?',dessertHistory,afterFourResponse.body.stateToken);
+assert.equal(moreDessert.body.verification,'published-place-options');
+assert.match(moreDessert.body.reply,/another confirmed/);
+assert.doesNotMatch(moreDessert.body.reply,/KRA:FT|Marmalade|M&S|Bob & Berts/);
+const hoursDessert = await ask('What are the typical opening hours?',[...dessertHistory,user('Any others?'),assistant(moreDessert.body.reply)],moreDessert.body.stateToken);
+assert.equal(hoursDessert.body.verification,'published-place-options');
+assert.match(hoursDessert.body.reply,/Dolce Vita/);
+assert.match(hoursDessert.body.reply,/16:30/);

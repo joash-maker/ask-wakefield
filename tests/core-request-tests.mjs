@@ -77,5 +77,11 @@ const fallback = await ask('Coffee and dessert on Friday after work in Wakefield
 assert.match(fallback.body.reply, /Dolce Vita/);
 assert.equal(fallback.body.live, false);
 assert.equal(fallback.body.verification, 'published-place-options');
-assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.1');
+assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.4');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
+
+const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
+const horburyReply = horburyFollowUp('Starting in Horbury, ages 7 and 4', {lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',ages:[]}}});
+assert.match(horburyReply.reply, /Secret Garden/);
+assert.match(horburyReply.reply, /£13.90/);
+assert.match(horburyFollowUp('Indoor activities nearby?', {lastIntent:'places.family_plan',constraints:horburyReply.constraints}).reply, /Secret Garden/);

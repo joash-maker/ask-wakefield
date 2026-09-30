@@ -1,5 +1,5 @@
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
-import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
@@ -4942,7 +4942,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.1');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.4');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -4973,7 +4973,7 @@ export default async function handler(req, res) {
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
   const scoped = scopeConversation(messages);
-  messages = scoped.messages;
+  messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
@@ -5002,7 +5002,8 @@ export default async function handler(req, res) {
   // A missing start point prevents a transport promise, but should not result
   // in a blank answer. The response carries first-party links as source chips.
   const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
-  const groundedStarter = isEventTopic ? null : familyDistrictStarter(lastUserText(messages))
+  const groundedStarter = isEventTopic ? null : foodSpecificFollowUp(currentText, clientState)
+    || familyDistrictStarter(lastUserText(messages))
     || undatedCityCentreArtsPlan(lastUserText(messages))
     || familyPlanFollowUp(lastUserText(messages), clientState)
     || cityItineraryFollowUp(lastUserText(messages), clientState);

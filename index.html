@@ -981,6 +981,9 @@ var voiceBtn = document.getElementById('voiceBtn');
 var chipsEl = document.getElementById('chips');
 var chatWrap = document.getElementById('assistant');
 var chatHistory = [];
+// Signed conversation state from the server. Sent back on every turn so
+// follow-ups ("which of those are free?") work even where cookies don't.
+var stateToken = null;
 var chipsGone = false;
 var isSending = false;
 
@@ -1112,6 +1115,7 @@ function sendMessage(override) {
       bBody.innerHTML = fmt(reply);
       if (xhr.status < 200 || xhr.status >= 300) { throw new Error('HTTP ' + xhr.status); }
       chatHistory.push({ role: 'assistant', content: reply });
+      if (data && Object.prototype.hasOwnProperty.call(data, 'stateToken')) stateToken = data.stateToken || null;
 
       // Scroll the messages container so bot message starts at top
       setTimeout(function() {
@@ -1138,8 +1142,10 @@ function sendMessage(override) {
 
       renderSources(data.sources, bWrap, data.live === true);
 
-      // Follow-ups
-      getFollowups(text, reply, bWrap);
+      // Follow-ups: when the server supplies chips it can answer
+      // deterministically, use those instead of free-form suggestions.
+      if (Array.isArray(data.followups)) renderFollowups(data.followups, bWrap);
+      else getFollowups(text, reply, bWrap);
     } catch(e) {
       if (!bBody.textContent || bBody.textContent.indexOf('Thinking') !== -1) {
         bBody.innerHTML = fmt('Something went wrong with the response. Please try again.');
@@ -1163,7 +1169,7 @@ function sendMessage(override) {
   };
 
   try {
-    xhr.send(JSON.stringify({ messages: chatHistory }));
+    xhr.send(JSON.stringify({ messages: chatHistory, stateToken: stateToken }));
   } catch(e) {
     bBody.innerHTML = fmt('Failed to send request. Please try again.');
     isSending = false;
@@ -1190,6 +1196,26 @@ inputEl.addEventListener('keydown', function(e) {
 sendBtn.onclick = function() { sendMessage(); };
 
 // FOLLOW-UPS
+function renderFollowups(followups, afterEl) {
+  if (!followups || !followups.length) return;
+  var container = document.createElement('div');
+  container.className = 'followup-chips';
+  var lbl = document.createElement('div');
+  lbl.className = 'fu-label';
+  lbl.textContent = 'Follow up:';
+  container.appendChild(lbl);
+  followups.forEach(function(q) {
+    var btn = document.createElement('button');
+    btn.className = 'fu-chip';
+    btn.textContent = q;
+    btn.onclick = function() { container.remove(); sendMessage(q); };
+    container.appendChild(btn);
+  });
+  // Add follow-up suggestions without moving the reader away from the answer.
+  // The user can reach them naturally after reading the response.
+  afterEl.after(container);
+}
+
 function getFollowups(question, answer, afterEl) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/followups', true);
@@ -1198,24 +1224,7 @@ function getFollowups(question, answer, afterEl) {
   xhr.onload = function() {
     try {
       var data = JSON.parse(xhr.responseText);
-      if (data.followups && data.followups.length) {
-        var container = document.createElement('div');
-        container.className = 'followup-chips';
-        var lbl = document.createElement('div');
-        lbl.className = 'fu-label';
-        lbl.textContent = 'Follow up:';
-        container.appendChild(lbl);
-        data.followups.forEach(function(q) {
-          var btn = document.createElement('button');
-          btn.className = 'fu-chip';
-          btn.textContent = q;
-          btn.onclick = function() { container.remove(); sendMessage(q); };
-          container.appendChild(btn);
-        });
-        // Add follow-up suggestions without moving the reader away from the answer.
-        // The user can reach them naturally after reading the response.
-        afterEl.after(container);
-      }
+      renderFollowups(data.followups, afterEl);
     } catch(e) {}
   };
   xhr.onerror = xhr.ontimeout = function() {};
@@ -1225,6 +1234,7 @@ function getFollowups(question, answer, afterEl) {
 // RESET CHAT
 function resetChat() {
   chatHistory = [];
+  stateToken = null;
   chipsGone = false;
   isSending = false;
   sendBtn.disabled = false;

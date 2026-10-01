@@ -326,6 +326,9 @@
     const closeEl    = panel.querySelector('#aw-close');
 
     let history = [];
+    // Signed conversation state from the server. The widget runs cross-origin,
+    // so cookies are not sent; the token keeps follow-ups working.
+    let stateToken = null;
     let chipsHidden = false;
 
     // Toggle
@@ -420,7 +423,7 @@
         const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: history })
+          body: JSON.stringify({ messages: history, stateToken })
         });
         const data = await res.json();
         removeTyping();
@@ -428,6 +431,7 @@
         appendMsg('bot', reply);
         appendSources(data.sources);
         if (res.ok) history.push({ role: 'assistant', content: reply });
+        if (res.ok && Object.prototype.hasOwnProperty.call(data, 'stateToken')) stateToken = data.stateToken || null;
       } catch {
         removeTyping();
         appendMsg('bot', 'Connection error. Please try again.');

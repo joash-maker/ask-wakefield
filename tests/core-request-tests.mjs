@@ -77,7 +77,7 @@ const fallback = await ask('Coffee and dessert on Friday after work in Wakefield
 assert.match(fallback.body.reply, /Dolce Vita/);
 assert.equal(fallback.body.live, false);
 assert.equal(fallback.body.verification, 'published-place-options');
-assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.11');
+assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-09-30.12');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
 
 const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
@@ -146,3 +146,12 @@ const acceptedDessert = await ask('Yes, let me know.',[...dessertHistory,user('D
 assert.equal(acceptedDessert.body.verification,'published-place-options');
 assert.match(acceptedDessert.body.reply,/Rassam/);
 assert.equal(acceptedDessert.body.state.constraints.coffeeRequired,false);
+
+for (const wording of ['How about just dessert?', 'Just desserts please', 'Only dessert', 'Skip the coffee']) {
+ const refined = await ask(wording,[...dessertHistory,user('Any others?'),assistant(moreDessert.body.reply)],moreDessert.body.stateToken);
+ assert.equal(refined.body.verification,'published-place-options',wording);
+ assert.match(refined.body.reply,/Rassam/,wording);
+ assert.match(refined.body.reply,/Legends/,wording);
+ assert.equal(refined.body.state.constraints.coffeeRequired,false,wording);
+ assert.doesNotMatch(refined.body.reply,/For coffee and something sweet/,wording);
+}

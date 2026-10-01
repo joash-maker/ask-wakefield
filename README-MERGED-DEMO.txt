@@ -1,5 +1,5 @@
 ASK WAKEFIELD — CORE UPDATE, 30 SEPTEMBER 2026
-Build marker: v18-core-2026-09-30.11
+Build marker: v18-core-2026-09-30.12
 
 Install on the test branch first. No production deployment has been performed.
 This archive contains the full site; copy these changed/new files at their exact paths:
@@ -42,7 +42,7 @@ These are offline tests with mocked external providers, not a deployed end-to-en
 
 After deployment
 1. Open /api/status on the same Preview URL used for chat.
-2. Confirm build is v18-core-2026-09-30.11 and livePlacesConfigured is true.
+2. Confirm build is v18-core-2026-09-30.12 and livePlacesConfigured is true.
 3. In one chat, run family, city itinerary, then weekend/free/start-time questions.
 4. Switch to: Friday night, coffee and dessert with friends in Wakefield. Any recommendations?
 5. Follow with: Around 7 pm. Check the time and topic stay attached to the dessert request.
@@ -50,7 +50,7 @@ After deployment
 Suggested commit
 Fix shared conversation routing and live weekday recommendations
 
-Children/event follow-up update, 30 September: published family-suitability checks use exact stored event titles and About descriptions. Filters remain attached across start-time questions. Conflicting personal-endorsement instructions removed. Indoor activity requests provide grounded museum, bowling and soft-play options. Latest changes: api/chat.js, api/status.js, lib/conversation-scope.js, lib/askwakefield-places.js, tests/conversation-harness.mjs, tests/core-request-tests.mjs, README. Build marker v18-core-2026-09-30.11.
+Children/event follow-up update, 30 September: published family-suitability checks use exact stored event titles and About descriptions. Filters remain attached across start-time questions. Conflicting personal-endorsement instructions removed. Indoor activity requests provide grounded museum, bowling and soft-play options. Latest changes: api/chat.js, api/status.js, lib/conversation-scope.js, lib/askwakefield-places.js, tests/conversation-harness.mjs, tests/core-request-tests.mjs, README. Build marker v18-core-2026-09-30.12.
 
 Latest regression fix: accepts ages 7 and 4 without kids prefix, preserves Anything for kids? on the events list, and handles finish by 1 pm with travel allowance and fewer stops.
 
@@ -70,14 +70,16 @@ Nine sourced records: Panda Mami, No Manches / San Leo's, Chopstix, Tet, Qubana,
 Name aliases support direct questions. Chopstix conflicting operator/centre hours are disclosed. Qubana kitchen and bar hours are not conflated. Vera's late closing is not given an invented clock time. Vinyl regular weekends are closed.
 Existing coffee records retained. Ratings, superlatives, live open labels, dietary guarantees, kids-eat-free promotions and 2026 launch claims were not imported.
 Pemberley's and Kredens remain research candidates pending current operating/menu evidence.
-Replace the same eight files, including lib/askwakefield-places-data.js. Build v18-core-2026-09-30.11.
+Replace the same eight files, including lib/askwakefield-places-data.js. Build v18-core-2026-09-30.12.
 
-Budget follow-up update: remembers Tenpin as selected activity, explains booking + travel + food budget, marks allocation as a spending limit rather than a quoted price. Does not assume a Trinity Walk starting point. Build v18-core-2026-09-30.11.
+Budget follow-up update: remembers Tenpin as selected activity, explains booking + travel + food budget, marks allocation as a spending limit rather than a quoted price. Does not assume a Trinity Walk starting point. Build v18-core-2026-09-30.12.
 
-Weather-neutral family recommendations: indoor play is an activity choice, not an assumption of heavy rain. Explicit wet-weather backup requests remain supported. Build v18-core-2026-09-30.11.
+Weather-neutral family recommendations: indoor play is an activity choice, not an assumption of heavy rain. Explicit wet-weather backup requests remain supported. Build v18-core-2026-09-30.12.
 
-After-4pm food fix: after-clock parsing precedes exact-clock parsing. Published fallback requires explicit coffee and dessert evidence and requested-day hours. Zero matches no longer fall into generic unsupported recommendations. Exact user wording covered in request regression. Build v18-core-2026-09-30.11.
+After-4pm food fix: after-clock parsing precedes exact-clock parsing. Published fallback requires explicit coffee and dessert evidence and requested-day hours. Zero matches no longer fall into generic unsupported recommendations. Exact user wording covered in request regression. Build v18-core-2026-09-30.12.
 
-Dessert follow-up fix: “Any others?” preserves coffee, dessert and requested hours and excludes previously shown venues. “Typical opening hours?” returns published hours for that filtered request. Covered by signed-state request regressions. Build v18-core-2026-09-30.11.
+Dessert follow-up fix: “Any others?” preserves coffee, dessert and requested hours and excludes previously shown venues. “Typical opening hours?” returns published hours for that filtered request. Covered by signed-state request regressions. Build v18-core-2026-09-30.12.
 
-Dessert-only refinement: preserves removal of coffee requirement in signed state, retains requested hours, and uses published dessert records on acceptance follow-ups. Exact reported sequence regression covered. Build v18-core-2026-09-30.11.
+Dessert-only refinement: preserves removal of coffee requirement in signed state, retains requested hours, and uses published dessert records on acceptance follow-ups. Exact reported sequence regression covered. Build v18-core-2026-09-30.12.
+
+Dessert-only wording: recognises just dessert, only dessert and skip the coffee, with signed-state regression checks for each. Build v18-core-2026-09-30.12.

@@ -4943,7 +4943,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.11');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.12');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -4989,7 +4989,7 @@ export default async function handler(req, res) {
   }
   const moreFood = /^(?:any others|any more|anything else|more options)[?.!\s]*$/i.test(currentText);
   const foodHours = /\b(?:typical|regular|usual)?\s*opening hours\b|^what time.*(?:open|close)/i.test(currentText);
-  const dessertOnly = /\b(?:desserts? without coffee|desserts? only|no coffee|without coffee)\b/i.test(currentText);
+  const dessertOnly = /\b(?:desserts? without coffee|desserts? only|(?:just|only) desserts?|skip (?:the )?coffee|no coffee|without coffee)\b/i.test(currentText);
   const foodAcceptance = /^(?:yes|yes please|yes,? let me know|please do|go ahead)[?.!\s]*$/i.test(currentText);
   if (clientState.lastIntent === 'food.open_at' && (moreFood || foodHours || dessertOnly || (foodAcceptance && clientState.constraints?.coffeeRequired === false))) {
     if (dessertOnly) clientState.constraints = {...clientState.constraints, coffeeRequired:false};

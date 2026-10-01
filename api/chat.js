@@ -4943,7 +4943,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-09-30.12');
+  res.setHeader('X-AskWakefield-Build', 'v18-core-2026-10-01.1');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 
@@ -4987,7 +4987,8 @@ export default async function handler(req, res) {
       sources: [], followups: ["What's on this weekend?"], live: false, verification: 'no-prior-list'
     });
   }
-  const moreFood = /^(?:any others|any more|anything else|more options)[?.!\s]*$/i.test(currentText);
+  const moreFood = /^(?:any others|any more|anything else|more options)[?.!\s]*$/i.test(currentText)
+    || /\b(?:other|more|alternative)\b.*\b(?:desserts?|places|caf[eé]s?|options)\b/i.test(currentText);
   const foodHours = /\b(?:typical|regular|usual)?\s*opening hours\b|^what time.*(?:open|close)/i.test(currentText);
   const dessertOnly = /\b(?:desserts? without coffee|desserts? only|(?:just|only) desserts?|skip (?:the )?coffee|no coffee|without coffee)\b/i.test(currentText);
   const foodAcceptance = /^(?:yes|yes please|yes,? let me know|please do|go ahead)[?.!\s]*$/i.test(currentText);
@@ -4997,8 +4998,11 @@ export default async function handler(req, res) {
     const excluded = moreFood ? (clientState.resultCards || []).map(c => c.id) : [];
     const published = publishedFoodRecommendation(queryContext, clientState.constraints?.time || route.timeConstraint, excluded, clientState.constraints?.coffeeRequired);
     if (published) {
+      if (published.places.length) clientState.resultCards = published.places.map(p => ({id:p.id,entityType:'place',name:p.name,title:p.name,url:p.source}));
+      const proximity = /\b(?:nearby|near me|close by)\b/i.test(currentText)
+        ? '\n\nWhere are you starting from? I can narrow the options by area, but I have not checked walking distances.' : '';
       attachStateCookie(res, clientState);
-      return res.status(200).json({reply:finaliseUserFacingReply(published.reply),sources:published.sources,state:clientState,live:false,verification:'published-place-options'});
+      return res.status(200).json({reply:finaliseUserFacingReply(published.reply + proximity),sources:published.sources,state:clientState,live:false,verification:'published-place-options'});
     }
   }
   const previousUserText = messages.slice(0, -1).reverse().find(message => message.role === 'user')?.content || '';

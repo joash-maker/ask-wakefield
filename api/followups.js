@@ -1,4 +1,5 @@
-export default async function handler(req, res) {
+import { withUsageTelemetry, recordAnthropicUsage } from '../lib/usage-telemetry.js';
+async function handlerImpl(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -28,10 +29,16 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    recordAnthropicUsage({ model: 'claude-haiku-4-5-20251001', responseOk: response.ok, usage: data?.usage });
     const text = (data.content?.[0]?.text || '').trim();
     const parsed = JSON.parse(text.replace(/```json\n?/g, '').replace(/```/g, '').trim());
     if (Array.isArray(parsed)) return res.json({ followups: parsed.slice(0, 3) });
   } catch {}
 
   return res.json({ followups: [] });
+}
+
+
+export default async function handler(req, res) {
+  return withUsageTelemetry({ requestType: 'followups', res }, () => handlerImpl(req, res));
 }

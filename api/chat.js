@@ -2,6 +2,7 @@ import { scopeConversation, isRequestRefinement } from '../lib/conversation-scop
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
+import { withUsageTelemetry, setTelemetryRoute, recordAnthropicUsage, recordGooglePlacesCall, recordOpenAIUsage } from '../lib/usage-telemetry.js';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
@@ -1190,6 +1191,9 @@ async function googlePlacesTextSearch(textQuery, {
       body: JSON.stringify(body),
       signal: controller.signal
     });
+    const atmosphereFields = new Set(['servesCoffee', 'servesDessert', 'dineIn', 'allowsDogs', 'goodForChildren', 'servesVegetarianFood']);
+    const placesSku = (richFields || []).some(field => atmosphereFields.has(field)) ? 'enterprise_atmosphere' : 'enterprise';
+    recordGooglePlacesCall({ sku: placesSku, responseOk: response.ok });
     if (!response.ok) {
       let detail = '';
       try { detail = await response.text(); } catch {}
@@ -1229,6 +1233,7 @@ async function googlePlacesAnchorSearch(area) {
       }),
       signal: controller.signal
     });
+    recordGooglePlacesCall({ sku: 'pro', responseOk: response.ok });
     if (!response.ok) return null;
     const data = await response.json();
     return data?.places?.[0]?.location || null;
@@ -1818,6 +1823,8 @@ STRICT RULES:
 
     let data = {};
     try { data = await response.json(); } catch {}
+    const openAIWebSearchCalls = (Array.isArray(data?.output) ? data.output : []).filter(item => item?.type === 'web_search_call').length;
+    recordOpenAIUsage({ model: OPENAI_VERIFY_MODEL, responseOk: response.ok, usage: data?.usage, webSearchCalls: openAIWebSearchCalls });
     if (!response.ok) {
       console.error('OpenAI fail-safe error:', response.status, data?.error?.message || data);
       return null;
@@ -3891,6 +3898,7 @@ async function callAnthropic(body) {
     });
     let data = {};
     try { data = await response.json(); } catch {}
+    recordAnthropicUsage({ model: body?.model, responseOk: response.ok, usage: data?.usage });
     return { response, data };
   } finally {
     clearTimeout(timer);
@@ -4942,7 +4950,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
     .trim();
 }
 
-export default async function handler(req, res) {
+async function handlerImpl(req, res) {
   res.setHeader('X-AskWakefield-Build', 'v18-core-2026-10-01.1');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
@@ -4978,6 +4986,7 @@ export default async function handler(req, res) {
   // A new request never inherits a previous list, itinerary or cookie-only chat.
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
+  setTelemetryRoute(route);
   const currentText = lastUserText(messages);
   if (suppliedToken && !decodedToken && !cookieState
       && /\b(which of|any of|of (?:those|them|these)|those|these|them)\b/i.test(currentText)
@@ -5744,4 +5753,9 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       reply: timedOut ? 'That search took too long. Please try again.' : 'Connection error. Please try again.'
     });
   }
+}
+
+
+export default async function handler(req, res) {
+  return withUsageTelemetry({ requestType: 'chat', res }, () => handlerImpl(req, res));
 }

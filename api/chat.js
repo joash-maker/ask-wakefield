@@ -1,5 +1,6 @@
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp } from '../lib/askwakefield-places.js';
+import { PLACES } from '../lib/askwakefield-places-data.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import { withUsageTelemetry, setTelemetryRoute, recordAnthropicUsage, recordGooglePlacesCall, recordOpenAIUsage } from '../lib/usage-telemetry.js';
@@ -3707,6 +3708,173 @@ async function fetchBusinessFirstPartyContexts(messages) {
   return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
 }
 
+
+function publishedPlaceById(id) {
+  return PLACES.find(place => place?.id === id) || null;
+}
+
+function publishedPlaceHoursCover(place, constraint) {
+  if (!place || !constraint || constraint.mode === 'now') return false;
+  const dayKeys = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const key = dayKeys[Number.isInteger(constraint.day) ? constraint.day : londonDayIndex()];
+  const raw = String(place?.hours?.[key] || '');
+  if (!raw || /closed|unknown|varies/i.test(raw)) return false;
+  if (constraint.mode === 'day') return true;
+  const target = minutesOfDay(constraint.hour, constraint.minute);
+  for (const match of raw.matchAll(/(\d{2}):(\d{2})\s*[–-]\s*(\d{2}):(\d{2})/g)) {
+    const start = Number(match[1]) * 60 + Number(match[2]);
+    let end = Number(match[3]) * 60 + Number(match[4]);
+    if (end <= start) end += 24 * 60;
+    if (constraint.mode === 'at' && target >= start && target < end) return true;
+    if (constraint.mode === 'after' && end > target) return true;
+  }
+  return false;
+}
+
+function pageHasAny(text, terms) {
+  const value = String(text || '').toLowerCase();
+  return terms.some(term => value.includes(String(term).toLowerCase()));
+}
+
+async function buildEveningCoffeeDessertShortlist(messages, route) {
+  if (route?.intent !== 'food.open_at' || !isEveningCoffeeDessertQuery(messages)) return null;
+  if (!isCoreWakefieldArea(route.area || detectWakefieldArea(messages))) return null;
+  if (route.timeConstraint?.mode === 'now') return null;
+  const requirements = coffeeSweetRequirements(messages);
+  if (!requirements.wantsCoffee || !requirements.wantsSweet) return null;
+
+  const [dolcePage, clubPage, rassamsPage, sipContact, sipMenu, kraftPage, dungeonsPage] = await Promise.all([
+    fetchSimpleFirstPartyContext(
+      'https://www.dolcevitawakefield.co.uk/menu/dessert-coffee-menu',
+      'Dolce Vita Wakefield — Dessert & Coffee Menu'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/the-club-house/',
+      'Experience Wakefield — The Club House'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://www.rassams.co.uk/stores/wakefield',
+      "Rassam's Creamery — Wakefield"
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://sip-and-dip.com/contact/',
+      'Sip & Dip Wakefield — Contact and hours'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://sip-and-dip.com/menu/',
+      'Sip & Dip Wakefield — Menu'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://experiencewakefield.co.uk/venue/kraft-koffee/',
+      'Experience Wakefield — Kraft Koffee'
+    ),
+    fetchSimpleFirstPartyContext(
+      'https://dungeonsanddonuts.co.uk/',
+      'Dungeons & Donuts — Wakefield'
+    )
+  ]);
+
+  const constraint = route.timeConstraint || requestedPlaceTimeConstraint(messages);
+  const shortlist = [];
+  const sources = [];
+  const resultCards = [];
+  const addSource = ctx => {
+    if (ctx?.source?.url && !sources.some(source => source.url === ctx.source.url)) sources.push(ctx.source);
+  };
+  const add = ({ place, title, description, caveat = '', confidence = 'verified', contexts = [] }) => {
+    if (!place) return;
+    shortlist.push({ place, title, description, caveat, confidence });
+    for (const ctx of contexts) addSource(ctx);
+    resultCards.push({
+      id: place.id,
+      entityType: 'place',
+      name: place.name,
+      title: place.name,
+      url: place.source || place.website || null,
+      address: place.address,
+      confidence,
+      sourceTier: confidence === 'verified' ? 'first-party-current' : 'first-party-partial'
+    });
+  };
+
+  const dolce = publishedPlaceById('AW-E001');
+  if (dolcePage && publishedPlaceHoursCover(dolce, constraint)
+      && pageHasAny(dolcePage.text, ['americano','espresso','latte','cappuccino','coffee'])
+      && pageHasAny(dolcePage.text, ['tiramisu','cheesecake','profiteroles','dessert','gelato'])) {
+    add({
+      place: dolce,
+      title: 'Best verified coffee + dessert match',
+      description: `Dolce Vita, ${dolce.address}: its current first-party menu explicitly lists coffee and desserts. Published ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]} hours: ${dolce.hours[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]]}.`,
+      caveat: 'It is a restaurant, so check that dessert-only visits are welcome when you arrive.',
+      contexts: [dolcePage]
+    });
+  }
+
+  const club = publishedPlaceById('AW-E003');
+  if (clubPage && publishedPlaceHoursCover(club, constraint)
+      && pageHasAny(clubPage.text, ['coffee']) && pageHasAny(clubPage.text, ['cake','cakes','waffles'])) {
+    add({
+      place: club,
+      title: 'Exact match if you are happy to go just outside the centre',
+      description: `The Club House, ${club.address}: Experience Wakefield currently confirms good coffee, fresh cakes and Friday evening opening. Published ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]} hours: ${club.hours[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]]}.`,
+      caveat: 'This is on Doncaster Road rather than in the city-centre core.',
+      contexts: [clubPage]
+    });
+  }
+
+  const rassams = publishedPlaceById('AW-E002');
+  if (rassamsPage && publishedPlaceHoursCover(rassams, constraint)
+      && pageHasAny(rassamsPage.text, ['waffle','sundae','cookie dough','gelato','cake','dessert'])) {
+    add({
+      place: rassams,
+      title: 'Dessert-first alternative',
+      description: `Rassam’s Creamery, ${rassams.address}: its current Wakefield branch page confirms late dessert service. Published ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]} hours: ${rassams.hours[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]]}.`,
+      caveat: 'I could not verify a specific coffee offering on the current Wakefield branch page, so I would choose this for dessert first rather than promise coffee.',
+      confidence: 'partial',
+      contexts: [rassamsPage]
+    });
+  }
+
+  const sip = publishedPlaceById('AW-E008');
+  if (sipContact && sipMenu
+      && pageHasAny(sipContact.text, ['8.00 am - 11.00 pm','8.00 am','11.00 pm','8:00','11:00'])
+      && pageHasAny(sipMenu.text, ['dessert','desserts','kulfi','falooda','sweet'])
+      && pageHasAny(sipMenu.text, ['chai','karak','hot drink','beverage'])) {
+    add({
+      place: sip,
+      title: 'Good if a hot drink or chai works instead of coffee',
+      description: 'Sip & Dip, 63 Westgate End: its current site publishes 08:00–23:00 opening and verifies desserts plus chai and other drinks.',
+      caveat: 'I could not verify coffee specifically, so I would not present it as an exact coffee match.',
+      confidence: 'partial',
+      contexts: [sipContact, sipMenu]
+    });
+  }
+
+  const kraft = publishedPlaceById('AW-031');
+  let exclusionNote = '';
+  if (kraftPage && !publishedPlaceHoursCover(kraft, constraint)) {
+    addSource(kraftPage);
+    exclusionNote = 'I have not included KRA:FT as a firm 7pm option because Experience Wakefield currently lists its Friday Koffee hours as 08:00–15:00, even though some other listings show later hours.';
+  }
+
+  let unverifiedNote = '';
+  if (dungeonsPage && pageHasAny(dungeonsPage.text, ['coffee']) && pageHasAny(dungeonsPage.text, ['donut','donuts','doughnut','doughnuts'])) {
+    addSource(dungeonsPage);
+    unverifiedNote = 'Dungeons & Donuts does verify coffee and donuts on its own site, but I could not verify Friday opening hours from that first-party page, so I have not called it a firm 7pm option.';
+  }
+
+  if (shortlist.length < 2) return null;
+
+  const lines = shortlist.slice(0, 4).map((item, index) => {
+    const caveat = item.caveat ? ` ${item.caveat}` : '';
+    return `${index + 1}. ${item.title}\n${item.description}${caveat}`;
+  });
+  const notes = [exclusionNote, unverifiedNote].filter(Boolean);
+  const reply = `For around 7pm on Friday, I’d use this evidence-led shortlist:\n\n${lines.join('\n\n')}${notes.length ? `\n\nA couple of evidence notes:\n${notes.map(note => `• ${note}`).join('\n')}` : ''}\n\nWould you prefer proper coffee, a dessert-parlour feel, or somewhere more relaxed?`;
+
+  return { reply, sources: sources.slice(0, 8), places: resultCards.slice(0, 4) };
+}
+
 async function fetchEveningServiceFirstPartyContexts(messages) {
   const area = detectWakefieldArea(messages);
   if (area && !isCoreWakefieldArea(area)) return { dolceVita: null, clubHouse: null, rassams: null };
@@ -5219,57 +5387,32 @@ async function handlerImpl(req, res) {
     });
   }
 
-  // Planned evening coffee + dessert in the Wakefield core can be resolved
-  // from a current first-party venue page plus our recently verified published
-  // place record. Do this before Google Places so a known exact match does not
-  // incur one anchor lookup and multiple Enterprise + Atmosphere searches.
-  // This shortcut is deliberately NOT used for open-now queries, where live
-  // status can change independently of regular published hours.
+  // Evening coffee + dessert uses a trusted shortlist before paid Places discovery.
+  // Current first-party pages are checked in parallel. Exact matches come first;
+  // useful near-matches are clearly labelled rather than being promoted as facts.
+  // If there are not enough current first-party candidates, fall through to the
+  // existing Google Places discovery route as the safety net.
   if (route.intent === 'food.open_at' && isEveningCoffeeDessertQuery(messages)
       && isCoreWakefieldArea(route.area || detectWakefieldArea(messages))
       && route.timeConstraint?.mode !== 'now') {
-    const requirements = coffeeSweetRequirements(messages);
-    if (requirements.wantsCoffee && requirements.wantsSweet) {
-      const published = publishedFoodRecommendation(
-        recentUserContext(messages, 5),
-        route.timeConstraint
-      );
-      const primary = published?.places?.[0] || null;
-      if (primary?.source && primary?.servesCoffee === true && primary?.servesDessert === true) {
-        const currentPage = await fetchSimpleFirstPartyContext(
-          primary.source,
-          `${primary.name} — current first-party page`
-        );
-        const pageText = String(currentPage?.text || '');
-        const stillShowsRequestedService = /\bcoffee\b/i.test(pageText)
-          && /\b(dessert|desserts|cake|cakes|pudding|gelato|sweet)\b/i.test(pageText);
-        const stillShowsHours = /\b(opening hours?|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(pageText);
-        if (currentPage && stillShowsRequestedService && stillShowsHours) {
-          const reply = String(published.reply || '')
-            .replace(
-              'These use published venue details, not a live availability check.',
-              'I checked the venue’s current first-party page against the published service and regular opening-hours record.'
-            );
-          const nextState = {
-            ...normaliseClientState(null),
-            lastIntent: 'food.open_at',
-            area: route.area || detectWakefieldArea(messages),
-            constraints: { time: route.timeConstraint, coffeeRequired: true },
-            resultCards: published.places.map(place => ({
-              id: place.id, entityType: 'place', name: place.name, title: place.name, url: place.source
-            }))
-          };
-          attachStateCookie(res, nextState);
-          console.info('Evening coffee/dessert resolved from current first-party page before paid Places discovery.');
-          return res.status(200).json({
-            reply: finaliseUserFacingReply(reply),
-            sources: published.sources,
-            live: true,
-            verification: 'first-party-published',
-            state: nextState
-          });
-        }
-      }
+    const shortlist = await buildEveningCoffeeDessertShortlist(messages, route);
+    if (shortlist?.places?.length >= 2) {
+      const nextState = {
+        ...normaliseClientState(null),
+        lastIntent: 'food.open_at',
+        area: route.area || detectWakefieldArea(messages),
+        constraints: { time: route.timeConstraint, coffeeRequired: true },
+        resultCards: shortlist.places
+      };
+      attachStateCookie(res, nextState);
+      console.info(`Evening coffee/dessert resolved from ${shortlist.places.length} current first-party shortlist candidates before paid Places discovery.`);
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(shortlist.reply),
+        sources: shortlist.sources,
+        live: true,
+        verification: 'first-party-shortlist',
+        state: nextState
+      });
     }
   }
 

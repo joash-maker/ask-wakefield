@@ -3674,13 +3674,13 @@ async function fetchFoodConstraintFirstPartyContexts(messages) {
 
 async function fetchBusinessFirstPartyContexts(messages) {
   const area = detectWakefieldArea(messages);
-  if (area && !isCoreWakefieldArea(area)) return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
+  if (area && !isCoreWakefieldArea(area)) return { bootsKirkgate: null, kingfisher: null, trinityPharmacyPlus: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
   if (!isCurrentBusinessStatusQuery(messages) && !isPharmacyOpenQuery(messages)) {
-    return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
+    return { bootsKirkgate: null, kingfisher: null, trinityPharmacyPlus: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
   }
 
   if (isPharmacyOpenQuery(messages)) {
-    const [bootsKirkgate, kingfisher, pinderfields, asdaWakefield, sainsburysMarshWay] = await Promise.all([
+    const [bootsKirkgate, kingfisher, trinityPharmacyPlus, pinderfields, asdaWakefield, sainsburysMarshWay] = await Promise.all([
       fetchSimpleFirstPartyContext(
         'https://www.boots.com/stores/505-wakefield-kirkgate-wf1-1up',
         'Boots — Wakefield Kirkgate'
@@ -3688,6 +3688,10 @@ async function fetchBusinessFirstPartyContexts(messages) {
       fetchSimpleFirstPartyContext(
         'https://kingfisherpharmacy.co.uk/',
         'Kingfisher Pharmacy — Wakefield Kirkgate'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://www.nhs.uk/services/pharmacy/trinity-pharmacy-plus-health/FPV92/contact-details-and-opening-times',
+        'NHS — Trinity Pharmacy Plus Health, Wakefield'
       ),
       fetchSimpleFirstPartyContext(
         'https://www.midyorks.nhs.uk/pharmacy',
@@ -3702,10 +3706,10 @@ async function fetchBusinessFirstPartyContexts(messages) {
         "Sainsbury's Wakefield Marsh Way"
       )
     ]);
-    return { bootsKirkgate, kingfisher, pinderfields, asdaWakefield, sainsburysMarshWay };
+    return { bootsKirkgate, kingfisher, trinityPharmacyPlus, pinderfields, asdaWakefield, sainsburysMarshWay };
   }
 
-  return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
+  return { bootsKirkgate: null, kingfisher: null, trinityPharmacyPlus: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
 }
 
 
@@ -3840,6 +3844,7 @@ function buildFirstPartyPharmacyAnswer(messages, route, businessContexts) {
   const defs = [
     { key: 'bootsKirkgate', name: 'Boots Pharmacy, Wakefield Kirkgate', address: '26–28 Kirkgate, Wakefield WF1 1UP', cityCore: true, kind: 'community pharmacy' },
     { key: 'kingfisher', name: 'Kingfisher Pharmacy', address: '192 Kirkgate, Wakefield WF1 1UE', cityCore: true, kind: 'independent community pharmacy' },
+    { key: 'trinityPharmacyPlus', name: 'Pharmacy Plus Health, Trinity Medical Centre', address: 'Trinity Medical Centre, Thornhill Street, Wakefield WF1 1PG', cityCore: true, kind: 'community pharmacy' },
     { key: 'asdaWakefield', name: 'ASDA Wakefield Pharmacy', address: 'Asdale Road, Wakefield WF2 7EQ', cityCore: false, kind: 'supermarket pharmacy' },
     { key: 'pinderfields', name: 'Pinderfields Numark Pharmacy (Rowlands)', address: 'Pinderfields Hospital', cityCore: false, kind: 'hospital/outpatient pharmacy' }
   ];
@@ -3865,7 +3870,8 @@ function buildFirstPartyPharmacyAnswer(messages, route, businessContexts) {
     const qualifier = item.key === 'pinderfields'
       ? ' This is a hospital/outpatient pharmacy, so it is not the same as a general high-street pharmacy.'
       : '';
-    return `• ${item.name}, ${item.address} — verified ${scope} pharmacy hours for the requested day: ${label}.${qualifier}`;
+    const hoursDescriptor = item.cityCore ? 'city-centre pharmacy hours' : `${scope} hours`;
+    return `• ${item.name}, ${item.address} — verified ${hoursDescriptor} for the requested day: ${label}.${qualifier}`;
   });
 
   const latest = candidates.reduce((best, item) => !best || item.hours.close > best.hours.close ? item : best, null);

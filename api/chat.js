@@ -4609,6 +4609,115 @@ function stripInternalProcessLeakage(reply) {
 }
 
 
+
+function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
+  if (!reply || !isFamilyPlanningQuery(messages)) return reply;
+
+  const userText = lastUserText(messages);
+  const familyContexts = evidence.familyPlanFirstPartyContexts || {};
+  const evidenceText = [
+    ...Object.values(familyContexts).map(ctx => ctx?.text || ''),
+    JSON.stringify(evidence.experienceEventsContext || {})
+  ].join('\n');
+
+  const normaliseMoney = value => String(value || '').replace(/\s+/g, '').replace(/\.00$/, '').toLowerCase();
+  const allowedPounds = new Set();
+  const allowedPence = new Set();
+  const collectMoney = (text, includePence = true) => {
+    const input = String(text || '');
+    for (const match of input.matchAll(/£\s*(\d+(?:\.\d{1,2})?)(?:\s*[–-]\s*(\d+(?:\.\d{1,2})?))?/g)) {
+      allowedPounds.add(normaliseMoney(match[1]));
+      if (match[2]) allowedPounds.add(normaliseMoney(match[2]));
+    }
+    if (includePence) {
+      for (const match of input.matchAll(/\b(\d+(?:\.\d+)?)\s*p\b/gi)) allowedPence.add(normaliseMoney(match[1]));
+    }
+  };
+  // The user's own budget may be repeated. Operational prices must come from current evidence.
+  collectMoney(userText, false);
+  collectMoney(evidenceText, true);
+
+  const unsupportedMoney = sentence => {
+    const text = String(sentence || '');
+    for (const match of text.matchAll(/£\s*(\d+(?:\.\d{1,2})?)(?:\s*[–-]\s*(\d+(?:\.\d{1,2})?))?/g)) {
+      if (!allowedPounds.has(normaliseMoney(match[1]))) return true;
+      if (match[2] && !allowedPounds.has(normaliseMoney(match[2]))) return true;
+    }
+    for (const match of text.matchAll(/\b(\d+(?:\.\d+)?)\s*p\b/gi)) {
+      if (!allowedPence.has(normaliseMoney(match[1]))) return true;
+    }
+    return false;
+  };
+
+  const userAskedContact = /\b(phone|telephone|contact|number|call|email|details)\b/i.test(userText);
+  const evidenceHasFreeParking = /\bfree parking\b/i.test(evidenceText);
+  let removedUnsupportedPrice = false;
+
+  const cleanedLines = [];
+  for (const rawLine of String(reply).split('\n')) {
+    if (!rawLine.trim()) { cleanedLines.push(''); continue; }
+    const sentences = rawLine.split(/(?<=[.!?])\s+/);
+    const kept = [];
+    for (let sentence of sentences) {
+      const original = sentence;
+
+      // Family-plan contact details are withheld unless the user explicitly asks.
+      if (!userAskedContact && /(?:\+?44|\b0\d)(?:[\s().-]*\d){7,12}\b/.test(sentence)) continue;
+
+      // Do not broaden a facility-specific free-parking fact into a park-wide claim.
+      if (/\b(?:parking is free|free parking)\b/i.test(sentence) && !evidenceHasFreeParking) continue;
+
+      if (unsupportedMoney(sentence)) {
+        removedUnsupportedPrice = true;
+        // Salvage a verified factual prefix such as "Merchant Gate is 90p per hour"
+        // while dropping the model's derived/guessed total after "so".
+        const parts = sentence.split(/,\s*so\s+|;\s*so\s+/i);
+        if (parts.length > 1 && !unsupportedMoney(parts[0])) {
+          sentence = parts[0].trim().replace(/[,:;]$/, '') + '.';
+        } else {
+          continue;
+        }
+      }
+
+      // "New" is stale for the Thornes Park play area opened in 2022.
+      sentence = sentence.replace(/\bnew inclusive play area\b/gi, 'inclusive play area');
+      kept.push(sentence);
+    }
+    if (kept.length) cleanedLines.push(kept.join(' '));
+  }
+
+  let out = cleanedLines.join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const hasUnknownPrice = removedUnsupportedPrice || /\b(?:price|prices|cost|costs).{0,40}(?:unconfirmed|not confirmed|couldn(?:'|’)t confirm|not specified|unknown)\b/i.test(out);
+  if (hasUnknownPrice) {
+    // Remove guarantees that cannot be supported while any paid component is unknown.
+    out = out
+      .replace(/\bhere(?:'|’)s a (?:solid )?plan within your budget:?/i, "Here’s a practical plan built around verified free or low-cost options:")
+      .split('\n')
+      .filter(line => !/\btotal spend\s*:/i.test(line))
+      .map(line => line
+        .split(/(?<=[.!?])\s+/)
+        .filter(sentence => !/\b(?:keeps? you (?:well )?under budget|(?:well )?inside your £?\d+(?:\.\d+)?(?: budget)?|within your budget|leav(?:e|ing) you £)/i.test(sentence))
+        .join(' ')
+      )
+      .filter(line => line.trim())
+      .join('\n')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    const budgetMatch = userText.match(/£\s*\d+(?:\.\d{1,2})?/);
+    const caveat = budgetMatch
+      ? `I couldn't verify every paid food or travel cost, so I can't guarantee the full outing stays within ${budgetMatch[0].replace(/\s+/g, '')}.`
+      : `I couldn't verify every paid food or travel cost, so I can't guarantee the final total.`;
+    if (!out.includes(caveat)) out = `${out}\n\n${caveat}`;
+  }
+
+  return out;
+}
+
 function stripMarkdownPresentation(reply) {
   if (!reply) return reply;
   return String(reply)
@@ -5767,6 +5876,11 @@ Use these only to establish whether a long-running attraction/exhibition is actu
         messages
       )
     );
+
+    finalReply = deterministicallySanitiseFamilyPlan(finalReply, messages, {
+      familyPlanFirstPartyContexts,
+      experienceEventsContext
+    });
 
     const deterministicFreeFollowUp = route.intent === 'events.filter_existing'
       ? buildDeterministicFreeFollowUpAnswer(messages, { eventDetailContexts })

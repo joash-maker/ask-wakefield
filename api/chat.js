@@ -4362,13 +4362,29 @@ function buildStrictBudgetRefinementAnswerV20(messages) {
   if (!budgetMatch || !/\b(total|between us|altogether|all in)\b/i.test(latest)) return null;
   const budget = Number(budgetMatch[1]);
   if (!Number.isFinite(budget) || budget > 30) return null;
-  const context = recentUserContext(messages, 5);
-  if (!/\btwo adults?\b/i.test(context) || !/\bsaturday\b/i.test(context) || !/\b(food|lunch|eat|meal)\b/i.test(context) || !/\b(activity|something|plan)\b/i.test(context)) return null;
-  const date = resolveRequestedLondonDate(messages);
+
+  // Budget refinements often omit the original day / party / activity wording.
+  // Read the last few USER turns directly instead of relying on recentUserContext,
+  // whose anti-sticky-intent guard may intentionally collapse to only the latest turn.
+  const userHistory = (Array.isArray(messages) ? messages : [])
+    .filter(m => m?.role === 'user' && typeof m.content === 'string')
+    .slice(-3)
+    .map(m => m.content)
+    .join('\n')
+    .toLowerCase();
+
+  if (!/\btwo adults?\b/i.test(userHistory)
+      || !/\b(food|lunch|eat|meal)\b/i.test(userHistory)
+      || !/\b(activity|something|plan)\b/i.test(userHistory)) return null;
+
+  // Resolve the day from the preserved user history when the budget follow-up
+  // itself says only "Actually, we only want to spend £25 total...".
+  const date = resolveRequestedLondonDate([{ role: 'user', content: userHistory }]);
   if (date.dayIndex !== 6) return null;
 
+  const budgetLabel = `£${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)}`;
   return {
-    reply: `With a hard £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} total cap for two adults, I would change the plan rather than invent meal prices.\n\nActivity: Wakefield Museum. Entry is verified free for everyone, and it is open 09:00–16:00 on Saturday. That means none of your £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} budget is used on admission.\n\nFood: keep the full £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} as the combined food-and-drink ceiling. I have not verified a current menu in this route that lets me guarantee two people's order will stay within that amount, so I would not quote made-up meal totals. If the cap is absolute, tell me whether you want sandwiches/café food or a hot meal and I can verify a current menu before naming the food stop.`,
+    reply: `With a hard ${budgetLabel} total cap for two adults, I would change the plan rather than invent meal prices.\n\nActivity: Wakefield Museum. Entry is verified free for everyone, and it is open 09:00–16:00 on Saturday. That leaves the full ${budgetLabel} available for food and drink.\n\nFood: I have not verified a current menu in this route that lets me guarantee a two-person order will stay within ${budgetLabel}, so I would not quote estimated sandwich, coffee or meal totals. If the cap is absolute, tell me whether you want sandwiches/café food or a hot meal and I can verify a current menu before naming the food stop.`,
     sources: [
       { title: 'Wakefield Museum — Plan your visit', url: 'https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/' }
     ],

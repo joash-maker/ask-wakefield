@@ -5155,6 +5155,7 @@ async function handlerImpl(req, res) {
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
+  let familyPlanFirstPartyContexts = null;
   if (isCurrentEventsQuery(messages)) {
     // Fetch strong first-party/current event sources in parallel. This avoids
     // a broad search while still covering the district aggregator, WX and the
@@ -5165,12 +5166,32 @@ async function handlerImpl(req, res) {
       fetchDatedFirstPartyContext('https://www.wakefieldcathedral.org.uk/whats-happening/events/', 'Wakefield Cathedral — Events')
     ]);
   } else if (route.intent === 'family.plan') {
-    // A family day plan needs fresh dated options, but Experience Wakefield is
-    // the preferred first-party discovery source. If it is available, the
-    // existing search gate below treats that snapshot as sufficient evidence
-    // and avoids a broad Claude web search. If it fails, normal live-search
-    // fallback still applies.
-    experienceEventsContext = await fetchExperienceWakefieldEventsContext();
+    // Family plans need current operational facts as well as dated events.
+    // Fetch a small set of high-value official pages directly so the model can
+    // verify tomorrow's weekday, seasonal hours, cafe availability and parking
+    // without paying for broad model web search. These are ordinary HTTP fetches
+    // to first-party sources and run in parallel with the Experience snapshot.
+    const [events, museum, castle, newmillerdam, thornes] = await Promise.all([
+      fetchExperienceWakefieldEventsContext(),
+      fetchSimpleFirstPartyContext(
+        'https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/',
+        'Wakefield Museum — Plan your visit'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://museumsandcastles.wakefield.gov.uk/visit/pontefract-castle/plan-your-visit-to-pontefract-castle/',
+        'Pontefract Castle — Plan your visit'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://www.wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/newmillerdam-country-park',
+        'Wakefield Council — Newmillerdam Country Park'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://www.wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/thornes-park/',
+        'Wakefield Council — Thornes Park'
+      )
+    ]);
+    experienceEventsContext = events;
+    familyPlanFirstPartyContexts = { museum, castle, newmillerdam, thornes };
   } else if (isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
   }
@@ -5480,8 +5501,15 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
     ? `\n\nCHILD / FAMILY TIMING MODE: Enforce the requested day, time-of-day and published age suitability. Morning events ending at noon are not afternoon recommendations. If no exact verified option remains, say so rather than padding with a mismatched event.`
     : '';
 
+  const familyPlanFirstPartyEvidence = route.intent === 'family.plan' && familyPlanFirstPartyContexts
+    ? `\n\nFAMILY PLAN CURRENT FIRST-PARTY EVIDENCE:\n${Object.entries(familyPlanFirstPartyContexts)
+        .filter(([, ctx]) => ctx?.text)
+        .map(([label, ctx]) => `${label.toUpperCase()}:\nSOURCE: ${ctx.source?.url || ''}\n${String(ctx.text).slice(0, 6000)}`)
+        .join('\n\n---\n\n')}\nUse these pages as the authority for current opening days/hours, entry status, cafe/service availability, parking charges, addresses and contact details for the named venues.`
+    : '';
+
   const familyPlanContext = route.intent === 'family.plan'
-    ? `\n\nFAMILY DAY-PLAN MODE: Build one practical primary plan and at most two clearly labelled alternatives. Use the current Experience Wakefield snapshot for dated options and the grounded local-place records for stable venues. Respect the stated ages and budget. Do not promise the whole plan fits the budget unless every included paid item has a verified current price for the right group size. Do not web-search simply to add more choices when the supplied first-party/current evidence is already sufficient.`
+    ? `\n\nFAMILY DAY-PLAN MODE: Build one practical primary plan and at most two clearly labelled alternatives. Use the current Experience Wakefield snapshot for dated options and the grounded local-place records for stable venue identity. Respect the stated ages and budget. CURRENT-FACT GATE: for a requested day such as today/tomorrow, any claim about opening hours, open/closed status, cafe or food availability, admission, parking charges, address/contact details, or a paid price must be supported by the FAMILY PLAN CURRENT FIRST-PARTY EVIDENCE above or by a current first-party event record supplied in this request. A canonical local-place card by itself is not current operational proof. Match the requested calendar date to the correct weekday and to the correct seasonal schedule. Never recommend a cafe or visitor centre on a day the evidence says it is closed. Never estimate a lunch bill from generic model knowledge. Do not state that the whole outing fits the user's budget unless every paid component you count has a verified current price for the relevant group; instead say which activities are verified free and how much of the budget remains for unpriced food/travel. If a country-park option has verified parking charges, mention them when driving/parking is part of the suggestion. Do not output a phone number unless the user asks for contact details and the current first-party evidence supplies it. If an operational fact is missing, say you could not confirm that fact or omit it. Do not web-search simply to add more choices when the supplied first-party/current evidence is already sufficient.`
     : '';
 
   const walkingRouteContext = isWalkingRouteQuery(messages)
@@ -5533,7 +5561,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   const weekendPerformanceContext = isWeekendPerformanceQuery(messages)
     ? `\n\nWEEKEND PERFORMANCE DISCOVERY: The user wants gigs, concerts, live music or comedy, not merely the first eight generic event cards. Search current first-party venue and organiser event pages beyond the two aggregate feeds. Include only a title, actual matching Saturday/Sunday date, venue and direct event URL supported by an exact official page. A missing ticket price must not suppress the event; omit price or say unconfirmed. If no suitable event is verified, say so rather than padding with unrelated activities.`
     : '';
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${familyPlanContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${familyPlanFirstPartyEvidence}${familyPlanContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'

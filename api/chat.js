@@ -3736,12 +3736,22 @@ function pageHasAny(text, terms) {
   return terms.some(term => value.includes(String(term).toLowerCase()));
 }
 
+function publishedPlaceRecentlyVerified(place, maxAgeDays = 7) {
+  const raw = String(place?.verified || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || place?.conflict === true) return false;
+  const verifiedAt = Date.parse(`${raw}T12:00:00Z`);
+  if (!Number.isFinite(verifiedAt)) return false;
+  return Math.max(0, Date.now() - verifiedAt) <= maxAgeDays * 24 * 60 * 60 * 1000;
+}
+
 async function buildEveningCoffeeDessertShortlist(messages, route) {
   if (route?.intent !== 'food.open_at' || !isEveningCoffeeDessertQuery(messages)) return null;
   if (!isCoreWakefieldArea(route.area || detectWakefieldArea(messages))) return null;
   if (route.timeConstraint?.mode === 'now') return null;
   const requirements = coffeeSweetRequirements(messages);
   if (!requirements.wantsCoffee || !requirements.wantsSweet) return null;
+  const latestUserText = String((messages || []).filter(message => message?.role === 'user').slice(-1)[0]?.content || '');
+  const strictCityCentre = /\b(city centre|city center|city-centre)\b/i.test(latestUserText);
 
   const [dolcePage, clubPage, rassamsPage, sipContact, sipMenu, kraftPage, dungeonsPage] = await Promise.all([
     fetchSimpleFirstPartyContext(
@@ -3785,6 +3795,9 @@ async function buildEveningCoffeeDessertShortlist(messages, route) {
     if (!place) return;
     shortlist.push({ place, title, description, caveat, confidence });
     for (const ctx of contexts) addSource(ctx);
+    if (!contexts.length && place.source && !sources.some(source => source.url === place.source)) {
+      sources.push({ title: `${place.name} — trusted source`, url: place.source });
+    }
     resultCards.push({
       id: place.id,
       entityType: 'place',
@@ -3793,25 +3806,33 @@ async function buildEveningCoffeeDessertShortlist(messages, route) {
       url: place.source || place.website || null,
       address: place.address,
       confidence,
-      sourceTier: confidence === 'verified' ? 'first-party-current' : 'first-party-partial'
+      sourceTier: confidence === 'verified' ? 'first-party-current' : (confidence === 'recent' ? 'first-party-recent' : 'first-party-partial')
     });
   };
 
   const dolce = publishedPlaceById('AW-E001');
-  if (dolcePage && publishedPlaceHoursCover(dolce, constraint)
+  const dolceLiveVerified = Boolean(dolcePage && publishedPlaceHoursCover(dolce, constraint)
       && pageHasAny(dolcePage.text, ['americano','espresso','latte','cappuccino','coffee'])
-      && pageHasAny(dolcePage.text, ['tiramisu','cheesecake','profiteroles','dessert','gelato'])) {
+      && pageHasAny(dolcePage.text, ['tiramisu','cheesecake','profiteroles','dessert','gelato']));
+  const dolceRecentVerified = Boolean(!dolceLiveVerified && publishedPlaceRecentlyVerified(dolce, 7)
+      && publishedPlaceHoursCover(dolce, constraint) && dolce?.servesCoffee === true && dolce?.servesDessert === true);
+  if (dolceLiveVerified || dolceRecentVerified) {
     add({
       place: dolce,
-      title: 'Best verified coffee + dessert match',
-      description: `Dolce Vita, ${dolce.address}: its current first-party menu explicitly lists coffee and desserts. Published ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]} hours: ${dolce.hours[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]]}.`,
-      caveat: 'It is a restaurant, so check that dessert-only visits are welcome when you arrive.',
-      contexts: [dolcePage]
+      title: 'Best coffee + dessert match',
+      description: dolceLiveVerified
+        ? `Dolce Vita, ${dolce.address}: its current first-party menu explicitly lists coffee and desserts. Published ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]} hours: ${dolce.hours[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]]}.`
+        : `Dolce Vita, ${dolce.address}: the trusted local record, last verified ${dolce.verified}, lists both coffee and desserts and published ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]} hours of ${dolce.hours[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][constraint.day]]}.`,
+      caveat: dolceLiveVerified
+        ? 'It is a restaurant, so check that dessert-only visits are welcome when you arrive.'
+        : 'The live menu page did not resolve in this request, so check the venue before setting off.',
+      confidence: dolceLiveVerified ? 'verified' : 'recent',
+      contexts: dolceLiveVerified ? [dolcePage] : []
     });
   }
 
   const club = publishedPlaceById('AW-E003');
-  if (clubPage && publishedPlaceHoursCover(club, constraint)
+  if (!strictCityCentre && clubPage && publishedPlaceHoursCover(club, constraint)
       && pageHasAny(clubPage.text, ['coffee']) && pageHasAny(clubPage.text, ['cake','cakes','waffles'])) {
     add({
       place: club,
@@ -3836,15 +3857,15 @@ async function buildEveningCoffeeDessertShortlist(messages, route) {
   }
 
   const sip = publishedPlaceById('AW-E008');
-  if (sipContact && sipMenu
+  if (!strictCityCentre && sipContact && sipMenu
       && pageHasAny(sipContact.text, ['8.00 am - 11.00 pm','8.00 am','11.00 pm','8:00','11:00'])
       && pageHasAny(sipMenu.text, ['dessert','desserts','kulfi','falooda','sweet'])
       && pageHasAny(sipMenu.text, ['chai','karak','hot drink','beverage'])) {
     add({
       place: sip,
-      title: 'Good if a hot drink or chai works instead of coffee',
+      title: 'Hot-drink + dessert alternative just outside the core',
       description: 'Sip & Dip, 63 Westgate End: its current site publishes 08:00–23:00 opening and verifies desserts plus chai and other drinks.',
-      caveat: 'I could not verify coffee specifically, so I would not present it as an exact coffee match.',
+      caveat: 'I could not verify coffee specifically, and Westgate End is outside the strict city-centre core, so treat this as a wider alternative.',
       confidence: 'partial',
       contexts: [sipContact, sipMenu]
     });
@@ -3870,7 +3891,7 @@ async function buildEveningCoffeeDessertShortlist(messages, route) {
     return `${index + 1}. ${item.title}\n${item.description}${caveat}`;
   });
   const notes = [exclusionNote, unverifiedNote].filter(Boolean);
-  const reply = `For around 7pm on Friday, I’d use this evidence-led shortlist:\n\n${lines.join('\n\n')}${notes.length ? `\n\nA couple of evidence notes:\n${notes.map(note => `• ${note}`).join('\n')}` : ''}\n\nWould you prefer proper coffee, a dessert-parlour feel, or somewhere more relaxed?`;
+  const reply = `For around 7pm on Friday, I’d use this evidence-led shortlist:\n\n${lines.join('\n\n')}${notes.length ? `\n\nA couple of evidence notes:\n${notes.map(note => `• ${note}`).join('\n')}` : ''}\n\nIf you want, I can widen beyond the city-centre core or use live business listings for more choices, but those may need an extra verification step. Would you prefer proper coffee, a dessert-parlour feel, or somewhere more relaxed?`;
 
   return { reply, sources: sources.slice(0, 8), places: resultCards.slice(0, 4) };
 }

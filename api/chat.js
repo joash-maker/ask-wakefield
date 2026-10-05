@@ -3694,8 +3694,8 @@ async function fetchBusinessFirstPartyContexts(messages) {
         'Mid Yorkshire Teaching NHS Trust — Pinderfields Pharmacy'
       ),
       fetchSimpleFirstPartyContext(
-        'https://storelocator.asda.com/yorkshire-%26-humber/wakefield/asdale-road',
-        'ASDA Wakefield Superstore — Pharmacy'
+        'https://storelocator.asda.com/yorkshire-%26-humber/wakefield/asdale-road/pharmacy',
+        'ASDA Wakefield Pharmacy'
       ),
       fetchSimpleFirstPartyContext(
         'https://stores.sainsburys.co.uk/2258/wakefield-marsh-way',
@@ -3706,6 +3706,187 @@ async function fetchBusinessFirstPartyContexts(messages) {
   }
 
   return { bootsKirkgate: null, kingfisher: null, pinderfields: null, asdaWakefield: null, sainsburysMarshWay: null };
+}
+
+
+function pharmacyClockMinutes(raw) {
+  const value = String(raw || '').trim().toLowerCase().replace(/\./g, ':').replace(/\s+/g, '');
+  const m = value.match(/^(\d{1,2})(?::(\d{2}))?(am|pm)?$/);
+  if (!m) return null;
+  let hour = Number(m[1]);
+  const minute = Number(m[2] || 0);
+  const meridiem = m[3] || '';
+  if (minute > 59) return null;
+  if (meridiem) {
+    if (hour < 1 || hour > 12) return null;
+    if (meridiem === 'pm' && hour !== 12) hour += 12;
+    if (meridiem === 'am' && hour === 12) hour = 0;
+  } else if (hour > 23) return null;
+  return hour * 60 + minute;
+}
+
+function pharmacyDayNames(dayIndex) {
+  const full = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const short = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return { full: full[dayIndex], short: short[dayIndex] };
+}
+
+function pharmacyDayInRange(dayIndex, startName, endName) {
+  const names = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const a = names.indexOf(String(startName || '').toLowerCase());
+  const b = names.indexOf(String(endName || '').toLowerCase());
+  if (a < 0 || b < 0) return false;
+  if (a <= b) return dayIndex >= a && dayIndex <= b;
+  return dayIndex >= a || dayIndex <= b;
+}
+
+function pharmacyTextScope(key, context) {
+  const text = String(context?.text || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  if (key === 'bootsKirkgate') {
+    const idx = text.search(/\bPharmacy\s*:/i);
+    if (idx >= 0) return text.slice(idx, idx + 1800);
+  }
+  if (key === 'pinderfields') {
+    const idx = text.search(/\bPinderfields\s+Numark\s+Pharmacy/i);
+    if (idx >= 0) return text.slice(idx, idx + 1200);
+  }
+  return text;
+}
+
+function pharmacyHoursForDay(key, context, dayIndex) {
+  const text = pharmacyTextScope(key, context);
+  if (!text) return null;
+  const { full, short } = pharmacyDayNames(dayIndex);
+  const escapedFull = full.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedShort = short.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const time = '(\\d{1,2}(?::|\\.)?\\d{0,2}\\s*(?:am|pm)?)';
+
+  const row = new RegExp(`\\b(?:${escapedFull}|${escapedShort})\\b\\s*(?:\\||:)?\\s*${time}\\s*(?:-|–|—|to)\\s*${time}`, 'i').exec(text);
+  if (row) {
+    const open = pharmacyClockMinutes(row[1]);
+    const close = pharmacyClockMinutes(row[2]);
+    if (open != null && close != null) return { open, close };
+  }
+
+  for (const match of text.matchAll(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*(?:-|–|—|to|&)\s*(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*:?\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)/gi)) {
+    if (!pharmacyDayInRange(dayIndex, match[1], match[2])) continue;
+    const open = pharmacyClockMinutes(match[3]);
+    const close = pharmacyClockMinutes(match[4]);
+    if (open != null && close != null) return { open, close };
+  }
+
+  for (const match of text.matchAll(/\b(?:Open\s*)?(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*(?:-|–|—|to)\s*(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/gi)) {
+    if (!pharmacyDayInRange(dayIndex, match[3], match[4])) continue;
+    const open = pharmacyClockMinutes(match[1]);
+    const close = pharmacyClockMinutes(match[2]);
+    if (open != null && close != null) return { open, close };
+  }
+
+  if (dayIndex === 0 || dayIndex === 6) {
+    const weekend = /\b(?:Open\s*)?(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*Saturday\s*,?\s*Sunday\b/i.exec(text);
+    if (weekend) {
+      const open = pharmacyClockMinutes(weekend[1]);
+      const close = pharmacyClockMinutes(weekend[2]);
+      if (open != null && close != null) return { open, close };
+    }
+  }
+
+  const closed = new RegExp(`\\b(?:${escapedFull}|${escapedShort})\\b[^.]{0,80}\\bclosed\\b|\\bclosed\\b[^.]{0,80}\\b(?:${escapedFull}|${escapedShort})\\b`, 'i');
+  if (closed.test(text)) return { closed: true };
+
+  return null;
+}
+
+function pharmacyConstraintMatches(hours, constraint) {
+  if (!hours || hours.closed) return false;
+  const open = Number(hours.open);
+  let close = Number(hours.close);
+  if (!Number.isFinite(open) || !Number.isFinite(close)) return false;
+  if (close <= open) close += 24 * 60;
+  if (!constraint || constraint.mode === 'day') return true;
+
+  let target;
+  if (constraint.mode === 'now') {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false
+    }).formatToParts(new Date());
+    const hour = Number(parts.find(part => part.type === 'hour')?.value || 0);
+    const minute = Number(parts.find(part => part.type === 'minute')?.value || 0);
+    target = hour * 60 + minute;
+  } else {
+    target = minutesOfDay(constraint.hour, constraint.minute);
+  }
+  if (constraint.mode === 'after') return close > target;
+  return target >= open && target < close;
+}
+
+function pharmacyHoursLabel(hours) {
+  const fmt = total => {
+    const hour = Math.floor(total / 60) % 24;
+    const minute = total % 60;
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  };
+  return `${fmt(hours.open)}–${fmt(hours.close)}`;
+}
+
+function buildFirstPartyPharmacyAnswer(messages, route, businessContexts) {
+  if (route?.intent !== 'pharmacy.open') return null;
+  const area = route.area || detectWakefieldArea(messages);
+  if (!isCoreWakefieldArea(area)) return null;
+
+  const constraint = route.timeConstraint || requestedPlaceTimeConstraint(messages);
+  const dayIndex = Number.isInteger(constraint?.day) ? constraint.day : londonDayIndex();
+  const defs = [
+    { key: 'bootsKirkgate', name: 'Boots Pharmacy, Wakefield Kirkgate', address: '26–28 Kirkgate, Wakefield WF1 1UP', cityCore: true, kind: 'community pharmacy' },
+    { key: 'kingfisher', name: 'Kingfisher Pharmacy', address: '192 Kirkgate, Wakefield WF1 1UE', cityCore: true, kind: 'independent community pharmacy' },
+    { key: 'asdaWakefield', name: 'ASDA Wakefield Pharmacy', address: 'Asdale Road, Wakefield WF2 7EQ', cityCore: false, kind: 'supermarket pharmacy' },
+    { key: 'pinderfields', name: 'Pinderfields Numark Pharmacy (Rowlands)', address: 'Pinderfields Hospital', cityCore: false, kind: 'hospital/outpatient pharmacy' }
+  ];
+
+  const candidates = [];
+  for (const def of defs) {
+    const context = businessContexts?.[def.key];
+    if (!context?.text || !context?.source?.url) continue;
+    const hours = pharmacyHoursForDay(def.key, context, dayIndex);
+    if (!hours || !pharmacyConstraintMatches(hours, constraint)) continue;
+    candidates.push({ ...def, context, hours });
+  }
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => {
+    if (a.cityCore !== b.cityCore) return a.cityCore ? -1 : 1;
+    return b.hours.close - a.hours.close;
+  });
+
+  const lines = candidates.slice(0, 4).map(item => {
+    const label = pharmacyHoursLabel(item.hours);
+    const scope = item.cityCore ? 'city-centre' : item.kind;
+    const qualifier = item.key === 'pinderfields'
+      ? ' This is a hospital/outpatient pharmacy, so it is not the same as a general high-street pharmacy.'
+      : '';
+    return `• ${item.name}, ${item.address} — verified ${scope} pharmacy hours for the requested day: ${label}.${qualifier}`;
+  });
+
+  const latest = candidates.reduce((best, item) => !best || item.hours.close > best.hours.close ? item : best, null);
+  const afterText = constraint?.mode === 'after'
+    ? ` For later in the evening, ${latest.name} is the latest-closing option I can verify from these current first-party pages (${pharmacyHoursLabel(latest.hours)}).`
+    : '';
+
+  const reply = `These are the pharmacy-counter hours I can verify from current first-party pages for the time you asked about:\n\n${lines.join('\n')}\n\nI have not ranked them as nearest because I do not have a verified distance calculation.${afterText}`;
+  const sources = candidates.slice(0, 4).map(item => item.context.source);
+  const resultCards = candidates.slice(0, 4).map(item => ({
+    id: `first-party:${item.key}`,
+    entityType: 'place',
+    name: item.name,
+    title: item.name,
+    address: item.address,
+    url: item.context.source.url,
+    sourceUrl: item.context.source.url,
+    serviceVerified: true,
+    timeMatch: true
+  }));
+  return { reply, sources, resultCards };
 }
 
 
@@ -5620,7 +5801,10 @@ async function handlerImpl(req, res) {
     ? await fetchFreeDayVenueContexts(messages)
     : { ysp: null, ncm: null, wxWeekly: null };
 
-  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesContext, userUrlContext] = await Promise.all([
+  const deferCorePharmacyPlaces = route.intent === 'pharmacy.open'
+    && isCoreWakefieldArea(route.area || detectWakefieldArea(messages));
+
+  const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesInitial, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
     fetchAccessibilityFirstPartyContexts(messages),
     fetchRunningFirstPartyContexts(messages),
@@ -5628,9 +5812,10 @@ async function handlerImpl(req, res) {
     fetchBusinessFirstPartyContexts(messages),
     fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
-    fetchWakefieldDistrictPlacesContext(messages),
+    deferCorePharmacyPlaces ? Promise.resolve(null) : fetchWakefieldDistrictPlacesContext(messages),
     fetchTrustedUserUrlContext(messages)
   ]);
+  let districtPlacesContext = districtPlacesInitial;
 
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
@@ -5657,9 +5842,37 @@ async function handlerImpl(req, res) {
     }
   }
 
+  if (STRUCTURED_CORE_ENABLED && deferCorePharmacyPlaces) {
+    const directPharmacy = buildFirstPartyPharmacyAnswer(messages, route, businessContexts);
+    if (directPharmacy) {
+      const state = {
+        ...normaliseClientState(null),
+        lastIntent: 'pharmacy.open',
+        area: route.area || null,
+        constraints: { time: route.timeConstraint || null },
+        resultCards: directPharmacy.resultCards,
+        viewIds: directPharmacy.resultCards.map(card => card.id),
+        lastFilter: null
+      };
+      attachStateCookie(res, state);
+      console.info('Pharmacy query resolved deterministically from current first-party pharmacy pages.');
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(directPharmacy.reply),
+        sources: directPharmacy.sources.slice(0, 8),
+        live: true,
+        verification: 'first-party-pharmacy',
+        state
+      });
+    }
+
+    districtPlacesContext = await fetchWakefieldDistrictPlacesContext(messages);
+  }
+
   const structuredPlaceCards = STRUCTURED_CORE_ENABLED ? verifiedPlaceCards(districtPlacesContext) : [];
   if (STRUCTURED_CORE_ENABLED && structuredPlaceCards.length && (route.intent === 'pharmacy.open' || route.intent === 'food.open_at')) {
-    const reply = await writeFromEvidenceCards(messages, route, structuredPlaceCards);
+    const reply = route.intent === 'pharmacy.open'
+      ? structuredFallbackFromCards(route, structuredPlaceCards)
+      : await writeFromEvidenceCards(messages, route, structuredPlaceCards);
     const state = buildResponseState(route, reply, {}, districtPlacesContext, clientState);
     attachStateCookie(res, state);
     const sourceMap = new Map();

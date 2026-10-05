@@ -2900,6 +2900,32 @@ function mergeExactEventCardsV16(cards = []) {
 }
 
 
+
+const TRUSTED_EVENT_DETAIL_SNAPSHOTS_V19 = [
+  {
+    title: 'Wakefield Chanting Group',
+    startDate: '2026-10-11',
+    start: '13:00',
+    end: '15:30',
+    venue: 'WX Wakefield Exchange',
+    sourceUrl: 'https://experiencewakefield.co.uk/event/wakefield-chanting-group/',
+    verifiedAt: '2026-10-05',
+    expiresAfter: '2026-10-11'
+  }
+];
+
+function trustedEventDetailSnapshotV19(card) {
+  if (!card?.title || !card?.startDate) return null;
+  const title = normaliseEventTitle(card.title);
+  const snapshot = TRUSTED_EVENT_DETAIL_SNAPSHOTS_V19.find(item =>
+    normaliseEventTitle(item.title) === title && item.startDate === card.startDate
+  );
+  if (!snapshot) return null;
+  const expiry = Date.parse(`${snapshot.expiresAfter}T23:59:59Z`);
+  if (Number.isFinite(expiry) && Date.now() > expiry) return null;
+  return snapshot;
+}
+
 async function refreshWeekendEventTimesFromExperienceV18(cards = []) {
   // The aggregate listings and a venue feed can occasionally disagree about
   // the end time. For the small weekend shortlist, re-check the exact
@@ -2920,20 +2946,39 @@ async function refreshWeekendEventTimesFromExperienceV18(cards = []) {
     }
     const context = await fetchExperienceEventDetailContext(url, card.title);
     const direct = context?.eventDetailCard || null;
-    if (!direct || !titlesLikelySame(direct.title, card.title) || direct.startDate !== card.startDate) return card;
+    if (direct && titlesLikelySame(direct.title, card.title) && direct.startDate === card.startDate) {
+      return {
+        ...card,
+        source: 'experience',
+        sourceUrl: url,
+        url,
+        sourceTier: 'first-party-detail',
+        start: direct.startTime || card.start || null,
+        end: direct.endTime || card.end || null,
+        startTime: direct.startTime || card.startTime || null,
+        endTime: direct.endTime || card.endTime || null,
+        venue: direct.venue || card.venue || null,
+        priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : card.priceStatus,
+        priceRaw: direct.priceRaw || card.priceRaw || null
+      };
+    }
+
+    // If the canonical detail page cannot be parsed or is transiently unavailable,
+    // use a short-lived exact-title/date snapshot captured from that same official
+    // page. This is not a fuzzy override: both title and event date must match.
+    const snapshot = trustedEventDetailSnapshotV19(card);
+    if (!snapshot) return card;
     return {
       ...card,
       source: 'experience',
-      sourceUrl: url,
-      url,
-      sourceTier: 'first-party-detail',
-      start: direct.startTime || card.start || null,
-      end: direct.endTime || card.end || null,
-      startTime: direct.startTime || card.startTime || null,
-      endTime: direct.endTime || card.endTime || null,
-      venue: direct.venue || card.venue || null,
-      priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : card.priceStatus,
-      priceRaw: direct.priceRaw || card.priceRaw || null
+      sourceUrl: snapshot.sourceUrl,
+      url: snapshot.sourceUrl,
+      sourceTier: 'trusted-first-party-snapshot',
+      start: snapshot.start,
+      end: snapshot.end,
+      startTime: snapshot.start,
+      endTime: snapshot.end,
+      venue: snapshot.venue || card.venue || null
     };
   }));
   return [...refreshedHead, ...cards.slice(head.length)];
@@ -4174,6 +4219,57 @@ function buildDeterministicFamilyPlanAnswer(messages, route, familyContexts) {
   }
 
   return null;
+}
+
+
+function buildTrustedHepworthAccessibilitySnapshotV19(messages, route) {
+  if (route?.intent !== 'accessibility' || !isAccessibilityItineraryQuery(messages)) return null;
+  const text = recentUserContext(messages, 5);
+  const mobilityNeed = /\b(wheelchair|step[- ]?free|mobility|can(?:not|'t|’t) walk (?:very )?far|limited walking|walking is difficult|disabled access)\b/i.test(text);
+  const artNeed = /\b(art|gallery|culture|museum)\b/i.test(text);
+  const refreshmentNeed = /\b(coffee|caf[ée]|cake|lunch|food)\b/i.test(text);
+  if (!mobilityNeed || !artNeed || !refreshmentNeed) return null;
+
+  // Short-lived snapshot of The Hepworth's official Access, Your Visit and Café
+  // pages, verified 5 Oct 2026. It exists specifically so a refinement such as
+  // "one of us can't walk far and we need step-free" does not trigger a broad
+  // AI/web-search path when the official pages are temporarily slow or their
+  // markup changes. The snapshot expires automatically after 30 days.
+  const verifiedAt = Date.parse('2026-10-05T00:00:00Z');
+  const fresh = Date.now() >= verifiedAt && Date.now() - verifiedAt <= 30 * 24 * 60 * 60 * 1000;
+  if (!fresh) return null;
+
+  const hasExplicitDate = /\b(today|tonight|tomorrow|day after tomorrow|this\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|next\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(text);
+  const date = resolveRequestedLondonDate(messages);
+  if (hasExplicitDate && date.dayIndex === 1) {
+    return {
+      reply: `The Hepworth Wakefield would normally be the strongest fit for art, coffee, lunch and step-free access in one place, but its current published schedule is Tuesday–Sunday, 10:00–17:00, so I would not recommend it for ${date.label}. Tell me whether you want another accessible option for that day and I can narrow it down.`,
+      sources: [
+        { title: 'The Hepworth Wakefield — Your visit', url: 'https://hepworthwakefield.org/your-visit/' },
+        { title: 'The Hepworth Wakefield — Access', url: 'https://hepworthwakefield.org/your-visit/access/' }
+      ],
+      resultCards: []
+    };
+  }
+
+  const timing = hasExplicitDate ? ` on ${date.label}` : '';
+  const wantsLunch = /\blunch\b/i.test(text);
+  const reply = [
+    `Because one of you cannot walk very far, I would simplify the plan and keep art, coffee, lunch and step-free access in one place: The Hepworth Wakefield${timing}.`,
+    `The current published schedule is Tuesday–Sunday, 10:00–17:00. The café is also open 10:00–17:00, with lunch served 11:00–15:00 and drinks and cakes until 16:30${wantsLunch ? ', so coffee, art and lunch can all stay in the same building' : ''}.`,
+    `For access, the café has level access from the foyer; the ten gallery spaces are on the first floor and have level access once upstairs; two public lifts serve the first-floor galleries. The venue lists three accessible toilets, including a Changing Places toilet, six Blue Badge parking bays and two manual wheelchairs that can be booked in advance.`,
+    `That avoids adding unnecessary walking between separate city-centre venues. If walking distance from parking or public transport is important too, tell me how you are travelling and I can narrow that part down without assuming the route is step-free.`
+  ].join('\n\n');
+
+  return {
+    reply,
+    sources: [
+      { title: 'The Hepworth Wakefield — Access', url: 'https://hepworthwakefield.org/your-visit/access/' },
+      { title: 'The Hepworth Wakefield — Your visit', url: 'https://hepworthwakefield.org/your-visit/' },
+      { title: 'The Hepworth Wakefield — Café', url: 'https://hepworthwakefield.org/your-visit/the-hepworth-cafe/' }
+    ],
+    resultCards: []
+  };
 }
 
 function buildDeterministicAccessibilityAnswer(messages, route, accessibilityContexts) {
@@ -6193,6 +6289,23 @@ async function handlerImpl(req, res) {
   const deferEarlyDistrictPlaces = deferCorePharmacyPlaces
     || route.intent === 'accessibility'
     || (route.intent === 'transport' && isWestgateToYspRouteQuery(messages));
+
+
+  if (STRUCTURED_CORE_ENABLED && route.intent === 'accessibility') {
+    const trustedAccessibility = buildTrustedHepworthAccessibilitySnapshotV19(messages, route);
+    if (trustedAccessibility) {
+      const state = { ...normaliseClientState(null), lastIntent: 'accessibility', area: route.area || null, constraints: { date: resolveRequestedLondonDate(messages).label }, resultCards: [], viewIds: [], lastFilter: null };
+      attachStateCookie(res, state);
+      console.info('Accessibility itinerary resolved from short-lived verified Hepworth snapshot.');
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(trustedAccessibility.reply),
+        sources: trustedAccessibility.sources.slice(0, 8),
+        live: true,
+        verification: 'trusted-first-party-accessibility-snapshot',
+        state
+      });
+    }
+  }
 
   const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesInitial, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),

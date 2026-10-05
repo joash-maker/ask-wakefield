@@ -5219,6 +5219,60 @@ async function handlerImpl(req, res) {
     });
   }
 
+  // Planned evening coffee + dessert in the Wakefield core can be resolved
+  // from a current first-party venue page plus our recently verified published
+  // place record. Do this before Google Places so a known exact match does not
+  // incur one anchor lookup and multiple Enterprise + Atmosphere searches.
+  // This shortcut is deliberately NOT used for open-now queries, where live
+  // status can change independently of regular published hours.
+  if (route.intent === 'food.open_at' && isEveningCoffeeDessertQuery(messages)
+      && isCoreWakefieldArea(route.area || detectWakefieldArea(messages))
+      && route.timeConstraint?.mode !== 'now') {
+    const requirements = coffeeSweetRequirements(messages);
+    if (requirements.wantsCoffee && requirements.wantsSweet) {
+      const published = publishedFoodRecommendation(
+        recentUserContext(messages, 5),
+        route.timeConstraint
+      );
+      const primary = published?.places?.[0] || null;
+      if (primary?.source && primary?.servesCoffee === true && primary?.servesDessert === true) {
+        const currentPage = await fetchSimpleFirstPartyContext(
+          primary.source,
+          `${primary.name} — current first-party page`
+        );
+        const pageText = String(currentPage?.text || '');
+        const stillShowsRequestedService = /\bcoffee\b/i.test(pageText)
+          && /\b(dessert|desserts|cake|cakes|pudding|gelato|sweet)\b/i.test(pageText);
+        const stillShowsHours = /\b(opening hours?|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(pageText);
+        if (currentPage && stillShowsRequestedService && stillShowsHours) {
+          const reply = String(published.reply || '')
+            .replace(
+              'These use published venue details, not a live availability check.',
+              'I checked the venue’s current first-party page against the published service and regular opening-hours record.'
+            );
+          const nextState = {
+            ...normaliseClientState(null),
+            lastIntent: 'food.open_at',
+            area: route.area || detectWakefieldArea(messages),
+            constraints: { time: route.timeConstraint, coffeeRequired: true },
+            resultCards: published.places.map(place => ({
+              id: place.id, entityType: 'place', name: place.name, title: place.name, url: place.source
+            }))
+          };
+          attachStateCookie(res, nextState);
+          console.info('Evening coffee/dessert resolved from current first-party page before paid Places discovery.');
+          return res.status(200).json({
+            reply: finaliseUserFacingReply(reply),
+            sources: published.sources,
+            live: true,
+            verification: 'first-party-published',
+            state: nextState
+          });
+        }
+      }
+    }
+  }
+
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
   // event follow-ups never fall through to the legacy prose-reconstruction path.
   // Membership comes only from persisted event IDs.

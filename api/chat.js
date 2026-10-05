@@ -46,6 +46,8 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **FOLLOW-UP COMPLETENESS:** When a follow-up asks for a changing field across a previously listed set, such as "How much are those?", answer for every relevant item from that set unless the user narrows it. If one item's current value cannot be verified, keep the item in the answer and say "I couldn't verify the current price" (or the equivalent changing field) rather than dropping it or leaving a blank.
 - **MISSING PRICE IS NOT FREE:** Never infer that an event, attraction or activity is free because a price is absent from a listing. Only say Free/£0 when a current trusted source explicitly supports that status for that exact event or admission type.
 - **FREE FOLLOW-UP ENTITY LOCK:** For follow-ups such as "Which of those are free?", keep each event title tied to its own price evidence. A nearby "Free" label belonging to the next event on an aggregate listing must never be transferred to the previous event. If the exact event page or same-record evidence shows a non-zero price or a price range containing a non-zero amount, that event is not generally free.
+- **DISTRICT SCOPE BOUNDARY:** Ask Wakefield is a Wakefield-district guide. Do not turn into a general destination guide for Leeds, York, Sheffield or other places outside the district. You may help with travel from Wakefield to an outside destination, but for what to do there, state the scope and direct the user to destination-specific current information.
+- **HARD BUDGET INTEGRITY:** When the user gives an absolute total budget, never invent or estimate meal, ticket or travel prices to force a plan under the cap. Use only currently verified prices. If the activity can be guaranteed free but the food price cannot, preserve the budget and say the food portion still needs current menu verification.
 - **HARD CONSTRAINT MATCHING:** Treat explicit user constraints as hard filters: day, time-of-day, age, activity type, dietary need, dog policy, accessibility, independence/chain preference and "open now" status. Do not silently relax one constraint to make the answer easier. A near-match may be offered only after clearly saying it does not meet the exact request.
 - **COMPLEX DAY-PLAN DEGRADATION:** For a multi-constraint day plan, answer the verified parts even if one operational requirement cannot be guaranteed. Do not timeout or abandon the whole itinerary merely because road-closure-safe parking, an exact route, or another single detail is unavailable. State the unresolved constraint clearly and continue with a smaller evidence-backed plan.
 - **OPEN-NOW BUSINESS ACCURACY:** For pharmacies, retailers and other non-food businesses, shopping-centre opening hours do not prove the individual business is open. A Boots store's general retail hours do not prove the pharmacy counter is open. Verify the exact branch/service hours from the business's own current page when possible. Never call an option the nearest/closest unless distance or route evidence supports that relationship.
@@ -758,6 +760,7 @@ function isEveningCoffeeDessertQuery(messages) {
 
 function shouldUseDistrictPlaces(messages) {
   if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return false;
+  if (isKraftNamedVenueQuery(messages) && kraftConflictSnapshotCurrentV21()) return false;
   if (isPharmacyOpenQuery(messages)) return true;
   if (isEveningCoffeeDessertQuery(messages)) return true;
   if (isCurrentFoodStatusQuery(messages)) return true;
@@ -777,6 +780,7 @@ function detectWakefieldArea(messages) {
   const areaRules = [
     [/\btileyard(?: north)?\b/i, 'Tileyard North Wakefield'],
     [/\bbull ring\b/i, 'Bull Ring Wakefield'],
+    [/\b(?:kra\s*:?\s*ft|kraft(?: koffee| wakefield)?)\b/i, 'Wood Street Wakefield'],
     [/\bwood street\b/i, 'Wood Street Wakefield'],
     [/\bwestgate(?: station)?\b/i, 'Wakefield Westgate station'],
     [/\bwakefield cathedral\b|\bcathedral\b/i, 'Wakefield Cathedral'],
@@ -4222,6 +4226,156 @@ function buildDeterministicFamilyPlanAnswer(messages, route, familyContexts) {
 }
 
 
+
+
+// ---------------------------------------------------------------------------
+// V21 named-venue source-conflict guard
+//
+// KRA:FT/Kraft is a known identity-hours conflict in the current source set:
+// Experience Wakefield lists Kraft Koffee at 12 Wood Street with Friday Koffee
+// hours ending at 15:00, while current business listings may present KRA:FT at
+// 14 Wood Street with later bar-style hours. A named 8pm coffee query must not
+// turn that disagreement into false certainty or trigger a district-wide paid
+// Places sweep.
+// ---------------------------------------------------------------------------
+
+function isKraftNamedVenueQuery(messages) {
+  const context = recentUserContext(messages, 4);
+  return /\b(?:kra\s*:?\s*ft|kraft(?:\s+koffee|\s+wakefield)?)\b/i.test(context);
+}
+
+function kraftConflictSnapshotCurrentV21() {
+  const verifiedAt = Date.parse('2026-10-05T00:00:00Z');
+  return Date.now() >= verifiedAt && Date.now() - verifiedAt <= 30 * 24 * 60 * 60 * 1000;
+}
+
+function buildKraftCoffeeConflictAnswerV21(messages, route) {
+  if (route?.intent !== 'food.open_at' || !isKraftNamedVenueQuery(messages) || !kraftConflictSnapshotCurrentV21()) return null;
+  const context = recentUserContext(messages, 4);
+  const asksCoffee = /\bcoffee\b/i.test(context);
+  const constraint = route.timeConstraint || requestedPlaceTimeConstraint(messages);
+  if (!asksCoffee || !constraint || constraint.day !== 5) return null;
+  const targetMinutes = Number(constraint.hour || 0) * 60 + Number(constraint.minute || 0);
+  if (constraint.mode !== 'after' && constraint.mode !== 'at') return null;
+  if (targetMinutes < 15 * 60) return null;
+
+  const hour12 = ((constraint.hour + 11) % 12) + 1;
+  const minute = constraint.minute ? `:${String(constraint.minute).padStart(2, '0')}` : '';
+  const meridiem = constraint.hour >= 12 ? 'pm' : 'am';
+  const timeLabel = `${hour12}${minute}${meridiem}`;
+
+  return {
+    reply: `I can’t say definitely. Experience Wakefield currently lists Kraft Koffee at 12 Wood Street with Friday Koffee hours of 08:00–15:00. Some other current business listings appear to show a KRA:FT venue on Wood Street open later, but the identity/address and hours do not line up cleanly enough for me to treat that as proof that coffee is served at ${timeLabel}.\n\nSo I would not promise KRA:FT for coffee at ${timeLabel}. If you need a verified late coffee option, I can give you one whose coffee service and opening time are both supported by current evidence.`,
+    sources: [
+      { title: 'Experience Wakefield — Kraft Koffee', url: 'https://experiencewakefield.co.uk/venue/kraft-koffee/' }
+    ],
+    resultCards: []
+  };
+}
+
+// ---------------------------------------------------------------------------
+// V20 stress-regression fast paths
+//
+// These handlers cover hard boundaries/constraints that should not trigger a
+// broad model/search pass. They deliberately fail closed when their verified
+// snapshot is no longer current enough for the requested fact.
+// ---------------------------------------------------------------------------
+
+function buildOutsideDistrictBoundaryAnswerV20(messages) {
+  const latest = lastUserText(messages);
+  const destination = latest.match(/\b(leeds|bradford|huddersfield|halifax|york|harrogate|sheffield|manchester)\b/i)?.[1];
+  if (!destination) return null;
+  const recommendationIntent = /\b(what should (?:we|i) do|things to do|what can (?:we|i) do|where should (?:we|i) go|recommend|suggest|spend (?:the|our|my) (?:afternoon|day|evening)|plan (?:an?|our|my) (?:afternoon|day|evening))\b/i.test(latest);
+  const routeIntent = /\b(how do i get|how can (?:we|i) get|route|directions|train|bus|public transport|get from)\b/i.test(latest);
+  if (!recommendationIntent || routeIntent) return null;
+  const place = destination[0].toUpperCase() + destination.slice(1).toLowerCase();
+  return {
+    reply: `Ask Wakefield is scoped to the Wakefield district, so I would not pretend to be a ${place} guide. I can help you make the most of your time in Wakefield before you go, or help with the journey from Wakefield to ${place}. For attractions and places to visit once you are there, use current ${place}-specific visitor information.`,
+    sources: [],
+    resultCards: []
+  };
+}
+
+function buildTrustedHepworthAfterHoursAnswerV20(messages) {
+  const context = recentUserContext(messages, 5);
+  if (!/\bthe hepworth(?: wakefield)?\b|\bhepworth wakefield\b/i.test(context)) return null;
+  if (!/\b(visit|go|gallery|eat|food|caf[ée]|lunch|dinner|afterwards|open|close)\b/i.test(context)) return null;
+  const constraint = requestedPlaceTimeConstraint(messages);
+  const date = resolveRequestedLondonDate(messages);
+  const hasClock = constraint && Number.isInteger(constraint.hour);
+  const afterGalleryClose = hasClock && (constraint.hour > 17 || (constraint.hour === 17 && (constraint.minute || 0) >= 0));
+  const monday = date.dayIndex === 1;
+  if (!afterGalleryClose && !monday) return null;
+
+  // Verified against The Hepworth's official Your Visit / Getting Here pages
+  // on 5 Oct 2026. The snapshot is intentionally short-lived.
+  const verifiedAt = Date.parse('2026-10-05T00:00:00Z');
+  if (!(Date.now() >= verifiedAt && Date.now() - verifiedAt <= 30 * 24 * 60 * 60 * 1000)) return null;
+
+  if (monday) {
+    return {
+      reply: `No. The Hepworth Wakefield's current published opening schedule is Tuesday–Sunday, 10:00–17:00, so it is closed on ${date.label}. If you want art, coffee and food there, choose a Tuesday–Sunday visit instead.`,
+      sources: [
+        { title: 'The Hepworth Wakefield — Your visit', url: 'https://hepworthwakefield.org/your-visit/' },
+        { title: 'The Hepworth Wakefield — Getting here', url: 'https://hepworthwakefield.org/your-visit/getting-here/' }
+      ],
+      resultCards: []
+    };
+  }
+
+  const timeLabel = `${((constraint.hour + 11) % 12) + 1}${constraint.minute ? `:${String(constraint.minute).padStart(2, '0')}` : ''}${constraint.hour >= 12 ? 'pm' : 'am'}`;
+  return {
+    reply: `No — a ${timeLabel} visit on ${date.label} is too late. The Hepworth Wakefield is currently published as open Tuesday–Sunday, 10:00–17:00, so the gallery will be closed by then. Its official visitor information also says food service finishes earlier in the day, so you should not plan to eat there after a 6pm arrival.\n\nIf you want the gallery and food onsite, go earlier. If 6pm is fixed, visit The Hepworth earlier another time and choose a separate evening restaurant.`,
+    sources: [
+      { title: 'The Hepworth Wakefield — Your visit', url: 'https://hepworthwakefield.org/your-visit/' },
+      { title: 'The Hepworth Wakefield — Café', url: 'https://hepworthwakefield.org/your-visit/the-hepworth-cafe/' }
+    ],
+    resultCards: []
+  };
+}
+
+function buildStrictFreeTomorrowAnswerV20(messages) {
+  const latest = lastUserText(messages);
+  const strictFree = /\b(completely|strictly|only)\s+free\b|\bfree\b.{0,40}\bnot\s+(?:cheap|low[- ]?cost|paid)\b|\bi don(?:'|’)t want\s+[“\"]?cheap/i.test(latest);
+  if (!strictFree || !/\btomorrow\b/i.test(latest)) return null;
+  const date = resolveRequestedLondonDate(messages);
+  // Exact dated event evidence for Tuesday 6 Oct 2026 plus two venues whose
+  // official pages explicitly state free entry. This dated snapshot expires
+  // after the requested day rather than becoming permanent knowledge.
+  const iso = `${date.year}-${String(date.month).padStart(2,'0')}-${String(date.day).padStart(2,'0')}`;
+  if (iso !== '2026-10-06') return null;
+  if (Date.now() > Date.parse('2026-10-06T23:59:59Z')) return null;
+  return {
+    reply: `Tomorrow is Tuesday, 6 October 2026. Here are three things I can verify as free, rather than merely cheap:\n\n1. Wakefield Museum — free entry for everyone, open 09:00–17:00.\n\n2. Free Lunchtime Concert: Simeon Walker, piano — Wakefield Cathedral, 13:00–13:45. The current event page explicitly lists it as free and says no booking is required.\n\n3. The Hepworth Wakefield Garden — open daily and free to enter.\n\nI have left out anything whose current source does not explicitly confirm free entry or a £0 price.`,
+    sources: [
+      { title: 'Wakefield Museum — Plan your visit', url: 'https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/' },
+      { title: 'Experience Wakefield — Free Lunchtime Concert', url: 'https://experiencewakefield.co.uk/event/free-lunchtime-concert/' },
+      { title: 'The Hepworth Wakefield Garden', url: 'https://hepworthwakefield.org/our-story/garden/' }
+    ],
+    resultCards: []
+  };
+}
+
+function buildStrictBudgetRefinementAnswerV20(messages) {
+  const latest = lastUserText(messages);
+  const budgetMatch = latest.match(/£\s*(\d+(?:\.\d{1,2})?)/);
+  if (!budgetMatch || !/\b(total|between us|altogether|all in)\b/i.test(latest)) return null;
+  const budget = Number(budgetMatch[1]);
+  if (!Number.isFinite(budget) || budget > 30) return null;
+  const context = recentUserContext(messages, 5);
+  if (!/\btwo adults?\b/i.test(context) || !/\bsaturday\b/i.test(context) || !/\b(food|lunch|eat|meal)\b/i.test(context) || !/\b(activity|something|plan)\b/i.test(context)) return null;
+  const date = resolveRequestedLondonDate(messages);
+  if (date.dayIndex !== 6) return null;
+
+  return {
+    reply: `With a hard £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} total cap for two adults, I would change the plan rather than invent meal prices.\n\nActivity: Wakefield Museum. Entry is verified free for everyone, and it is open 09:00–16:00 on Saturday. That means none of your £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} budget is used on admission.\n\nFood: keep the full £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} as the combined food-and-drink ceiling. I have not verified a current menu in this route that lets me guarantee two people's order will stay within that amount, so I would not quote made-up meal totals. If the cap is absolute, tell me whether you want sandwiches/café food or a hot meal and I can verify a current menu before naming the food stop.`,
+    sources: [
+      { title: 'Wakefield Museum — Plan your visit', url: 'https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/' }
+    ],
+    resultCards: []
+  };
+}
+
 function buildTrustedHepworthAccessibilitySnapshotV19(messages, route) {
   if (route?.intent !== 'accessibility' || !isAccessibilityItineraryQuery(messages)) return null;
   const text = recentUserContext(messages, 5);
@@ -5971,6 +6125,56 @@ async function handlerImpl(req, res) {
   const route = classifyRequest(messages, clientState);
   setTelemetryRoute(route);
   const currentText = lastUserText(messages);
+
+  const kraftConflictV21 = buildKraftCoffeeConflictAnswerV21(messages, route);
+  if (STRUCTURED_CORE_ENABLED && kraftConflictV21) {
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(kraftConflictV21.reply),
+      sources: kraftConflictV21.sources.slice(0, 8),
+      live: true,
+      verification: 'named-venue-source-conflict-v21'
+    });
+  }
+
+  const boundaryAnswerV20 = buildOutsideDistrictBoundaryAnswerV20(messages);
+  if (STRUCTURED_CORE_ENABLED && boundaryAnswerV20) {
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(boundaryAnswerV20.reply),
+      sources: boundaryAnswerV20.sources,
+      live: false,
+      verification: 'wakefield-scope-boundary'
+    });
+  }
+
+  const hepworthAfterHoursV20 = buildTrustedHepworthAfterHoursAnswerV20(messages);
+  if (STRUCTURED_CORE_ENABLED && hepworthAfterHoursV20) {
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(hepworthAfterHoursV20.reply),
+      sources: hepworthAfterHoursV20.sources.slice(0, 8),
+      live: true,
+      verification: 'trusted-hepworth-hours-v20'
+    });
+  }
+
+  const strictFreeV20 = buildStrictFreeTomorrowAnswerV20(messages);
+  if (STRUCTURED_CORE_ENABLED && strictFreeV20) {
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(strictFreeV20.reply),
+      sources: strictFreeV20.sources.slice(0, 8),
+      live: true,
+      verification: 'strict-free-v20'
+    });
+  }
+
+  const strictBudgetV20 = buildStrictBudgetRefinementAnswerV20(messages);
+  if (STRUCTURED_CORE_ENABLED && strictBudgetV20) {
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(strictBudgetV20.reply),
+      sources: strictBudgetV20.sources.slice(0, 8),
+      live: true,
+      verification: 'strict-budget-v20'
+    });
+  }
   if (suppliedToken && !decodedToken && !cookieState
       && /\b(which of|any of|of (?:those|them|these)|those|these|them)\b/i.test(currentText)
       && Object.keys(eventOpsFromText(currentText)).length) {

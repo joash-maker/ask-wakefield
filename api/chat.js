@@ -693,6 +693,14 @@ function isFoodDecisionQuery(messages) {
   return foodIntent.test(context) && decisionIntent.test(context);
 }
 
+function isVagueEveningRecommendationQuery(messages) {
+  const last = lastUserText(messages);
+  const evening = /\b(tonight|this evening|evening)\b/i.test(last);
+  const vagueAsk = /\b(somewhere nice|what would you suggest|recommend|suggest somewhere|couple of hours free|a few hours free)\b/i.test(last);
+  const category = /\b(coffee|caf[ée]|dessert|restaurant|dinner|food|drink|pub|bar|music|gig|comedy|cinema|film|art|gallery|museum|walk|shopping|activity|event)\b/i.test(last);
+  return evening && vagueAsk && !category;
+}
+
 function isCurrentFoodStatusQuery(messages) {
   const context = recentUserContext(messages);
   const foodIntent = /\b(lunch|breakfast|brunch|dinner|tea|restaurant|cafe|coffee|food|eat|meal|sandwich|bakery)\b/i;
@@ -1485,6 +1493,13 @@ function isCathedralToYspRouteQuery(messages) {
   return /\b(wakefield cathedral|cathedral)\b/i.test(context)
     && /\b(yorkshire sculpture park|ysp)\b/i.test(context)
     && /\b(how do i get|how can i get|route|directions|without a car|public transport|get from)\b/i.test(context);
+}
+
+function isWestgateToYspRouteQuery(messages) {
+  const context = recentUserContext(messages, 5);
+  return /\b(wakefield westgate|westgate station|near westgate)\b/i.test(context)
+    && /\b(yorkshire sculpture park|ysp)\b/i.test(context)
+    && /\b(how do i get|how can i get|route|directions|without a car|don(?:'|’)t have a car|public transport|get from)\b/i.test(context);
 }
 
 function isComplexSaturdayDayPlanQuery(messages) {
@@ -4078,17 +4093,23 @@ function buildDeterministicFamilyPlanAnswer(messages, route, familyContexts) {
 function buildDeterministicAccessibilityAnswer(messages, route, accessibilityContexts) {
   if (route?.intent !== 'accessibility' || !isAccessibilityItineraryQuery(messages)) return null;
   const text = recentUserContext(messages, 5);
-  if (!/\bwheelchair\b/i.test(text) || !/\b(art|gallery|culture|museum)\b/i.test(text) || !/\b(coffee|caf[ée]|cake)\b/i.test(text)) return null;
+  const mobilityNeed = /\b(wheelchair|step[- ]?free|mobility|can(?:not|'t|’t) walk (?:very )?far|limited walking|walking is difficult|disabled access)\b/i.test(text);
+  if (!mobilityNeed || !/\b(art|gallery|culture|museum)\b/i.test(text) || !/\b(coffee|caf[ée]|cake)\b/i.test(text)) return null;
 
   const access = accessibilityContexts?.hepworth;
   const visit = accessibilityContexts?.hepworthVisit;
   const cafe = accessibilityContexts?.hepworthCafe;
   if (!access?.text || !visit?.text || !cafe?.text) return null;
 
+  const dateContext = recentUserContext(messages, 5);
+  const hasExplicitDate = /\b(today|tonight|tomorrow|day after tomorrow|this\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|next\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(dateContext);
   const date = resolveRequestedLondonDate(messages);
-  const venueHours = pharmacyHoursForDay('generic', visit, date.dayIndex);
-  const cafeHours = pharmacyHoursForDay('generic', cafe, date.dayIndex);
-  if (!venueHours || venueHours.closed || !cafeHours || cafeHours.closed) return null;
+  const venueHours = hasExplicitDate ? pharmacyHoursForDay('generic', visit, date.dayIndex) : null;
+  const cafeHours = hasExplicitDate ? pharmacyHoursForDay('generic', cafe, date.dayIndex) : null;
+  if (hasExplicitDate && (!venueHours || venueHours.closed || !cafeHours || cafeHours.closed)) return null;
+  const genericVenueHours = /Open\s+Tuesday\s*[–-]\s*Sunday,?\s*10(?:[:.]00)?\s*(?:am)?\s*[–-]\s*5(?:[:.]00)?\s*(?:pm)?/i.test(visit.text);
+  const genericCafeHours = /Open\s+Tuesday\s*[–-]\s*Sunday,?\s*10(?:[:.]00)?\s*(?:am)?\s*[–-]\s*5(?:[:.]00)?\s*(?:pm)?/i.test(cafe.text);
+  if (!hasExplicitDate && (!genericVenueHours || !genericCafeHours)) return null;
 
   const accessText = access.text;
   const details = [];
@@ -4097,11 +4118,19 @@ function buildDeterministicAccessibilityAnswer(messages, route, accessibilityCon
   if (/\b6 parking bays\b|\bsix parking bays\b/i.test(accessText)) details.push('six Blue Badge parking bays are listed on site');
   if (/\btwo manual wheelchairs\b/i.test(accessText)) details.push('two manual wheelchairs can be booked in advance');
 
+  const wantsLunch = /\blunch\b/i.test(text);
+  const lunchVerified = wantsLunch && /\blunch served\s+(?:11(?:[:.]00)?\s*(?:am)?\s*[–-]\s*3(?:[:.]00)?\s*(?:pm)?|until\s+3(?:[:.]00)?\s*(?:pm)?)/i.test(cafe.text);
+  const lowWalking = /\b(can(?:not|'t|’t) walk (?:very )?far|limited walking|mobility|step[- ]?free)\b/i.test(text);
+  const timingLead = hasExplicitDate ? `for ${date.label}` : `for an accessible Wakefield afternoon`;
+  const hoursSentence = hasExplicitDate
+    ? `The gallery is verified open ${pharmacyHoursLabel(venueHours)}, and the café is open ${pharmacyHoursLabel(cafeHours)}`
+    : `The current published schedule lists both the gallery and café as open Tuesday–Sunday, 10:00–17:00 (closed Monday)`;
   const reply = [
-    `The Hepworth Wakefield is the strongest verified fit for ${date.label}: art, coffee and wheelchair access in one place.`,
-    `The gallery is verified open ${pharmacyHoursLabel(venueHours)}, and the café is open ${pharmacyHoursLabel(cafeHours)}${/\bcoffee and cake\b/i.test(cafe.text) ? ' with coffee and cake listed on its current page' : ''}.`,
+    `The Hepworth Wakefield is the strongest verified fit ${timingLead}: art, coffee${wantsLunch ? ', lunch' : ''} and accessible facilities in one place.`,
+    `${hoursSentence}${/\bcoffee and cake\b/i.test(cafe.text) ? ' with coffee and cake listed on the café page' : ''}${lunchVerified ? '; lunch is served until 15:00' : ''}.`,
     details.length ? `For access, ${details.join('; ')}.` : '',
-    `That makes it a practical option for a relaxed couple of hours without needing to move between several venues. If you need one of the gallery wheelchairs, book it with the venue before travelling.`
+    lowWalking ? `Because one of you cannot walk very far, keeping the art and refreshments in the same building avoids adding unnecessary walking between venues.` : `That makes it a practical option for a relaxed couple of hours without needing to move between several venues.`,
+    /\bwheelchair\b/i.test(text) ? `If you need one of the gallery wheelchairs, book it with the venue before travelling.` : ''
   ].filter(Boolean).join('\n\n');
 
   return { reply, sources: [access.source, visit.source, cafe.source].filter(Boolean), resultCards: [] };
@@ -4288,8 +4317,15 @@ async function buildEveningCoffeeDessertShortlist(messages, route) {
     const caveat = item.caveat ? ` ${item.caveat}` : '';
     return `${index + 1}. ${item.title}\n${item.description}${caveat}`;
   });
+  const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][constraint.day];
+  const hour12 = constraint.hour == null ? null : ((constraint.hour + 11) % 12) + 1;
+  const minuteLabel = constraint.minute ? `:${String(constraint.minute).padStart(2, '0')}` : '';
+  const meridiem = constraint.hour == null ? '' : (constraint.hour >= 12 ? 'pm' : 'am');
+  const requestedTimeLabel = constraint.hour == null ? 'the evening' : `${hour12}${minuteLabel}${meridiem}`;
+  exclusionNote = exclusionNote.replace(/7pm/g, requestedTimeLabel).replace(/Friday/g, dayName);
+  unverifiedNote = unverifiedNote.replace(/7pm/g, requestedTimeLabel).replace(/Friday/g, dayName);
   const notes = [exclusionNote, unverifiedNote].filter(Boolean);
-  const reply = `For around 7pm on Friday, I’d use this evidence-led shortlist:\n\n${lines.join('\n\n')}${notes.length ? `\n\nA couple of evidence notes:\n${notes.map(note => `• ${note}`).join('\n')}` : ''}\n\nIf you want, I can widen beyond the city-centre core or use live business listings for more choices, but those may need an extra verification step. Would you prefer proper coffee, a dessert-parlour feel, or somewhere more relaxed?`;
+  const reply = `For around ${requestedTimeLabel} on ${dayName}, I’d use this evidence-led shortlist:\n\n${lines.join('\n\n')}${notes.length ? `\n\nA couple of evidence notes:\n${notes.map(note => `• ${note}`).join('\n')}` : ''}\n\nIf you want, I can widen beyond the city-centre core or use live business listings for more choices, but those may need an extra verification step. Would you prefer proper coffee, a dessert-parlour feel, or somewhere more relaxed?`;
 
   return { reply, sources: sources.slice(0, 8), places: resultCards.slice(0, 4) };
 }
@@ -4321,7 +4357,7 @@ async function fetchEveningServiceFirstPartyContexts(messages) {
 
 async function fetchRouteFirstPartyContexts(messages) {
   if (!isRoutePlanningQuery(messages)) return { yspGettingHere: null };
-  if (isCathedralToYspRouteQuery(messages)) {
+  if (isCathedralToYspRouteQuery(messages) || isWestgateToYspRouteQuery(messages)) {
     const yspGettingHere = await fetchSimpleFirstPartyContext(
       'https://ysp.org.uk/visit-us/getting-here',
       'Yorkshire Sculpture Park — Getting Here'
@@ -4329,6 +4365,22 @@ async function fetchRouteFirstPartyContexts(messages) {
     return { yspGettingHere };
   }
   return { yspGettingHere: null };
+}
+
+function buildDeterministicYspRouteAnswer(messages, route, routeContexts) {
+  if (route?.intent !== 'transport' || !isWestgateToYspRouteQuery(messages)) return null;
+  const ysp = routeContexts?.yspGettingHere;
+  if (!ysp?.text || !ysp?.source?.url) return null;
+  const text = ysp.text;
+  if (!/\b96 bus\b/i.test(text) || !/\bMonday[–-]Sunday\b|\bMonday to Sunday\b/i.test(text) || !/\bWakefield Westgate\b/i.test(text)) return null;
+  const date = resolveRequestedLondonDate(messages);
+  const parts = [
+    `From Wakefield Westgate, the simplest public-transport option I can verify for ${date.label} is the 96 bus towards Yorkshire Sculpture Park.`,
+    `YSP's current Getting Here page says the 96 runs Monday–Sunday between Wakefield and Barnsley with regular stops at YSP. It also identifies Wakefield Westgate as the nearest railway station, around seven miles from the park.`,
+    `I have not verified an exact departure time or Westgate bus-stop number from that first-party page, so I would not guess those. Use the live journey-planner link from YSP's page for the specific morning departure you want.`,
+    `A taxi is the direct alternative if you prefer not to connect to the bus.`
+  ];
+  return { reply: parts.join('\n\n'), sources: [ysp.source], resultCards: [] };
 }
 
 async function fetchDatedFirstPartyContext(url, title) {
@@ -5915,6 +5967,15 @@ async function handlerImpl(req, res) {
     });
   }
 
+  if (isVagueEveningRecommendationQuery(messages)) {
+    return res.status(200).json({
+      reply: `Happy to help. When you say “somewhere nice” tonight, do you mean food and drink, somewhere for coffee/dessert, or an activity? I’d rather narrow that down than recommend places whose evening hours or price level do not match what you want.`,
+      sources: [],
+      live: false,
+      verification: 'clarification-needed'
+    });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
 
   let wxContext = null;
@@ -5988,8 +6049,8 @@ async function handlerImpl(req, res) {
   // do not fall through to the legacy prose-first event machinery.
   const weekendListRequest = EVENT_CARDS_FIRST_ENABLED
     && route.intent === 'events.whats_on'
-    && /\bweekend\b|\b(?:on |this )?(?:saturday|sunday)\b/i.test(currentText)
-    && !/\bnext (?:weekend|week|saturday|sunday)\b/i.test(currentText)
+    && /\bweekend\b|\b(?:on |this |next )?(?:saturday|sunday)\b/i.test(currentText)
+    && !/\bnext week\b/i.test(currentText)
     && !isWeekendPerformanceQuery(messages);
   if (weekendListRequest) {
     const supplement = await verifiedOctoberWeekendSupplementV16(eventDateState());
@@ -6042,6 +6103,9 @@ async function handlerImpl(req, res) {
 
   const deferCorePharmacyPlaces = route.intent === 'pharmacy.open'
     && isCoreWakefieldArea(route.area || detectWakefieldArea(messages));
+  const deferEarlyDistrictPlaces = deferCorePharmacyPlaces
+    || route.intent === 'accessibility'
+    || (route.intent === 'transport' && isWestgateToYspRouteQuery(messages));
 
   const [namedEventContexts, accessibilityContexts, runningContexts, foodConstraintContexts, businessContexts, eveningServiceContexts, routeContexts, districtPlacesInitial, userUrlContext] = await Promise.all([
     fetchNamedEventFirstPartyContexts(messages),
@@ -6051,7 +6115,7 @@ async function handlerImpl(req, res) {
     fetchBusinessFirstPartyContexts(messages),
     fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
-    deferCorePharmacyPlaces ? Promise.resolve(null) : fetchWakefieldDistrictPlacesContext(messages),
+    deferEarlyDistrictPlaces ? Promise.resolve(null) : fetchWakefieldDistrictPlacesContext(messages),
     fetchTrustedUserUrlContext(messages)
   ]);
   let districtPlacesContext = districtPlacesInitial;
@@ -6068,6 +6132,22 @@ async function handlerImpl(req, res) {
         sources: directAccessibility.sources.slice(0, 8),
         live: true,
         verification: 'first-party-accessibility',
+        state
+      });
+    }
+  }
+
+  if (STRUCTURED_CORE_ENABLED && route.intent === 'transport') {
+    const directYspRoute = buildDeterministicYspRouteAnswer(messages, route, routeContexts);
+    if (directYspRoute) {
+      const state = { ...normaliseClientState(null), lastIntent: 'transport', area: route.area || null, constraints: { date: resolveRequestedLondonDate(messages).label }, resultCards: [], viewIds: [], lastFilter: null };
+      attachStateCookie(res, state);
+      console.info('Westgate to YSP route resolved deterministically from YSP first-party travel guidance.');
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(directYspRoute.reply),
+        sources: directYspRoute.sources.slice(0, 8),
+        live: true,
+        verification: 'first-party-route',
         state
       });
     }

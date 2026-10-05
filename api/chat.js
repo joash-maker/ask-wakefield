@@ -2864,9 +2864,15 @@ function mergeExactEventCardsV16(cards = []) {
       priceRaw = card.priceRaw;
     }
     const sourceRank = value => {
-      if (value?.sourceTier === 'first-party-detail') return 4;
       const url = String(value?.sourceUrl || value?.url || '');
-      if (/experiencewakefield\.co\.uk\/event\//i.test(url)) return 3;
+      const experienceDetail = /experiencewakefield\.co\.uk\/event\//i.test(url);
+      // Experience Wakefield is the district authority for the public event
+      // record. Prefer its event detail/listing when a venue feed disagrees on
+      // an end time, even when the venue page is itself first-party.
+      if (experienceDetail && value?.sourceTier === 'first-party-detail') return 6;
+      if (experienceDetail) return 5;
+      if (value?.source === 'experience') return 4;
+      if (value?.sourceTier === 'first-party-detail') return 3;
       if (value?.sourceTier === 'first-party-listing') return 2;
       return 1;
     };
@@ -2891,6 +2897,46 @@ function mergeExactEventCardsV16(cards = []) {
     });
   }
   return Array.from(merged.values());
+}
+
+
+async function refreshWeekendEventTimesFromExperienceV18(cards = []) {
+  // The aggregate listings and a venue feed can occasionally disagree about
+  // the end time. For the small weekend shortlist, re-check the exact
+  // Experience Wakefield event detail page before presentation. This is an
+  // ordinary first-party HTTP fetch, not a paid search/model call. A candidate
+  // is accepted only when title and date match the card we already discovered.
+  const head = cards.slice(0, 6);
+  const refreshedHead = await Promise.all(head.map(async card => {
+    if (!card?.title || !card?.startDate) return card;
+    let url = null;
+    const existingUrl = String(card.sourceUrl || card.url || '');
+    if (/^https:\/\/(?:www\.)?experiencewakefield\.co\.uk\/event\//i.test(existingUrl)) {
+      url = existingUrl;
+    } else {
+      const slug = normaliseEventTitle(card.title).replace(/\s+/g, '-');
+      if (!slug) return card;
+      url = `https://experiencewakefield.co.uk/event/${slug}/`;
+    }
+    const context = await fetchExperienceEventDetailContext(url, card.title);
+    const direct = context?.eventDetailCard || null;
+    if (!direct || !titlesLikelySame(direct.title, card.title) || direct.startDate !== card.startDate) return card;
+    return {
+      ...card,
+      source: 'experience',
+      sourceUrl: url,
+      url,
+      sourceTier: 'first-party-detail',
+      start: direct.startTime || card.start || null,
+      end: direct.endTime || card.end || null,
+      startTime: direct.startTime || card.startTime || null,
+      endTime: direct.endTime || card.endTime || null,
+      venue: direct.venue || card.venue || null,
+      priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : card.priceStatus,
+      priceRaw: direct.priceRaw || card.priceRaw || null
+    };
+  }));
+  return [...refreshedHead, ...cards.slice(head.length)];
 }
 
 function weekendDatesForCardV16(card, saturdayIso, sundayIso) {
@@ -3685,7 +3731,7 @@ async function fetchAccessibilityFirstPartyContexts(messages) {
   // access, visit and cafe pages can answer the whole request. Keep this path
   // narrow so we do not fetch unrelated venue pages or need a broad AI search.
   if (isAccessibilityItineraryQuery(messages) && /\b(art|gallery|culture|museum)\b/i.test(recentUserContext(messages, 5))) {
-    const [hepworth, hepworthVisit, liveHepworthCafe] = await Promise.all([
+    const [liveHepworth, liveHepworthVisit, liveHepworthCafe] = await Promise.all([
       fetchSimpleFirstPartyContext(
         'https://hepworthwakefield.org/your-visit/access/',
         'The Hepworth Wakefield — Access'
@@ -3700,18 +3746,33 @@ async function fetchAccessibilityFirstPartyContexts(messages) {
       )
     ]);
 
-    // The dedicated cafe page occasionally times out at the edge even while the
-    // main Hepworth pages resolve. Use a short-lived trusted record rather than
-    // falling all the way back to a large AI search. It automatically expires
-    // after 30 days so stale opening/menu facts cannot live indefinitely.
+    // Any one of these pages can time out at the edge. Keep a short-lived,
+    // explicitly dated snapshot of the same official pages so an accessibility
+    // refinement does not fall back to a huge web/model request just because a
+    // first-party fetch failed transiently. The snapshots expire automatically.
     const fallbackVerifiedAt = Date.parse('2026-10-05T00:00:00Z');
     const fallbackAgeMs = Date.now() - fallbackVerifiedAt;
-    const hepworthCafeFallback = fallbackAgeMs >= 0 && fallbackAgeMs <= 30 * 24 * 60 * 60 * 1000 ? {
+    const fallbackFresh = fallbackAgeMs >= 0 && fallbackAgeMs <= 30 * 24 * 60 * 60 * 1000;
+    const hepworthAccessFallback = fallbackFresh ? {
+      text: 'The Hepworth Wakefield Access. The café is on the ground floor and has level access from the foyer, with room for a wheelchair user to manoeuvre. There are three accessible toilets, including a Changing Places toilet. There are 6 parking bays on site for Blue Badge holders. The gallery has two manual wheelchairs available to use and these can be booked in advance.',
+      source: { title: 'The Hepworth Wakefield — Access', url: 'https://hepworthwakefield.org/your-visit/access/' },
+      trustedFallback: true,
+      verifiedAt: '2026-10-05'
+    } : null;
+    const hepworthVisitFallback = fallbackFresh ? {
+      text: 'The Hepworth Wakefield. Open Tuesday – Sunday, 10am – 5pm. Closed Monday except bank and Wakefield school holidays. The Hepworth Wakefield Café is open Tuesday – Sunday, 10am – 5pm.',
+      source: { title: 'The Hepworth Wakefield — Your visit', url: 'https://hepworthwakefield.org/your-visit/' },
+      trustedFallback: true,
+      verifiedAt: '2026-10-05'
+    } : null;
+    const hepworthCafeFallback = fallbackFresh ? {
       text: 'The Hepworth Wakefield Café. Catch-up over coffee and cake. Open Tuesday – Sunday, 10am – 5pm. Lunch served 11am – 3pm. Drinks and cakes served 10am – 4.30pm.',
       source: { title: 'The Hepworth Wakefield — Café', url: 'https://hepworthwakefield.org/your-visit/the-hepworth-cafe/' },
       trustedFallback: true,
       verifiedAt: '2026-10-05'
     } : null;
+    const hepworth = liveHepworth || hepworthAccessFallback;
+    const hepworthVisit = liveHepworthVisit || hepworthVisitFallback;
     const hepworthCafe = liveHepworthCafe || hepworthCafeFallback;
     return { hepworth, hepworthVisit, hepworthCafe, wx: null, grays: null, mocca: null, bakes: null, recent: null };
   }
@@ -6079,7 +6140,8 @@ async function handlerImpl(req, res) {
     && !isWeekendPerformanceQuery(messages);
   if (weekendListRequest) {
     const supplement = await verifiedOctoberWeekendSupplementV16(eventDateState());
-    const collected = collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
+    const collectedBase = collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
+    const collected = { ...collectedBase, cards: await refreshWeekendEventTimesFromExperienceV18(collectedBase.cards) };
     if (!collected.cards.length) {
       return res.status(200).json({
         reply: 'I could not verify a reliable weekend event set from the current official listings just now.',

@@ -2863,7 +2863,18 @@ function mergeExactEventCardsV16(cards = []) {
       priceStatus = card.priceStatus;
       priceRaw = card.priceRaw;
     }
-    const preferred = existing.sourceTier === 'first-party-detail' ? existing : (card.sourceTier === 'first-party-detail' ? card : existing);
+    const sourceRank = value => {
+      if (value?.sourceTier === 'first-party-detail') return 4;
+      const url = String(value?.sourceUrl || value?.url || '');
+      if (/experiencewakefield\.co\.uk\/event\//i.test(url)) return 3;
+      if (value?.sourceTier === 'first-party-listing') return 2;
+      return 1;
+    };
+    // When two first-party listings describe the exact same event/date/start but
+    // disagree on an end time, prefer the canonical Experience Wakefield event
+    // listing over a venue feed. This avoids retaining a truncated venue-card
+    // end time when the district event page carries the fuller published time.
+    const preferred = sourceRank(card) > sourceRank(existing) ? card : existing;
     merged.set(key, {
       ...existing,
       ...preferred,
@@ -3674,7 +3685,7 @@ async function fetchAccessibilityFirstPartyContexts(messages) {
   // access, visit and cafe pages can answer the whole request. Keep this path
   // narrow so we do not fetch unrelated venue pages or need a broad AI search.
   if (isAccessibilityItineraryQuery(messages) && /\b(art|gallery|culture|museum)\b/i.test(recentUserContext(messages, 5))) {
-    const [hepworth, hepworthVisit, hepworthCafe] = await Promise.all([
+    const [hepworth, hepworthVisit, liveHepworthCafe] = await Promise.all([
       fetchSimpleFirstPartyContext(
         'https://hepworthwakefield.org/your-visit/access/',
         'The Hepworth Wakefield — Access'
@@ -3688,6 +3699,20 @@ async function fetchAccessibilityFirstPartyContexts(messages) {
         'The Hepworth Wakefield — Café'
       )
     ]);
+
+    // The dedicated cafe page occasionally times out at the edge even while the
+    // main Hepworth pages resolve. Use a short-lived trusted record rather than
+    // falling all the way back to a large AI search. It automatically expires
+    // after 30 days so stale opening/menu facts cannot live indefinitely.
+    const fallbackVerifiedAt = Date.parse('2026-10-05T00:00:00Z');
+    const fallbackAgeMs = Date.now() - fallbackVerifiedAt;
+    const hepworthCafeFallback = fallbackAgeMs >= 0 && fallbackAgeMs <= 30 * 24 * 60 * 60 * 1000 ? {
+      text: 'The Hepworth Wakefield Café. Catch-up over coffee and cake. Open Tuesday – Sunday, 10am – 5pm. Lunch served 11am – 3pm. Drinks and cakes served 10am – 4.30pm.',
+      source: { title: 'The Hepworth Wakefield — Café', url: 'https://hepworthwakefield.org/your-visit/the-hepworth-cafe/' },
+      trustedFallback: true,
+      verifiedAt: '2026-10-05'
+    } : null;
+    const hepworthCafe = liveHepworthCafe || hepworthCafeFallback;
     return { hepworth, hepworthVisit, hepworthCafe, wx: null, grays: null, mocca: null, bakes: null, recent: null };
   }
 

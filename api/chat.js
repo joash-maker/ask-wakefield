@@ -616,8 +616,8 @@ function classifyRequest(messages, state = null) {
   // list. It refuses messages that bring in a new topic, area or date window.
   const eventFollowUp = hasRecentAssistantAnswer(messages) ? parseEventFollowUp(last, state) : null;
   if (eventFollowUp) intent = 'events.filter_existing';
-  else if (isCurrentEventsQuery(messages)) intent = 'events.whats_on';
   else if (isFamilyPlanningQuery(messages)) intent = 'family.plan';
+  else if (isCurrentEventsQuery(messages)) intent = 'events.whats_on';
   else if (isPharmacyOpenQuery(messages)) intent = 'pharmacy.open';
   else if (isEveningCoffeeDessertQuery(messages) || isCurrentFoodStatusQuery(messages) || isTimedFoodAvailabilityQuery(messages)) intent = 'food.open_at';
   else if (isNamedEventDetailQuery(messages)) intent = 'events.detail';
@@ -722,7 +722,7 @@ function isWakefieldCathedralPharmacyQuery(messages) {
 function isPharmacyOpenQuery(messages) {
   const context = recentUserContext(messages, 5);
   const pharmacyIntent = /\b(pharmacy|pharmacies|chemist|chemists|boots|asda pharmacy|sainsbury(?:'|’)s pharmacy|rowlands|numark)\b/i.test(context);
-  const timingOrDiscovery = /\b(open now|open right now|right now|currently open|open today|open tonight|open late|late[- ]?night|this evening|evening|nearest|closest|where can i get|where(?:'|’)s|after\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?|after\s+(?:six|seven|eight|nine)|later than\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i.test(context);
+  const timingOrDiscovery = /\b(open now|open right now|right now|currently open|open today|open tonight|open late|late[- ]?night|this evening|evening|this afternoon|afternoon|this morning|morning|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|nearest|closest|where can i get|where(?:'|’)s|after\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?|after\s+(?:six|seven|eight|nine)|later than\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i.test(context);
   return pharmacyIntent && timingOrDiscovery;
 }
 
@@ -983,19 +983,80 @@ function buildDistrictPlacesServiceQuery(messages) {
   return 'restaurant cafe food';
 }
 
+function londonCalendarDateParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(date);
+  return {
+    year: Number(parts.find(part => part.type === 'year')?.value),
+    month: Number(parts.find(part => part.type === 'month')?.value),
+    day: Number(parts.find(part => part.type === 'day')?.value)
+  };
+}
+
+function addCalendarDays(parts, amount) {
+  const d = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + amount, 12, 0, 0));
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+}
+
+function calendarDayIndex(parts) {
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0, 0)).getUTCDay();
+}
+
+function formatCalendarParts(parts) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }).format(new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0, 0)));
+}
+
+function resolveRequestedLondonDate(messages) {
+  const latest = lastUserText(messages);
+  const recent = recentUserContext(messages, 5);
+  const hasDatePhrase = /\b(today|tonight|tomorrow|day after tomorrow|this\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|next\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(latest);
+  const context = hasDatePhrase ? latest : recent;
+  const today = londonCalendarDateParts();
+  const todayIndex = calendarDayIndex(today);
+  if (/\bday after tomorrow\b/i.test(context)) {
+    const parts = addCalendarDays(today, 2);
+    return { ...parts, dayIndex: calendarDayIndex(parts), label: formatCalendarParts(parts), source: 'day after tomorrow' };
+  }
+  if (/\btomorrow\b/i.test(context)) {
+    const parts = addCalendarDays(today, 1);
+    return { ...parts, dayIndex: calendarDayIndex(parts), label: formatCalendarParts(parts), source: 'tomorrow' };
+  }
+  if (/\btoday\b|\btonight\b/i.test(context)) {
+    return { ...today, dayIndex: todayIndex, label: formatCalendarParts(today), source: 'today' };
+  }
+
+  const names = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const matches = [...context.matchAll(/\b(?:this\s+|next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/gi)];
+  const match = matches.at(-1);
+  if (match) {
+    const target = names.indexOf(match[1].toLowerCase());
+    const delta = (target - todayIndex + 7) % 7;
+    const parts = addCalendarDays(today, delta);
+    return { ...parts, dayIndex: target, label: formatCalendarParts(parts), source: match[0].toLowerCase() };
+  }
+  return { ...today, dayIndex: todayIndex, label: formatCalendarParts(today), source: 'current day' };
+}
+
 export function requestedPlaceTimeConstraint(messages) {
   const context = recentUserContext(messages, 5);
-  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-  const named = [...context.matchAll(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/gi)].at(-1)?.[1]?.toLowerCase();
-  const day = named ? days.indexOf(named) : (/\btomorrow\b/i.test(context) ? (londonDayIndex() + 1) % 7 : londonDayIndex());
+  const resolvedDate = resolveRequestedLondonDate(messages);
+  const day = resolvedDate.dayIndex;
+  const hasExplicitDay = /\b(today|tomorrow|day after tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(context);
   const clock = requestedPlaceClockConstraint(messages);
-  if (clock?.mode === 'now' && named && day !== londonDayIndex()) {
-    if (/\b(?:after work|evening|night)\b/i.test(context)) return { mode: 'after', hour: 17, minute: 0, day, approximate: true };
-    return { mode: 'day', day };
+  if (clock?.mode === 'now' && hasExplicitDay && day !== londonDayIndex()) {
+    if (/\b(?:after work|evening|night)\b/i.test(context)) return { mode: 'after', hour: 17, minute: 0, day, approximate: true, dateLabel: resolvedDate.label };
+    if (/\bafternoon\b/i.test(context)) return { mode: 'at', hour: 15, minute: 0, day, approximate: true, dateLabel: resolvedDate.label };
+    if (/\bmorning\b/i.test(context)) return { mode: 'at', hour: 10, minute: 0, day, approximate: true, dateLabel: resolvedDate.label };
+    return { mode: 'day', day, dateLabel: resolvedDate.label };
   }
-  if (clock) return { ...clock, day };
-  // An evening window is a search filter, not a promised arrival time.
-  if (/\b(?:after work|after-work|evening|night|tonight)\b/i.test(context)) return { mode: 'after', hour: 17, minute: 0, day, approximate: true };
+  if (clock) return { ...clock, day, dateLabel: resolvedDate.label };
+  if (/\b(?:after work|after-work|evening|night|tonight)\b/i.test(context)) return { mode: 'after', hour: 17, minute: 0, day, approximate: true, dateLabel: resolvedDate.label };
+  if (/\bafternoon\b/i.test(context)) return { mode: 'at', hour: 15, minute: 0, day, approximate: true, dateLabel: resolvedDate.label };
+  if (/\bmorning\b/i.test(context)) return { mode: 'at', hour: 10, minute: 0, day, approximate: true, dateLabel: resolvedDate.label };
+  if (hasExplicitDay) return { mode: 'day', day, dateLabel: resolvedDate.label };
   return null;
 }
 
@@ -1986,6 +2047,9 @@ function isWxCurrentEventsQuery(messages) {
 
 function isCurrentEventsQuery(messages) {
   const context = recentUserContext(messages, 4);
+  // Family day-planning questions such as "what can we do today?" belong to
+  // the family route, not the generic current-events route.
+  if (isFamilyPlanningQuery(messages)) return false;
   if (isCurrentFoodStatusQuery(messages)) return false;
   // V17: "where can I get lunch near them?" after an event list is a food
   // question. Do not let the previous turn's "what's on" drag it into events.
@@ -3588,7 +3652,28 @@ async function fetchNamedEventFirstPartyContexts(messages) {
 
 async function fetchAccessibilityFirstPartyContexts(messages) {
   if (!isGeneralAccessibilityQuery(messages)) {
-    return { hepworth: null, wx: null, grays: null, mocca: null, bakes: null, recent: null };
+    return { hepworth: null, hepworthVisit: null, hepworthCafe: null, wx: null, grays: null, mocca: null, bakes: null, recent: null };
+  }
+
+  // For the common wheelchair + art + coffee itinerary, The Hepworth's own
+  // access, visit and cafe pages can answer the whole request. Keep this path
+  // narrow so we do not fetch unrelated venue pages or need a broad AI search.
+  if (isAccessibilityItineraryQuery(messages) && /\b(art|gallery|culture|museum)\b/i.test(recentUserContext(messages, 5))) {
+    const [hepworth, hepworthVisit, hepworthCafe] = await Promise.all([
+      fetchSimpleFirstPartyContext(
+        'https://hepworthwakefield.org/your-visit/access/',
+        'The Hepworth Wakefield — Access'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://hepworthwakefield.org/your-visit/',
+        'The Hepworth Wakefield — Your visit'
+      ),
+      fetchSimpleFirstPartyContext(
+        'https://hepworthwakefield.org/your-visit/the-hepworth-cafe/',
+        'The Hepworth Wakefield — Café'
+      )
+    ]);
+    return { hepworth, hepworthVisit, hepworthCafe, wx: null, grays: null, mocca: null, bakes: null, recent: null };
   }
 
   const [hepworth, wx, grays, mocca, bakes, recent] = await Promise.all([
@@ -3618,7 +3703,7 @@ async function fetchAccessibilityFirstPartyContexts(messages) {
     )
   ]);
 
-  return { hepworth, wx, grays, mocca, bakes, recent };
+  return { hepworth, hepworthVisit: null, hepworthCafe: null, wx, grays, mocca, bakes, recent };
 }
 
 async function fetchRunningFirstPartyContexts(messages) {
@@ -3682,7 +3767,7 @@ async function fetchBusinessFirstPartyContexts(messages) {
   if (isPharmacyOpenQuery(messages)) {
     const [bootsKirkgate, kingfisher, trinityPharmacyPlus, pinderfields, asdaWakefield, sainsburysMarshWay] = await Promise.all([
       fetchSimpleFirstPartyContext(
-        'https://www.boots.com/stores/505-wakefield-kirkgate-wf1-1up',
+        'https://www.boots.com/EStoreStoreDetailNonAjaxView?catalogId=28501&storeId=11352&storeLocatorStoreId=505&storeType=boots-store&urlRequestType=Base',
         'Boots — Wakefield Kirkgate'
       ),
       fetchSimpleFirstPartyContext(
@@ -3773,7 +3858,7 @@ function pharmacyHoursForDay(key, context, dayIndex) {
     if (open != null && close != null) return { open, close };
   }
 
-  for (const match of text.matchAll(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*(?:-|–|—|to|&)\s*(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*:?\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)/gi)) {
+  for (const match of text.matchAll(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*(?:-|–|—|to|&)\s*(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*[:,]?\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)?\d{0,2}\s*(?:am|pm)?)/gi)) {
     if (!pharmacyDayInRange(dayIndex, match[1], match[2])) continue;
     const open = pharmacyClockMinutes(match[3]);
     const close = pharmacyClockMinutes(match[4]);
@@ -3844,7 +3929,7 @@ function buildFirstPartyPharmacyAnswer(messages, route, businessContexts) {
   const defs = [
     { key: 'bootsKirkgate', name: 'Boots Pharmacy, Wakefield Kirkgate', address: '26–28 Kirkgate, Wakefield WF1 1UP', cityCore: true, kind: 'community pharmacy' },
     { key: 'kingfisher', name: 'Kingfisher Pharmacy', address: '192 Kirkgate, Wakefield WF1 1UE', cityCore: true, kind: 'independent community pharmacy' },
-    { key: 'trinityPharmacyPlus', name: 'Pharmacy Plus Health, Trinity Medical Centre', address: 'Trinity Medical Centre, Thornhill Street, Wakefield WF1 1PG', cityCore: true, kind: 'community pharmacy' },
+    { key: 'trinityPharmacyPlus', name: 'Pharmacy Plus Health', address: 'Trinity Medical Centre, Thornhill Street, Wakefield WF1 1PG', cityCore: true, kind: 'community pharmacy' },
     { key: 'asdaWakefield', name: 'ASDA Wakefield Pharmacy', address: 'Asdale Road, Wakefield WF2 7EQ', cityCore: false, kind: 'supermarket pharmacy' },
     { key: 'pinderfields', name: 'Pinderfields Numark Pharmacy (Rowlands)', address: 'Pinderfields Hospital', cityCore: false, kind: 'hospital/outpatient pharmacy' }
   ];
@@ -3876,10 +3961,15 @@ function buildFirstPartyPharmacyAnswer(messages, route, businessContexts) {
 
   const latest = candidates.reduce((best, item) => !best || item.hours.close > best.hours.close ? item : best, null);
   const afterText = constraint?.mode === 'after'
-    ? ` For later in the evening, ${latest.name} is the latest-closing option I can verify from these current first-party pages (${pharmacyHoursLabel(latest.hours)}).`
+    ? ` For later in the evening, ${latest.name} is the latest-closing option I can verify from these current authoritative sources (${pharmacyHoursLabel(latest.hours)}).`
     : '';
 
-  const reply = `These are the pharmacy-counter hours I can verify from current first-party pages for the time you asked about:\n\n${lines.join('\n')}\n\nI have not ranked them as nearest because I do not have a verified distance calculation.${afterText}`;
+  const dateText = constraint?.dateLabel ? ` for ${constraint.dateLabel}` : '';
+  const reply = `These are the pharmacy-counter hours I can verify from current authoritative sources${dateText}:
+
+${lines.join('\n')}
+
+I have not ranked them as nearest because I do not have a verified distance calculation.${afterText}`;
   const sources = candidates.slice(0, 4).map(item => item.context.source);
   const resultCards = candidates.slice(0, 4).map(item => ({
     id: `first-party:${item.key}`,
@@ -3895,6 +3985,127 @@ function buildFirstPartyPharmacyAnswer(messages, route, businessContexts) {
   return { reply, sources, resultCards };
 }
 
+
+function firstPartySection(context, headingPattern, maxChars = 2200) {
+  const text = String(context?.text || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  const index = text.search(headingPattern);
+  return index >= 0 ? text.slice(index, index + maxChars) : '';
+}
+
+function firstPartyHoursForSection(context, headingPattern, dayIndex) {
+  const scoped = firstPartySection(context, headingPattern);
+  if (!scoped) return null;
+  return pharmacyHoursForDay('generic', { text: scoped }, dayIndex);
+}
+
+function familyBudgetPounds(messages) {
+  const match = lastUserText(messages).match(/£\s*(\d+(?:\.\d{1,2})?)/i);
+  return match ? Number(match[1]) : null;
+}
+
+function buildDeterministicFamilyPlanAnswer(messages, route, familyContexts) {
+  if (route?.intent !== 'family.plan') return null;
+  const text = recentUserContext(messages, 5);
+  const date = resolveRequestedLondonDate(messages);
+  const dayIndex = date.dayIndex;
+
+  // Named-venue/day hard gate. Operational sub-venues such as cafés must be
+  // checked against the requested weekday before any itinerary prose is written.
+  if (/\bpontefract castle\b/i.test(text) && /\b(caf[ée]|lunch|food|eat)\b/i.test(text)) {
+    const castle = familyContexts?.castle;
+    const castleFamily = familyContexts?.castleFamily;
+    if (!castle?.text || !castle?.source?.url) return null;
+    const grounds = pharmacyHoursForDay('generic', castle, dayIndex);
+    const cafe = firstPartyHoursForSection(castle, /The Keep Caf[ée]/i, dayIndex);
+    if (!grounds) return null;
+
+    const free = /\bfree entry for all\b|\bfree entry\b/i.test(castle.text);
+    const picnic = /\bbring a picnic\b|\bpicnic\b/i.test(String(castleFamily?.text || ''));
+
+    if (cafe?.closed) {
+      const reply = [
+        `Pontefract Castle itself can work on ${date.label}, but I would change the lunch part of your plan.`,
+        `The Castle Grounds are verified open ${pharmacyHoursLabel(grounds)}${free ? ' and entry is free' : ''}. The Keep Café is closed on the requested day, so I would not plan lunch there.`,
+        picnic
+          ? `A simple option is to bring a picnic; the Castle's current family information says picnics are welcome. Otherwise, plan lunch elsewhere in Pontefract and verify that venue separately.`
+          : `Plan lunch elsewhere in Pontefract and verify that venue separately rather than relying on the Castle café.`,
+        `A practical visit would be mid-morning to early afternoon, leaving plenty of time before the grounds close.`
+      ].join('\n\n');
+      return { reply, sources: [castle.source, castleFamily?.source].filter(Boolean), resultCards: [] };
+    }
+
+    if (cafe && !cafe.closed) {
+      const reply = `Pontefract Castle is verified open on ${date.label}: grounds ${pharmacyHoursLabel(grounds)}${free ? ', with free entry' : ''}. The Keep Café is also verified open ${pharmacyHoursLabel(cafe)}. A practical plan is to arrive mid-morning, explore first, then have lunch while the café is open.`;
+      return { reply, sources: [castle.source], resultCards: [] };
+    }
+  }
+
+  // Low-cost or rainy-day family requests can be answered safely from the
+  // current Wakefield Museum page without inventing admission or food prices.
+  const budget = familyBudgetPounds(messages);
+  const rainyIndoor = /\b(rain|raining|pouring|wet weather|indoors?|inside)\b/i.test(text);
+  const lowCost = budget != null || /\b(don(?:'|’)t want to spend much|low[- ]?cost|cheap|budget)\b/i.test(text);
+  const namedOtherVenue = /\b(pontefract castle|thornes park|newmillerdam)\b/i.test(text);
+  if (!namedOtherVenue && (rainyIndoor || lowCost)) {
+    const museum = familyContexts?.museum;
+    if (!museum?.text || !museum?.source?.url) return null;
+    const hours = pharmacyHoursForDay('generic', museum, dayIndex);
+    if (!hours || hours.closed) return null;
+    const free = /\bfree entry for all\b|\bfree entry\b/i.test(museum.text);
+    const familyActivities = /\bfree family activities\b|\bfamily activities\b/i.test(museum.text);
+    const stepFree = /\bstep[- ]?free access\b|\bwheelchair accessible\b/i.test(museum.text);
+    const cafe = firstPartyHoursForSection(museum, /Create Caf[ée]/i, dayIndex);
+
+    const parts = [
+      `${rainyIndoor ? 'For a low-cost indoor option' : 'For the most reliable low-cost option'}, I’d start with Wakefield Museum on ${date.label}.`,
+      `Wakefield Museum is verified open ${pharmacyHoursLabel(hours)}${free ? ' and entry is free' : ''}.${familyActivities ? ' Its current visitor information also confirms family activities and resources.' : ''}${stepFree ? ' It has step-free access.' : ''}`
+    ];
+    if (budget != null) {
+      parts.push(`Because museum admission is ${free ? 'free' : 'not priced in the current evidence'}, I would keep the £${budget % 1 ? budget.toFixed(2) : budget.toFixed(0)} for any food or travel. I have not verified those extra costs, so I would not promise the whole outing stays within the budget.`);
+    } else {
+      parts.push(`You can do the museum without paying an admission charge, which keeps the plan simple on a wet day.`);
+    }
+    if (cafe && !cafe.closed) {
+      parts.push(`Create Café opposite the museum is verified open ${pharmacyHoursLabel(cafe)} on that day, but I have not verified its current menu prices.`);
+    }
+    return { reply: parts.join('\n\n'), sources: [museum.source], resultCards: [] };
+  }
+
+  return null;
+}
+
+function buildDeterministicAccessibilityAnswer(messages, route, accessibilityContexts) {
+  if (route?.intent !== 'accessibility' || !isAccessibilityItineraryQuery(messages)) return null;
+  const text = recentUserContext(messages, 5);
+  if (!/\bwheelchair\b/i.test(text) || !/\b(art|gallery|culture|museum)\b/i.test(text) || !/\b(coffee|caf[ée]|cake)\b/i.test(text)) return null;
+
+  const access = accessibilityContexts?.hepworth;
+  const visit = accessibilityContexts?.hepworthVisit;
+  const cafe = accessibilityContexts?.hepworthCafe;
+  if (!access?.text || !visit?.text || !cafe?.text) return null;
+
+  const date = resolveRequestedLondonDate(messages);
+  const venueHours = pharmacyHoursForDay('generic', visit, date.dayIndex);
+  const cafeHours = pharmacyHoursForDay('generic', cafe, date.dayIndex);
+  if (!venueHours || venueHours.closed || !cafeHours || cafeHours.closed) return null;
+
+  const accessText = access.text;
+  const details = [];
+  if (/caf[ée].{0,220}\blevel access\b|\blevel access\b.{0,220}caf[ée]/i.test(accessText)) details.push('the café has level access');
+  if (/\baccessible toilets?\b|\bChanging Places\b/i.test(accessText)) details.push('accessible toilets are provided, including a Changing Places toilet');
+  if (/\b6 parking bays\b|\bsix parking bays\b/i.test(accessText)) details.push('six Blue Badge parking bays are listed on site');
+  if (/\btwo manual wheelchairs\b/i.test(accessText)) details.push('two manual wheelchairs can be booked in advance');
+
+  const reply = [
+    `The Hepworth Wakefield is the strongest verified fit for ${date.label}: art, coffee and wheelchair access in one place.`,
+    `The gallery is verified open ${pharmacyHoursLabel(venueHours)}, and the café is open ${pharmacyHoursLabel(cafeHours)}${/\bcoffee and cake\b/i.test(cafe.text) ? ' with coffee and cake listed on its current page' : ''}.`,
+    details.length ? `For access, ${details.join('; ')}.` : '',
+    `That makes it a practical option for a relaxed couple of hours without needing to move between several venues. If you need one of the gallery wheelchairs, book it with the venue before travelling.`
+  ].filter(Boolean).join('\n\n');
+
+  return { reply, sources: [access.source, visit.source, cafe.source].filter(Boolean), resultCards: [] };
+}
 
 function publishedPlaceById(id) {
   return PLACES.find(place => place?.id === id) || null;
@@ -5725,7 +5936,8 @@ async function handlerImpl(req, res) {
     // verify tomorrow's weekday, seasonal hours, cafe availability and parking
     // without paying for broad model web search. These are ordinary HTTP fetches
     // to first-party sources and run in parallel with the Experience snapshot.
-    const [events, museum, castle, newmillerdam, thornes] = await Promise.all([
+    const wantsPontefractCastle = /\bpontefract castle\b/i.test(currentText);
+    const [events, museum, castle, castleFamily, newmillerdam, thornes] = await Promise.all([
       fetchExperienceWakefieldEventsContext(),
       fetchSimpleFirstPartyContext(
         'https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/',
@@ -5735,6 +5947,10 @@ async function handlerImpl(req, res) {
         'https://museumsandcastles.wakefield.gov.uk/visit/pontefract-castle/plan-your-visit-to-pontefract-castle/',
         'Pontefract Castle — Plan your visit'
       ),
+      wantsPontefractCastle ? fetchSimpleFirstPartyContext(
+        'https://museumsandcastles.wakefield.gov.uk/visit/pontefract-castle/for-families/',
+        'Pontefract Castle — For families'
+      ) : Promise.resolve(null),
       fetchSimpleFirstPartyContext(
         'https://www.wakefield.gov.uk/parks-countryside-and-outdoor-spaces/parks/newmillerdam-country-park',
         'Wakefield Council — Newmillerdam Country Park'
@@ -5745,9 +5961,26 @@ async function handlerImpl(req, res) {
       )
     ]);
     experienceEventsContext = events;
-    familyPlanFirstPartyContexts = { museum, castle, newmillerdam, thornes };
+    familyPlanFirstPartyContexts = { museum, castle, castleFamily, newmillerdam, thornes };
   } else if (isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
+  }
+
+
+  if (STRUCTURED_CORE_ENABLED && route.intent === 'family.plan' && familyPlanFirstPartyContexts) {
+    const directFamily = buildDeterministicFamilyPlanAnswer(messages, route, familyPlanFirstPartyContexts);
+    if (directFamily) {
+      const state = { ...normaliseClientState(null), lastIntent: 'family.plan', area: route.area || null, constraints: { date: resolveRequestedLondonDate(messages).label }, resultCards: [], viewIds: [], lastFilter: null };
+      attachStateCookie(res, state);
+      console.info('Family plan resolved deterministically from current first-party venue evidence.');
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(directFamily.reply),
+        sources: directFamily.sources.slice(0, 8),
+        live: true,
+        verification: 'first-party-family-plan',
+        state
+      });
+    }
   }
 
   // V16.2 cards-first weekend pilot. The deterministic result set is created
@@ -5822,6 +6055,23 @@ async function handlerImpl(req, res) {
     fetchTrustedUserUrlContext(messages)
   ]);
   let districtPlacesContext = districtPlacesInitial;
+
+
+  if (STRUCTURED_CORE_ENABLED && route.intent === 'accessibility') {
+    const directAccessibility = buildDeterministicAccessibilityAnswer(messages, route, accessibilityContexts);
+    if (directAccessibility) {
+      const state = { ...normaliseClientState(null), lastIntent: 'accessibility', area: route.area || null, constraints: { date: resolveRequestedLondonDate(messages).label }, resultCards: [], viewIds: [], lastFilter: null };
+      attachStateCookie(res, state);
+      console.info('Accessibility itinerary resolved deterministically from The Hepworth first-party pages.');
+      return res.status(200).json({
+        reply: finaliseUserFacingReply(directAccessibility.reply),
+        sources: directAccessibility.sources.slice(0, 8),
+        live: true,
+        verification: 'first-party-accessibility',
+        state
+      });
+    }
+  }
 
   // Price/free follow-ups need event-level evidence. Resolve the events already
   // named in the previous answer to their own Experience Wakefield detail pages
@@ -6095,7 +6345,7 @@ Use the published days/times literally. If Harriers publishes Tuesday/Thursday 1
     : '';
 
   const familyPlanContext = route.intent === 'family.plan'
-    ? `\n\nFAMILY DAY-PLAN MODE: Build one practical primary plan and at most two clearly labelled alternatives. Use the current Experience Wakefield snapshot for dated options and the grounded local-place records for stable venue identity. Respect the stated ages and budget. CURRENT-FACT GATE: for a requested day such as today/tomorrow, any claim about opening hours, open/closed status, cafe or food availability, admission, parking charges, address/contact details, or a paid price must be supported by the FAMILY PLAN CURRENT FIRST-PARTY EVIDENCE above or by a current first-party event record supplied in this request. A canonical local-place card by itself is not current operational proof. Match the requested calendar date to the correct weekday and to the correct seasonal schedule. Never recommend a cafe or visitor centre on a day the evidence says it is closed. Never estimate a lunch bill from generic model knowledge. Do not state that the whole outing fits the user's budget unless every paid component you count has a verified current price for the relevant group; instead say which activities are verified free and how much of the budget remains for unpriced food/travel. If a country-park option has verified parking charges, mention them when driving/parking is part of the suggestion. Do not output a phone number unless the user asks for contact details and the current first-party evidence supplies it. If an operational fact is missing, say you could not confirm that fact or omit it. HARD SOURCE WHITELIST: for today/tomorrow family plans, only recommend a named venue or activity when it appears in FAMILY PLAN CURRENT FIRST-PARTY EVIDENCE or in the current Experience Wakefield event evidence supplied in this request. Do not use other canonical/trusted-place records, model memory or generic local knowledge as a recommendation source. Fewer verified options are better than padded alternatives. HARD BUDGET RULE: never invent, infer or estimate an unverified price range. Do not use phrases such as 'budget around', 'typically costs', 'should come in at', 'roughly £X', or derive a remaining budget from an unknown food/travel price. If a paid component has no verified price, explicitly say its price is unconfirmed and therefore you cannot guarantee the full outing stays within the user's budget. Do not web-search simply to add more choices when the supplied first-party/current evidence is already sufficient.`
+    ? `\n\nFAMILY DAY-PLAN MODE: Build one practical primary plan and at most two clearly labelled alternatives. Use the current Experience Wakefield snapshot for dated options and the grounded local-place records for stable venue identity. Respect the stated ages and budget. CURRENT-FACT GATE: for a requested day such as today/tomorrow, any claim about opening hours, open/closed status, cafe or food availability, admission, parking charges, address/contact details, or a paid price must be supported by the FAMILY PLAN CURRENT FIRST-PARTY EVIDENCE above or by a current first-party event record supplied in this request. A canonical local-place card by itself is not current operational proof. Match the requested calendar date to the correct weekday and to the correct seasonal schedule. Never recommend a cafe or visitor centre on a day the evidence says it is closed. Never estimate a lunch bill from generic model knowledge. Do not state that the whole outing fits the user's budget unless every paid component you count has a verified current price for the relevant group; instead say which activities are verified free and how much of the budget remains for unpriced food/travel. If a country-park option has verified parking charges, mention them when driving/parking is part of the suggestion. Do not output a phone number unless the user asks for contact details and the current first-party evidence supplies it. If an operational fact is missing, say you could not confirm that fact or omit it. HARD SOURCE WHITELIST: for today/tomorrow family plans, only recommend a named venue or activity when it appears in FAMILY PLAN CURRENT FIRST-PARTY EVIDENCE or in the current Experience Wakefield event evidence supplied in this request. Do not use other canonical/trusted-place records, model memory or generic local knowledge as a recommendation source. Fewer verified options are better than padded alternatives. HARD BUDGET RULE: never invent, infer or estimate an unverified price range. Do not use phrases such as 'budget around', 'typically costs', 'should come in at', 'roughly £X', or derive a remaining budget from an unknown food/travel price. If a paid component has no verified price, explicitly say its price is unconfirmed and therefore you cannot guarantee the full outing stays within the user's budget. RAIN / INDOOR RULE: when the user says it is raining, pouring, wet, or asks for indoor options, recommend only venues supported by the supplied evidence as indoor; do not pad the answer with shops or outdoor attractions. MONEY SENTENCE RULE: if a price is unsupported, omit or rewrite the entire price-bearing sentence rather than deleting only the number and leaving broken prose. Do not web-search simply to add more choices when the supplied first-party/current evidence is already sufficient.`
     : '';
 
   const walkingRouteContext = isWalkingRouteQuery(messages)

@@ -4651,7 +4651,14 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
 
   const userAskedContact = /\b(phone|telephone|contact|number|call|email|details)\b/i.test(userText);
   const evidenceHasFreeParking = /\bfree parking\b/i.test(evidenceText);
+  const evidenceHasCreateTuesdayToThree = /Create.{0,120}Tuesday to Thursday.{0,80}8:?45.{0,40}3pm/i.test(evidenceText)
+    || /Tuesday to Thursday.{0,80}8:?45.{0,40}3pm/i.test(evidenceText);
+  const mentionsUnpricedFood = /\b(?:Create Caf[ée]|caf[ée]|lunch|food|snacks?|meal)\b/i.test(String(reply));
+  // A food stop makes the total budget unverified unless the current evidence supplies
+  // an actual food/menu price. A parking tariff elsewhere on the same page does not count.
+  const evidenceHasFoodPrice = /(?:Create.{0,220}|caf[ée].{0,220}|menu.{0,220})(?:£\s*\d|\b\d+(?:\.\d+)?\s*p\b)/i.test(evidenceText);
   let removedUnsupportedPrice = false;
+  let removedUnsupportedBudgetClaim = false;
 
   const cleanedLines = [];
   for (const rawLine of String(reply).split('\n')) {
@@ -4679,6 +4686,28 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
         }
       }
 
+      // Current official Wakefield Museum evidence says Create Café is usually
+      // open Tuesday-Thursday 08:45-15:00. Correct a model slip to 14:00.
+      if (evidenceHasCreateTuesdayToThree && /Create Caf[ée]/i.test(rawLine)) {
+        sentence = sentence.replace(/\b(?:on Tuesday\s+(?:it(?:'|’)s|it is)\s+open\s+)?8:?45\s*(?:am)?\s+(?:to|[-–])\s+2\s*pm\b/gi, 'On Tuesday it is open 8:45am to 3pm');
+        sentence = sentence.replace(/\b8:?45\s*(?:am)?\s+(?:to|[-–])\s+2\s*pm\b/gi, '8:45am to 3pm');
+      }
+
+      // Do not invent generic facility charges when the current first-party evidence
+      // only confirms that the facilities exist.
+      if (!/\b(?:toilet|facility|facilities).{0,80}(?:charge|fee|cost)\b/i.test(evidenceText)) {
+        sentence = sentence
+          .replace(/\s*\((?:charges?|fees?) apply for some facilities\)\.?/gi, '.')
+          .replace(/\b(?:charges?|fees?) apply for some facilities\.?/gi, '');
+      }
+
+      // A café/meal with no verified menu price cannot support a claim that the
+      // overall outing, or the meal itself, fits the user's stated budget.
+      if (mentionsUnpricedFood && !evidenceHasFoodPrice && /\b(?:comfortably|easily|should|will|would).{0,55}(?:fit|stay|come).{0,35}(?:budget|£\s*\d)|\b(?:within|inside|under)\s+(?:your\s+)?(?:remaining\s+)?budget\b|\bkeeps? costs? low\b/i.test(sentence)) {
+        removedUnsupportedBudgetClaim = true;
+        continue;
+      }
+
       // "New" is stale for the Thornes Park play area opened in 2022.
       sentence = sentence.replace(/\bnew inclusive play area\b/gi, 'inclusive play area');
       kept.push(sentence);
@@ -4690,7 +4719,10 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  const hasUnknownPrice = removedUnsupportedPrice || /\b(?:price|prices|cost|costs).{0,40}(?:unconfirmed|not confirmed|couldn(?:'|’)t confirm|not specified|unknown)\b/i.test(out);
+  const hasUnknownPrice = removedUnsupportedPrice
+    || removedUnsupportedBudgetClaim
+    || (mentionsUnpricedFood && !evidenceHasFoodPrice)
+    || /\b(?:price|prices|cost|costs).{0,40}(?:unconfirmed|not confirmed|couldn(?:'|’)t confirm|not specified|unknown)\b/i.test(out);
   if (hasUnknownPrice) {
     // Remove guarantees that cannot be supported while any paid component is unknown.
     out = out

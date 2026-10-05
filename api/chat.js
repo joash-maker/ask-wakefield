@@ -4651,6 +4651,8 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
 
   const userAskedContact = /\b(phone|telephone|contact|number|call|email|details)\b/i.test(userText);
   const evidenceHasFreeParking = /\bfree parking\b/i.test(evidenceText);
+  const thornesEvidenceText = String(familyContexts.thornes?.text || '');
+  const thornesHasFreeParking = /\bfree parking\b/i.test(thornesEvidenceText);
   const evidenceHasCreateTuesdayToThree = /Create.{0,120}Tuesday to Thursday.{0,80}8:?45.{0,40}3pm/i.test(evidenceText)
     || /Tuesday to Thursday.{0,80}8:?45.{0,40}3pm/i.test(evidenceText);
   const mentionsUnpricedFood = /\b(?:Create Caf[ée]|caf[ée]|lunch|food|snacks?|meal)\b/i.test(String(reply));
@@ -4672,7 +4674,10 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
       if (!userAskedContact && /(?:\+?44|\b0\d)(?:[\s().-]*\d){7,12}\b/.test(sentence)) continue;
 
       // Do not broaden a facility-specific free-parking fact into a park-wide claim.
-      if (/\b(?:parking is free|free parking)\b/i.test(sentence) && !evidenceHasFreeParking) continue;
+      if (/\b(?:parking is free|free parking)\b/i.test(sentence)) {
+        const thornesContext = /\bThornes Park\b/i.test(rawLine);
+        if ((thornesContext && !thornesHasFreeParking) || (!thornesContext && !evidenceHasFreeParking)) continue;
+      }
 
       if (unsupportedMoney(sentence)) {
         removedUnsupportedPrice = true;
@@ -4709,7 +4714,9 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
       }
 
       // "New" is stale for the Thornes Park play area opened in 2022.
-      sentence = sentence.replace(/\bnew inclusive play area\b/gi, 'inclusive play area');
+      sentence = sentence
+        .replace(/\bnew inclusive play area\b/gi, 'inclusive play area')
+        .replace(/\b(?:brilliant\s+)?new play area\b/gi, 'play area');
       kept.push(sentence);
     }
     if (kept.length) cleanedLines.push(kept.join(' '));
@@ -4727,11 +4734,12 @@ function deterministicallySanitiseFamilyPlan(reply, messages, evidence = {}) {
     // Remove guarantees that cannot be supported while any paid component is unknown.
     out = out
       .replace(/\bhere(?:'|’)s a (?:solid )?plan within your budget:?/i, "Here’s a practical plan built around verified free or low-cost options:")
+      .replace(/\bhere(?:'|’)s a practical plan[^\n.!?]{0,80}within your £?\d+(?:\.\d+)? budget:?/i, "Here’s a practical plan built around verified free or low-cost options:")
       .split('\n')
       .filter(line => !/\btotal spend\s*:/i.test(line))
       .map(line => line
         .split(/(?<=[.!?])\s+/)
-        .filter(sentence => !/\b(?:keeps? you (?:well )?under budget|(?:well )?inside your £?\d+(?:\.\d+)?(?: budget)?|within your budget|leav(?:e|ing) you £)/i.test(sentence))
+        .filter(sentence => !/\b(?:keeps? you (?:well )?under budget|(?:well )?inside your £?\d+(?:\.\d+)?(?: budget)?|within your budget|leav(?:e|ing) you £|(?:your )?budget should cover|should cover it comfortably|comfortably (?:within|under) (?:your )?budget|well within (?:your )?budget)/i.test(sentence))
         .join(' ')
       )
       .filter(line => line.trim())

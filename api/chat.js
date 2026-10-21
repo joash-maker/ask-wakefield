@@ -1,5 +1,5 @@
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
-import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
@@ -5023,6 +5023,7 @@ export default async function handler(req, res) {
   const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
   const groundedStarter = isEventTopic ? null : foodSpecificFollowUp(currentText, clientState)
     || nightlifeRecommendation(currentText, clientState)
+    || namedDiningThaliFollowUp(currentText, messages)
     || namedDiningFollowUp(currentText)
     || familyDistrictStarter(lastUserText(messages))
     || undatedCityCentreArtsPlan(lastUserText(messages))

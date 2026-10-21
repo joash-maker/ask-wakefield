@@ -101,6 +101,15 @@ assert.match(namedDiningFollowUp('Could we try Vera Friday?').reply,/17:00/);
 assert.match(namedDiningFollowUp('Vinyl Café North Saturday?').reply,/Closed/);
 assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/18:00/);
 assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/conflict/);
+const tanvisHours = namedDiningFollowUp("What are Tanvi's opening hours?");
+assert.match(tanvisHours.reply,/Monday: 12:00/);
+assert.match(tanvisHours.reply,/Sunday: 13:00/);
+assert.match(tanvisHours.reply,/other published listings disagree/i);
+assert.match(tanvisHours.reply,/01924 201515/);
+assert.doesNotMatch(tanvisHours.reply,/North and South Indian dishes/);
+const tanvisHoursContext = namedDiningFollowUp('What are the opening hours?', [user('I heard about Tanvis'),assistant('Tanvi’s Indian Cuisine at 65 Northgate, Wakefield'),user('What are the opening hours?')]);
+assert.match(tanvisHoursContext.reply,/Monday: 12:00/);
+
 assert.ok(selectTrustedPlaces('Recommend a Thai restaurant in Wakefield').some(p=>p.id==='AW-R004'));
 
 const bowlingState = horburyFollowUp('What about bowling?', {lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',origin:'Wakefield city centre',ages:[7,4]}}});
@@ -173,6 +182,10 @@ assert.ok(vegThali);
 assert.match(vegThali.reply, /£13\.95/);
 assert.match(vegThali.reply, /Dal makhani/);
 assert.match(vegThali.reply, /01924 201515/);
+const bothThalis = namedDiningThaliFollowUp('What are the lunch thali prices?', [user('Tell me about Tanvis'),tanvisIntro,user('What are the lunch thali prices?')]);
+assert.match(bothThalis.reply,/£13\.95/);
+assert.match(bothThalis.reply,/£15\.95/);
+
 assert.doesNotMatch(vegThali.reply, /01924 290 290/);
 const dinnerThali = namedDiningThaliFollowUp('Are vegetarian thalis available for dinner service?', [...thaliHistory, assistant(vegThali.reply), user('Are vegetarian thalis available for dinner service?')]);
 assert.ok(dinnerThali);

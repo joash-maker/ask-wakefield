@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { scopeConversation } from '../lib/conversation-scope.js';
-import { publishedFoodRecommendation } from '../lib/askwakefield-places.js';
+import { publishedFoodRecommendation, namedDiningThaliFollowUp } from '../lib/askwakefield-places.js';
 
 process.env.ANTHROPIC_API_KEY = 'test-key';
 process.env.GOOGLE_PLACES_API_KEY = 'test-places-key';
@@ -164,3 +164,18 @@ const nearbyOnly = await ask('How about just dessert?',[...dessertHistory,user('
 assert.match(nearbyOnly.body.reply,/Rassam/);
 assert.equal(nearbyOnly.body.state.constraints.coffeeRequired,false);
 assert.ok(nearbyOnly.body.state.resultCards.some(p=>/Rassam/.test(p.name)));
+
+
+const tanvisIntro = assistant('Tanvi’s Indian Cuisine at 65 Northgate, Wakefield, WF1 3BP: Indian food and lunchtime thalis.');
+const thaliHistory = [user('I heard about a new restaurant called Tanvis?'), tanvisIntro, user('Do they offer vegetarian thali options?')];
+const vegThali = namedDiningThaliFollowUp('Do they offer vegetarian thali options?', thaliHistory);
+assert.ok(vegThali);
+assert.match(vegThali.reply, /£13\.95/);
+assert.match(vegThali.reply, /Dal makhani/);
+assert.match(vegThali.reply, /01924 201515/);
+assert.doesNotMatch(vegThali.reply, /01924 290 290/);
+const dinnerThali = namedDiningThaliFollowUp('Are vegetarian thalis available for dinner service?', [...thaliHistory, assistant(vegThali.reply), user('Are vegetarian thalis available for dinner service?')]);
+assert.ok(dinnerThali);
+assert.match(dinnerThali.reply, /does not confirm thali availability at dinner/);
+assert.match(dinnerThali.reply, /01924 201515/);
+assert.equal(namedDiningThaliFollowUp('Are vegetarian thalis available for dinner?', [user('Are vegetarian thalis available for dinner?')]), null);

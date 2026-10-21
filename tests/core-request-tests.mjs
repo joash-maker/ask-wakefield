@@ -220,3 +220,8 @@ const deliveryResponse = await ask('Does the restaurant offer delivery or takeaw
   [user('I heard about Tanvis'),tanvisIntro]);
 assert.equal(deliveryResponse.body.verification,'canonical-place-starter');
 assert.match(deliveryResponse.body.reply,/Just Eat/);
+
+const veganMenuQ = "Does Tanvi's have vegan menu options?";
+const veganInfo = namedDiningServiceFollowUp(veganMenuQ, [user(veganMenuQ)]);
+assert.match(veganInfo.reply,/cannot confirm their ingredients/);
+assert.doesNotMatch(veganInfo.reply,/including Saag paneer|including Kadai paneer/);

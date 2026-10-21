@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { scopeConversation } from '../lib/conversation-scope.js';
-import { publishedFoodRecommendation, namedDiningThaliFollowUp } from '../lib/askwakefield-places.js';
+import { publishedFoodRecommendation, namedDiningThaliFollowUp, namedDiningServiceFollowUp } from '../lib/askwakefield-places.js';
 
 process.env.ANTHROPIC_API_KEY = 'test-key';
 process.env.GOOGLE_PLACES_API_KEY = 'test-places-key';
@@ -103,6 +103,8 @@ assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/18:00/);
 assert.match(namedDiningFollowUp('Chopstix Sunday?').reply,/conflict/);
 const tanvisHours = namedDiningFollowUp("What are Tanvi's opening hours?");
 assert.match(tanvisHours.reply,/Monday: 12:00/);
+assert.match(namedDiningFollowUp("What are Tanvi's exact opening hours?").reply,/Monday: 12:00/);
+assert.match(namedDiningFollowUp("What are Tanvi's current opening hours?").reply,/Sunday: 13:00/);
 assert.match(tanvisHours.reply,/Sunday: 13:00/);
 assert.match(tanvisHours.reply,/other published listings disagree/i);
 assert.match(tanvisHours.reply,/01924 201515/);
@@ -192,3 +194,29 @@ assert.ok(dinnerThali);
 assert.match(dinnerThali.reply, /does not confirm thali availability at dinner/);
 assert.match(dinnerThali.reply, /01924 201515/);
 assert.equal(namedDiningThaliFollowUp('Are vegetarian thalis available for dinner?', [user('Are vegetarian thalis available for dinner?')]), null);
+
+const vegMenuQ = 'Does Tanvi\'s have vegetarian menu options?';
+const vegMenuInfo = namedDiningServiceFollowUp(vegMenuQ, [user(vegMenuQ)]);
+assert.match(vegMenuInfo.reply,/Saag paneer/);
+assert.match(vegMenuInfo.reply,/Kadai paneer/);
+assert.match(vegMenuInfo.reply,/£13\.95/);
+assert.doesNotMatch(vegMenuInfo.reply,/not able to verify/);
+const orderingInfo = namedDiningServiceFollowUp('Does the restaurant offer delivery or takeaway?',
+  [user('Tell me about Tanvis'), tanvisIntro, user('Does the restaurant offer delivery or takeaway?')]);
+assert.match(orderingInfo.reply,/Just Eat/);
+assert.match(orderingInfo.reply,/Deliveroo/);
+assert.match(orderingInfo.reply,/01924 201515/);
+assert.doesNotMatch(orderingInfo.reply,/cannot verify current delivery availability/);
+const deliveryByName = namedDiningServiceFollowUp('Does Tanvi offer delivery or takeaway?', [user('Does Tanvi offer delivery or takeaway?')]);
+assert.match(deliveryByName.reply,/Grab & Go/);
+const exactHoursResponse = await ask("What are Tanvi's exact opening hours?",[user('I heard about Tanvis'),tanvisIntro]);
+assert.equal(exactHoursResponse.body.verification,'canonical-place-starter');
+assert.match(exactHoursResponse.body.reply,/Monday: 12:00/);
+assert.doesNotMatch(exactHoursResponse.body.reply,/North and South Indian dishes/);
+const vegMenuResponse = await ask(vegMenuQ,[user('I heard about Tanvis'),tanvisIntro]);
+assert.equal(vegMenuResponse.body.verification,'canonical-place-starter');
+assert.match(vegMenuResponse.body.reply,/Saag paneer/);
+const deliveryResponse = await ask('Does the restaurant offer delivery or takeaway?',
+  [user('I heard about Tanvis'),tanvisIntro]);
+assert.equal(deliveryResponse.body.verification,'canonical-place-starter');
+assert.match(deliveryResponse.body.reply,/Just Eat/);

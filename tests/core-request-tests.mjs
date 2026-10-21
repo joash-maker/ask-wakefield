@@ -237,16 +237,16 @@ assert.ok(priceScoped.messages.length > 1, 'A generic thali price follow-up must
 const priceAnswer = await ask(priceQuestion,fullVenueContext);
 assert.equal(priceAnswer.body.verification,'canonical-place-starter');
 assert.match(priceAnswer.body.reply,/Tanvi/);
-assert.match(priceAnswer.body.reply,/£13\\.95/);
-assert.match(priceAnswer.body.reply,/£15\\.95/);
+assert.match(priceAnswer.body.reply,/£13\.95/);
+assert.match(priceAnswer.body.reply,/£15\.95/);
 assert.doesNotMatch(priceAnswer.body.reply,/need a bit more detail|specific restaurant/i);
 
 const broadQuestion = 'Which Indian restaurants in Wakefield serve thali?';
 const broadThali = districtThaliDiscovery(broadQuestion);
 assert.ok(broadThali);
 assert.match(broadThali.reply,/Tanvi/);
-assert.match(broadThali.reply,/£13\\.95/);
-assert.match(broadThali.reply,/£15\\.95/);
+assert.match(broadThali.reply,/£13\.95/);
+assert.match(broadThali.reply,/£15\.95/);
 assert.doesNotMatch(broadThali.reply,/Taste of Dosa|The Spicy Biker/);
 const broadAnswer = await ask(broadQuestion,[...fullVenueContext,user(priceQuestion),assistant(priceAnswer.body.reply)]);
 assert.equal(broadAnswer.body.verification,'canonical-place-starter');

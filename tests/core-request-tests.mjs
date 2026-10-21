@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { scopeConversation } from '../lib/conversation-scope.js';
-import { publishedFoodRecommendation, namedDiningThaliFollowUp, namedDiningServiceFollowUp } from '../lib/askwakefield-places.js';
+import { publishedFoodRecommendation, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 
 process.env.ANTHROPIC_API_KEY = 'test-key';
 process.env.GOOGLE_PLACES_API_KEY = 'test-places-key';
@@ -225,3 +225,36 @@ const veganMenuQ = "Does Tanvi's have vegan menu options?";
 const veganInfo = namedDiningServiceFollowUp(veganMenuQ, [user(veganMenuQ)]);
 assert.match(veganInfo.reply,/cannot confirm their ingredients/);
 assert.doesNotMatch(veganInfo.reply,/including Saag paneer|including Kadai paneer/);
+
+const fullVenueContext = [
+  user("What are Tanvi's exact opening hours?"), assistant('Tanvi’s Indian Cuisine: published opening hours.'),
+  user("Does Tanvi's have vegetarian menu options?"), assistant('Yes. Tanvi’s Indian Cuisine lists vegetarian dishes.'),
+  user("Does Tanvi offer delivery or takeaway?"), assistant('Yes. Tanvi’s Indian Cuisine advertises Grab & Go takeaway and Just Eat delivery.')
+];
+const priceQuestion = 'What are the lunch thali prices?';
+const priceScoped = scopeConversation([...fullVenueContext,user(priceQuestion)]);
+assert.ok(priceScoped.messages.length > 1, 'A generic thali price follow-up must keep its named venue context');
+const priceAnswer = await ask(priceQuestion,fullVenueContext);
+assert.equal(priceAnswer.body.verification,'canonical-place-starter');
+assert.match(priceAnswer.body.reply,/Tanvi/);
+assert.match(priceAnswer.body.reply,/£13\\.95/);
+assert.match(priceAnswer.body.reply,/£15\\.95/);
+assert.doesNotMatch(priceAnswer.body.reply,/need a bit more detail|specific restaurant/i);
+
+const broadQuestion = 'Which Indian restaurants in Wakefield serve thali?';
+const broadThali = districtThaliDiscovery(broadQuestion);
+assert.ok(broadThali);
+assert.match(broadThali.reply,/Tanvi/);
+assert.match(broadThali.reply,/£13\\.95/);
+assert.match(broadThali.reply,/£15\\.95/);
+assert.doesNotMatch(broadThali.reply,/Taste of Dosa|The Spicy Biker/);
+const broadAnswer = await ask(broadQuestion,[...fullVenueContext,user(priceQuestion),assistant(priceAnswer.body.reply)]);
+assert.equal(broadAnswer.body.verification,'canonical-place-starter');
+assert.match(broadAnswer.body.reply,/Tanvi/);
+assert.doesNotMatch(broadAnswer.body.reply,/Taste of Dosa|The Spicy Biker/);
+const otherThali = districtThaliDiscovery('Any other Indian restaurants that serve thali?');
+assert.match(otherThali.reply,/do not have another independently verified/);
+assert.equal(districtThaliDiscovery('What are the lunch thali prices?'),null);
+assert.equal(namedDiningThaliFollowUp('What are the lunch thali prices?', [user('What are the lunch thali prices?')]),null);
+const unrelatedNewQuestion = scopeConversation([...fullVenueContext,user('Where can I get a pharmacy in Wakefield?')]);
+assert.equal(unrelatedNewQuestion.messages.length,1,'Unrelated venue follow-ups must not leak into a new topic');

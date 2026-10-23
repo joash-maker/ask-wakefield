@@ -710,7 +710,7 @@
     /* PWA install / offline notice — quiet, dismissible */
     .pwa-notice {
       position: fixed;
-      bottom: 16px;
+      bottom: var(--pwa-notice-bottom, 16px);
       left: 50%;
       transform: translateX(-50%);
       max-width: 32rem;
@@ -1108,6 +1108,16 @@ function sendMessage(override) {
   var text = typeof override === 'string' ? override.trim() : inputEl.value.trim();
   if (!text || isSending) return;
 
+  // Offline: do nothing to chat state. Preserve the typed question, keep Send usable,
+  // do not add an unsent question to chatHistory, and do not create a Thinking bubble.
+  // Normal sending resumes after reconnect without a reload.
+  if (!navigator.onLine) {
+    if (typeof window.__askWakefieldShowOffline === 'function') {
+      window.__askWakefieldShowOffline();
+    }
+    return;
+  }
+
   if (chatWrap) chatWrap.classList.add('chat-active');
   isSending = true;
   sendBtn.disabled = true;
@@ -1144,14 +1154,6 @@ function sendMessage(override) {
 
   // XHR request
   var xhr = new XMLHttpRequest();
-  if (!navigator.onLine) {
-    var offlineWrap = document.createElement('div');
-    offlineWrap.className = 'msg bot';
-    offlineWrap.innerHTML = '<div class="msg-label">Ask Wakefield</div><div class="msg-text">You’re offline. Live questions need an internet connection so answers can be checked against current sources. Events, opening hours, prices and transport information are not shown from a cache.</div>';
-    msgsEl.appendChild(offlineWrap);
-    msgsEl.scrollTop = msgsEl.scrollHeight;
-    return;
-  }
   xhr.open('POST', '/api/chat', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.timeout = 25000;
@@ -1401,19 +1403,29 @@ function copyEmbed() {
     if (notice) notice.style.display = 'none';
   }
 
+  function showOfflineNotice() {
+    showNotice(
+      '<div>You’re offline. Live questions need an internet connection so answers can be checked against current sources. Events, opening hours, prices and transport information are not shown from a cache.</div>' +
+      '<button type="button" id="pwaDismissOffline">Dismiss</button>'
+    );
+    if (notice) notice.dataset.kind = 'offline';
+    var dismiss = document.getElementById('pwaDismissOffline');
+    if (dismiss) dismiss.onclick = hideNotice;
+  }
+  window.__askWakefieldShowOffline = showOfflineNotice;
+
+  function isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
   // Offline message — live questions need a connection
   function updateOnlineState() {
     if (!navigator.onLine) {
-      showNotice(
-        '<div>You’re offline. The page can open, but live questions need an internet connection so answers can be checked against current sources. Events, opening hours and prices are not shown from a cache.</div>' +
-        '<button type="button" id="pwaRetry">Try again</button>'
-      );
-      var retry = document.getElementById('pwaRetry');
-      if (retry) retry.onclick = function () { location.reload(); };
+      showOfflineNotice();
     } else if (notice && notice.dataset.kind === 'offline') {
       hideNotice();
+      if (notice) notice.dataset.kind = '';
     }
-    if (notice) notice.dataset.kind = navigator.onLine ? '' : 'offline';
   }
   window.addEventListener('online', updateOnlineState);
   window.addEventListener('offline', updateOnlineState);
@@ -1446,10 +1458,12 @@ function copyEmbed() {
 
   // iOS Safari does not fire beforeinstallprompt. Show a quiet note only in Safari on iPhone/iPad.
   var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if (isIos && !isStandalone && navigator.onLine) {
-    // Delay slightly so it does not compete with the first view
+  if (isIos && !isStandaloneMode() && navigator.onLine) {
+    // Delay slightly so it does not compete with the first view.
+    // Recheck connectivity and standalone mode before showing.
     setTimeout(function () {
+      if (!navigator.onLine) return;
+      if (isStandaloneMode()) return;
       if (notice && notice.style.display === 'block') return;
       showNotice(
         '<div>On iPhone or iPad: open the Share menu and choose “Add to Home Screen”.</div>' +

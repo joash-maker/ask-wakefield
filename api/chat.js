@@ -1,3 +1,4 @@
+import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -3864,11 +3865,15 @@ function londonContext() {
 
   const thisSaturday = formatLondonDate(new Date(now.getTime() + saturdayOffset * 24 * 60 * 60 * 1000));
   const thisSunday = formatLondonDate(new Date(now.getTime() + sundayOffset * 24 * 60 * 60 * 1000));
+  const currentWeek = eventWeekWindow('this week', now);
+  const nextWeek = eventWeekWindow('next week', now);
+  const sevenDays = eventWeekWindow('next seven days', now);
   const followingSaturday = formatLondonDate(new Date(now.getTime() + (saturdayOffset + 7) * 24 * 60 * 60 * 1000));
 
   return [
     `CURRENT UK DATE AND TIME: ${today}, ${time} Europe/London.`,
     `RELATIVE DATE MAP: Today = ${today}. Tonight = ${today}, interpreted as 17:00 onward unless the user gives another time. Tomorrow = ${tomorrow}. Day after tomorrow = ${dayAfterTomorrow}. This weekend = Saturday ${thisSaturday.replace(/^Saturday\s+/, '')} and Sunday ${thisSunday.replace(/^Sunday\s+/, '')}. Following Saturday = ${followingSaturday}.`,
+    `WEEK DATE MAP: This week = ${currentWeek.start} through ${currentWeek.end} (Monday to Sunday). Next week = ${nextWeek.start} through ${nextWeek.end}. Next seven days = ${sevenDays.start} through ${sevenDays.end}, including today. Never mix these ranges or silently add next-week events.`,
     'DATE ACCURACY RULE: When the user uses a relative date or period listed above, use the exact mapped date(s). Do not calculate or infer the weekday/date yourself. "This weekend" means the Saturday and Sunday in the map, not tomorrow or the next two calendar days. If the phrase "next Saturday" is ambiguous in context, state the date you are using rather than hiding the interpretation.',
     'TONIGHT FILTER RULE: For a request about something to do tonight, only present options whose verified opening/event time extends into the evening window from 17:00 onward. A place that closes at 17:00 is not a tonight recommendation.',
     'Use this context only when time or date matters. Do not start with a time-of-day greeting.'
@@ -4607,7 +4612,7 @@ function stripMarkdownPresentation(reply) {
 }
 
 function finaliseUserFacingReply(reply) {
-  return stripMarkdownPresentation(stripInternalProcessLeakage(reply));
+  return cleanMissingEventFields(stripMarkdownPresentation(stripInternalProcessLeakage(reply)));
 }
 
 function deterministicallySanitiseRouteAnswer(reply, messages) {
@@ -5147,6 +5152,34 @@ export default async function handler(req, res) {
     ]);
   } else if (isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
+  }
+
+  // Weekly discovery must not fall through to prose that mixes calendar weeks.
+  const weekWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages)
+    ? eventWeekWindow(currentText) : null;
+  if (weekWindow) {
+    const raw = mergeExactEventCardsV16([
+      ...(wxContext?.eventCards || []),
+      ...(experienceEventsContext?.listingEventCards || [])
+    ]);
+    let cards = selectWeekCards(raw, weekWindow);
+    const ops = eventOpsFromText(currentText);
+    // Do not silently relax constraints unsupported by this structured view.
+    const unsupported = unsupportedEventConstraintsV17(currentText);
+    if (ops.price || ops.family || ops.day || unsupported.length) {
+      return res.status(200).json({
+        reply: `The requested period is ${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
+        sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
+      });
+    }
+    const state = buildEventStateV16(cards, clientState);
+    state.lastIntent = 'events.whats_on';
+    attachStateCookie(res, state);
+    return res.status(200).json({
+      reply: finaliseUserFacingReply(formatWeekCards(cards, weekWindow)),
+      sources: eventSourcesV17(cards), followups: [], live: cards.length > 0,
+      verification: 'weekly-cards-v1', state
+    });
   }
 
   // V16.2 cards-first weekend pilot. The deterministic result set is created

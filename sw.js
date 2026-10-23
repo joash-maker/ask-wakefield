@@ -2,7 +2,7 @@
 // Versioned cache so updates replace old shells cleanly.
 // Never caches chat, submissions, or other API traffic.
 
-const CACHE_NAME = 'ask-wakefield-shell-v1';
+const CACHE_NAME = 'ask-wakefield-shell-v2';
 const PRECACHE = [
   '/offline.html',
   '/favicon.svg',

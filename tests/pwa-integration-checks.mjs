@@ -12,10 +12,10 @@ assert.equal(ctx.inputEl.value,'Free things this weekend');assert.equal(ctx.isSe
 ctx.navigator.onLine=true;vm.runInContext('sendMessage();',ctx);
 assert.equal(ctx.chatHistory.length,1);assert.equal(messages.length,2);assert.equal(request.body.stateToken,'signed-token');assert.equal(request.body.messages[0].content,'Free things this weekend');
 const handlers={},deleted=[],cached=[],origin='https://example.test';let networkFails=false;
-const swctx={URL,self:{location:{origin},addEventListener:(n,fn)=>handlers[n]=fn,skipWaiting(){},clients:{claim(){}}},caches:{keys:async()=>['ask-wakefield-shell-v0','ask-wakefield-shell-v1','unrelated-cache'],delete:async key=>deleted.push(key),match:async url=>{assert.equal(url,'/offline.html');return 'OFFLINE'},open:async()=>({addAll:async paths=>cached.push(...paths)})},fetch:async()=>{if(networkFails)throw Error('Offline');return 'NETWORK'}};
+const swctx={URL,self:{location:{origin},addEventListener:(n,fn)=>handlers[n]=fn,skipWaiting(){},clients:{claim(){}}},caches:{keys:async()=>['ask-wakefield-shell-v0','ask-wakefield-shell-v1','ask-wakefield-shell-v2','unrelated-cache'],delete:async key=>deleted.push(key),match:async url=>{assert.equal(url,'/offline.html');return 'OFFLINE'},open:async()=>({addAll:async paths=>cached.push(...paths)})},fetch:async()=>{if(networkFails)throw Error('Offline');return 'NETWORK'}};
 vm.createContext(swctx);vm.runInContext(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),swctx);
 let pending;handlers.install({waitUntil:p=>pending=p});await pending;assert(cached.includes('/offline.html'));assert(cached.every(x=>!x.startsWith('/api/')));
-handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['ask-wakefield-shell-v0']);
+handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['ask-wakefield-shell-v0','ask-wakefield-shell-v1']);
 for(const req of [{method:'POST',url:origin+'/api/chat'},{method:'GET',url:origin+'/api/listings',mode:'navigate'},{method:'GET',url:'https://other.test/icon.png'}]){let intercepted=false;handlers.fetch({request:req,respondWith(){intercepted=true}});assert.equal(intercepted,false)}
 const navigation=()=>{let response;handlers.fetch({request:{method:'GET',url:origin+'/',mode:'navigate'},respondWith:p=>response=p});return response};
 assert.equal(await navigation(),'NETWORK');networkFails=true;assert.equal(await navigation(),'OFFLINE');

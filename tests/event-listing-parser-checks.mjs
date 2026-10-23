@@ -20,4 +20,6 @@ const stored={...copleys,ongoing:true,startDate:null};
 const follow=formatWeekCards([stored],window);
 assert.match(follow,/Ongoing until Sunday 1 November 2026/);
 assert.doesNotMatch(follow,/23 October 2026 to/);
+const timed=formatWeekCards([{...copleys,startTime:'10:00',endTime:'16:00',start:'10:00',end:'16:00'}],window);
+assert.match(timed,/Ongoing until/);assert.doesNotMatch(timed,/10:00|16:00|Starts /);
 console.log('Listing parser checks passed: nested Now/end spans, ongoing marker, compact ranges, split times, sold-out ownership and weekday shortlist coverage.');

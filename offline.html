@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline — Ask Wakefield</title>
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #faf9f7;
+      color: #111;
+      font-family: Georgia, "Times New Roman", serif;
+      text-align: center;
+      padding: 24px;
+    }
+    main { max-width: 28rem; }
+    h1 { font-weight: 400; font-size: 2rem; margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: #e61c5d; }
+    p { font-family: system-ui, sans-serif; line-height: 1.6; color: #333; }
+    button {
+      margin-top: 1rem;
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #fff;
+      border: 0;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Ask <em>Wakefield</em></h1>
+    <p>You’re offline. The page can open, but live questions need an internet connection so answers can be checked against current sources.</p>
+    <p>Events, opening hours, prices and transport information are not shown from a cache, because they can change.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

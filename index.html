@@ -6,6 +6,11 @@
   <title>Ask Wakefield — Your Local AI Assistant</title>
   <meta name="description" content="An independent AI assistant for Wakefield — what's on, family activities, food, sport, clubs, local services and trusted local information." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ask Wakefield" />
   <meta property="og:title" content="Ask Wakefield" />
   <meta property="og:description" content="Your independent AI assistant for the Wakefield district." />
   <meta property="og:image" content="https://askwakefield.co.uk/og-image.svg" />
@@ -701,6 +706,41 @@
       .chat-credit { padding: 1px 10px 9px; }
     }
 
+
+    /* PWA install / offline notice — quiet, dismissible */
+    .pwa-notice {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 32rem;
+      width: calc(100% - 32px);
+      background: #1c1c1e;
+      color: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      z-index: 8000;
+      display: none;
+      box-shadow: 0 8px 24px rgba(17,17,17,0.18);
+    }
+    .pwa-notice button {
+      margin-top: 8px;
+      margin-right: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .pwa-notice button.primary { background: #e61c5d; border-color: #e61c5d; }
   </style>
 
 <!-- Vercel Web Analytics -->
@@ -1104,6 +1144,14 @@ function sendMessage(override) {
 
   // XHR request
   var xhr = new XMLHttpRequest();
+  if (!navigator.onLine) {
+    var offlineWrap = document.createElement('div');
+    offlineWrap.className = 'msg bot';
+    offlineWrap.innerHTML = '<div class="msg-label">Ask Wakefield</div><div class="msg-text">You’re offline. Live questions need an internet connection so answers can be checked against current sources. Events, opening hours, prices and transport information are not shown from a cache.</div>';
+    msgsEl.appendChild(offlineWrap);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+    return;
+  }
   xhr.open('POST', '/api/chat', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.timeout = 25000;
@@ -1336,6 +1384,93 @@ function copyEmbed() {
 })();
 </script>
 
+
+
+<div id="pwaNotice" class="pwa-notice" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  var notice = document.getElementById('pwaNotice');
+  var deferredPrompt = null;
+
+  function showNotice(html) {
+    if (!notice) return;
+    notice.innerHTML = html;
+    notice.style.display = 'block';
+  }
+  function hideNotice() {
+    if (notice) notice.style.display = 'none';
+  }
+
+  // Offline message — live questions need a connection
+  function updateOnlineState() {
+    if (!navigator.onLine) {
+      showNotice(
+        '<div>You’re offline. The page can open, but live questions need an internet connection so answers can be checked against current sources. Events, opening hours and prices are not shown from a cache.</div>' +
+        '<button type="button" id="pwaRetry">Try again</button>'
+      );
+      var retry = document.getElementById('pwaRetry');
+      if (retry) retry.onclick = function () { location.reload(); };
+    } else if (notice && notice.dataset.kind === 'offline') {
+      hideNotice();
+    }
+    if (notice) notice.dataset.kind = navigator.onLine ? '' : 'offline';
+  }
+  window.addEventListener('online', updateOnlineState);
+  window.addEventListener('offline', updateOnlineState);
+  updateOnlineState();
+
+  // Chromium install prompt (Android Chrome / Edge) — only when the browser offers it
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (navigator.onLine && !window.matchMedia('(display-mode: standalone)').matches) {
+      showNotice(
+        '<div>Add Ask Wakefield to your home screen for quicker access.</div>' +
+        '<button type="button" class="primary" id="pwaInstall">Add</button>' +
+        '<button type="button" id="pwaDismiss">Not now</button>'
+      );
+      if (notice) notice.dataset.kind = 'install';
+      var installBtn = document.getElementById('pwaInstall');
+      var dismissBtn = document.getElementById('pwaDismiss');
+      if (installBtn) installBtn.onclick = function () {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.finally(function () {
+          deferredPrompt = null;
+          hideNotice();
+        });
+      };
+      if (dismissBtn) dismissBtn.onclick = hideNotice;
+    }
+  });
+
+  // iOS Safari does not fire beforeinstallprompt. Show a quiet note only in Safari on iPhone/iPad.
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isIos && !isStandalone && navigator.onLine) {
+    // Delay slightly so it does not compete with the first view
+    setTimeout(function () {
+      if (notice && notice.style.display === 'block') return;
+      showNotice(
+        '<div>On iPhone or iPad: open the Share menu and choose “Add to Home Screen”.</div>' +
+        '<button type="button" id="pwaDismissIos">Dismiss</button>'
+      );
+      if (notice) notice.dataset.kind = 'ios';
+      var d = document.getElementById('pwaDismissIos');
+      if (d) d.onclick = hideNotice;
+    }, 4000);
+  }
+
+  // Service worker — network-first shell, no API caching
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function (err) {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+})();
+</script>
 
 </body>
 </html>

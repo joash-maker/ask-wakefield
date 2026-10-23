@@ -2740,6 +2740,7 @@ function canonicaliseEventCardV16(card) {
     sourceTier: card.sourceTier || null,
     startDate: card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
     endDate: card.endDate || card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
+    ongoing: card.ongoing === true,
     start: card.start || card.startTime || null,
     end: card.end || card.endTime || null,
     startTime: card.startTime || card.start || null,
@@ -2781,6 +2782,7 @@ function mergeExactEventCardsV16(cards = []) {
     merged.set(key, {
       ...existing,
       ...preferred,
+      ongoing: existing.ongoing === true || card.ongoing === true,
       id: existing.id,
       canonId: existing.canonId,
       sourceId: existing.sourceId,

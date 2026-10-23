@@ -101,6 +101,12 @@
 
 /* Keep event links easy to identify and tap inside longer answers. */
 .msg-text .chat-inline-link{display:inline-flex;align-items:center;max-width:100%;min-height:44px;margin:7px 0;padding:7px 12px;border:1px solid #ffffff52;border-radius:8px;background:#ffffff0d;color:#f3dce5;font-size:13px;font-weight:600;line-height:1.5;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}.msg-text .chat-inline-link:hover{background:#ffffff19;border-color:#f3dce5}.assistant-links a,.quick-asks button{scroll-margin-bottom:calc(120px + env(safe-area-inset-bottom))}
+/* Floating page navigation */
+#backToTop{position:fixed;left:20px;bottom:24px;z-index:40;display:none;align-items:center;gap:8px;min-height:44px;padding:10px 16px;border:1px solid #ffffff50;border-radius:24px;background:#202626;color:#fff;font-size:13px;font-weight:600;box-shadow:0 4px 16px #0002}
+#backToTop.visible{display:inline-flex}
+#backToTop:hover{background:#34383a}
+body.chat-input-focused #backToTop,body:has(#pwaNotice[style*="display: block"]) #backToTop{display:none}
+@media(max-width:600px){#backToTop{left:16px;bottom:calc(82px + env(safe-area-inset-bottom))}}
 </style>
 
 <!-- Vercel Web Analytics -->
@@ -352,7 +358,7 @@
 </footer>
 <div class="image-credit">Hero &amp; district imagery: illustrative visuals created for Ask Wakefield.</div>
 
-<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+<button id="backToTop" type="button" aria-label="Back to top of page">
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   Back to top
 </button>
@@ -372,9 +378,15 @@ document.getElementById('welcomeMsg').textContent = welcomeText();
 
 // BACK TO TOP
 var bttBtn = document.getElementById('backToTop');
-window.addEventListener('scroll', function() {
+function updateBackToTop() {
   bttBtn.classList.toggle('visible', window.scrollY > 400);
-}, { passive: true });
+}
+window.addEventListener('scroll', updateBackToTop, { passive: true });
+window.addEventListener('pageshow', updateBackToTop);
+updateBackToTop();
+bttBtn.addEventListener('click', function() {
+  window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+});
 
 // ELEMENTS
 var msgsEl = document.getElementById('messages');

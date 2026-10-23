@@ -541,10 +541,14 @@ function sendMessage(override) {
       copyBtn.className = 'copy-msg';
       copyBtn.textContent = 'Copy';
       copyBtn.onclick = function() {
-        navigator.clipboard.writeText(reply).then(function() {
+        copyPlainText(messagePlainText(bWrap), function() {
           copyBtn.textContent = 'Copied!';
           copyBtn.classList.add('ok');
           setTimeout(function() { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('ok'); }, 2000);
+        }, function(message) {
+          copyBtn.textContent = message || 'Copy failed';
+          copyBtn.classList.remove('ok');
+          setTimeout(function() { copyBtn.textContent = 'Copy'; }, 2500);
         });
       };
       acts.appendChild(copyBtn);
@@ -701,26 +705,105 @@ function toggleFaq(btn) {
 }
 
 // COPY CHAT
+function copyTextToClipboard(text, onOk, onFail) {
+  if (!text) {
+    if (onFail) onFail('Nothing to copy.');
+    return;
+  }
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    if (onFail) onFail('Copying is not available in this browser.');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(onOk).catch(function() {
+    if (onFail) onFail('Could not copy. Check browser permissions and try again.');
+  });
+}
+
+function appendCopyLink(label, url, seen, parts) {
+  var cleanLabel = String(label || '').replace(/\s+/g, ' ').trim();
+  var cleanUrl = String(url || '').trim();
+  if (!cleanUrl) {
+    if (cleanLabel) parts.push(cleanLabel);
+    return;
+  }
+  if (seen.has(cleanUrl)) {
+    if (cleanLabel && cleanLabel !== cleanUrl) parts.push(cleanLabel);
+    return;
+  }
+  seen.add(cleanUrl);
+  parts.push(cleanLabel && cleanLabel !== cleanUrl ? cleanLabel + ': ' + cleanUrl : cleanUrl);
+}
+
+function plainTextFromNode(node, seen, parts) {
+  if (!node) return;
+  if (node.nodeType === 3) {
+    parts.push(node.textContent);
+    return;
+  }
+  if (node.nodeType !== 1) return;
+  if (node.classList && node.classList.contains('source-link')) {
+    var title = node.querySelector('span');
+    appendCopyLink(title ? title.textContent : node.textContent, node.href, seen, parts);
+    parts.push('\n');
+    return;
+  }
+  if (node.tagName === 'A') {
+    appendCopyLink(node.textContent, node.href, seen, parts);
+    return;
+  }
+  if (node.tagName === 'BR') {
+    parts.push('\n');
+    return;
+  }
+  for (var i = 0; i < node.childNodes.length; i++) plainTextFromNode(node.childNodes[i], seen, parts);
+  if (node.tagName === 'DIV' || node.tagName === 'P') parts.push('\n');
+}
+
+function sourcesAfterMessage(msg) {
+  var el = msg.nextElementSibling;
+  while (el && !el.classList.contains('msg')) {
+    if (el.classList.contains('source-list')) return el;
+    el = el.nextElementSibling;
+  }
+  return null;
+}
+
+function messagePlainText(msg) {
+  var label = msg.querySelector('.msg-label');
+  var body = msg.querySelector('.msg-text');
+  if (!label || !body) return '';
+  var seen = new Set();
+  var parts = [label.textContent.trim() + ':', '\n'];
+  plainTextFromNode(body, seen, parts);
+  var sources = sourcesAfterMessage(msg);
+  if (sources) {
+    parts.push('\n');
+    plainTextFromNode(sources, seen, parts);
+  }
+  return parts.join('').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function copyPlainText(text, onOk, onFail) {
+  copyTextToClipboard(text, onOk, onFail);
+}
+
 function copyChatHistory() {
   var msgs = msgsEl.querySelectorAll('.msg');
-  var lines = [];
+  var blocks = [];
   msgs.forEach(function(msg) {
-    var label = msg.querySelector('.msg-label');
-    var body = msg.querySelector('.msg-text');
-    if (label && body) {
-      lines.push(label.textContent.trim() + ':');
-      lines.push(body.innerText.trim());
-      lines.push('');
-    }
+    var block = messagePlainText(msg);
+    if (block) blocks.push(block);
   });
-  var text = lines.join('\n').trim();
+  var text = blocks.join('\n\n').trim();
   if (!text) return;
   var btn = document.getElementById('copyChatBtn');
-  navigator.clipboard.writeText(text).then(function() {
+  var original = btn.innerHTML;
+  copyTextToClipboard(text, function() {
     btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied!';
-    setTimeout(function() {
-      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg> Copy chat';
-    }, 2000);
+    setTimeout(function() { btn.innerHTML = original; }, 2000);
+  }, function(message) {
+    btn.textContent = message || 'Copy failed';
+    setTimeout(function() { btn.innerHTML = original; }, 2500);
   });
 }
 

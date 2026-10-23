@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync,existsSync} from 'node:fs';
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+for(const [,script] of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(script);
+const fn=html.slice(html.indexOf('function sendMessage('),html.indexOf('\nfunction sendMsg('));
+const messages=[];let notices=0,request;
+const element=()=>({appendChild(){},classList:{add(){}},style:{}});
+const ctx={isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend'},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
+vm.createContext(ctx);vm.runInContext(fn+';sendMessage();',ctx);
+assert.equal(ctx.inputEl.value,'Free things this weekend');assert.equal(ctx.isSending,false);assert.equal(ctx.sendBtn.disabled,false);assert.equal(ctx.chatHistory.length,0);assert.equal(messages.length,0);assert.equal(notices,1);
+ctx.navigator.onLine=true;vm.runInContext('sendMessage();',ctx);
+assert.equal(ctx.chatHistory.length,1);assert.equal(messages.length,2);assert.equal(request.body.stateToken,'signed-token');assert.equal(request.body.messages[0].content,'Free things this weekend');
+const handlers={},deleted=[],cached=[],origin='https://example.test';let networkFails=false;
+const swctx={URL,self:{location:{origin},addEventListener:(n,fn)=>handlers[n]=fn,skipWaiting(){},clients:{claim(){}}},caches:{keys:async()=>['ask-wakefield-shell-v0','ask-wakefield-shell-v1','unrelated-cache'],delete:async key=>deleted.push(key),match:async url=>{assert.equal(url,'/offline.html');return 'OFFLINE'},open:async()=>({addAll:async paths=>cached.push(...paths)})},fetch:async()=>{if(networkFails)throw Error('Offline');return 'NETWORK'}};
+vm.createContext(swctx);vm.runInContext(readFileSync(new URL('../sw.js',import.meta.url),'utf8'),swctx);
+let pending;handlers.install({waitUntil:p=>pending=p});await pending;assert(cached.includes('/offline.html'));assert(cached.every(x=>!x.startsWith('/api/')));
+handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['ask-wakefield-shell-v0']);
+for(const req of [{method:'POST',url:origin+'/api/chat'},{method:'GET',url:origin+'/api/listings',mode:'navigate'},{method:'GET',url:'https://other.test/icon.png'}]){let intercepted=false;handlers.fetch({request:req,respondWith(){intercepted=true}});assert.equal(intercepted,false)}
+const navigation=()=>{let response;handlers.fetch({request:{method:'GET',url:origin+'/',mode:'navigate'},respondWith:p=>response=p});return response};
+assert.equal(await navigation(),'NETWORK');networkFails=true;assert.equal(await navigation(),'OFFLINE');
+const manifest=JSON.parse(readFileSync(new URL('../manifest.json',import.meta.url)));
+for(const icon of manifest.icons)assert(existsSync(new URL('..'+icon.src,import.meta.url)),icon.src);
+for(const asset of cached)assert(existsSync(new URL('..'+asset,import.meta.url)),asset);
+assert(html.includes('class="mobile-nav"'));assert(html.includes('Your district.'));assert(html.includes('--pwa-notice-bottom:calc(78px + env(safe-area-inset-bottom))'));
+console.log('Integration checks passed: actual offline/reconnect send, service worker install/cleanup, API bypass, network/offline navigation, assets and redesign preservation.');

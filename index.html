@@ -6,6 +6,11 @@
   <title>Ask Wakefield | Local answers and things to do</title>
   <meta name="description" content="An independent AI assistant for Wakefield — what's on, family activities, food, sport, clubs, local services and trusted local information." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ask Wakefield" />
   <meta property="og:title" content="Ask Wakefield" />
   <meta property="og:description" content="Your independent AI assistant for the Wakefield district." />
   <meta property="og:image" content="https://askwakefield.co.uk/og-image.svg" />
@@ -13,7 +18,7 @@
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://askwakefield.co.uk/og-image.svg" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#f7f8f3" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -57,6 +62,42 @@
 @media(max-width:600px){html{scroll-padding-top:75px}body{padding-bottom:74px}.nav-inner{padding:13px 18px}.wordmark{font-size:20px}.nav-links>a{display:none}.nav-links .nav-ask{display:block;padding:8px 14px;font-size:12px}.hero{margin:16px 16px 0;min-height:0;border-radius:18px}.hero-content{padding:62px 24px 28px}.hero-badge{left:24px;right:auto;top:20px;font-size:9px}.hero-title{font-size:45px;letter-spacing:-1.4px}.hero-desc{font-size:14px;margin-top:15px}.hero-eyebrow{font-size:9px;margin-bottom:12px}.hero-overlay{background:linear-gradient(90deg,#0a211ce8,#0a211c91)}.hero-actions{margin-top:20px}.hero-cta{font-size:12px;padding:9px 15px}.home-section{padding:40px 16px 0}.assistant-section{padding-top:30px;gap:19px}.assistant-section .section-title{font-size:29px}.section-title{font-size:30px}.section-kicker{font-size:10px;margin-bottom:9px}.section-intro{font-size:14px;margin-top:10px}.section-head{display:block;margin-bottom:20px}.chat-wrap{height:465px;border-radius:16px}.chat-wrap.chat-active{height:76dvh}.chat-header{padding:15px}.chat-brand-name{font-size:21px}.chat-brand-sub{font-size:9px}.new-chat-btn{min-height:36px}.messages{padding:17px}.msg-text{font-size:14px}.chips{padding:10px 14px}.input-area{padding:10px 12px 7px}.assistant-links{font-size:10px}.discover-grid{grid-template-columns:1fr;gap:12px}.discover-card{display:grid;grid-template-columns:32% 68%}.discover-art{height:100%;min-height:180px}.discover-art.graphic svg{width:55px;height:55px}.discover-body{min-height:180px;padding:17px}.discover-name{font-size:24px}.discover-copy{font-size:12px;margin:8px 0 12px}.discover-label{font-size:9px}.contribute-panel{padding:25px 21px}.contribute-panel .section-title{font-size:30px!important}.trust-section{margin:40px 16px 0}.trust-grid{grid-template-columns:1fr}.trust-title{font-size:29px}.trust-sub{font-size:10px}.trust-q{font-size:13px}.org-cta{margin-top:40px;padding:0 16px}.org-cta-inner{padding:25px 21px}.org-cta h2{font-size:27px}.public-footer{margin:30px 16px 0;grid-template-columns:1fr;gap:15px}.public-footer-side{text-align:left}.image-credit{margin:0 16px 25px}.mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:#fffffff5;border-top:1px solid var(--line);padding:9px 10px calc(9px + env(safe-area-inset-bottom))}.mobile-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:#52634f;font-size:10px}.mobile-nav svg{width:20px;height:20px}.mobile-nav a:first-child{color:var(--red)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
 
+    .pwa-notice {
+      position: fixed;
+      bottom: var(--pwa-notice-bottom, 16px);
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 32rem;
+      width: calc(100% - 32px);
+      background: #1c1c1e;
+      color: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      z-index: 8000;
+      display: none;
+      box-shadow: 0 8px 24px rgba(17,17,17,0.18);
+    }
+    .pwa-notice button {
+      margin-top: 8px;
+      margin-right: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .pwa-notice button.primary { background: #e61c5d; border-color: #e61c5d; }
+
+.pwa-notice {font-family:Arial,Helvetica,sans-serif;border-radius:16px;max-height:50dvh;overflow:auto;line-height:1.6;background:#202626;color:white}.pwa-notice button{font-family:inherit;min-height:44px;border-radius:8px;font-size:12px}.pwa-notice button.primary{background:#b9144c;border-color:#b9144c}
+@media(max-width:600px){:root{--pwa-notice-bottom:calc(78px + env(safe-area-inset-bottom))}}
 </style>
 
 <!-- Vercel Web Analytics -->
@@ -427,6 +468,16 @@ function sendMessage(override) {
   var text = typeof override === 'string' ? override.trim() : inputEl.value.trim();
   if (!text || isSending) return;
 
+  // Offline: do nothing to chat state. Preserve the typed question, keep Send usable,
+  // do not add an unsent question to chatHistory, and do not create a Thinking bubble.
+  // Normal sending resumes after reconnect without a reload.
+  if (!navigator.onLine) {
+    if (typeof window.__askWakefieldShowOffline === 'function') {
+      window.__askWakefieldShowOffline();
+    }
+    return;
+  }
+
   if (chatWrap) chatWrap.classList.add('chat-active');
   isSending = true;
   sendBtn.disabled = true;
@@ -698,6 +749,103 @@ function copyEmbed() {
 
 
 <nav class="mobile-nav" aria-label="Quick navigation"><a href="#assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v12H9l-5 4z"/></svg>Ask</a><a href="#discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 4-4 2 2-4z"/></svg>Explore</a><a href="/activities"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2"/></svg>Activities</a></nav>
+<div id="pwaNotice" class="pwa-notice" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  var notice = document.getElementById('pwaNotice');
+  var deferredPrompt = null;
+
+  function showNotice(html) {
+    if (!notice) return;
+    notice.innerHTML = html;
+    notice.style.display = 'block';
+  }
+  function hideNotice() {
+    if (notice) notice.style.display = 'none';
+  }
+
+  function showOfflineNotice() {
+    showNotice(
+      '<div>You’re offline. Live questions need an internet connection so answers can be checked against current sources. Events, opening hours, prices and transport information are not shown from a cache.</div>' +
+      '<button type="button" id="pwaDismissOffline">Dismiss</button>'
+    );
+    if (notice) notice.dataset.kind = 'offline';
+    var dismiss = document.getElementById('pwaDismissOffline');
+    if (dismiss) dismiss.onclick = hideNotice;
+  }
+  window.__askWakefieldShowOffline = showOfflineNotice;
+
+  function isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  // Offline message — live questions need a connection
+  function updateOnlineState() {
+    if (!navigator.onLine) {
+      showOfflineNotice();
+    } else if (notice && notice.dataset.kind === 'offline') {
+      hideNotice();
+      if (notice) notice.dataset.kind = '';
+    }
+  }
+  window.addEventListener('online', updateOnlineState);
+  window.addEventListener('offline', updateOnlineState);
+  updateOnlineState();
+
+  // Chromium install prompt (Android Chrome / Edge) — only when the browser offers it
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (navigator.onLine && !window.matchMedia('(display-mode: standalone)').matches) {
+      showNotice(
+        '<div>Add Ask Wakefield to your home screen for quicker access.</div>' +
+        '<button type="button" class="primary" id="pwaInstall">Add</button>' +
+        '<button type="button" id="pwaDismiss">Not now</button>'
+      );
+      if (notice) notice.dataset.kind = 'install';
+      var installBtn = document.getElementById('pwaInstall');
+      var dismissBtn = document.getElementById('pwaDismiss');
+      if (installBtn) installBtn.onclick = function () {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.finally(function () {
+          deferredPrompt = null;
+          hideNotice();
+        });
+      };
+      if (dismissBtn) dismissBtn.onclick = hideNotice;
+    }
+  });
+
+  // iOS Safari does not fire beforeinstallprompt. Show a quiet note only in Safari on iPhone/iPad.
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIos && !isStandaloneMode() && navigator.onLine) {
+    // Delay slightly so it does not compete with the first view.
+    // Recheck connectivity and standalone mode before showing.
+    setTimeout(function () {
+      if (!navigator.onLine) return;
+      if (isStandaloneMode()) return;
+      if (notice && notice.style.display === 'block') return;
+      showNotice(
+        '<div>On iPhone or iPad: open the Share menu and choose “Add to Home Screen”.</div>' +
+        '<button type="button" id="pwaDismissIos">Dismiss</button>'
+      );
+      if (notice) notice.dataset.kind = 'ios';
+      var d = document.getElementById('pwaDismissIos');
+      if (d) d.onclick = hideNotice;
+    }, 4000);
+  }
+
+  // Service worker — network-first shell, no API caching
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function (err) {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+})();
+</script>
 </body>
 </html>
 

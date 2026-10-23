@@ -492,6 +492,7 @@ function compactStateCard(card) {
     dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
     startDate: card?.startDate || null,
     endDate: card?.endDate || null,
+    ongoing: card?.ongoing === true,
     start: card?.start || card?.startTime || null,
     end: card?.end || card?.endTime || null,
     performanceStart: card?.performanceStart || null,
@@ -579,6 +580,7 @@ function normaliseClientState(raw) {
     dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
     startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
     endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
+    ongoing: card?.ongoing === true,
     start: typeof card?.start === 'string' ? card.start.slice(0, 40) : null,
     end: typeof card?.end === 'string' ? card.end.slice(0, 40) : null,
     startTime: typeof card?.startTime === 'string' ? card.startTime.slice(0, 40) : null,
@@ -2614,7 +2616,8 @@ export function parseLooseExperienceDateRange(text, todayIso = null) {
   if (!value) return { startDate: null, endDate: null };
 
   const nowRange = value.match(/\bNow\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
-  if (nowRange) return { startDate: todayIso || null, endDate: shortEventDateToIso(nowRange[1]) };
+  // "Now" is not a published start date. Keep the end date and mark the run ongoing.
+  if (nowRange) return { startDate: null, endDate: shortEventDateToIso(nowRange[1]), ongoing: true };
 
   const range = value.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+(?:\s+\d{4})?)\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
   if (range) {
@@ -2656,8 +2659,11 @@ export function extractExperienceListingEventCards(html, todayIso = null) {
     const dateIndex = section.lines.findIndex(line => /\bNow\s*[-–]|\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+/i.test(line));
     if (dateIndex < 0) continue;
     const calendarLine = section.lines.slice(dateIndex, dateIndex + 3).join(' ');
-    const { startDate, endDate } = parseLooseExperienceDateRange(calendarLine, todayIso);
-    if (!startDate) continue;
+    const parsedRange = parseLooseExperienceDateRange(calendarLine, todayIso);
+    const startDate = parsedRange.startDate;
+    const endDate = parsedRange.endDate;
+    const ongoing = parsedRange.ongoing === true;
+    if (!startDate && !(ongoing && endDate)) continue;
 
     const clockLine = section.lines.find(line => /^(?:Image:\s*)?Clock(?: icon)?\b/i.test(line))
       || section.lines.find(line => /\b\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}\b/.test(line));
@@ -2681,7 +2687,7 @@ export function extractExperienceListingEventCards(html, todayIso = null) {
     if (!url) continue;
     let slug = normaliseEventTitle(title).replace(/\s+/g, '-');
     try { slug = new URL(url).pathname.split('/event/')[1]?.replace(/\/$/, '') || slug; } catch {}
-    const id = `experience:${slug}:${startDate}`;
+    const id = `experience:${slug}:${ongoing ? 'ongoing:' + endDate : startDate}`;
     if (seen.has(id)) continue;
     seen.add(id);
 
@@ -2695,6 +2701,7 @@ export function extractExperienceListingEventCards(html, todayIso = null) {
       sourceUrl: url,
       startDate,
       endDate: endDate || startDate,
+      ongoing,
       startTime: timeMatch?.[1] || null,
       endTime: timeMatch?.[2] || null,
       venue,

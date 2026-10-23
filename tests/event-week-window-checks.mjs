@@ -33,6 +33,17 @@ const {default:handler}=await import('../api/chat.js');
 const res={headers:{},setHeader(k,v){this.headers[k]=v},status(code){this.statusCode=code;return this},json(body){this.body=body;return this}};
 await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'weekly-regression'},socket:{},body:{messages:[{role:'user',content:"What's on this week in Wakefield?"}]}},res);
 assert.equal(res.statusCode,200);assert.equal(res.body.verification,'weekly-cards-v1');assert.match(res.body.reply,/Beer Festival/);assert.doesNotMatch(res.body.reply,/Next Week Concert|MOOsicals/);assert(res.body.sources.length);assert.equal(modelCalls,0);
+
+import {formatWeekCards as fmt} from '../lib/event-week-window.js';
+const ongoing={title:'Pumpkin Festival',venue:'Farmer Copleys',sourceUrl:'https://experiencewakefield.co.uk/event/pumpkin-festival/',startDate:null,endDate:'2026-11-01',ongoing:true};
+const thisWeek=eventWeekWindow('this week',fri);
+const first=formatWeekCards(selectWeekCards([ongoing,card('Concert','2026-10-27')],thisWeek),thisWeek);
+assert.match(first,/Ongoing until Sunday 1 November 2026/);
+assert.doesNotMatch(first,/Friday 23 October 2026 to Sunday 1 November/);
+const followUp=formatWeekCards([ongoing],thisWeek);
+assert.match(followUp,/Ongoing until Sunday 1 November 2026\. Check the event page/);
+assert.equal(ongoing.startDate,null);
+
 console.log('Weekly checks passed: exact calendar ranges, DST/year boundaries, out-of-range exclusion, source links, missing fields and actual handler replay without model calls.');
 
 async function askWithState(q,previous){

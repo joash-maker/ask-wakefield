@@ -1,4 +1,4 @@
-import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields } from '../lib/event-week-window.js';
+import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -5056,6 +5056,47 @@ export default async function handler(req, res) {
     });
   }
 
+  // Weekly follow-ups must retain the signed original period and membership.
+  const storedWeek = clientState.constraints?.eventWeek;
+  const weekOps = storedWeek && clientState.lastIntent?.startsWith('events.')
+    ? weeklyFollowUp(currentText) : null;
+  if (weekOps) {
+    const original = storedEventCards(clientState);
+    const filters = weekOps.reset ? {} : { ...(storedWeek.filters || {}) };
+    if (weekOps.price) filters.price = weekOps.price;
+    if (weekOps.showPrice) delete filters.price;
+    if (weekOps.day) filters.day = weekOps.day;
+    let cards = original;
+    if (weekOps.price || weekOps.showPrice || filters.price) cards = await refreshEventCardsForPriceV16(cards);
+    // Recheck dates after detail refresh, without introducing new event IDs.
+    cards = selectWeekCards(cards, storedWeek);
+    const dayIso = filters.day ? weekdayInWindow(filters.day, storedWeek) : null;
+    const priceScope = filters.price === 'free' ? ' Confirmed free entries only.' : filters.price === 'paid' ? ' Ticketed entries only.' : '';
+    const scope = (dayIso ? `For ${dateLabel(dayIso)} within the original list:` : 'From the original weekly list:') + priceScope;
+    let view = cards;
+    if (filters.day) {
+      // A broad published run is not proof of an occurrence on this weekday.
+      view = dayIso && dayIso >= storedWeek.from
+        ? view.filter(card => card.startDate === dayIso && (card.endDate || card.startDate) === dayIso)
+        : [];
+    }
+    if (filters.price) view = view.filter(card => filters.price === 'free'
+      ? card.priceStatus === 'free' : ['paid','variable'].includes(card.priceStatus));
+    const unsupported = weekOps.unsupported || unsupportedEventConstraintsV17(currentText).length > 0;
+    const body = unsupported
+      ? 'I cannot verify that extra requirement from the saved weekly records. Please check the original event pages. The original date range has not changed.'
+      : view.length
+        ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17 })
+        : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
+    const state = buildEventStateV16(cards, clientState, unsupported ? clientState.viewIds : view.map(card => card.id));
+    state.constraints = { ...clientState.constraints, eventWeek: { ...storedWeek, filters } };
+    state.lastIntent = 'events.filter_existing';
+    attachStateCookie(res, state);
+    return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}`),
+      sources: eventSourcesV17(view.length && !unsupported ? view : original), followups: [],
+      live: Boolean(weekOps.price || weekOps.showPrice || filters.price), verification: 'weekly-followup-v1', state });
+  }
+
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
   // event follow-ups never fall through to the legacy prose-reconstruction path.
   // Membership comes only from persisted event IDs.
@@ -5173,6 +5214,7 @@ export default async function handler(req, res) {
       });
     }
     const state = buildEventStateV16(cards, clientState);
+    state.constraints = { ...clientState.constraints, eventWeek: { ...weekWindow, filters: {} } };
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
@@ -5223,6 +5265,10 @@ export default async function handler(req, res) {
       };
     }
     rendered.state.area = clientState.area || null;
+    if (rendered.state.constraints?.eventWeek) {
+      const { eventWeek, ...otherConstraints } = rendered.state.constraints;
+      rendered.state.constraints = otherConstraints;
+    }
     attachStateCookie(res, rendered.state);
     console.info(`[${EVENT_CARDS_FIRST_VERSION}] ${collected.cards.length} weekend event cards persisted before presentation.`);
     return res.status(200).json({

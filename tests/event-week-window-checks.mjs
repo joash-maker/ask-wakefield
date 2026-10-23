@@ -20,10 +20,38 @@ assert.equal(cleanMissingEventFields('Concert 13:00–13:45 (). Disco (2–4pm, 
 const NativeDate=Date;globalThis.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:['2026-10-23T12:00:00Z']))}static now(){return NativeDate.parse('2026-10-23T12:00:00Z')}};
 process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';
 let modelCalls=0;
-const listing='<html><body>'+[['Beer Festival','Fri 23 October 2026 - Sun 25 October 2026'],['Next Week Concert','Tue 27 October 2026'],['MOOsicals','Fri 30 October 2026']].map(([name,dates],i)=>`<h3><a href="https://experiencewakefield.co.uk/event/event-${i}/">${name}</a></h3><p>Calendar ${dates}</p><p>Clock 13:00 - 14:00</p><p>Map pin WX Wakefield Exchange</p>`).join('')+'</body></html>';
-globalThis.fetch=async(url)=>{if(String(url).includes('anthropic.com')){modelCalls++;throw Error('Weekly view must bypass model')}return new Response(String(url)==='https://experiencewakefield.co.uk/whats-on/'?listing:'not found',{status:String(url)==='https://experiencewakefield.co.uk/whats-on/'?200:404})};
+let listing='<html><body>'+[['Beer Festival','Fri 23 October 2026 - Sun 25 October 2026'],['Next Week Concert','Tue 27 October 2026'],['MOOsicals','Fri 30 October 2026'],['Thursday Club','Thu 29 October 2026'],['Saturday Free Event','Sat 31 October 2026']].map(([name,dates],i)=>`<h3><a href="https://experiencewakefield.co.uk/event/event-${i}/">${name}</a></h3><p>Calendar ${dates}</p><p>Clock 13:00 - 14:00</p><p>Map pin WX Wakefield Exchange</p>`).join('')+'</body></html>';
+globalThis.fetch=async(url)=>{
+  const detail=String(url).match(/experiencewakefield\.co\.uk\/event\/event-(\d+)\//);
+  if(detail){
+    const records=[['Beer Festival','Fri 23 October 2026 - Sun 25 October 2026'],['Next Week Concert','Tue 27 October 2026'],['MOOsicals','Fri 30 October 2026'],['Thursday Club','Thu 29 October 2026'],['Saturday Free Event','Sat 31 October 2026']];
+    const [title,date]=records[Number(detail[1])];
+    return new Response(`<html><h1>${title}</h1><p>${date} 13:00 - 14:00 WX Wakefield Exchange Free event</p><h2>About</h2><p>A local event.</p></html>`,{status:200});
+  }
+if(String(url).includes('anthropic.com')){modelCalls++;throw Error('Weekly view must bypass model')}return new Response(String(url)==='https://experiencewakefield.co.uk/whats-on/'?listing:'not found',{status:String(url)==='https://experiencewakefield.co.uk/whats-on/'?200:404})};
 const {default:handler}=await import('../api/chat.js');
 const res={headers:{},setHeader(k,v){this.headers[k]=v},status(code){this.statusCode=code;return this},json(body){this.body=body;return this}};
 await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'weekly-regression'},socket:{},body:{messages:[{role:'user',content:"What's on this week in Wakefield?"}]}},res);
 assert.equal(res.statusCode,200);assert.equal(res.body.verification,'weekly-cards-v1');assert.match(res.body.reply,/Beer Festival/);assert.doesNotMatch(res.body.reply,/Next Week Concert|MOOsicals/);assert(res.body.sources.length);assert.equal(modelCalls,0);
 console.log('Weekly checks passed: exact calendar ranges, DST/year boundaries, out-of-range exclusion, source links, missing fields and actual handler replay without model calls.');
+
+async function askWithState(q,previous){
+ const result={headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};
+ const prior=previous?[{role:'user',content:"What's on next week in Wakefield?"},{role:'assistant',content:previous.reply}]:[];
+ await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'weekly-followup-'+q},socket:{},body:{messages:[...prior,{role:'user',content:q}],stateToken:previous?.stateToken}},result);
+ return result.body;
+}
+const next=await askWithState("What's on next week in Wakefield?");
+assert.equal(next.state.constraints.eventWeek.start,'2026-10-26');assert(next.stateToken);
+const thursday=await askWithState('What about Thursday?',next);
+assert.equal(thursday.verification,'weekly-followup-v1');assert.match(thursday.reply,/Thursday 29 October 2026/);assert.match(thursday.reply,/Thursday Club/);assert.doesNotMatch(thursday.reply,/Saturday Free Event/);
+const free=await askWithState('Any free ones?',thursday);
+assert.equal(free.verification,'weekly-followup-v1');assert.match(free.reply,/Confirmed free entries only/);assert.match(free.reply,/Thursday Club/);assert.equal(free.state.constraints.eventWeek.start,'2026-10-26');assert.equal(free.state.constraints.eventWeek.filters.day,'thursday');assert.equal(free.state.constraints.eventWeek.filters.price,'free');assert.doesNotMatch(free.reply,/this weekend|Saturday Free Event/);
+const reset=await askWithState('Show the full list again',free);
+assert.match(reset.reply,/Saturday Free Event/);assert.deepEqual(reset.state.constraints.eventWeek.filters,{});
+const times=await askWithState('What time do they start?',next);
+assert.equal(times.verification,'weekly-followup-v1');assert.match(times.reply,/13:00/);
+const unsupported=await askWithState('Are those wheelchair accessible?',next);
+assert.equal(unsupported.verification,'weekly-followup-v1');assert.match(unsupported.reply,/cannot verify/);
+assert.equal(modelCalls,0);
+console.log('Weekly follow-up replay passed: signed state, next-week Thursday, cumulative free/day filters, reset, times and unsupported constraints.');

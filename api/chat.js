@@ -496,6 +496,7 @@ function compactStateCard(card) {
     end: card?.end || card?.endTime || null,
     performanceStart: card?.performanceStart || null,
     venue: card?.venue || null,
+    availability: card?.availability || null,
     priceStatus: card?.priceStatus || null,
     priceRaw: card?.priceRaw || null
   };
@@ -585,6 +586,7 @@ function normaliseClientState(raw) {
     performanceStart: typeof card?.performanceStart === 'string' ? card.performanceStart.slice(0, 10) : null,
     venue: typeof card?.venue === 'string' ? card.venue.slice(0, 180) : null,
     venueId: typeof card?.venueId === 'string' ? card.venueId.slice(0, 160) : null,
+    availability: card?.availability === 'sold-out' ? 'sold-out' : 'unknown',
     priceStatus: typeof card?.priceStatus === 'string' ? card.priceStatus.slice(0, 30) : null,
     priceRaw: typeof card?.priceRaw === 'string' ? card.priceRaw.slice(0, 80) : null,
     address: typeof card?.address === 'string' ? card.address.slice(0, 260) : null,
@@ -2414,7 +2416,7 @@ function wxEventDetailFromHtml(html, url, expectedTitle = '') {
 }
 
 
-function extractWxListingEventCards(html, links = []) {
+export function extractWxListingEventCards(html, links = []) {
   const cards = [];
   const seen = new Set();
   const linkByTitle = new Map();
@@ -2425,15 +2427,12 @@ function extractWxListingEventCards(html, links = []) {
 
   for (const section of eventHeadingSections(html)) {
     const title = decodeBasicEntities(section.title).replace(/\s+/g, ' ').trim();
-    const dateLine = section.lines.find(line => /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/i.test(line));
-    const timeLine = section.lines.find(line => /^Start time\s*:/i.test(line));
-    if (!dateLine || !timeLine) continue;
-
-    const dateMatch = dateLine.match(/\b((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
-    const date = shortEventDateToIso(dateMatch?.[1] || '');
+    const dateIndex = section.lines.findIndex(line => /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}/i.test(line));
+    if (dateIndex < 0) continue;
+    const dates = parseLooseExperienceDateRange(section.lines.slice(dateIndex, dateIndex + 3).join(' '));
+    const date = dates.startDate;
     if (!date) continue;
-
-    const timeMatch = timeLine.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
+    const timeMatch = section.text.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
     const startTime = clockLabelTo24(timeMatch?.[1]);
     const endTime = clockLabelTo24(timeMatch?.[2]);
     const price = explicitPriceFromEventLines(section.lines);
@@ -2459,10 +2458,11 @@ function extractWxListingEventCards(html, links = []) {
       url,
       sourceUrl: url,
       startDate: date,
-      endDate: date,
+      endDate: dates.endDate || date,
       startTime,
       endTime,
       venue: 'WX Wakefield Exchange',
+      availability: /class=[\"'][^\"']*sold-out[^\"']*d-block/i.test(section.fragment) ? 'sold-out' : 'unknown',
       priceStatus: price.type,
       priceRaw: price.raw || null,
       source: 'wx',
@@ -2474,7 +2474,7 @@ function extractWxListingEventCards(html, links = []) {
 
 async function fetchWxWhatsOnContext() {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5_500);
+  const timer = setTimeout(() => controller.abort(), 12_000);
   try {
     const response = await fetch('https://wxwakefield.co.uk/whats-on', {
       headers: {
@@ -2609,7 +2609,7 @@ function extractExperienceEventLinks(html) {
 }
 
 
-function parseLooseExperienceDateRange(text, todayIso = null) {
+export function parseLooseExperienceDateRange(text, todayIso = null) {
   const value = String(text || '').replace(/\s+/g, ' ').trim();
   if (!value) return { startDate: null, endDate: null };
 
@@ -2636,21 +2636,26 @@ function parseLooseExperienceDateRange(text, todayIso = null) {
     return { startDate, endDate };
   }
 
+  // WX shares the month/year across endpoints: Tuesday 27 - Friday 30 October 2026.
+  const compact = value.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*)\s+(\d{1,2})\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+([A-Za-z]+)\s+(\d{4}))\b/i);
+  if (compact) return { startDate: shortEventDateToIso(`${compact[1]} ${compact[2]} ${compact[4]} ${compact[5]}`), endDate: shortEventDateToIso(compact[3]) };
+
   const single = value.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
   const date = shortEventDateToIso(single?.[1] || '');
   return { startDate: date, endDate: date };
 }
 
-function extractExperienceListingEventCards(html, todayIso = null) {
+export function extractExperienceListingEventCards(html, todayIso = null) {
   const cards = [];
   const seen = new Set();
 
   for (const section of eventHeadingSections(html)) {
     const title = decodeBasicEntities(section.title).replace(/\s+/g, ' ').trim();
-    const calendarLine = section.lines.find(line => /^(?:Image:\s*)?Calendar(?: Icon)?\b/i.test(line))
-      || section.lines.find(line => /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+(?:\s+\d{4})?(?:\s*[-–]\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})?/i.test(line));
-    if (!calendarLine) continue;
-
+    // Nested spans split "Now -" and the end date into different text lines.
+    // Read the complete date field, rather than treating the end as a single event.
+    const dateIndex = section.lines.findIndex(line => /\bNow\s*[-–]|\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+/i.test(line));
+    if (dateIndex < 0) continue;
+    const calendarLine = section.lines.slice(dateIndex, dateIndex + 3).join(' ');
     const { startDate, endDate } = parseLooseExperienceDateRange(calendarLine, todayIso);
     if (!startDate) continue;
 
@@ -2735,6 +2740,7 @@ function canonicaliseEventCardV16(card) {
     performanceStart: card.performanceStart || null,
     venue: card.venue || null,
     venueId: card.venueId || (card.venue ? `venue:${normaliseEventTitle(card.venue).replace(/\s+/g, '-')}` : null),
+    availability: card.availability === 'sold-out' ? 'sold-out' : 'unknown',
     priceStatus: ['free','paid','variable','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
     priceRaw: card.priceRaw || null,
     dates: Array.isArray(card.dates) ? card.dates.slice(0, 3) : []
@@ -5218,7 +5224,7 @@ export default async function handler(req, res) {
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply(formatWeekCards(cards, weekWindow)),
+      reply: finaliseUserFacingReply(formatWeekCards(cards, weekWindow) + (!wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
       sources: eventSourcesV17(cards), followups: [], live: cards.length > 0,
       verification: 'weekly-cards-v1', state
     });

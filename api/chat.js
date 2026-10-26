@@ -2387,10 +2387,12 @@ function wxEventDetailFromHtml(html, url, expectedTitle = '') {
   const pageTitle = h1 ? htmlToPlainText(h1[1]).trim() : String(expectedTitle || '').trim();
   if (expectedTitle && pageTitle && !titlesLikelySame(pageTitle, expectedTitle)) return null;
 
-  const titleNeedle = pageTitle || expectedTitle;
-  let start = titleNeedle ? text.toLowerCase().indexOf(String(titleNeedle).toLowerCase()) : 0;
-  if (start < 0) start = 0;
-  let scoped = text.slice(start, start + 5000);
+  // Start at the visible event heading, not the duplicate title in <head>.
+  // Otherwise the navigation's 'Plan your visit' cuts away the whole event.
+  let eventHtml = h1?.index != null ? source.slice(h1.index) : source;
+  const related = eventHtml.search(/<[^>]+class=["'][^"']*\brelated-events[^"']*["']/i);
+  if (related >= 0) eventHtml = eventHtml.slice(0, related);
+  let scoped = htmlToPlainText(eventHtml).slice(0, 14000);
   const boundaryMatch = scoped.match(/\bMore at WX\b|\bPlan your visit\b/i);
   if (boundaryMatch?.index != null && boundaryMatch.index > 0) scoped = scoped.slice(0, boundaryMatch.index);
 
@@ -3156,19 +3158,27 @@ function eventSourcesV17(cards) {
 async function verifyWeeklyFamilyCards(cards) {
   return Promise.all(cards.map(async card => {
     try {
-      const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
-      const text = String(context?.fullText || context?.eventDetailText || context?.text || '');
+      const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title, 12_000);
+      const text = String(context?.familyEvidenceText ?? context?.eventDetailText ?? context?.text ?? '');
       const titleAt = text.toLowerCase().indexOf(card.title.toLowerCase());
       const scoped = titleAt >= 0 ? text.slice(titleAt, titleAt + 7000).split(/More at WX|Related Events|You may also|Venue Details/i)[0] : '';
       const about = scoped.split(/\bAbout\b/i)[1] || scoped;
-      const familyVerified = /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages welcome|suitable for all ages)\b/i.test(about)
+      const ageRange = scoped.match(/\bAGE RANGE\s*:\s*([\s\S]{0,180}?)(?=\b(?:Step|Join|Enjoy|This|About|PRICE|DATE)\b|$)/i)?.[1] || '';
+      const publishedAudience = /\b(?:Children|Families)\b/i.test(ageRange);
+      const familyVerified = (publishedAudience || /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages(?: welcome)?|suitable for all ages|open to (?:kids|children))\b/i.test(about))
         && !/\b(?:adults only|18\+|over[- ]18s only|not suitable for (?:children|kids)|not for (?:children|kids))\b/i.test(about);
-      return { ...card, familyVerified };
-    } catch { return { ...card, familyVerified: false }; }
+      return { ...card, familyVerified, familyCheck: context ? 'read' : 'unavailable' };
+    } catch { return { ...card, familyVerified: false, familyCheck: 'unavailable' }; }
   }));
 }
 const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => label !== 'suit children' || /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text));
 const weeklyFamilyNote = 'These entries have published family or children’s suitability. Check the event pages for age limits, accompanying-adult rules and booking.';
+function weeklyFamilyEmpty(cards) {
+  if (!cards.length) return 'I could not read verified dated listings for this period, so I cannot confirm a family shortlist. This does not mean there are no family activities.';
+  return 'I found dated listings, but could not confirm children’s suitability for any matching entries from their event pages.'
+    + (cards.some(card => card.familyCheck === 'unavailable') ? ' Some event pages could not be read, so this is an incomplete check. Please try again shortly.' : ' This does not mean there are no family activities.');
+}
+
 
 // Applies filters to a card set and renders the answer. Used for the first
 // weekend answer and for every follow-up, so both behave identically.
@@ -3474,9 +3484,9 @@ async function fetchExperienceWakefieldEventsContext() {
 }
 
 
-async function fetchExperienceEventDetailContext(url, expectedTitle) {
+async function fetchExperienceEventDetailContext(url, expectedTitle, timeoutMs = 5_500) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5_500);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)' },
@@ -3487,6 +3497,9 @@ async function fetchExperienceEventDetailContext(url, expectedTitle) {
     const text = htmlToPlainText(html);
     if (!text) return null;
     const structured = extractStructuredPageData(html, text, url);
+    const h1 = html.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/i);
+    const ownHtml = h1?.index != null ? html.slice(h1.index) : '';
+    const familyEvidenceText = htmlToPlainText(ownHtml.split(/<(?:div|section|footer)\b[^>]*(?:class|id)=["'][^"']*(?:related|venue-details|footer)[^"']*["']/i)[0]);
     const direct = experienceEventDetailFromHtml(html, url, expectedTitle);
     if (direct) {
       const cards = Array.isArray(structured?.eventCards) ? structured.eventCards : [];
@@ -3501,6 +3514,7 @@ async function fetchExperienceEventDetailContext(url, expectedTitle) {
     return {
       text: direct?.detailText || extractRelevantFirstPartyText(text, expectedTitle, 9000),
       fullText: text,
+      familyEvidenceText,
       eventDetailText: direct?.detailText || null,
       eventDetailCard: direct || null,
       structured,
@@ -3515,9 +3529,9 @@ async function fetchExperienceEventDetailContext(url, expectedTitle) {
 }
 
 
-async function fetchWxEventDetailContext(url, expectedTitle) {
+async function fetchWxEventDetailContext(url, expectedTitle, timeoutMs = 5_500) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5_500);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': 'AskWakefield/2.0 (+https://www.askwakefield.co.uk)' },
@@ -3530,6 +3544,7 @@ async function fetchWxEventDetailContext(url, expectedTitle) {
     return {
       text: direct.detailText,
       eventDetailText: direct.detailText,
+      familyEvidenceText: /<h1\b/i.test(html) ? direct.detailText : '',
       eventDetailCard: direct,
       structured: { eventCards: [direct] },
       source: { title: `Wakefield Exchange — ${direct.title || expectedTitle}`, url }
@@ -3542,9 +3557,9 @@ async function fetchWxEventDetailContext(url, expectedTitle) {
   }
 }
 
-async function fetchEventDetailContextByUrl(url, expectedTitle) {
-  if (isSpecificWxEventUrl(url)) return fetchWxEventDetailContext(url, expectedTitle);
-  if (isSpecificExperienceEventUrl(url)) return fetchExperienceEventDetailContext(url, expectedTitle);
+async function fetchEventDetailContextByUrl(url, expectedTitle, timeoutMs = 5_500) {
+  if (isSpecificWxEventUrl(url)) return fetchWxEventDetailContext(url, expectedTitle, timeoutMs);
+  if (isSpecificExperienceEventUrl(url)) return fetchExperienceEventDetailContext(url, expectedTitle, timeoutMs);
   return null;
 }
 
@@ -5126,13 +5141,13 @@ export default async function handler(req, res) {
       ? 'I cannot verify that extra requirement from the saved weekly records. Please check the original event pages. The original date range has not changed.'
       : view.length
         ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17 })
-        : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
+        : filters.family ? weeklyFamilyEmpty(cards) : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
     const state = buildEventStateV16(cards, clientState, unsupported ? clientState.viewIds : view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventWeek: { ...storedWeek, filters } };
     state.lastIntent = 'events.filter_existing';
     attachStateCookie(res, state);
     return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}${filters.family && view.length && !unsupported ? '\n\n' + weeklyFamilyNote : ''}${weekOps.halfTerm ? '\n\nI have kept the original weekly date range above. School half-term dates vary, and I have not checked yours. Tell me your dates if your break differs.' : ''}`),
-      sources: eventSourcesV17(view.length && !unsupported ? view : original), followups: [],
+      sources: eventSourcesV17(!unsupported ? view : []), followups: [],
       live: Boolean(weekOps.price || weekOps.showPrice || filters.price), verification: 'weekly-followup-v1', state });
   }
 
@@ -5260,7 +5275,7 @@ export default async function handler(req, res) {
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply(formatWeekCards(view, weekWindow) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (!wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
+      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (!wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
       sources: eventSourcesV17(view), followups: [], live: cards.length > 0,
       verification: 'weekly-cards-v1', state
     });

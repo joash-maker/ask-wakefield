@@ -46,3 +46,11 @@ Initial actual-source checks: six current listing pages yielded discoverable eve
 ## Known first-phase limits
 
 No automatic pagination or RSS/ICS adapters yet. Programme ranges remain ranges, not proof of daily sessions. Category labels are discovery tags and not independently verified constraints. Child-age filtering is implemented in the catalogue query module only where explicit programme-level ages are published; conversational age-specific planning remains fail-closed in the current weekly route. Venue access conditions, full booking inventories and travel times are not verified by this collector. The uploaded printed planner has not been imported as live data.
+
+## Latest preview check
+
+All 15 registered sources were attempted through the deployed API. Nine completed with usable records. Six were flagged: YSP and Theatre Royal need extraction/pagination work; Fairburn routes to an external event service; Blacker Hall redirected outside the approved host; Libraries produced incomplete dated records; the historical race fixtures had no upcoming events. These failures are visible and do not silently erase prior evidence. The snapshot contains 208 records, 188 eligible under the current validation rules and 25 with published family suitability. These are records/sessions, not 208 distinct events.
+
+The revised WX run retained explicit sold-out warnings and single-session times. Real preview weekly chat and its signed half-term follow-up returned source-linked catalogue records. Authenticated review controls were tested by holding and restoring one unchanged, previously automatically eligible Cathedral record. An out-of-date review hash was rejected.
+
+Vercel team access is now granted. Collector tabs are initialised, preview catalogue use is enabled only on feature/event-collector, and a dedicated production cron secret is prepared. Daily jobs are not active until a production release. Production chat remains unchanged. The temporary preview test admin override is retired before handover so the normal AW admin password is used again.

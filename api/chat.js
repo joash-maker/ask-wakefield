@@ -5716,6 +5716,10 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }];
   }
 
+  // On supported Claude 4 models, discovery must invoke search rather than merely having it available.
+  if (useSearch && (isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages))
+      && /^claude-(?:haiku|sonnet|opus)-4(?:-|$)/.test(MODEL)) baseBody.tool_choice = { type: 'any' };
+
   try {
     let { response, data } = await callAnthropic(baseBody);
 
@@ -5723,6 +5727,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     if (useSearch && response.status === 400 && /web.?search|tool/i.test(JSON.stringify(data))) {
       const fallbackBody = { ...baseBody };
       delete fallbackBody.tools;
+      delete fallbackBody.tool_choice;
       ({ response, data } = await callAnthropic(fallbackBody));
     }
 

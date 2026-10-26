@@ -26,6 +26,7 @@ async function ask(text,prior=[]) {
 for(const text of ['HYROX gyms?','ATHX training gyms','What local clubs, walking groups and community groups can I join in Wakefield?','Walking groups in Ossett','Book clubs in Pontefract','What can I join in Wakefield?']) {
  const result=await ask(text);const body=bodies.at(-1);
  assert.ok(body.tools?.some(t=>t.name==='web_search'),text);
+ assert.equal(body.tool_choice?.type,'any');
  assert.equal(body.tools[0].allowed_domains,undefined,'New organisations must be discoverable');
  assert.match(body.system,/LOCAL CLUBS AND FITNESS DISCOVERY/);
  assert.match(result.reply,/Elevate/);assert.ok(result.sources.some(s=>s.url==='https://fitness.example/join'));

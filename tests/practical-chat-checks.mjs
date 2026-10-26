@@ -44,6 +44,7 @@ await ask("What are Wakefield's best vegetarian restaurants?",first.messages);
 assert.ok(modelBodies.at(-1).tools?.some(t=>t.name==='web_search'));
 assert.equal(modelBodies.at(-1).tools[0].allowed_domains,undefined);
 assert.match(modelBodies.at(-1).system,/RESTAURANT DISCOVERY/);
+assert.equal(modelBodies.at(-1).tool_choice?.type,'any');
 assert.equal(modelBodies.at(-1).messages.length,1,'A restaurant request must leave the parking topic');
 await ask('Where are popular restaurants in Wakefield?');
 assert.ok(modelBodies.at(-1).tools?.some(t=>t.name==='web_search'));

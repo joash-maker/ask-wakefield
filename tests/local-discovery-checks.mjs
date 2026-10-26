@@ -9,9 +9,9 @@ let bodies=[], mode='verified';
 globalThis.fetch=async (url,options)=>{
  if(String(url).includes('api.anthropic.com')) {
   const body=JSON.parse(options.body);bodies.push(body);
-  return new Response(JSON.stringify({content:mode==='verified' ? [
+  return new Response(JSON.stringify({content:['verified','directory'].includes(mode) ? [
    {type:'web_search_tool_result',content:[]},
-   {type:'text',text:'FINAL_RESPONSE: Elevate offers published fitness sessions. [Joining details](https://fitness.example/join)',citations:[{type:'web_search_result_location',url:'https://fitness.example/join',title:'Official joining page',cited_text:'Elevate offers fitness sessions. Join using our booking page.'}]}
+   {type:'text',text:'FINAL_RESPONSE: Elevate offers published fitness sessions. [Joining details](https://fitness.example/join)',citations:[{type:'web_search_result_location',url:mode==='directory'?'https://wellhub.com/en-uk/search/partners/elevate/':'https://fitness.example/join',title:'Official joining page',cited_text:'Elevate offers fitness sessions. Join using our booking page.'}]}
   ] : [{type:'text',text:'There are definitely no HYROX gyms in Wakefield.',citations:mode==='citation-only'?[{url:'https://fitness.example/join',title:'Unsearched citation'}]:[]}]}));
  }
  return new Response('Not found',{status:404});
@@ -45,6 +45,12 @@ for(mode of ['no-search','citation-only']) {
  assert.equal(result.verification,'local-discovery-unverified');assert.equal(result.live,false);
  assert.equal(result.sources.length,0);assert.doesNotMatch(result.reply,/definitely no/);
 }
+mode='directory';
+const directoryResult=await ask('What about Elevate?',history);
+assert.equal(directoryResult.verification,'local-discovery-leads-only');
+assert.match(directoryResult.reply,/directory listings/);
+assert.doesNotMatch(directoryResult.reply,/Elevate offers published fitness sessions/);
+mode='no-search';
 const beginnerFailure=await ask('Any beginner sessions?',history);
 assert.match(beginnerFailure.reply,/haven.t confirmed which sessions welcome beginners/);
 assert.doesNotMatch(beginnerFailure.reply,/no beginner sessions|definitely no/);

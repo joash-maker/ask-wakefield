@@ -1,4 +1,4 @@
-import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback } from '../lib/local-discovery.js';
+import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
@@ -5709,6 +5709,11 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'local-discovery-unverified' });
     }
 
+
+    if (isLocalDiscoveryQuery(messages)) {
+      const leads = directoryOnlyDiscovery(sources);
+      if (leads) return res.status(200).json({ reply: leads, sources: sources.slice(0,3), live: true, verification: 'local-discovery-leads-only' });
+    }
 
     const mergedSourceMap = new Map();
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);

@@ -1,4 +1,4 @@
-import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse } from '../lib/practical-answers.js';
+import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse, dietaryMenuAnswer } from '../lib/practical-answers.js';
 import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
@@ -5742,6 +5742,10 @@ Use these only to establish whether a long-running attraction/exhibition is actu
 
     const { reply, sources, searchEvidence, searched } = extractAnswer(data);
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
+    if (isRestaurantDiscovery(messages)) {
+      const menuAnswer = await dietaryMenuAnswer(messages,sources);
+      if (menuAnswer) return res.status(200).json(menuAnswer);
+    }
     // Unrelated direct snapshots must not make an unsearched discovery reply look verified.
     if (isLocalDiscoveryQuery(messages) && (!searched || !sources.length)) {
       return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'local-discovery-unverified' });

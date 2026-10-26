@@ -1,3 +1,4 @@
+import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
@@ -493,6 +494,9 @@ function compactStateCard(card) {
     startDate: card?.startDate || null,
     endDate: card?.endDate || null,
     ongoing: card?.ongoing === true,
+    catalogueVerified: card?.catalogueVerified === true,
+    familyVerified: card?.familyVerified === true,
+    checkedAt: card?.checkedAt || null,
     start: card?.start || card?.startTime || null,
     end: card?.end || card?.endTime || null,
     performanceStart: card?.performanceStart || null,
@@ -581,6 +585,9 @@ function normaliseClientState(raw) {
     startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
     endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
     ongoing: card?.ongoing === true,
+    catalogueVerified: card?.catalogueVerified === true,
+    familyVerified: card?.familyVerified === true,
+    checkedAt: typeof card?.checkedAt === 'string' ? card.checkedAt.slice(0,30) : null,
     start: typeof card?.start === 'string' ? card.start.slice(0, 40) : null,
     end: typeof card?.end === 'string' ? card.end.slice(0, 40) : null,
     startTime: typeof card?.startTime === 'string' ? card.startTime.slice(0, 40) : null,
@@ -2743,6 +2750,9 @@ function canonicaliseEventCardV16(card) {
     startDate: card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
     endDate: card.endDate || card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
     ongoing: card.ongoing === true,
+    catalogueVerified: card.catalogueVerified === true,
+    familyVerified: card.familyVerified === true,
+    checkedAt: card.checkedAt || null,
     start: card.start || card.startTime || null,
     end: card.end || card.endTime || null,
     startTime: card.startTime || card.start || null,
@@ -3158,6 +3168,7 @@ function eventSourcesV17(cards) {
 async function verifyWeeklyFamilyCards(cards) {
   return Promise.all(cards.map(async card => {
     try {
+      if (card.catalogueVerified && card.checkedAt && Date.now() - Date.parse(card.checkedAt) <= 48 * 3600000) return { ...card, familyCheck: 'read' };
       const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title, 12_000);
       const text = String(context?.familyEvidenceText ?? context?.eventDetailText ?? context?.text ?? '');
       const titleAt = text.toLowerCase().indexOf(card.title.toLowerCase());
@@ -5236,7 +5247,9 @@ export default async function handler(req, res) {
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
-  if (isCurrentEventsQuery(messages)) {
+  const catalogueWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages) ? eventWeekWindow(currentText) : null;
+  const catalogueCards = catalogueWindow ? await loadCatalogueWeek(catalogueWindow) : null;
+  if (!catalogueCards && isCurrentEventsQuery(messages)) {
     // Fetch strong first-party/current event sources in parallel. This avoids
     // a broad search while still covering the district aggregator, WX and the
     // Cathedral's own dated events.
@@ -5245,7 +5258,7 @@ export default async function handler(req, res) {
       fetchWxWhatsOnContext(),
       fetchDatedFirstPartyContext('https://www.wakefieldcathedral.org.uk/whats-happening/events/', 'Wakefield Cathedral — Events')
     ]);
-  } else if (isWxCurrentEventsQuery(messages)) {
+  } else if (!catalogueCards && isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
   }
 
@@ -5253,12 +5266,12 @@ export default async function handler(req, res) {
   const weekWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages)
     ? eventWeekWindow(currentText) : null;
   if (weekWindow) {
-    const raw = mergeExactEventCardsV16([
+    const raw = mergeExactEventCardsV16(catalogueCards || [
       ...(wxContext?.eventCards || []),
       ...(experienceEventsContext?.listingEventCards || [])
     ]);
-    let cards = selectWeekCards(raw, weekWindow);
     const ops = eventOpsFromText(currentText);
+    let cards = selectWeekCards(catalogueCards && ops.family ? raw.filter(card => card.familyVerified) : raw, weekWindow);
     // Do not silently relax constraints unsupported by this structured view.
     const unsupported = weeklyExtraConstraints(currentText);
     if (ops.price || ops.day || unsupported.length) {
@@ -5275,9 +5288,9 @@ export default async function handler(req, res) {
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (!wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
-      sources: eventSourcesV17(view), followups: [], live: cards.length > 0,
-      verification: 'weekly-cards-v1', state
+      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
+      sources: eventSourcesV17(view), followups: [], live: !catalogueCards && cards.length > 0,
+      verification: catalogueCards ? 'weekly-catalogue-v1' : 'weekly-cards-v1', state
     });
   }
 

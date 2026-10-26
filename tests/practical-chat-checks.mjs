@@ -4,15 +4,16 @@ const NativeDate=Date;
 globalThis.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:['2026-10-26T16:00:00Z']));}static now(){return NativeDate.parse('2026-10-26T16:00:00Z');}};
 process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';process.env.OPENAI_FAILSAFE_ENABLED='false';
 const u=content=>({role:'user',content}),a=content=>({role:'assistant',content});
-let modelBodies=[],outage=false,events=false,cited=true,menuText='Our Wakefield vegetarian menu lists dishes separately.';
+let modelBodies=[],outage=false,events=false,cited=true,menuBlocked=false,menuText='Our Wakefield vegetarian menu lists dishes separately.';
 const parking='<main><h1>Car parks in Wakefield</h1><p>A ticket must be obtained from the car park machine and clearly displayed in the vehicle.</p><p>On the map click the off-street or on-street parking icon for hours and charges.</p></main>';
 const contact='<main><h1>Contact us</h1><h3>General enquiries</h3><p>0345 8 506 506</p><p>Customer Services Team 24 hours, 7 days a week. Availability does not apply to all council services.</p><h3>Council Tax and Benefits</h3><p>10am to 4pm</p></main>';
 globalThis.fetch=async (url,opts)=>{
  const href=String(url);
  if(href.includes('/api.anthropic.com/')){
   modelBodies.push(JSON.parse(opts.body));
-  return new Response(JSON.stringify({content:cited?[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: This restaurant lists vegetarian dishes. [Menu](https://fixture-restaurant.co.uk/menu)',citations:[{url:'https://fixture-restaurant.co.uk/menu',title:'Restaurant menu',cited_text:'Vegetarian dishes listed on the menu.'}]}]:[{type:'text',text:'Try Italian food. It is typically vegetarian.'}]}));
+  return new Response(JSON.stringify({content:cited?[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: This restaurant lists vegetarian dishes. [Menu](https://fixture-restaurant.co.uk/menu)',citations:[{url:'https://fixture-restaurant.co.uk/menu',title:'Wakefield restaurant menu',cited_text:'Vegetarian dishes listed on the Wakefield menu.'}]}]:[{type:'text',text:'Try Italian food. It is typically vegetarian.'}]}));
  }
+ if(href==='https://fixture-restaurant.co.uk/menu'&&menuBlocked)return new Response('Forbidden',{status:403});
  if(href==='https://fixture-restaurant.co.uk/menu')return new Response('<main><h1>Example Restaurant menu</h1><p>'+menuText+'</p></main>');
  if(href.includes('/car-parks-in-wakefield'))return new Response(outage?'Unavailable':parking,{status:outage?503:200});
  if(href.includes('/contact-us/'))return new Response(outage?'Unavailable':contact,{status:outage?503:200});
@@ -52,6 +53,11 @@ const wrongArea=await ask("What are Wakefield's best vegetarian restaurants?");
 assert.equal(wrongArea.verification,'dietary-menu-unverified');
 menuText='Our Wakefield vegetarian menu lists dishes separately.';
 assert.doesNotMatch(menu.reply,/This restaurant lists vegetarian dishes/);
+menuBlocked=true;
+const excerpt=await ask("What are Wakefield's best vegetarian restaurants?");
+assert.equal(excerpt.verification,'dietary-menu-search-evidence');
+assert.match(excerpt.reply,/could not open the page directly/);
+menuBlocked=false;
 assert.ok(modelBodies.at(-1).tools?.some(t=>t.name==='web_search'));
 assert.equal(modelBodies.at(-1).tools[0].allowed_domains,undefined);
 assert.match(modelBodies.at(-1).system,/RESTAURANT DISCOVERY/);

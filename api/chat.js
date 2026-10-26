@@ -5743,7 +5743,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     const { reply, sources, searchEvidence, searched } = extractAnswer(data);
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
     if (isRestaurantDiscovery(messages)) {
-      const menuAnswer = await dietaryMenuAnswer(messages,sources);
+      const menuAnswer = await dietaryMenuAnswer(messages,sources,searchEvidence);
       if (menuAnswer) return res.status(200).json(menuAnswer);
     }
     // Unrelated direct snapshots must not make an unsearched discovery reply look verified.

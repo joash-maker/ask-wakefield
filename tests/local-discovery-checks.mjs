@@ -45,4 +45,7 @@ for(mode of ['no-search','citation-only']) {
  assert.equal(result.verification,'local-discovery-unverified');assert.equal(result.live,false);
  assert.equal(result.sources.length,0);assert.doesNotMatch(result.reply,/definitely no/);
 }
+const beginnerFailure=await ask('Any beginner sessions?',history);
+assert.match(beginnerFailure.reply,/haven.t confirmed which sessions welcome beginners/);
+assert.doesNotMatch(beginnerFailure.reply,/no beginner sessions|definitely no/);
 console.log('Local discovery checks passed: search activation, unrestricted discovery, short follow-ups, topic resets and failure without actual search evidence.');

@@ -46,7 +46,8 @@ assert.doesNotMatch(second.reply,/Diggerland|Stockeld|£25|half term in England/
 assert.equal(second.state.constraints.eventWeek.filters.family,true);
 const third=await ask('What about Thursday?',second.messages,second.stateToken);
 assert.equal(third.verification,'weekly-followup-v1');
-assert.doesNotMatch(third.reply,/Family Workshop/);
+assert.doesNotMatch(third.reply,/Family Workshop|could not confirm children|missing price/);
+assert.match(third.reply,/haven.t confirmed a session for that day/);
 const standalone=await ask('What can we do for October half term?');
 assert.equal(standalone.verification,'half-term-dates-needed');
 assert.match(standalone.reply,/dates vary/);

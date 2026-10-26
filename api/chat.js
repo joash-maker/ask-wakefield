@@ -1,4 +1,4 @@
-import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE } from '../lib/local-discovery.js';
+import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
@@ -1904,7 +1904,7 @@ function requiresVerifiedSource(messages) {
 }
 
 function verificationFallback(messages) {
-  if (isLocalDiscoveryQuery(messages)) return "I couldn't check the current details for matching local clubs or gyms just now. That doesn't mean there aren't any. Please try again in a moment.";
+  if (isLocalDiscoveryQuery(messages)) return localDiscoveryFallback(messages);
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   if (isPropertySpecificCouncilQuery(messages) && hasApproximateLocationOnly(messages)) {
     return "I can check the bin collection accurately, but I need the rental's full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
@@ -5153,7 +5153,7 @@ export default async function handler(req, res) {
       ? 'I haven’t confirmed that extra detail for these events. The dates are unchanged. Check the event pages for that detail.'
       : view.length
         ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17, includeIntro: !dayIso })
-        : filters.family ? weeklyFamilyEmpty(cards) : weeklyEmptyFollowUp({ dayIso, price: filters.price });
+        : filters.family && !cards.some(card => card.familyVerified) ? weeklyFamilyEmpty(cards) : weeklyEmptyFollowUp({ dayIso, price: filters.price });
     const state = buildEventStateV16(cards, clientState, unsupported ? clientState.viewIds : view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventWeek: { ...storedWeek, filters } };
     state.lastIntent = 'events.filter_existing';

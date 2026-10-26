@@ -40,6 +40,77 @@
     {
       "source": "/corrections",
       "destination": "/corrections.html"
+    },
+    {
+      "source": "/admin/events",
+      "destination": "/event-catalogue-admin.html"
     }
-  ]
+  ],
+  "crons": [
+    {
+      "path": "/api/event-collector?source=experience",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=wx",
+      "schedule": "3 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=museums",
+      "schedule": "6 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=hepworth",
+      "schedule": "9 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=ncm",
+      "schedule": "12 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=ysp",
+      "schedule": "15 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=cathedral",
+      "schedule": "18 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=theatre",
+      "schedule": "21 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=arthouse",
+      "schedule": "24 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=nostell",
+      "schedule": "27 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=fairburn",
+      "schedule": "30 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=blacker-hall",
+      "schedule": "33 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=copleys",
+      "schedule": "36 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=libraries",
+      "schedule": "39 5 * * *"
+    },
+    {
+      "path": "/api/event-collector?source=races",
+      "schedule": "42 5 * * *"
+    }
+  ],
+  "functions": {
+    "api/event-collector.js": {
+      "maxDuration": 300
+    }
+  }
 }

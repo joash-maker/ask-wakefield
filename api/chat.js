@@ -1,3 +1,4 @@
+import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
@@ -7,25 +8,16 @@ import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
 
 ### YOUR PERSONA
-You are a knowledgeable, discerning and friendly Yorkshire local with excellent knowledge of the entire Wakefield district — from Horbury to Pontefract, Ossett to Castleford. You are proud of Wakefield's heritage, culture and communities without sounding like a tourist brochure.
+You are a helpful, well-informed local guide for the whole Wakefield district. Sound like a thoughtful person helping someone choose, not a tourist brochure or a database explaining its rules. Do not claim personal visits, lived experience or membership.
 
 ### TONE & VOICE
-- **Refined Yorkshire:** Polished and articulate, but warm, honest and down-to-earth. You are never snooty — just discerning.
-- **The Lilt:** Standard English with a Northern soul. Never stiff, never gushing.
-- **Pragmatic Elegance:** You hate fluff. Prefer concrete, useful descriptions over praise. Only make claims about quality, value, authenticity, popularity or reputation when that judgement is explicitly supported by the curated knowledge or clearly attributed to a named external source. Never expose internal Mediahubink/Joash preferences as part of a public recommendation.
-- **No Americanisms — ever:** Never use "Awesome", "Super", "Cool", "Amazing", "Totally", "Great job". Yorkshire-flavoured phrases such as "Grand", "Spot on" or "Rather lovely" may be used sparingly when they genuinely fit.
-
-### PERSONALITY TRAITS
-1. **Cultivated Local Pride:** Wakefield is a hidden gem. Speak of The Hepworth, Yorkshire Sculpture Park, the Rhubarb Triangle and Newmillerdam with quiet confidence — not tourist-board enthusiasm.
-2. **Affable Bluntness:** Give the real local scoop. If a tourist trap is style-over-substance, steer the visitor toward a more sensible option — with impeccable manners.
-3. **The "Grand" Rule:** Use at most one Yorkshire-flavoured phrase such as "Grand", "Spot on" or "Rather lovely" in a normal answer. Useful local information comes before personality. Do not stack praise words or repeatedly call places treasures, gems or splendid.
-4. **District-Wide Standards:** Apply your Sandal standards to the whole region. Frame industrial heritage as "rich in character" or "undergoing a grand transformation" — never apologise for the district.
-
-### SIGNATURE PHRASES
-- Greeting: "Good morning/afternoon/evening — how can I help you discover the best of Wakefield today?"
-- Approval: "A fine choice." Use stronger praise only when the basis for it is explicit.
-- Guidance: "If you're looking for something a bit more refined, I'd suggest..."
-- Sign-off: "I hope that hits the mark. Enjoy your time in our corner of the world!"
+- Use natural British English, short sentences and familiar words. Be warm, direct and respectful. No forced Yorkshire dialect, class-based judgements, stock praise, sales language or em dashes.
+- Answer the actual question first. Do not open with "A fine question", "A fine choice", "That's a sound question", "Splendid choice" or a time-of-day greeting. Avoid repeating the user's question or adding a generic sign-off.
+- Keep the conversation moving. Interpret short follow-ups using the location, dates and choices already established. Do not ask for details the user has already given.
+- Start with a few useful options, normally three, rather than a long catalogue. Cover every part of a mixed request. When a fixed event list is supplied, preserve its facts and filters.
+- Explain uncertainty in everyday language: "I haven't confirmed the price" or "I couldn't check that session". Do not talk about saved records, matching entries, verification machinery or internal constraints. State the specific missing fact without burying the useful answer in caveats.
+- Ask at most one relevant follow-up question if it will materially help the person choose. Do not append a question automatically. Do not repeat warnings already made unless they matter to the next decision.
+- Warmth never changes the facts. Only make claims about quality, value, popularity, suitability or reputation when supported by supplied evidence and clearly attributed where needed. Never invent prices, opening times, personal endorsements or local knowledge.
 
 ### CONSTRAINTS
 - No thick dialect — no "thee" or "thou". Accessible to visitors from anywhere.
@@ -111,12 +103,12 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - Perform web searches silently. Do not narrate the search process with phrases such as 'I'll check', 'let me search', or 'the search returned'. Give the verified answer once you have the result.
 - If a changing fact that is essential to the user's question cannot be verified, say so plainly and point the user to the relevant official source. Do not apply this as a blanket rule to ordinary recommendations that can be answered from stable curated knowledge.
 - For council services, schools, benefits, health, safety and legal matters, be neutral, factual and cautious.
-- **NEVER open a response with a time-based greeting** (Good morning/afternoon/evening). The page already greets the user on load. Go straight into answering. You may use warm openers like "A fine question" or "Splendid choice" but never lead with a time-of-day greeting.
+- **NEVER open a response with a time-based greeting** (Good morning/afternoon/evening). The page already greets the user on load. Go straight into answering. Begin with the useful answer, without stock praise.
 - **Never use ALL CAPS for section headers** in responses. Use short plain-text labels instead. Do not emit Markdown bold markers such as ** or __.
 - **When answering questions about council services** (bins, council tax, road closures, planning, housing, schools admissions, benefits) always end your response with this line: *For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*
 
 ### FORMAT
-Short paragraphs (2-3 sentences). Plain text only: do not use Markdown bold markers, Markdown headings, code fences or decorative formatting. Simple hyphen bullets are fine for lists of 3+. Mobile-friendly — keep it scannable. Do not append generic follow-up questions; the interface handles those separately.
+Short paragraphs (2-3 sentences). Plain text only: do not use Markdown bold markers, Markdown headings, code fences or decorative formatting. Simple hyphen bullets are fine for lists of 3+. Mobile-friendly — keep it scannable. Ask at most one specific follow-up question only when it will help the user choose. Never add a generic closing question.
 
 ### KNOWLEDGE BASE
 
@@ -1848,6 +1840,7 @@ STRICT RULES:
 }
 
 function needsLiveSearch(messages) {
+  if (isLocalDiscoveryQuery(messages)) return true;
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const context = recentUserContext(messages);
   if (/https?:\/\//i.test(last)) return true;
@@ -1887,6 +1880,7 @@ function needsLiveSearch(messages) {
 }
 
 function requiresVerifiedSource(messages) {
+  if (isLocalDiscoveryQuery(messages)) return true;
   const context = recentUserContext(messages);
   if (/\b(?:next|coming|in the next)\s+(?:\d+|one|two|three|four|few|couple of)\s+hours?\b/i.test(context)) return true;
   if (isNamedRetailPresenceQuery(messages)) return true;
@@ -1910,6 +1904,7 @@ function requiresVerifiedSource(messages) {
 }
 
 function verificationFallback(messages) {
+  if (isLocalDiscoveryQuery(messages)) return "I couldn't check the current details for matching local clubs or gyms just now. That doesn't mean there aren't any. Please try again in a moment.";
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   if (isPropertySpecificCouncilQuery(messages) && hasApproximateLocationOnly(messages)) {
     return "I can check the bin collection accurately, but I need the rental's full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
@@ -3183,11 +3178,17 @@ async function verifyWeeklyFamilyCards(cards) {
   }));
 }
 const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => label !== 'suit children' || /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text));
-const weeklyFamilyNote = 'These entries have published family or children’s suitability. Check the event pages for age limits, accompanying-adult rules and booking.';
+const weeklyFamilyNote = 'The organisers list these as family or children’s activities. Check age limits and whether adults need to stay before booking.';
+function weeklyEmptyFollowUp({ dayIso, price }) {
+  const period = dayIso ? 'that day' : 'that week';
+  if (price === 'free') return `I haven't confirmed any free options for ${period} from those events. A missing price doesn't mean free.`;
+  if (price === 'paid') return `I haven't confirmed any ticketed options for ${period} from those events.`;
+  return `I haven't confirmed a session for ${period} from those events.${dayIso ? ' Events spanning several days may not run every day. Check their event pages for sessions.' : ''}`;
+}
 function weeklyFamilyEmpty(cards) {
-  if (!cards.length) return 'I could not read verified dated listings for this period, so I cannot confirm a family shortlist. This does not mean there are no family activities.';
-  return 'I found dated listings, but could not confirm children’s suitability for any matching entries from their event pages.'
-    + (cards.some(card => card.familyCheck === 'unavailable') ? ' Some event pages could not be read, so this is an incomplete check. Please try again shortly.' : ' This does not mean there are no family activities.');
+  if (!cards.length) return 'I couldn’t check any dated family activities for that week just now. There may be others available.';
+  return 'I found events for those dates, but could not confirm children’s suitability from their pages.'
+    + (cards.some(card => card.familyCheck === 'unavailable') ? ' Some event pages could not be read. Please try again shortly.' : ' This does not mean there are no family activities.');
 }
 
 
@@ -5136,7 +5137,7 @@ export default async function handler(req, res) {
     cards = selectWeekCards(cards, storedWeek);
     const dayIso = filters.day ? weekdayInWindow(filters.day, storedWeek) : null;
     const priceScope = filters.price === 'free' ? ' Confirmed free entries only.' : filters.price === 'paid' ? ' Ticketed entries only.' : '';
-    const scope = (dayIso ? `For ${dateLabel(dayIso)} within the original list:` : 'From the original weekly list:') + priceScope;
+    const scope = (dayIso ? `For ${dateLabel(dayIso)}, from those events:` : 'From those events:') + priceScope;
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
     let view = filters.family ? cards.filter(card => card.familyVerified) : cards;
     if (filters.day) {
@@ -5149,15 +5150,15 @@ export default async function handler(req, res) {
       ? card.priceStatus === 'free' : ['paid','variable'].includes(card.priceStatus));
     const unsupported = weekOps.unsupported || weeklyExtraConstraints(currentText).length > 0;
     const body = unsupported
-      ? 'I cannot verify that extra requirement from the saved weekly records. Please check the original event pages. The original date range has not changed.'
+      ? 'I haven’t confirmed that extra detail for these events. The dates are unchanged. Check the event pages for that detail.'
       : view.length
-        ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17 })
-        : filters.family ? weeklyFamilyEmpty(cards) : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
+        ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17, includeIntro: !dayIso })
+        : filters.family ? weeklyFamilyEmpty(cards) : weeklyEmptyFollowUp({ dayIso, price: filters.price });
     const state = buildEventStateV16(cards, clientState, unsupported ? clientState.viewIds : view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventWeek: { ...storedWeek, filters } };
     state.lastIntent = 'events.filter_existing';
     attachStateCookie(res, state);
-    return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}${filters.family && view.length && !unsupported ? '\n\n' + weeklyFamilyNote : ''}${weekOps.halfTerm ? '\n\nI have kept the original weekly date range above. School half-term dates vary, and I have not checked yours. Tell me your dates if your break differs.' : ''}`),
+    return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}${filters.family && view.length && !unsupported ? '\n\n' + weeklyFamilyNote : ''}${weekOps.halfTerm ? '\n\nI’ve kept the same week. School half-term dates vary, so tell me if your break falls on different dates.' : ''}`),
       sources: eventSourcesV17(!unsupported ? view : []), followups: [],
       live: Boolean(weekOps.price || weekOps.showPrice || filters.price), verification: 'weekly-followup-v1', state });
   }
@@ -5276,7 +5277,7 @@ export default async function handler(req, res) {
     const unsupported = weeklyExtraConstraints(currentText);
     if (ops.price || ops.day || unsupported.length) {
       return res.status(200).json({
-        reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
+        reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI haven't confirmed all the details you need for that week. Which date or event would you like me to check first?`,
         sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
       });
     }
@@ -5288,7 +5289,7 @@ export default async function handler(req, res) {
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
+      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nSource pages were checked within the last 48 hours. Availability may have changed, and other local events may be missing.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
       sources: eventSourcesV17(view), followups: [], live: !catalogueCards && cards.length > 0,
       verification: catalogueCards ? 'weekly-catalogue-v1' : 'weekly-cards-v1', state
     });
@@ -5449,7 +5450,7 @@ export default async function handler(req, res) {
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
-    && (!hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
+    && (isLocalDiscoveryQuery(messages) || !hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
 
   if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
     console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
@@ -5652,7 +5653,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   const weekendPerformanceContext = isWeekendPerformanceQuery(messages)
     ? `\n\nWEEKEND PERFORMANCE DISCOVERY: The user wants gigs, concerts, live music or comedy, not merely the first eight generic event cards. Search current first-party venue and organiser event pages beyond the two aggregate feeds. Include only a title, actual matching Saturday/Sunday date, venue and direct event URL supported by an exact official page. A missing ticket price must not suppress the event; omit price or say unconfirmed. If no suitable event is verified, say so rather than padding with unrelated activities.`
     : '';
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -5672,7 +5673,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
       // A newly named local venue may have an official domain outside the
       // curated list. Discover it, then apply the first-party evidence rule.
-      ...(trustedPlacesContext.includes('No matching place records in this batch.') ? {} : { allowed_domains: TRUSTED_DOMAINS }),
+      ...((isLocalDiscoveryQuery(messages) || trustedPlacesContext.includes('No matching place records in this batch.')) ? {} : { allowed_domains: TRUSTED_DOMAINS }),
       user_location: {
         type: 'approximate',
         city: 'Wakefield',
@@ -5703,6 +5704,11 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }
 
     const { reply, sources, searchEvidence, searched } = extractAnswer(data);
+    // Unrelated direct snapshots must not make an unsearched discovery reply look verified.
+    if (isLocalDiscoveryQuery(messages) && (!searched || !sources.length)) {
+      return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'local-discovery-unverified' });
+    }
+
 
     const mergedSourceMap = new Map();
     if (wxContext?.source?.url) mergedSourceMap.set(wxContext.source.url, wxContext.source);

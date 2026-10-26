@@ -39,6 +39,8 @@ Empty parsing is recorded as a failure and never erases previous successful evid
 - Existing weekly, family, ongoing, copy and PWA suites.
 - `node scripts/collect-events.mjs museums --pages=3` performs a read-only live collection smoke test. It uses no production credentials and does not persist data.
 
+Actual deployed preview verification (26 October 2026): the collector initialised its three tabs through the deployed API and completed full bounded runs for Museums (12 valid), WX (12), Experience (8 valid of 12), Cathedral (12) and NCM (12). The catalogue held 60 records, with 56 eligible and 24 eligible records having published family suitability. A live preview weekly family answer and signed October half-term follow-up used the catalogue. These counts are a snapshot, not guaranteed ongoing coverage. Follow-up parser changes preserve explicit listing sold-out labels and single-session start/end fields.
+
 Initial actual-source checks: six current listing pages yielded discoverable event links or Cathedral listing records. A live Museums run with a three-detail-page cap returned three valid records. Current Museums, Experience, WX and NCM detail pages were replayed through the parser. A Hepworth page without a published year was held rather than assigned the current year. Remaining sources require individual run review before claiming coverage.
 
 ## Known first-phase limits

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {getSource,allowedUrl,EVENT_SOURCES} from '../lib/events/sources.js';
-import {humanDates,isoDate,parseEventPage,listingLinks} from '../lib/events/parser.js';
+import {humanDates,isoDate,parseEventPage,listingLinks,listingAvailability} from '../lib/events/parser.js';
 import {collectSource,robotsAllows,createSourceFetcher} from '../lib/events/collector.js';
 import {createSheetsStore,latestSnapshots} from '../lib/events/store.js';
 import {buildCatalogue,queryCatalogue} from '../lib/events/catalogue.js';
@@ -25,6 +25,9 @@ const conditional=parseEventPage(html().replace('Family-friendly craft.','Family
 const wx=getSource('wx'),wxUrl='https://wxwakefield.co.uk/Whats-On/Details?event=test';
 const programme=parseEventPage('<title>Programme | WX</title><nav>Plan your visit</nav><main><h1>Programme</h1><div>Tuesday 27 - Friday 30 October 2026</div><div>AGE RANGE: Children Families</div><p>Join us for crafts.</p><h2>Nerf session</h2><p>Suitable for children aged 6-14</p><div class="related-events">Adults only</div></main>',wx,wxUrl,date)[0];
 assert.equal(programme.familyVerified,true);assert.equal(programme.minAge,null,'A sub-session age must not become a programme age');assert.equal(programme.startTime,null,'A run has no assumed daily time');
+const timed=parseEventPage('<main><h1>Children workshop</h1><div>Wednesday 28 October 2026</div><div>Start time:10:30AM - End time: 3:30PM</div></main>',wx,wxUrl,date)[0];assert.equal(timed.startTime,'10:30');assert.equal(timed.endTime,'15:30');
+assert.equal(listingAvailability(`<div class="events-col"><div class="sold-out d-block">Sold out</div><a href="${wxUrl}">More info</a></div>`,wx).get(wxUrl),'sold-out');
+assert.equal(listingAvailability(`<div class="events-col"><div class="sold-out d-none">Sold out</div><a href="${wxUrl}">More info</a></div>`,wx).size,0);
 assert.equal(listingLinks('<nav><a href="/whats-on/nav/">Menu</a></nav><h2><a href="/whats-on/session/">Session</a></h2><p>28 October 2026</p><a href="https://evil.test/whats-on/x/">Other</a>',source)[0],url);
 assert.equal(robotsAllows('User-agent: *\nDisallow: /private\nAllow: /private/public','/private/x'),false);
 assert.equal(robotsAllows('User-agent: *\nDisallow: /private\nAllow: /private/public','/private/public/a'),true);

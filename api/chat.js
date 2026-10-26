@@ -1979,7 +1979,7 @@ function isCurrentEventsQuery(messages) {
   if (isEventCostFollowUp(messages)) return true;
   const directWhatsOn = /\b(what(?:'|’)s on|wots on|anything on|what is happening|what(?:'|’)s happening|anything happening)\b/i.test(context);
   const eventIntent = /\b(events?|things to do|something to do|anything to do|what can (?:we|i) do|free to do|live music|gig|gigs|concert|show|shows|theatre|comedy|festival|market|exhibition|workshop|family event|heritage open days?)\b/i.test(context);
-  const currentWindow = /\b(today|tonight|tomorrow|this weekend|weekend|this week|next saturday|next sunday|later today|later tonight|right now|currently)\b/i.test(context);
+  const currentWindow = /\b(today|tonight|tomorrow|this weekend|weekend|this week|next week|next (?:seven|7) days|next saturday|next sunday|later today|later tonight|right now|currently)\b/i.test(context);
   return directWhatsOn || (eventIntent && currentWindow);
 }
 
@@ -3151,6 +3151,24 @@ function eventSourcesV17(cards) {
   }
   return sources;
 }
+
+// Family suitability requires explicit wording on the exact event page, not a price or category.
+async function verifyWeeklyFamilyCards(cards) {
+  return Promise.all(cards.map(async card => {
+    try {
+      const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
+      const text = String(context?.fullText || context?.eventDetailText || context?.text || '');
+      const titleAt = text.toLowerCase().indexOf(card.title.toLowerCase());
+      const scoped = titleAt >= 0 ? text.slice(titleAt, titleAt + 7000).split(/More at WX|Related Events|You may also|Venue Details/i)[0] : '';
+      const about = scoped.split(/\bAbout\b/i)[1] || scoped;
+      const familyVerified = /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages welcome|suitable for all ages)\b/i.test(about)
+        && !/\b(?:adults only|18\+|over[- ]18s only|not suitable for (?:children|kids)|not for (?:children|kids))\b/i.test(about);
+      return { ...card, familyVerified };
+    } catch { return { ...card, familyVerified: false }; }
+  }));
+}
+const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => label !== 'suit children' || /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text));
+const weeklyFamilyNote = 'These entries have published family or children’s suitability. Check the event pages for age limits, accompanying-adult rules and booking.';
 
 // Applies filters to a card set and renders the answer. Used for the first
 // weekend answer and for every follow-up, so both behave identically.
@@ -5073,11 +5091,16 @@ export default async function handler(req, res) {
 
   // Weekly follow-ups must retain the signed original period and membership.
   const storedWeek = clientState.constraints?.eventWeek;
+  const halfTermClarification = /^(?:for |during |in |what about )?(?:the )?(?:october )?half[ -]term[?.!]*$/i.test(currentText.trim());
+  if (/\bhalf[ -]term\b/i.test(currentText) && !eventWeekWindow(currentText) && !storedWeek) {
+    return res.status(200).json({ reply: 'Which dates would you like to plan for? School half-term dates vary. Tell me the dates and the children’s ages so I can check dated local listings.', sources: [], live: false, verification: 'half-term-dates-needed', state: clientState });
+  }
   const weekOps = storedWeek && clientState.lastIntent?.startsWith('events.')
-    ? weeklyFollowUp(currentText) : null;
+    ? (halfTermClarification ? { halfTerm: true } : weeklyFollowUp(currentText)) : null;
   if (weekOps) {
     const original = storedEventCards(clientState);
     const filters = weekOps.reset ? {} : { ...(storedWeek.filters || {}) };
+    if (eventOpsFromText(currentText).family) filters.family = true;
     if (weekOps.price) filters.price = weekOps.price;
     if (weekOps.showPrice) delete filters.price;
     if (weekOps.day) filters.day = weekOps.day;
@@ -5088,7 +5111,8 @@ export default async function handler(req, res) {
     const dayIso = filters.day ? weekdayInWindow(filters.day, storedWeek) : null;
     const priceScope = filters.price === 'free' ? ' Confirmed free entries only.' : filters.price === 'paid' ? ' Ticketed entries only.' : '';
     const scope = (dayIso ? `For ${dateLabel(dayIso)} within the original list:` : 'From the original weekly list:') + priceScope;
-    let view = cards;
+    if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
+    let view = filters.family ? cards.filter(card => card.familyVerified) : cards;
     if (filters.day) {
       // A broad published run is not proof of an occurrence on this weekday.
       view = dayIso && dayIso >= storedWeek.from
@@ -5097,7 +5121,7 @@ export default async function handler(req, res) {
     }
     if (filters.price) view = view.filter(card => filters.price === 'free'
       ? card.priceStatus === 'free' : ['paid','variable'].includes(card.priceStatus));
-    const unsupported = weekOps.unsupported || unsupportedEventConstraintsV17(currentText).length > 0;
+    const unsupported = weekOps.unsupported || weeklyExtraConstraints(currentText).length > 0;
     const body = unsupported
       ? 'I cannot verify that extra requirement from the saved weekly records. Please check the original event pages. The original date range has not changed.'
       : view.length
@@ -5107,7 +5131,7 @@ export default async function handler(req, res) {
     state.constraints = { ...clientState.constraints, eventWeek: { ...storedWeek, filters } };
     state.lastIntent = 'events.filter_existing';
     attachStateCookie(res, state);
-    return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}`),
+    return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}${filters.family && view.length && !unsupported ? '\n\n' + weeklyFamilyNote : ''}${weekOps.halfTerm ? '\n\nI have kept the original weekly date range above. School half-term dates vary, and I have not checked yours. Tell me your dates if your break differs.' : ''}`),
       sources: eventSourcesV17(view.length && !unsupported ? view : original), followups: [],
       live: Boolean(weekOps.price || weekOps.showPrice || filters.price), verification: 'weekly-followup-v1', state });
   }
@@ -5221,20 +5245,23 @@ export default async function handler(req, res) {
     let cards = selectWeekCards(raw, weekWindow);
     const ops = eventOpsFromText(currentText);
     // Do not silently relax constraints unsupported by this structured view.
-    const unsupported = unsupportedEventConstraintsV17(currentText);
-    if (ops.price || ops.family || ops.day || unsupported.length) {
+    const unsupported = weeklyExtraConstraints(currentText);
+    if (ops.price || ops.day || unsupported.length) {
       return res.status(200).json({
-        reply: `The requested period is ${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
+        reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
         sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
       });
     }
-    const state = buildEventStateV16(cards, clientState);
-    state.constraints = { ...clientState.constraints, eventWeek: { ...weekWindow, filters: {} } };
+    const filters = ops.family ? { family: true } : {};
+    if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
+    const view = filters.family ? cards.filter(card => card.familyVerified) : cards;
+    const state = buildEventStateV16(cards, clientState, view.map(card => card.id));
+    state.constraints = { ...clientState.constraints, eventWeek: { ...weekWindow, filters } };
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply(formatWeekCards(cards, weekWindow) + (!wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
-      sources: eventSourcesV17(cards), followups: [], live: cards.length > 0,
+      reply: finaliseUserFacingReply(formatWeekCards(view, weekWindow) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (!wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
+      sources: eventSourcesV17(view), followups: [], live: cards.length > 0,
       verification: 'weekly-cards-v1', state
     });
   }

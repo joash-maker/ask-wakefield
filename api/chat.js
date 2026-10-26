@@ -1,3 +1,4 @@
+import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse } from '../lib/practical-answers.js';
 import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
@@ -114,13 +115,13 @@ Short paragraphs (2-3 sentences). Plain text only: do not use Markdown bold mark
 
 BINS: Most Wakefield homes have a green household-waste bin and two brown bins: one for mixed recycling and one for garden waste. Garden-waste collections run from March through November. Exact collection dates are property-specific: use wakefield.gov.uk/where-i-live and enter the FULL postcode or the house number and street. Never infer the user's property from a nearby landmark or venue. Phone: 0345 8 506 506. For current household-waste, recycling and garden-waste dates, rely on the property result returned by Where I Live rather than a generic fortnightly pattern.
 
-ROADS: Live closures: one.network or wakefield.gov.uk/roads. Report potholes: wakefield.gov.uk/potholes. Out-of-hours: 01924 306 987.
+ROADS: Live closures: one.network or wakefield.gov.uk/roads. Report potholes: wakefield.gov.uk/potholes. For current out-of-hours contacts, check the Council contact page for the specific service.
 
 COUNCIL TAX: Bands A-H. Check band: voa.service.gov.uk. Pay: wakefield.gov.uk/counciltax. Single occupancy 25% discount. Support: wakefield.gov.uk/counciltaxsupport.
 
 SCHOOLS: Term dates: wakefield.gov.uk/schoolterms. Admissions by 15 January: wakefield.gov.uk/admissions. Free meals: wakefield.gov.uk/freeschoolmeals.
 
-COUNCIL: 0345 8 506 506 (Mon-Fri 8:30am-5pm). Out-of-hours: 01924 306 987. wakefield.gov.uk.
+COUNCIL: For phone numbers and service hours, check https://www.wakefield.gov.uk/contact-wakefield-council/contact-us/. For current out-of-hours contacts, check the Council contact page for the specific service. wakefield.gov.uk.
 
 PLANNING: Do not assume a two-storey extension automatically requires planning permission. In England, some two-storey rear extensions can fall within permitted development if all current limits and conditions are met; two-storey side/front extensions require planning permission, and designated land or removed permitted-development rights can change the position. Always verify current rules live using planningportal.co.uk, gov.uk and Wakefield Council before stating specific limits. Building Regulations are separate from planning permission.
 
@@ -145,7 +146,7 @@ PUGNEYS COUNTRY PARK: Asdale Road / Denby Dale Road, Wakefield WF2 7BN. Wakefiel
 
 WAKEFIELD WATERWAYS: Wakefield DOES have a navigable waterway. The Wakefield Branch of the Aire & Calder Navigation is approximately 7.5 miles long and links Wakefield to Castleford. For canoe/kayak launch access, licences, stoppages and navigation rules, verify current guidance with the Canal & River Trust at canalrivertrust.org.uk. Never recommend Newmillerdam or Pugneys for paddling unless an official current source explicitly allows it.
 
-WAKEFIELD PARKING: Wakefield Council currently states that up to two hours free parking is available in some Council-owned off-street car parks. A ticket must still be obtained from the machine and displayed, and users must check the car-park notice board for current restrictions. Do not claim supermarket or retail-centre parking is free unless verified from that operator's current terms. Merchant Gate and country parks have different arrangements and must not be assumed to be included.
+WAKEFIELD PARKING: Check the current Council car-park page and current policy notices before making a free-parking claim. A general overview is not proof that a particular car park is free today. Never repeat a static scheme description when the user asks about ticket display, a particular car park or time restrictions.
 
 TRINITY WALK / TK MAXX: Trinity Walk is a Wakefield city-centre shopping centre at WF1 1QS. Its current store directory lists TK Maxx. Because retail tenants and opening hours can change, verify current status at trinitywalk.com or the retailer when asked.
 
@@ -1840,6 +1841,7 @@ STRICT RULES:
 }
 
 function needsLiveSearch(messages) {
+  if (isRestaurantDiscovery(messages)) return true;
   if (isLocalDiscoveryQuery(messages)) return true;
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   const context = recentUserContext(messages);
@@ -1880,6 +1882,7 @@ function needsLiveSearch(messages) {
 }
 
 function requiresVerifiedSource(messages) {
+  if (isRestaurantDiscovery(messages)) return true;
   if (isLocalDiscoveryQuery(messages)) return true;
   const context = recentUserContext(messages);
   if (/\b(?:next|coming|in the next)\s+(?:\d+|one|two|three|four|few|couple of)\s+hours?\b/i.test(context)) return true;
@@ -1904,6 +1907,7 @@ function requiresVerifiedSource(messages) {
 }
 
 function verificationFallback(messages) {
+  if (isRestaurantDiscovery(messages)) return "I couldn’t check current menus for that request just now. I won’t assume a restaurant suits your diet from its cuisine. Please try again shortly.";
   if (isLocalDiscoveryQuery(messages)) return localDiscoveryFallback(messages);
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   if (isPropertySpecificCouncilQuery(messages) && hasApproximateLocationOnly(messages)) {
@@ -1933,9 +1937,10 @@ function verificationFallback(messages) {
   if (/canoe|canoeing|kayak|kayaking|paddleboard|water sports?|watersports|canal|swim|swimming/.test(last)) {
     return 'I could not verify a safe, permitted launch point from an official source just now, so I do not want to send you onto the wrong water. Pugneys Country Park currently prohibits entering the lake, including kayaking and paddleboarding. For navigable waterways around Wakefield, check the Canal & River Trust guidance for the Wakefield Branch of the Aire & Calder Navigation.';
   }
-  if (/parking|free parking/.test(last)) {
-    return 'Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+  if (/parking|car parks?/.test(last)) {
+    return "I couldn't check the current parking terms just now. Use the [Council parking pages](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district) and the signs at your chosen car park for current charges and restrictions.";
   }
+
   if (/tk\s?maxx?|store|shop/.test(last)) {
     return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
   }
@@ -5044,6 +5049,11 @@ export default async function handler(req, res) {
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  if (practicalTopic(messages) && !isNamedEventDetailQuery(messages) && !isComplexSaturdayDayPlanQuery(messages)) {
+    const practical = await practicalAnswer(messages);
+    if (practical) return res.status(200).json(practical);
+  }
+
   if (suppliedToken && !decodedToken && !cookieState
       && /\b(which of|any of|of (?:those|them|these)|those|these|them)\b/i.test(currentText)
       && Object.keys(eventOpsFromText(currentText)).length) {
@@ -5248,7 +5258,7 @@ export default async function handler(req, res) {
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
-  const catalogueWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages) ? eventWeekWindow(currentText) : null;
+  const catalogueWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages) ? (eventWeekWindow(currentText) || (/\btonight\b/i.test(currentText) ? eventWeekWindow('this week') : null)) : null;
   const catalogueCards = catalogueWindow ? await loadCatalogueWeek(catalogueWindow) : null;
   if (!catalogueCards && isCurrentEventsQuery(messages)) {
     // Fetch strong first-party/current event sources in parallel. This avoids
@@ -5261,6 +5271,28 @@ export default async function handler(req, res) {
     ]);
   } else if (!catalogueCards && isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
+  }
+
+  if (isCurrentEventsQuery(messages) && /\btonight\b/i.test(currentText) && !isNamedEventDetailQuery(messages)) {
+    const tonightCatalogue = catalogueCards;
+    let cards = mergeExactEventCardsV16(tonightCatalogue || [ ...(wxContext?.eventCards || []), ...(experienceEventsContext?.listingEventCards || []) ]);
+    const ops = eventOpsFromText(currentText);
+    const unsupported = weeklyExtraConstraints(currentText);
+    if (unsupported.length) return res.status(200).json({ reply: "I haven't confirmed tonight's events against all those requirements. Which requirement matters most for your plans?", sources: [], live: false, verification: 'tonight-constraints-unverified' });
+    if (ops.family) cards = (await verifyWeeklyFamilyCards(cards)).filter(card => card.familyVerified);
+    if (ops.price || ops.showPrice) cards = await refreshEventCardsForPriceV16(cards);
+    if (ops.price) cards = cards.filter(card => ops.price === 'free' ? card.priceStatus === 'free' : ['paid','variable'].includes(card.priceStatus));
+    const area = detectWakefieldArea(messages);
+    if (area) {
+      const locality = area.replace(/\s+Wakefield$/i,'').toLowerCase();
+      cards = cards.filter(card => [card.venue,card.area].some(value => String(value || '').toLowerCase().includes(locality)));
+    }
+    const result = tonightResponse(cards,new Date(),{showPrice:Boolean(ops.showPrice || ops.price),priceLabel:eventPriceLabelV17});
+    const state = buildEventStateV16(result.cards, clientState, result.cards.map(card => card.id));
+    state.lastIntent = 'events.whats_on';
+    attachStateCookie(res,state);
+    const listingSources = [wxContext?.source,experienceEventsContext?.source].filter(s=>s?.url);
+    return res.status(200).json({ reply: result.reply + (tonightCatalogue ? '\n\nSource pages were checked within the last 48 hours. Availability may have changed.' : ''), sources: result.cards.length ? eventSourcesV17(result.cards) : listingSources, live: !tonightCatalogue && listingSources.length > 0, verification: 'tonight-dated-cards', state });
   }
 
   // Weekly discovery must not fall through to prose that mixes calendar weeks.
@@ -5450,7 +5482,7 @@ export default async function handler(req, res) {
     || isComplexSaturdayDayPlanQuery(messages);
   const useSearch = needsLiveSearch(messages)
     && !directlyResolved
-    && (isLocalDiscoveryQuery(messages) || !hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
+    && (isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages) || !hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
 
   if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
     console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
@@ -5653,7 +5685,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   const weekendPerformanceContext = isWeekendPerformanceQuery(messages)
     ? `\n\nWEEKEND PERFORMANCE DISCOVERY: The user wants gigs, concerts, live music or comedy, not merely the first eight generic event cards. Search current first-party venue and organiser event pages beyond the two aggregate feeds. Include only a title, actual matching Saturday/Sunday date, venue and direct event URL supported by an exact official page. A missing ticket price must not suppress the event; omit price or say unconfirmed. If no suitable event is verified, say so rather than padding with unrelated activities.`
     : '';
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}`;
+  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}${isRestaurantDiscovery(messages) ? RESTAURANT_GUIDANCE : ''}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -5673,7 +5705,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
       // A newly named local venue may have an official domain outside the
       // curated list. Discover it, then apply the first-party evidence rule.
-      ...((isLocalDiscoveryQuery(messages) || trustedPlacesContext.includes('No matching place records in this batch.')) ? {} : { allowed_domains: TRUSTED_DOMAINS }),
+      ...((isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages) || trustedPlacesContext.includes('No matching place records in this batch.')) ? {} : { allowed_domains: TRUSTED_DOMAINS }),
       user_location: {
         type: 'approximate',
         city: 'Wakefield',
@@ -5704,6 +5736,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     }
 
     const { reply, sources, searchEvidence, searched } = extractAnswer(data);
+    if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
     // Unrelated direct snapshots must not make an unsearched discovery reply look verified.
     if (isLocalDiscoveryQuery(messages) && (!searched || !sources.length)) {
       return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'local-discovery-unverified' });

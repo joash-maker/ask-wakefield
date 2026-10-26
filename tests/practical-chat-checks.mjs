@@ -1,0 +1,66 @@
+import assert from 'node:assert/strict';
+import {tonightResponse,practicalTopic} from '../lib/practical-answers.js';
+const NativeDate=Date;
+globalThis.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:['2026-10-26T16:00:00Z']));}static now(){return NativeDate.parse('2026-10-26T16:00:00Z');}};
+process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';process.env.OPENAI_FAILSAFE_ENABLED='false';
+const u=content=>({role:'user',content}),a=content=>({role:'assistant',content});
+let modelBodies=[],outage=false,events=false,cited=true;
+const parking='<main><h1>Car parks in Wakefield</h1><p>A ticket must be obtained from the car park machine and clearly displayed in the vehicle.</p><p>On the map click the off-street or on-street parking icon for hours and charges.</p></main>';
+const contact='<main><h1>Contact us</h1><h3>General enquiries</h3><p>0345 8 506 506</p><p>Customer Services Team 24 hours, 7 days a week. Availability does not apply to all council services.</p><h3>Council Tax and Benefits</h3><p>10am to 4pm</p></main>';
+globalThis.fetch=async (url,opts)=>{
+ const href=String(url);
+ if(href.includes('/api.anthropic.com/')){
+  modelBodies.push(JSON.parse(opts.body));
+  return new Response(JSON.stringify({content:cited?[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: This restaurant lists vegetarian dishes. [Menu](https://restaurant.example/menu)',citations:[{url:'https://restaurant.example/menu',title:'Restaurant menu',cited_text:'Vegetarian dishes listed on the menu.'}]}]:[{type:'text',text:'Try Italian food. It is typically vegetarian.'}]}));
+ }
+ if(href.includes('/car-parks-in-wakefield'))return new Response(outage?'Unavailable':parking,{status:outage?503:200});
+ if(href.includes('/contact-us/'))return new Response(outage?'Unavailable':contact,{status:outage?503:200});
+ if(href.includes('/new-parking-proposals-'))return new Response('<main>If approved, removal of the two-hour free parking offer.</main>');
+ if(href==='https://experiencewakefield.co.uk/whats-on/')return new Response(events?'<h3><a href="https://experiencewakefield.co.uk/event/evening/">Evening Workshop</a></h3><p>Calendar Mon 26 October 2026</p><p>Clock 18:00 - 21:00</p><p>Map pin WX Wakefield Exchange</p>':'<h1>What is on</h1>');
+ return new Response('Not found',{status:404});
+};
+const {default:handler}=await import('../api/chat.js');let count=0;
+async function ask(q,history=[]){
+ const messages=[...history,u(q)],res={setHeader(){},status(c){this.code=c;return this;},json(body){this.body=body;return this;}};
+ await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'practical-'+(++count)},socket:{},body:{messages}},res);
+ assert.equal(res.code,200,JSON.stringify(res.body));return {...res.body,messages:[...messages,a(res.body.reply)]};
+}
+const first=await ask('Help me find official parking information for Wakefield city centre.');
+const display=await ask('How do I display parking tickets?',first.messages);
+assert.match(display.reply,/printed details can be clearly read from outside/);
+assert.doesNotMatch(display.reply,/two hours free|two-hour free/);
+const free=await ask('Which Wakefield car parks offer free parking?',display.messages);
+assert.match(free.reply,/can't confirm a current list/);assert.match(free.reply,/implementation date/);
+assert.doesNotMatch(free.reply,/currently offers up to two/);
+const limits=await ask('Are there time restrictions?',free.messages);
+assert.match(limits.reply,/Time limits and charging hours depend on the car park/);
+assert.match(limits.reply,/Which car park/);assert.notEqual(limits.reply,free.reply);
+const website=await ask("Where can I find Wakefield's official website?",limits.messages);
+assert.match(website.reply,/https:\/\/www.wakefield.gov.uk\//);
+const hours=await ask('How do I contact Wakefield Council outside hours?',website.messages);
+assert.match(hours.reply,/24 hours a day, seven days a week/);assert.doesNotMatch(hours.reply,/01924 306 987|8:30/);
+assert.equal(modelBodies.length,0,'Parking and contact help should not depend on model prose');
+await ask("What are Wakefield's best vegetarian restaurants?",first.messages);
+assert.ok(modelBodies.at(-1).tools?.some(t=>t.name==='web_search'));
+assert.equal(modelBodies.at(-1).tools[0].allowed_domains,undefined);
+assert.match(modelBodies.at(-1).system,/RESTAURANT DISCOVERY/);
+assert.equal(modelBodies.at(-1).messages.length,1,'A restaurant request must leave the parking topic');
+await ask('Where are popular restaurants in Wakefield?');
+assert.ok(modelBodies.at(-1).tools?.some(t=>t.name==='web_search'));
+cited=false;const failedDiet=await ask("What are Wakefield's best vegetarian restaurants?");
+assert.equal(failedDiet.verification,'restaurant-discovery-unverified');assert.doesNotMatch(failedDiet.reply,/Try Italian/);
+const before=modelBodies.length;
+const empty=await ask("What's on tonight in Wakefield?");
+assert.equal(empty.verification,'tonight-dated-cards');assert.match(empty.reply,/doesn't mean nothing is happening/);assert.doesNotMatch(empty.reply,/Gyros|Marmalade|Robatary|restaurants are open/);
+events=true;const night=await ask("What's on tonight in Wakefield?");
+assert.match(night.reply,/Evening Workshop/);assert.match(night.reply,/18:00–21:00/);assert.ok(night.sources.some(s=>s.url.endsWith('/evening/')));
+assert.equal(modelBodies.length,before,'Tonight result cannot fall through to invented venue opening claims');
+const card=(title,start,end,date='2026-10-26')=>({title,venue:'WX',startDate:date,endDate:date,start,end,url:'https://wxwakefield.co.uk/event/'+title});
+const selected=tonightResponse([card('Daytime','10:00','15:00'),card('Evening','18:00','21:00'),card('NextDay','18:00','21:00','2026-10-27'),card('Late','23:00','01:00'),{...card('Run','18:00','21:00'),endDate:'2026-10-30'},card('Invalid','29:00','30:00'),{...card('Cancelled','18:00','21:00'),status:'cancelled'}]);
+assert.deepEqual(selected.cards.map(c=>c.title),['Evening','Late']);
+const late=tonightResponse([card('Ended','18:00','19:00'),card('NoEnd','18:00',null),card('Future','23:00','01:00')],new NativeDate('2026-10-26T22:00:00Z'));
+assert.deepEqual(late.cards.map(c=>c.title),['Future']);
+assert.equal(practicalTopic([u('Parking for the parade?')]),null);
+outage=true;const failedParking=await ask('Which Wakefield car parks offer free parking?');assert.doesNotMatch(failedParking.reply,/two hours|two-hour/);assert.equal(failedParking.sources.length,0);
+const failedContact=await ask('How do I contact Wakefield Council outside hours?');assert.doesNotMatch(failedContact.reply,/01924 306 987|24 hours a day/);
+console.log('Practical chat checks passed: distinct parking follow-ups, no stale scheme promises, current contact evidence, vegetarian search and deterministic tonight sessions without restaurant padding.');

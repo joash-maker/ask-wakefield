@@ -1,3 +1,4 @@
+import {useBroadFoodDiscovery,FOOD_DRINK_SEARCH_GUIDANCE,foodDrinkSearchAnswer} from '../lib/food-drink-discovery.js';
 import {restaurantDietFollowUp,restaurantSetState} from '../lib/restaurant-followups.js';
 import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse, dietaryMenuAnswer, knownDietaryMenuAnswer } from '../lib/practical-answers.js';
 import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
@@ -1908,6 +1909,7 @@ function requiresVerifiedSource(messages) {
 }
 
 function verificationFallback(messages) {
+  if (useBroadFoodDiscovery(messages)) return "I couldn’t check those food and drink options just now. Please try again shortly.";
   if (isRestaurantDiscovery(messages)) return "I couldn’t check current menus for that request just now. I won’t assume a restaurant suits your diet from its cuisine. Please try again shortly.";
   if (isLocalDiscoveryQuery(messages)) return localDiscoveryFallback(messages);
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
@@ -5113,7 +5115,7 @@ export default async function handler(req, res) {
   // A missing start point prevents a transport promise, but should not result
   // in a blank answer. The response carries first-party links as source chips.
   const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
-  const groundedStarter = isEventTopic ? null : foodSpecificFollowUp(currentText, clientState)
+  const groundedStarter = (isEventTopic || useBroadFoodDiscovery(messages)) ? null : foodSpecificFollowUp(currentText, clientState)
     || nightlifeRecommendation(currentText, clientState)
     || districtThaliDiscovery(currentText)
     || namedDiningThaliFollowUp(currentText, messages)
@@ -5711,7 +5713,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   const baseBody = {
     model: MODEL,
     max_tokens: isCurrentEventsQuery(messages) ? 950 : (districtPlacesContext?.places?.length ? 1350 : 1200),
-    system: `${SYSTEM_PROMPT}\n\n${londonContext()}${directContext}${liveOutputContract}`,
+    system: `${SYSTEM_PROMPT}\n\n${londonContext()}${directContext}${liveOutputContract}${useBroadFoodDiscovery(messages) ? FOOD_DRINK_SEARCH_GUIDANCE : ''}`,
     messages
   };
 
@@ -5759,6 +5761,14 @@ Use these only to establish whether a long-running attraction/exhibition is actu
 
     const { reply, sources, searchEvidence, searched } = extractAnswer(data);
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
+    if (useBroadFoodDiscovery(messages)) {
+      const discovered = foodDrinkSearchAnswer(reply,sources,searchEvidence,messages);
+      if (!discovered) return res.status(200).json({reply:"I couldn't confirm a useful shortlist from the sources I checked just now. Please try again shortly.",sources:[],live:false,verification:'food-drink-discovery-unverified'});
+      const state=restaurantSetState(discovered,{...normaliseClientState(null),area:route.area||'Wakefield district'});
+      const {restaurantSet,...answer}=discovered;
+      attachStateCookie(res,state);
+      return res.status(200).json({...answer,state});
+    }
     if (isRestaurantDiscovery(messages)) {
       const menuAnswer = await dietaryMenuAnswer(messages,sources,searchEvidence);
       if (menuAnswer) {

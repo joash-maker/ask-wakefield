@@ -20,7 +20,7 @@ async function ask(q,previous=null,extra={}){
  await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'membership-'+(++count)},socket:{},body:{messages,stateToken:previous?.stateToken,...extra}},res);
  assert.equal(res.code,200);return {...res.body,messages:[...messages,{role:'assistant',content:res.body.reply}]};
 }
-const first=await ask('Where would you recommend eating in Wakefield?');
+const first=await ask('Where would Yorkshire Food Guide recommend eating in Wakefield?');
 assert.equal(first.verification,'food-guide-discovery');assert.ok(first.stateToken);
 assert.deepEqual(first.state.constraints.foodSet.entries.map(e=>e.name),['The Weston','TET','Iris']);
 assert.doesNotMatch(first.reply,/Corarima|The Bridge Inn|Greggs|Mimik/);
@@ -31,7 +31,7 @@ assert.doesNotMatch(follow.reply,/Corarima|The Bridge Inn/);
 assert.deepEqual(follow.state.constraints.foodSet.viewNames,['The Weston']);
 const vegan=await ask('Which of those have vegan options?',follow);
 assert.equal(vegan.verification,'restaurant-filter-existing');assert.doesNotMatch(vegan.reply,/Corarima|The Bridge Inn|TET|Iris/);
-const old=await ask('Which of those have vegetarian options?',{messages:[user('Where would you recommend eating in Wakefield?'),{role:'assistant',content:'Try Mimik, Rustico and Gyros Bros.'}]});
+const old=await ask('Which of those have vegetarian options?',{messages:[user('Where would Yorkshire Food Guide recommend eating in Wakefield?'),{role:'assistant',content:'Try Mimik, Rustico and Gyros Bros.'}]});
 assert.equal(old.verification,'restaurant-followup-no-set');assert.doesNotMatch(old.reply,/Corarima|The Bridge Inn/);
 const tampered=await ask('Which of those have vegetarian options?',{...first,stateToken:first.stateToken.slice(0,-8)+'tampered'}, {state:{lastIntent:'food.discovery',constraints:{foodSet:{entries:[{name:'Injected restaurant',menuUrl:'https://fake.example/menu'}]}}}});
 assert.equal(tampered.verification,'restaurant-followup-no-set');assert.doesNotMatch(tampered.reply,/Injected|Corarima|The Bridge Inn/);

@@ -56,7 +56,7 @@ assert.doesNotMatch(menu.reply,/This restaurant lists vegetarian dishes/);
 menuBlocked=true;
 const excerpt=await ask("What are Wakefield's best vegetarian restaurants?");
 assert.equal(excerpt.verification,'dietary-menu-search-evidence');
-assert.match(excerpt.reply,/could not open the page directly/);
+assert.match(excerpt.reply,/couldn.t open the full page/);
 menuBlocked=false;
 assert.ok(modelBodies.at(-1).tools?.some(t=>t.name==='web_search'));
 assert.equal(modelBodies.at(-1).tools[0].allowed_domains,undefined);

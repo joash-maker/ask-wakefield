@@ -1,4 +1,4 @@
-import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse, dietaryMenuAnswer } from '../lib/practical-answers.js';
+import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse, dietaryMenuAnswer, knownDietaryMenuAnswer } from '../lib/practical-answers.js';
 import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
@@ -5049,6 +5049,11 @@ export default async function handler(req, res) {
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  // Equivalent general dietary questions start with the same known first-party pages.
+  // Registry membership is a discovery hint; this function returns only after a fresh menu read.
+  const knownMenus = await knownDietaryMenuAnswer(messages);
+  if (knownMenus) return res.status(200).json(knownMenus);
+
   if (practicalTopic(messages) && !isNamedEventDetailQuery(messages) && !isComplexSaturdayDayPlanQuery(messages)) {
     const practical = await practicalAnswer(messages);
     if (practical) return res.status(200).json(practical);

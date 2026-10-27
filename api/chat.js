@@ -1,3 +1,4 @@
+import {restaurantDietFollowUp,restaurantSetState} from '../lib/restaurant-followups.js';
 import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUIDANCE, tonightResponse, dietaryMenuAnswer, knownDietaryMenuAnswer } from '../lib/practical-answers.js';
 import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
@@ -5049,13 +5050,20 @@ export default async function handler(req, res) {
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  const restaurantFollowUp = await restaurantDietFollowUp(messages,clientState);
+  if (restaurantFollowUp) {
+    attachStateCookie(res,restaurantFollowUp.state);
+    return res.status(200).json(restaurantFollowUp);
+  }
+
   // Discover guide recommendations before narrowing to independently checked menu pages.
   // Guide attribution and menu verification remain separate in the returned answer.
   const knownMenus = await knownDietaryMenuAnswer(messages);
   if (knownMenus) {
-    const state = { ...normaliseClientState(null), lastIntent: 'food.discovery', area: route.area || 'Wakefield district' };
+    const state = restaurantSetState(knownMenus,{ ...normaliseClientState(null), area: route.area || 'Wakefield district' });
+    const {restaurantSet,...answer} = knownMenus;
     attachStateCookie(res,state);
-    return res.status(200).json({ ...knownMenus, state });
+    return res.status(200).json({ ...answer, state });
   }
 
   if (practicalTopic(messages) && !isNamedEventDetailQuery(messages) && !isComplexSaturdayDayPlanQuery(messages)) {
@@ -5754,9 +5762,10 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     if (isRestaurantDiscovery(messages)) {
       const menuAnswer = await dietaryMenuAnswer(messages,sources,searchEvidence);
       if (menuAnswer) {
-        const state = { ...normaliseClientState(null), lastIntent: 'food.discovery', area: route.area || 'Wakefield district' };
+        const state = restaurantSetState(menuAnswer,{ ...normaliseClientState(null), area: route.area || 'Wakefield district' });
+        const {restaurantSet,...answer} = menuAnswer;
         attachStateCookie(res,state);
-        return res.status(200).json({ ...menuAnswer, state });
+        return res.status(200).json({ ...answer, state });
       }
     }
     // Unrelated direct snapshots must not make an unsearched discovery reply look verified.

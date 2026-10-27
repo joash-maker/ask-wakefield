@@ -5049,10 +5049,14 @@ export default async function handler(req, res) {
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
-  // Equivalent general dietary questions start with the same known first-party pages.
-  // Registry membership is a discovery hint; this function returns only after a fresh menu read.
+  // Discover guide recommendations before narrowing to independently checked menu pages.
+  // Guide attribution and menu verification remain separate in the returned answer.
   const knownMenus = await knownDietaryMenuAnswer(messages);
-  if (knownMenus) return res.status(200).json(knownMenus);
+  if (knownMenus) {
+    const state = { ...normaliseClientState(null), lastIntent: 'food.discovery', area: route.area || 'Wakefield district' };
+    attachStateCookie(res,state);
+    return res.status(200).json({ ...knownMenus, state });
+  }
 
   if (practicalTopic(messages) && !isNamedEventDetailQuery(messages) && !isComplexSaturdayDayPlanQuery(messages)) {
     const practical = await practicalAnswer(messages);
@@ -5749,7 +5753,11 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
     if (isRestaurantDiscovery(messages)) {
       const menuAnswer = await dietaryMenuAnswer(messages,sources,searchEvidence);
-      if (menuAnswer) return res.status(200).json(menuAnswer);
+      if (menuAnswer) {
+        const state = { ...normaliseClientState(null), lastIntent: 'food.discovery', area: route.area || 'Wakefield district' };
+        attachStateCookie(res,state);
+        return res.status(200).json({ ...menuAnswer, state });
+      }
     }
     // Unrelated direct snapshots must not make an unsearched discovery reply look verified.
     if (isLocalDiscoveryQuery(messages) && (!searched || !sources.length)) {

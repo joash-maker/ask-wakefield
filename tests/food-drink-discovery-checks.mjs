@@ -4,7 +4,7 @@ const user=content=>({role:'user',content});
 process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';
 let mode='good',bodies=[];
 const places=[{name:'Test Coffee House',area:'Wakefield',category:'cafe',url:'https://coffee.test/about',sourceKind:'official'},{name:'Test Tap',area:'Ossett',category:'taproom',url:'https://tap.test/about',sourceKind:'official'}];
-const citations=places.map(p=>({url:p.url,title:p.name,cited_text:`${p.name} is a ${p.category} in ${p.area}.`}));
+const citations=places.map(p=>({url:p.url,title:p.name,cited_text:`${p.name} is an independent ${p.category} in ${p.area}.`}));
 globalThis.fetch=async(url,options)=>{
  if(String(url).includes('anthropic.com')){
   const body=JSON.parse(options.body);bodies.push(body);

@@ -36,5 +36,6 @@ for(const q of ['Vegetarian restaurants in Wakefield?','Restaurants open tonight
 assert.equal(useBroadFoodDiscovery([user('How do I display a parking ticket?')]),false);
 const sources=citations.map(({url,title})=>({url,title})),evidence=citations.map(c=>({url:c.url,text:c.cited_text}));
 const wrong={places:[{...places[0],area:'Leeds'}, {...places[0],url:'https://invented.test/'}]};
-assert.equal(foodDrinkSearchAnswer(JSON.stringify(wrong),sources,evidence,[user('Coffee in Wakefield?')]),null);
+const recovered=foodDrinkSearchAnswer('**```json\n'+JSON.stringify(wrong)+'\n``` citations follow',sources,evidence,[user('Coffee in Wakefield?')]);
+assert.equal(recovered.restaurantSet.length,1);assert.equal(recovered.restaurantSet[0].name,'Test Coffee House');assert.equal(recovered.sources[0].url,places[0].url,'An invented URL must be replaced only with an actual cited source for that same venue');
 console.log('Food/drink discovery checks passed: categories, fresh search, open domains, locality, signed list follow-up, constraints and unverified/malformed failures.');

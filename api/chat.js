@@ -4032,7 +4032,7 @@ function extractAnswer(data) {
 
   return {
     reply: renderedReply,
-    sources: Array.from(sources.values()).slice(0, 5),
+    sources: Array.from(sources.values()).slice(0, 15),
     searchEvidence: searchEvidence.slice(0, 20),
     searched
   };

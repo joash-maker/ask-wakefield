@@ -34,6 +34,8 @@ assert.equal(follow.verification,'restaurant-filter-existing');assert.doesNotMat
 for(const m of ['no-search','no-proof','malformed']){mode=m;const r=await ask('Where would you recommend eating in Wakefield?');assert.equal(r.live,false);assert.equal(r.sources.length,0);assert.doesNotMatch(r.reply,/Test Coffee House|"places"/);}
 for(const q of ['Vegetarian restaurants in Wakefield?','Restaurants open tonight?','Restaurants under £20?','Dog-friendly cafes in Wakefield?','Restaurants from Yorkshire Food Guide?'])assert.equal(useBroadFoodDiscovery([user(q)]),false,q);
 assert.equal(useBroadFoodDiscovery([user('How do I display a parking ticket?')]),false);
+assert.equal(useBroadFoodDiscovery([user('Vegetarian restaurants in Wakefield?'),user('Any others?')]),false,'More must retain the original diet');
+assert.equal(useBroadFoodDiscovery([user('Pubs open tonight?'),user('Any others?')]),false,'More must retain the time constraint');
 const sources=citations.map(({url,title})=>({url,title})),evidence=citations.map(c=>({url:c.url,text:c.cited_text}));
 const wrong={places:[{...places[0],area:'Leeds'}, {...places[0],url:'https://invented.test/'}]};
 const recovered=foodDrinkSearchAnswer('**```json\n'+JSON.stringify(wrong)+'\n``` citations follow',sources,evidence,[user('Coffee in Wakefield?')]);

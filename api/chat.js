@@ -5763,7 +5763,6 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
     if (useBroadFoodDiscovery(messages)) {
       const discovered = foodDrinkSearchAnswer(reply,sources,searchEvidence,messages);
-      if (!discovered && process.env.VERCEL_ENV === 'preview') console.info('Food discovery rejected public search output', JSON.stringify({reply,sources,searchEvidence}));
       if (!discovered) return res.status(200).json({reply:"I couldn't confirm a useful shortlist from the sources I checked just now. Please try again shortly.",sources:[],live:false,verification:'food-drink-discovery-unverified'});
       const state=restaurantSetState(discovered,{...normaliseClientState(null),area:route.area||'Wakefield district'});
       const {restaurantSet,...answer}=discovered;

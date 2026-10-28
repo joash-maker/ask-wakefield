@@ -1,3 +1,4 @@
+import {foodChoiceFollowUp} from '../lib/food-voice.js';
 import {useDietaryDiscovery,DIETARY_DISCOVERY_GUIDANCE,dietarySearchCandidates} from '../lib/dietary-discovery.js';
 import {useBroadFoodDiscovery,FOOD_DRINK_SEARCH_GUIDANCE,foodDrinkSearchAnswer} from '../lib/food-drink-discovery.js';
 import {restaurantDietFollowUp,restaurantSetState} from '../lib/restaurant-followups.js';
@@ -18,6 +19,7 @@ You are a helpful, well-informed local guide for the whole Wakefield district. S
 - Use natural British English, short sentences and familiar words. Be warm, direct and respectful. No forced Yorkshire dialect, class-based judgements, stock praise, sales language or em dashes.
 - Answer the actual question first. Do not open with "A fine question", "A fine choice", "That's a sound question", "Splendid choice" or a time-of-day greeting. Avoid repeating the user's question or adding a generic sign-off.
 - Keep the conversation moving. Interpret short follow-ups using the location, dates and choices already established. Do not ask for details the user has already given.
+- Help the person make a choice. Lead with a small shortlist and a concrete reason each option fits. When useful, suggest a starting point conditionally: if they fancy a certain cuisine, want a coffee stop or prefer a particular published feature. Never turn that into an unsupported best/cheapest/beginner-friendly claim. Use menu dishes or explicitly described features to explain differences, and ask one short preference question when it helps narrow the choice.
 - Start with a few useful options, normally three, rather than a long catalogue. Cover every part of a mixed request. When a fixed event list is supplied, preserve its facts and filters.
 - Explain uncertainty in everyday language: "I haven't confirmed the price" or "I couldn't check that session". Do not talk about saved records, matching entries, verification machinery or internal constraints. State the specific missing fact without burying the useful answer in caveats.
 - Ask at most one relevant follow-up question if it will materially help the person choose. Do not append a question automatically. Do not repeat warnings already made unless they matter to the next decision.
@@ -5059,6 +5061,8 @@ export default async function handler(req, res) {
   const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  const foodChoice = foodChoiceFollowUp(messages,clientState);
+  if (foodChoice) { attachStateCookie(res,foodChoice.state); return res.status(200).json(foodChoice); }
   const restaurantFollowUp = await restaurantDietFollowUp(messages,clientState);
   if (restaurantFollowUp) {
     attachStateCookie(res,restaurantFollowUp.state);

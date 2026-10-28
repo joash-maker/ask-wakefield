@@ -26,7 +26,7 @@ assert.deepEqual(first.state.constraints.foodSet.entries.map(e=>e.name),['The We
 assert.doesNotMatch(first.reply,/Corarima|The Bridge Inn|Greggs|Mimik/);
 const follow=await ask('Which of those have vegetarian options?',first);
 assert.equal(follow.verification,'restaurant-filter-existing');
-assert.match(follow.reply,/The Weston/);assert.match(follow.reply,/haven't confirmed vegetarian menus for TET, Iris/);
+assert.match(follow.reply,/The Weston/);assert.match(follow.reply,/haven't confirmed vegetarian menus for TET or Iris/);
 assert.doesNotMatch(follow.reply,/Corarima|The Bridge Inn/);
 assert.deepEqual(follow.state.constraints.foodSet.viewNames,['The Weston']);
 const vegan=await ask('Which of those have vegan options?',follow);

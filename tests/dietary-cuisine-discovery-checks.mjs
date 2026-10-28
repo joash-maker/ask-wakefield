@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {useDietaryDiscovery,dietarySearchCandidates} from '../lib/dietary-discovery.js';
-process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';
+process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='true';process.env.GOOGLE_PLACES_API_KEY='test';
 const user=content=>({role:'user',content});
 const venues=[
  {name:'Test Indian Kitchen',area:'Wakefield',cuisine:'Indian',url:'https://indian-fixture.co.uk/menu',diet:'Vegetarian',meat:'Chicken tikka'},
@@ -10,9 +10,10 @@ const venues=[
  {name:'Unconfirmed Japanese Place',area:'Wakefield',cuisine:'Japanese',url:'https://japanese-fixture.co.uk/menu',diet:'',meat:'Sushi menu'},
  {name:'Wrong Town Thai',area:'Leeds',cuisine:'Thai',url:'https://leeds-fixture.co.uk/menu',diet:'Vegetarian',meat:''}
 ];
-let bodies=[],mode='normal',i=0;
+let bodies=[],mode='normal',i=0,placesCalls=0;
 globalThis.fetch=async(url,opts)=>{
  const href=String(url);
+ if(href.includes('places.googleapis.com')){placesCalls++;return new Response(JSON.stringify({places:[{id:'google-fixture',displayName:{text:'Discovery Lead Restaurant'},formattedAddress:'Wakefield WF1 1AA',location:{latitude:53.68,longitude:-1.49},primaryType:'restaurant',types:['restaurant','food'],businessStatus:'OPERATIONAL',websiteUri:'https://indian-fixture.co.uk/menu',googleMapsUri:'https://maps.google.com/?cid=fixture',servesVegetarianFood:true}]}));}
  if(href.includes('anthropic.com')){
   bodies.push(JSON.parse(opts.body));
   const citations=['no-search','search-results-only'].includes(mode)?[]:venues.map(v=>({url:v.url,title:v.name,cited_text:`${v.name} ${v.area} ${v.cuisine} restaurant menu ${v.diet? v.diet+' dishes listed.':''}`}));
@@ -33,6 +34,7 @@ async function ask(q,previous){
  assert.equal(res.code,200,JSON.stringify(res.body));return {...res.body,messages:[...messages,{role:'assistant',content:res.body.reply}]};
 }
 const all=await ask('Where can we eat vegetarian food in Wakefield?');
+assert.ok(placesCalls>0,'Exercise the real Places-enabled route that previously suppressed menu search');
 assert.equal(all.verification,'dietary-menu-pages');assert.ok(all.stateToken);
 for(const name of ['Test Indian Kitchen','Test Thai Table','Test Turkish Table'])assert.match(all.reply,new RegExp(name));
 assert.doesNotMatch(all.reply,/Unconfirmed Japanese|Wrong Town|Leeds/);
@@ -41,6 +43,8 @@ assert.match(all.reply,/does not mean each restaurant is entirely vegetarian/);
 assert.equal(bodies.at(-1).tools[0].allowed_domains,undefined);assert.equal(bodies.at(-1).tool_choice.type,'any');
 assert.match(bodies.at(-1).system,/Vegetarian and vegan are dietary requirements, not cuisines/);
 const more=await ask('Any others?',all);assert.equal(more.verification,'dietary-menu-unverified');assert.doesNotMatch(more.reply,/Test Indian|Test Thai|Test Italian|Test Turkish/,'More must not repeat the signed shortlist');
+const {dietaryMenuAnswer}=await import('../lib/practical-answers.js');
+const directory=await dietaryMenuAnswer([user('Vegetarian food in Wakefield?')],[{name:'Trip',url:'https://www.trip.com/restaurant/fixture'}],[{url:'https://www.trip.com/restaurant/fixture',text:'Trip Wakefield vegetarian menu dishes'}]);assert.equal(directory.live,false,'Trip listings are not first-party menu evidence');
 const thai=await ask('Any Thai restaurants with vegetarian options in Wakefield?');assert.equal(thai.verification,'dietary-menu-pages');assert.match(thai.reply,/Test Thai Table/);assert.doesNotMatch(thai.reply,/Indian|Italian|Turkish|Wrong Town/);
 const ossett=await ask('Vegetarian restaurants in Ossett?');assert.equal(ossett.verification,'dietary-menu-pages');assert.match(ossett.reply,/Test Italian House/);assert.doesNotMatch(ossett.reply,/Test Thai Table|Test Indian/);
 const vegan=await ask('Where can we eat vegan food in Wakefield?');assert.equal(vegan.verification,'dietary-menu-pages');assert.match(vegan.reply,/Test Turkish Table/);assert.doesNotMatch(vegan.reply,/Test Indian|Test Thai|Test Italian/);

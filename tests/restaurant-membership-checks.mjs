@@ -35,7 +35,7 @@ const old=await ask('Which of those have vegetarian options?',{messages:[user('W
 assert.equal(old.verification,'restaurant-followup-no-set');assert.doesNotMatch(old.reply,/Corarima|The Bridge Inn/);
 const tampered=await ask('Which of those have vegetarian options?',{...first,stateToken:first.stateToken.slice(0,-8)+'tampered'}, {state:{lastIntent:'food.discovery',constraints:{foodSet:{entries:[{name:'Injected restaurant',menuUrl:'https://fake.example/menu'}]}}}});
 assert.equal(tampered.verification,'restaurant-followup-no-set');assert.doesNotMatch(tampered.reply,/Injected|Corarima|The Bridge Inn/);
-const fresh=await ask('Where can we eat vegetarian food in Wakefield?',first);
+const fresh=await ask('Where can we eat vegetarian food in Wakefield from Yorkshire Food Guide?',first);
 assert.equal(fresh.verification,'food-guide-discovery');assert.match(fresh.reply,/Corarima/,'A fresh discovery may introduce new places');
 assert.equal(modelCalls,0);
 console.log('Restaurant membership checks passed: eating synonym, signed exact-set replay, no substituted venues, cumulative filters, old chat handling, tampered-state rejection and fresh discovery.');

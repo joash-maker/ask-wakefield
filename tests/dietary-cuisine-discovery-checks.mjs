@@ -15,8 +15,8 @@ globalThis.fetch=async(url,opts)=>{
  const href=String(url);
  if(href.includes('anthropic.com')){
   bodies.push(JSON.parse(opts.body));
-  const citations=mode==='no-search'?[]:venues.map(v=>({url:v.url,title:v.name,cited_text:`${v.name} ${v.area} ${v.cuisine} restaurant menu ${v.diet? v.diet+' dishes listed.':''}`}));
-  return new Response(JSON.stringify({content:[...(mode==='no-search'?[]:[{type:'web_search_tool_result',content:[]}]),{type:'text',text:'FINAL_RESPONSE: **```json\n'+JSON.stringify({menus:venues})+'\n```\nEvidence with citations.',citations}]}));
+  const citations=['no-search','search-results-only'].includes(mode)?[]:venues.map(v=>({url:v.url,title:v.name,cited_text:`${v.name} ${v.area} ${v.cuisine} restaurant menu ${v.diet? v.diet+' dishes listed.':''}`}));
+  return new Response(JSON.stringify({content:[...(mode==='no-search'?[]:[{type:'web_search_tool_result',content:mode==='search-results-only'?venues.map(v=>({type:'web_search_result',url:v.url,title:v.name})):[]}]),{type:'text',text:'FINAL_RESPONSE: **```json\n'+JSON.stringify({menus:venues})+'\n```\nEvidence with citations.',citations}]}));
  }
  const v=venues.find(v=>v.url===href);
  if(v){
@@ -46,6 +46,7 @@ const ossett=await ask('Vegetarian restaurants in Ossett?');assert.equal(ossett.
 const vegan=await ask('Where can we eat vegan food in Wakefield?');assert.equal(vegan.verification,'dietary-menu-pages');assert.match(vegan.reply,/Test Turkish Table/);assert.doesNotMatch(vegan.reply,/Test Indian|Test Thai|Test Italian/);
 const refined=await ask('What about Italian?',all);assert.equal(refined.verification,'dietary-menu-pages');assert.match(refined.reply,/Test Italian House/);assert.doesNotMatch(refined.reply,/Test Thai Table|Test Indian/);
 const filtered=await ask('Which of those have vegan options?',all);assert.equal(filtered.verification,'restaurant-filter-existing');assert.match(filtered.reply,/Test Turkish Table/);assert.deepEqual(filtered.state.constraints.foodSet.viewNames,['Test Turkish Table']);
+mode='search-results-only';const fetchedWithoutCitations=await ask('Where can we eat vegetarian food in Wakefield?');assert.equal(fetchedWithoutCitations.verification,'dietary-menu-pages');assert.match(fetchedWithoutCitations.reply,/Test Thai Table/);
 mode='pdf';const pdf=await ask('Any Thai restaurants with vegetarian options in Wakefield?');assert.equal(pdf.verification,'dietary-menu-search-evidence');assert.match(pdf.reply,/excerpt/);
 mode='no-search';const failed=await ask('Where can we eat vegetarian food in Wakefield?');assert.equal(failed.live,false);assert.equal(failed.sources.length,0);assert.doesNotMatch(failed.reply,/Test Indian/);
 for(const q of ['Vegetarian restaurants open tonight?','Vegetarian options under £20?','Vegetarian food suitable for a nut allergy?','Vegetarian-only restaurants?','What does Tanvi offer vegetarians?'])assert.equal(useDietaryDiscovery([user(q)]),false,q);

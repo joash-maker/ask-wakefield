@@ -3971,7 +3971,7 @@ async function callAnthropic(body) {
   }
 }
 
-function extractAnswer(data) {
+function extractAnswer(data, includeSearchResults = false) {
   const content = Array.isArray(data?.content) ? data.content : [];
   const sources = new Map();
   const searchEvidence = [];
@@ -3985,6 +3985,12 @@ function extractAnswer(data) {
     if (block?.type === 'web_search_tool_result') {
       searched = true;
       lastSearchResultIndex = index;
+      if (includeSearchResults && Array.isArray(block.content)) {
+        for (const result of block.content) {
+          if (result?.type !== 'web_search_result' || !/^https:\/\//.test(result.url || '')) continue;
+          sources.set(result.url,{title:result.title||result.url,url:result.url});
+        }
+      }
     }
   });
 
@@ -4033,7 +4039,7 @@ function extractAnswer(data) {
 
   return {
     reply: renderedReply,
-    sources: Array.from(sources.values()).slice(0, 15),
+    sources: Array.from(sources.values()).slice(0, includeSearchResults ? 40 : 15),
     searchEvidence: searchEvidence.slice(0, 20),
     searched
   };
@@ -5760,7 +5766,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       return res.status(status).json({ error: 'upstream_error', reply });
     }
 
-    const { reply, sources, searchEvidence, searched } = extractAnswer(data);
+    const { reply, sources, searchEvidence, searched } = extractAnswer(data,useDietaryDiscovery(messages));
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
     if (useBroadFoodDiscovery(messages)) {
       const discovered = foodDrinkSearchAnswer(reply,sources,searchEvidence,messages);

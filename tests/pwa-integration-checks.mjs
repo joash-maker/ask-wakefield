@@ -6,7 +6,7 @@ for(const [,script] of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Scr
 const fn=html.slice(html.indexOf('function sendMessage('),html.indexOf('\nfunction sendMsg('));
 const messages=[];let notices=0,request;
 const element=()=>({appendChild(){},classList:{add(){}},style:{}});
-const ctx={isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend'},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
+const ctx={requestAnimationFrame(){},isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend'},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
 vm.createContext(ctx);vm.runInContext(fn+';sendMessage();',ctx);
 assert.equal(ctx.inputEl.value,'Free things this weekend');assert.equal(ctx.isSending,false);assert.equal(ctx.sendBtn.disabled,false);assert.equal(ctx.chatHistory.length,0);assert.equal(messages.length,0);assert.equal(notices,1);
 ctx.navigator.onLine=true;vm.runInContext('sendMessage();',ctx);

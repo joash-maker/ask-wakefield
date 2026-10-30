@@ -137,7 +137,7 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
   if(name.startsWith('Indoor activity choices')){
     assert.equal(results[2].state.constraints.requestFrame.environment,'indoor');
     assert.match(results[2].reply,/Tenpin/);
-    assert.equal(results[4].sources.length,1);assert.match(results[4].reply,/group ticket price/);
+    assert.equal(results[4].sources.length,1);assert.match(results[4].reply,/current ticket quote/);
   }
   if (name.startsWith('Children from stored weekend')) {
     assert.match(results[2].reply, /Caphouse Tabletop Gaming Day/);

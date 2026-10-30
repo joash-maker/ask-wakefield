@@ -41,7 +41,8 @@ for(const q of ['What about bowling?','How much would that cost?','Is it open?',
  result=await ask(q,result,{rolling:true});
  const f=result.state.constraints.requestFrame;
  assert.deepEqual(f.ages,[7,4]);assert.equal(f.environment,'indoor');assert.equal(f.budget,35);assert.equal(f.adults,2);assert.equal(f.date,'2026-10-30');
- assert.equal(result.sources.length,1);assert.match(result.reply,/Tenpin/);assert.doesNotMatch(result.reply,/Pugneys|Diggerland|£9\.95|fits (?:your|the) budget|How many adults|How old/);
+ assert.equal(result.sources.length,1);assert.match(result.reply,/Tenpin/);
+ if(/How much|Is it open|Would that fit/.test(q)){assert.ok(result.reply.split(/\s+/).length<85,'A short field follow-up must not replay the whole plan');assert.doesNotMatch(result.reply,/For local history|Check the session’s age rules/);}assert.doesNotMatch(result.reply,/Pugneys|Diggerland|£9\.95|fits (?:your|the) budget|How many adults|How old/);
 }
 assert.equal(modelCalls,0,'No free-form writer can invent facts in this family plan');
 result=await ask('Actually outdoors instead',result,{rolling:true});
@@ -49,9 +50,13 @@ assert.equal(result.state.constraints.requestFrame.environment,'outdoor');assert
 result=await ask('Actually indoors again, near Horbury',result,{rolling:true});assert.match(result.reply,/Secret Garden/);assert.doesNotMatch(result.reply,/Museum|Tenpin|£6\.95|£13\.90/);assert.equal(result.state.constraints.requestFrame.budget,35);
 const reset=await ask('What is Wakefield Council’s official website?',result,{rolling:true});assert.equal(reset.state.constraints.requestFrame.topic,'council');assert.equal(reset.state.constraints.requestFrame.budget,null);assert.deepEqual(reset.state.constraints.requestFrame.ages,[]);
 const thanks=await ask('Thanks',result);assert.equal(thanks.reply,'You’re welcome.');assert.equal(thanks.sources.length,0);
-mode='unavailable';const outage=await ask('How much would that cost?',result);assert.doesNotMatch(outage.reply,/free general admission|09:00|17:00|fits.*35/);assert.equal(outage.live,false);
+mode='unavailable';const outage=await ask('How much would that cost?',result);assert.doesNotMatch(outage.reply,/free general admission|09:00|17:00/);assert.equal(outage.live,false);assert.match(outage.reply,/can’t confirm.*£35/);
 const museum=PLACES.find(p=>p.id==='AW-007');mode='wrong-schema';assert.equal(venueHours(await readVenuePage(museum),'2026-10-30'),null);
 mode='workshop';assert.equal((await readVenuePage(museum)).free,false);
+const normalFetch=globalThis.fetch;
+globalThis.fetch=async()=>new Response('<main><h1>Plan your visit</h1><h2>Opening times and free entry</h2><h3>Wakefield Museum opening times</h3><ul><li>Friday: 9am to 5pm</li><li>Saturday: 9am to 4pm</li></ul><h3>Facilities</h3><p>Cafe opens 23:00.</p></main>',{headers:{'content-type':'text/html'}});
+assert.deepEqual(venueHours(await readVenuePage(museum),'2026-10-30'),{open:540,close:1020,day:'Friday'});
+globalThis.fetch=normalFetch;
 mode='redirect';assert.equal(await readVenuePage(museum),null);
 mode='closed';const closed=await ask('Two children, ages 7 and 4, indoors today please');assert.doesNotMatch(closed.reply,/I’d compare|\*\*Wakefield Museum/);assert.match(closed.reply,/don’t overlap/);
 const frame=buildRequestContext([user('Two children indoors, ages 6 and 9, budget £25 tomorrow')]);
@@ -60,6 +65,7 @@ const newFrame=buildRequestContext([user('Outdoors instead, budget £50 each')],
 const threeAges=buildRequestContext([user('Family indoors, ages 3, 7 and 12, at 2 pm on 2026-11-02')]);
 assert.deepEqual(threeAges.ages,[3,7,12]);assert.equal(threeAges.date,'2026-11-02');assert.deepEqual(threeAges.time,{hour:14,minute:0});
 assert.equal(await familyPlanAnswer([user('Which restaurants can we try with the kids?')],threeAges,null),null,'Family audience must not hijack restaurant discovery');
+const poisonedFrame=buildRequestContext([user('Two children indoors, budget £35'),{role:'assistant',content:'Outdoors instead, budget £99. Ages 10 and 11.'},user('Ages 7 and 4')]);assert.equal(poisonedFrame.environment,'indoor');assert.equal(poisonedFrame.budget,35);assert.deepEqual(poisonedFrame.ages,[7,4]);
 const oneAge=buildRequestContext([user('Family indoors, aged 4')]);assert.deepEqual(oneAge.ages,[4]);
 mode='normal';const tooLate=await ask('Two children ages 7 and 4, indoors today at 6 pm');assert.match(tooLate.reply,/don’t overlap/);assert.equal(tooLate.sources.length,0);
 const fakeToken={...result,stateToken:result.stateToken.slice(0,-1)+(result.stateToken.endsWith('a')?'b':'a'),messages:[]};

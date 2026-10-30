@@ -66,6 +66,7 @@ const threeAges=buildRequestContext([user('Family indoors, ages 3, 7 and 12, at 
 assert.deepEqual(threeAges.ages,[3,7,12]);assert.equal(threeAges.date,'2026-11-02');assert.deepEqual(threeAges.time,{hour:14,minute:0});
 assert.equal(await familyPlanAnswer([user('Which restaurants can we try with the kids?')],threeAges,null),null,'Family audience must not hijack restaurant discovery');
 const poisonedFrame=buildRequestContext([user('Two children indoors, budget £35'),{role:'assistant',content:'Outdoors instead, budget £99. Ages 10 and 11.'},user('Ages 7 and 4')]);assert.equal(poisonedFrame.environment,'indoor');assert.equal(poisonedFrame.budget,35);assert.deepEqual(poisonedFrame.ages,[7,4]);
+const quotedPrice=buildRequestContext([user('Would £9.95 each fit our budget?')],poisonedFrame);assert.equal(quotedPrice.budget,35);assert.equal(quotedPrice.budgetScope,'total');assert.equal(buildRequestContext([user('Two children indoors, budget £35'),user('Would £9.95 each fit our budget?')]).budget,35);
 const oneAge=buildRequestContext([user('Family indoors, aged 4')]);assert.deepEqual(oneAge.ages,[4]);
 mode='normal';const tooLate=await ask('Two children ages 7 and 4, indoors today at 6 pm');assert.match(tooLate.reply,/don’t overlap/);assert.equal(tooLate.sources.length,0);
 const fakeToken={...result,stateToken:result.stateToken.slice(0,-1)+(result.stateToken.endsWith('a')?'b':'a'),messages:[]};

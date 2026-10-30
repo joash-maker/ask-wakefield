@@ -1,3 +1,4 @@
+import {indoorFamilyAnswer} from '../lib/indoor-family.js';
 import { GUIDE_VOICE } from '../lib/guide-voice.js';
 import {foodChoiceFollowUp} from '../lib/food-voice.js';
 import {useDietaryDiscovery,DIETARY_DISCOVERY_GUIDANCE,dietarySearchCandidates} from '../lib/dietary-discovery.js';
@@ -5112,6 +5113,8 @@ export default async function handler(req, res) {
     if (retried) { route.intent = 'events.filter_existing'; route.eventFollowUp = retried; }
   }
   if (route.eventFollowUp?.ask) route.eventFollowUp.question = retryingEventFollowUp ? previousUserText : currentText;
+  const indoorFamily = await indoorFamilyAnswer(messages);
+  if (indoorFamily) return res.status(200).json(indoorFamily);
   const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), messages);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 

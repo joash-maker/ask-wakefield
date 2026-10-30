@@ -1,4 +1,5 @@
-import {indoorFamilyAnswer} from '../lib/indoor-family.js';
+import {buildRequestContext,continuesRequest,requestContextText} from '../lib/request-context.js';
+import {familyPlanAnswer} from '../lib/family-planner.js';
 import { GUIDE_VOICE } from '../lib/guide-voice.js';
 import {foodChoiceFollowUp} from '../lib/food-voice.js';
 import {useDietaryDiscovery,DIETARY_DISCOVERY_GUIDANCE,dietarySearchCandidates} from '../lib/dietary-discovery.js';
@@ -9,7 +10,7 @@ import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
-import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
+import { buildTrustedPlacesContext, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 const SYSTEM_PROMPT = `You are Ask Wakefield, the independent AI guide for the Wakefield district, built by Mediahubink Limited.
@@ -541,6 +542,8 @@ function stateFromCookie(req) {
 }
 
 function attachStateCookie(res, state) {
+  state = res.__awRequestFrame ? {...state,constraints:{...state?.constraints,requestFrame:res.__awRequestFrame}} : state;
+  res.__awResponseState = state;
   const token = encodeStateToken(state);
   if (!token) {
     // Never leave an older result set behind: a stale cookie would make the
@@ -1002,7 +1005,7 @@ export function requestedPlaceTimeConstraint(messages) {
 
 function requestedPlaceClockConstraint(messages) {
   const context = recentUserContext(messages, 5).split('\n').reverse().join('\n');
-  if (/\b(open now|open right now|right now|currently open|what(?:'|’)s open)\b/i.test(context)) {
+  if (/\b(open now|open right now|right now|currently open)\b/i.test(context) || /\bwhat(?:'|’)s open\b/i.test(context) && !/\b(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday|tomorrow|evening|night|after work)\b/i.test(context)) {
     return { mode: 'now' };
   }
 
@@ -5040,9 +5043,14 @@ export default async function handler(req, res) {
   // Every JSON response carries the latest signed state token when this turn
   // produced one. Clients keep their previous token when the field is absent.
   const sendJson = res.json.bind(res);
-  res.json = body => sendJson(body && typeof body === 'object' && typeof res.__awStateToken === 'string'
-    ? { ...body, stateToken: res.__awStateToken || null }
-    : body);
+  res.json = body => {
+    if (body && typeof body === 'object' && !body.error && res.__awRequestFrame) {
+      attachStateCookie(res,body.state || res.__awResponseState || res.__awRequestBase);
+      body={...body,state:res.__awResponseState};
+    }
+    return sendJson(body && typeof body === 'object' && typeof res.__awStateToken === 'string'
+      ? {...body,stateToken:res.__awStateToken || null} : body);
+  };
 
   // Unsigned client state (req.body.state) is deliberately ignored: it could be
   // edited to mark any event as free.
@@ -5052,7 +5060,13 @@ export default async function handler(req, res) {
   const scoped = scopeConversation(messages);
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.
-  const clientState = scoped.newRequest ? normaliseClientState(null) : (decodedToken || cookieState || normaliseClientState(null));
+  const priorSigned = decodedToken || cookieState;
+  const continuation = continuesRequest(lastUserText(messages),priorSigned?.constraints?.requestFrame);
+  const clientState = scoped.newRequest && !continuation ? normaliseClientState(null) : (priorSigned || normaliseClientState(null));
+  const priorFrame = continuation ? clientState.constraints?.requestFrame : null;
+  res.__awRequestFrame=buildRequestContext(priorFrame ? messages.slice(-2) : messages,priorFrame);
+  res.__awRequestBase=clientState;
+  if (/^(?:thanks|thank you|thanks very much|cheers|no thanks)[.!?\s]*$/i.test(lastUserText(messages))) return res.status(200).json({reply:'You’re welcome.',sources:[],followups:[],live:false,verification:'conversation-acknowledgement'});
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
   const foodChoice = foodChoiceFollowUp(messages,clientState);
@@ -5113,9 +5127,9 @@ export default async function handler(req, res) {
     if (retried) { route.intent = 'events.filter_existing'; route.eventFollowUp = retried; }
   }
   if (route.eventFollowUp?.ask) route.eventFollowUp.question = retryingEventFollowUp ? previousUserText : currentText;
-  const indoorFamily = await indoorFamilyAnswer(messages);
-  if (indoorFamily) return res.status(200).json(indoorFamily);
-  const trustedPlacesContext = buildTrustedPlacesContext(lastUserText(messages), messages);
+  const familyPlan = await familyPlanAnswer(messages,res.__awRequestFrame,clientState);
+  if (familyPlan) return res.status(200).json(familyPlan);
+  const trustedPlacesContext = buildTrustedPlacesContext(requestContextText(res.__awRequestFrame)+'\n'+lastUserText(messages), messages);
   console.info(`Ask Wakefield route: ${route.intent} (${route.operation})${route.area ? ` area=${route.area}` : ''}.`);
 
   // These questions can be answered conservatively from named place records.
@@ -5128,9 +5142,9 @@ export default async function handler(req, res) {
     || namedDiningThaliFollowUp(currentText, messages)
     || namedDiningServiceFollowUp(currentText, messages)
     || namedDiningFollowUp(currentText, messages)
-    || familyDistrictStarter(lastUserText(messages))
+
     || undatedCityCentreArtsPlan(lastUserText(messages))
-    || familyPlanFollowUp(lastUserText(messages), clientState)
+
     || cityItineraryFollowUp(lastUserText(messages), clientState);
   if (groundedStarter) {
     const nextState = {
@@ -5711,7 +5725,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   const weekendPerformanceContext = isWeekendPerformanceQuery(messages)
     ? `\n\nWEEKEND PERFORMANCE DISCOVERY: The user wants gigs, concerts, live music or comedy, not merely the first eight generic event cards. Search current first-party venue and organiser event pages beyond the two aggregate feeds. Include only a title, actual matching Saturday/Sunday date, venue and direct event URL supported by an exact official page. A missing ticket price must not suppress the event; omit price or say unconfirmed. If no suitable event is verified, say so rather than padding with unrelated activities.`
     : '';
-  const directContext = `${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}${isRestaurantDiscovery(messages) ? RESTAURANT_GUIDANCE : ''}`;
+  const directContext = `${requestContextText(res.__awRequestFrame)}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}${isRestaurantDiscovery(messages) ? RESTAURANT_GUIDANCE : ''}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'

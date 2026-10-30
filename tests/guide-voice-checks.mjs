@@ -27,9 +27,9 @@ async function ask(messages){
 const user=content=>({role:'user',content});
 await ask([user('What local walking groups can I join in Wakefield?')]);
 await ask([user('Can you suggest somewhere interesting to visit in Wakefield?')]);
-const followup=await ask([user('We have two children aged 5 and 8 and want somewhere indoors in Wakefield.'),{role:'assistant',content:'Wakefield Museum and Wakefield Library are different indoor options.'},user('How do those two differ?')]);
+const followup=await ask([user('We have three hours and want local history in Wakefield.'),{role:'assistant',content:'Wakefield Museum and Wakefield Library are different indoor options.'},user('How do those two differ?')]);
 const history=JSON.stringify(followup.messages);
-assert.match(history,/two children aged 5 and 8/);
+assert.match(history,/three hours/);
 assert.match(history,/How do those two differ/);
 // This checks instruction delivery and retained context, not the quality of a mocked model's prose.
 console.log('Guide voice transport checks passed: groups, general discovery, contextual follow-ups and no conflicting shortlist instructions.');

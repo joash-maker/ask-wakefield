@@ -22,10 +22,11 @@ const {default:handler}=await import('../api/chat.js');
 const user=content=>({role:'user',content});let serial=0;
 async function ask(q,previous,{rolling=false,token=true}={}){
  const messages=[...(previous?.messages||[]),user(q)],sent=rolling?messages.slice(-10):messages;
- const res={setHeader(){},status(n){this.code=n;return this;},json(b){this.body=b;return this;}};
+ const responseHeaders={};
+ const res={setHeader(k,v){responseHeaders[k]=v;},status(n){this.code=n;return this;},json(b){this.body=b;return this;}};
  await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'family-review-'+(++serial)},socket:{},body:{messages:sent,stateToken:token?previous?.stateToken:null}},res);
  assert.equal(res.code,200,JSON.stringify(res.body));
- return {...res.body,messages:[...sent,{role:'assistant',content:res.body.reply}]};
+ return {...res.body,responseCookie:responseHeaders['Set-Cookie'],messages:[...sent,{role:'assistant',content:res.body.reply}]};
 }
 let result=await ask('We’ve got two children and want something indoors. What would you suggest?');
 assert.match(result.reply,/How old/);assert.ok(result.stateToken);assert.equal(result.state.constraints.requestFrame.environment,'indoor');
@@ -44,10 +45,20 @@ for(const q of ['What about bowling?','How much would that cost?','Is it open?',
  assert.equal(result.sources.length,1);assert.match(result.reply,/Tenpin/);
  if(/How much|Is it open|Would that fit/.test(q)){assert.ok(result.reply.split(/\s+/).length<85,'A short field follow-up must not replay the whole plan');assert.doesNotMatch(result.reply,/For local history|Check the session’s age rules/);}assert.doesNotMatch(result.reply,/Pugneys|Diggerland|£9\.95|fits (?:your|the) budget|How many adults|How old/);
 }
+const calculated=await ask('Would £9.95 each fit our budget?',result,{rolling:true});assert.equal(calculated.state.constraints.requestFrame.budget,35);assert.match(calculated.reply,/39.80/);assert.match(calculated.reply,/4.80 over/);assert.match(calculated.reply,/If/);assert.match(calculated.reply,/haven’t verified/);
+const childQuote=await ask('Would £6.50 per child fit our budget?',result,{rolling:true});assert.match(childQuote.reply,/13.00/);assert.match(childQuote.reply,/adult tickets/);
 assert.equal(modelCalls,0,'No free-form writer can invent facts in this family plan');
 result=await ask('Actually outdoors instead',result,{rolling:true});
 assert.equal(result.state.constraints.requestFrame.environment,'outdoor');assert.equal(result.state.constraints.requestFrame.activity,null);assert.ok(result.sources.every(s=>/Park/.test(s.title)));assert.doesNotMatch(result.reply,/Tenpin|Cheeky/);
 result=await ask('Actually indoors again, near Horbury',result,{rolling:true});assert.match(result.reply,/Secret Garden/);assert.doesNotMatch(result.reply,/Museum|Tenpin|£6\.95|£13\.90/);assert.equal(result.state.constraints.requestFrame.budget,35);
+const cookie=result.responseCookie.split(';')[0];
+for(const explicitNull of [true,false]){
+ const body={messages:[user('Ages 7 and 4')]};if(explicitNull)body.stateToken=null;
+ const res={setHeader(){},status(n){this.code=n;return this;},json(b){this.body=b;return this;}};
+ await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'reset-'+(++serial),cookie},socket:{},body},res);
+ assert.equal(res.code,200);
+ assert.equal(res.body.state.constraints.requestFrame.budget,explicitNull?null:35,'New must clear cookie state while legacy cookie-only clients retain it');
+}
 const reset=await ask('What is Wakefield Council’s official website?',result,{rolling:true});assert.equal(reset.state.constraints.requestFrame.topic,'council');assert.equal(reset.state.constraints.requestFrame.budget,null);assert.deepEqual(reset.state.constraints.requestFrame.ages,[]);
 const thanks=await ask('Thanks',result);assert.equal(thanks.reply,'You’re welcome.');assert.equal(thanks.sources.length,0);
 mode='unavailable';const outage=await ask('How much would that cost?',result);assert.doesNotMatch(outage.reply,/free general admission|09:00|17:00/);assert.equal(outage.live,false);assert.match(outage.reply,/can’t confirm.*£35/);

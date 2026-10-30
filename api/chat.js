@@ -5056,7 +5056,10 @@ export default async function handler(req, res) {
   // edited to mark any event as free.
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
-  const cookieState = stateFromCookie(req);
+  // The web client's New button sends an explicit null token. Only older
+  // clients which omit the field may recover state from the cookie.
+  const explicitStateReset = Object.prototype.hasOwnProperty.call(req.body || {},'stateToken') && (req.body.stateToken === null || req.body.stateToken === '');
+  const cookieState = explicitStateReset ? null : stateFromCookie(req);
   const scoped = scopeConversation(messages);
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.

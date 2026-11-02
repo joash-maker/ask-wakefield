@@ -1,4 +1,5 @@
 import {bookingRequest,readBooksyProfile,renderBookingBusiness} from '../lib/booking-business.js';
+import {researchLocalQuestion,isLocalQuestion,startsLocalQuestion} from '../lib/local-questions.js';
 import {localServiceMode,LOCAL_SERVICE_GUIDANCE,localServiceSearchAnswer} from '../lib/local-services.js';
 import {buildRequestContext,continuesRequest,requestContextText} from '../lib/request-context.js';
 import {familyPlanAnswer} from '../lib/family-planner.js';
@@ -11,7 +12,7 @@ import { practicalAnswer, practicalTopic, isRestaurantDiscovery, RESTAURANT_GUID
 import { isLocalDiscoveryQuery, LOCAL_DISCOVERY_GUIDANCE, localDiscoveryFallback, directoryOnlyDiscovery } from '../lib/local-discovery.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
-import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
+import { scopeConversation, isRequestRefinement, requestTopic } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
@@ -5063,10 +5064,16 @@ export default async function handler(req, res) {
   const explicitStateReset = Object.prototype.hasOwnProperty.call(req.body || {},'stateToken') && (req.body.stateToken === null || req.body.stateToken === '');
   const cookieState = explicitStateReset ? null : stateFromCookie(req);
   const scoped = scopeConversation(messages);
+  const latestQuestion=String(messages.filter(m=>m.role==='user').at(-1)?.content||'');
+  if(!requestTopic(latestQuestion)&&startsLocalQuestion(latestQuestion)&&!isRequestRefinement(latestQuestion)){
+    scoped.messages=[{role:'user',content:latestQuestion}];
+    scoped.newRequest=true;
+    scoped.newLocalRequest=true;
+  }
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.
   const priorSigned = decodedToken || cookieState;
-  const continuation = continuesRequest(lastUserText(messages),priorSigned?.constraints?.requestFrame);
+  const continuation = !scoped.newLocalRequest && continuesRequest(lastUserText(messages),priorSigned?.constraints?.requestFrame);
   const clientState = scoped.newRequest && !continuation ? normaliseClientState(null) : (priorSigned || normaliseClientState(null));
   const priorFrame = continuation ? clientState.constraints?.requestFrame : null;
   res.__awRequestFrame=buildRequestContext(priorFrame ? messages.slice(-2) : messages,priorFrame);
@@ -5306,6 +5313,22 @@ export default async function handler(req, res) {
   }
 
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'service_unavailable', reply: 'The assistant is temporarily unavailable.' });
+
+  // Unknown local subjects get their own current-source research, rather than
+  // a memory-only answer constrained to the curated attractions catalogue.
+  const broadLocalRequest = !requestTopic(currentText) && isLocalQuestion(currentText) && !isRequestRefinement(currentText)
+    && (!isLocalDiscoveryQuery(messages) || /^(?:where can|where do|who can|how do|find|looking for|i need|we need)\b/i.test(currentText));
+  if ((broadLocalRequest || priorFrame?.topic === 'local') && !serviceMode && !bookingTarget
+      && ['other','civic.property'].includes(route.intent)) {
+    const researchMessages=continuation?messages:[{role:'user',content:latestQuestion}];
+    res.__awRequestFrame=buildRequestContext(continuation?messages.slice(-2):researchMessages,priorFrame);
+    res.__awRequestFrame.topic='local';
+    res.__awRequestFrame.localQuestion=priorFrame?.localQuestion || latestQuestion.slice(0,600);
+    const base=continuation?clientState:normaliseClientState(null);
+    const state={...base,constraints:{...base.constraints,requestFrame:res.__awRequestFrame}};
+    const answer=await researchLocalQuestion(researchMessages,state,{model:MODEL,clock:londonContext(),call:callAnthropic,extract:extractAnswer});
+    return res.status(200).json(answer);
+  }
 
   let wxContext = null;
   let experienceEventsContext = null;

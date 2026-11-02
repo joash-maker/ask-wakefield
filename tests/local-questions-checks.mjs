@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import {localQuestionAnswer,isLocalQuestion} from '../lib/local-questions.js';
+process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';process.env.OPENAI_FAILSAFE_ENABLED='false';
+const user=content=>({role:'user',content});
+const source={url:'https://fixture-repairs.co.uk/repairs',title:'Fixture Cycles Wakefield'};
+const council={url:'https://www.wakefield.gov.uk/bins/report-a-missed-bin/',title:'Wakefield Council missed bins'};
+let mode='normal',bodies=[],serial=0;
+globalThis.fetch=async(url,opts)=>{
+ if(!String(url).includes('api.anthropic.com'))return new Response('Unavailable',{status:404});
+ const body=JSON.parse(opts.body);bodies.push(body);
+ if(mode==='outage')throw Error('test outage');
+ if(mode==='no-search')return new Response(JSON.stringify({content:[{type:'text',text:'A guessed answer.'}]}));
+ const civic=body.messages.some(m=>/missed bin/i.test(m.content));
+ const s=civic?council:source;
+ const reply=civic?`Report the missed collection using the [Council reporting page](${s.url}).`:`For bicycle repairs, [Fixture Cycles](${s.url}) lists puncture repairs and servicing. Is it a puncture or a fuller service you need?`;
+ return new Response(JSON.stringify({content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: '+reply,citations:[{url:s.url,title:s.title,cited_text:civic?'Report a missed bin collection to Wakefield Council.':'Fixture Cycles, Wakefield. Bicycle puncture repairs and servicing.'}]}]}));
+};
+const {default:handler}=await import('../api/chat.js');
+async function ask(q,previous,extra={}){
+ const messages=[...(previous?.messages||[]),user(q)],res={setHeader(){},status(n){this.code=n;return this;},json(b){this.body=b;return this;}};
+ await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'broad-local-'+(++serial)},socket:{},body:{messages:messages.slice(-10),stateToken:previous?.stateToken,...extra}},res);
+ assert.equal(res.code,200,JSON.stringify(res.body));return {...res.body,messages:[...messages,{role:'assistant',content:res.body.reply}]};
+}
+for(const q of ['Where can I get my bike repaired in Wakefield?','Where can I get a passport photo in Ossett?','Who can repair a washing machine in Horbury?','How do I report a missed bin?']){
+ const a=await ask(q);assert.equal(a.verification,'local-question-sourced',q);assert.ok(a.sources.length);assert.ok(a.stateToken);
+ const b=bodies.at(-1);assert.ok(b.tools?.length);assert.equal(b.tools[0].allowed_domains,undefined);assert.equal(b.tool_choice.type,'any');assert.match(b.system,/everyday life across Wakefield district/);assert.doesNotMatch(b.system,/choose only from the exact entity cards/);
+ assert.equal(a.state.constraints.requestFrame.localQuestion,q);
+}
+let a=await ask('Where can I get my bike repaired in Ossett?');
+for(const q of ['Do they repair punctures?','What are the prices?','How do I book?','Are they open today?','What services do they offer?','What is their address?']){
+ a=await ask(q,a);assert.equal(a.verification,'local-question-sourced');assert.equal(a.state.constraints.requestFrame.area,'Ossett');assert.equal(a.state.constraints.requestFrame.localQuestion,'Where can I get my bike repaired in Ossett?');
+ assert.match(bodies.at(-1).system,/fixture-repairs/,'Signed source leads survive the rolling model window and are marked for rechecking');
+}
+const fresh=await ask('Where can I get a passport photo in Castleford?',a);assert.equal(fresh.state.constraints.requestFrame.area,'Castleford');assert.match(fresh.state.constraints.requestFrame.localQuestion,/passport/);assert.doesNotMatch(bodies.at(-1).messages.map(m=>m.content).join(' '),/bike|puncture/i);
+const councilAnswer=await ask('What is Wakefield Council’s official website?',a);assert.equal(councilAnswer.verification,'official-council-link');assert.equal(councilAnswer.state.constraints.requestFrame.topic,'council');assert.ok(!councilAnswer.state.constraints.localSources);
+const fromBarber={messages:[user('Where’s a good barber?'),{role:'assistant',content:'Gaffers Barbering.'}]};
+const changed=await ask('Where can I get my bike repaired?',fromBarber);assert.equal(changed.verification,'local-question-sourced');assert.equal(bodies.at(-1).messages.length,1);assert.doesNotMatch(bodies.at(-1).system,/LOCAL BUSINESS DISCOVERY CONTRACT/);
+mode='no-search';const noSearch=await ask('Who can repair a washing machine?');assert.equal(noSearch.live,false);assert.equal(noSearch.sources.length,0);
+mode='outage';const outage=await ask('Where can I get a passport photo?');assert.equal(outage.verification,'local-question-unverified');assert.equal(outage.sources.length,0);
+const result={searched:true,reply:`Try [Fixture Cycles](${source.url}).`,sources:[source],searchEvidence:[{url:source.url,text:'Fixture Cycles repairs bikes in Wakefield.'}]};
+assert.equal(localQuestionAnswer(result,[],{}).verification,'local-question-sourced');
+for(const bad of [{...result,searched:false},{...result,searchEvidence:[]},{...result,reply:'Try [a made-up booking page](https://invented.example/book)'},{...result,reply:'Check Google Maps for a repair shop.'}])assert.equal(localQuestionAnswer(bad,[],{}).live,false);
+assert.equal(localQuestionAnswer(result,[user('How do I report a missed bin?')],{constraints:{requestFrame:{localQuestion:'How do I report a missed bin?'}}}).live,false,'A commercial citation cannot establish public-service instructions');
+assert.equal(isLocalQuestion('Thanks!'),false);assert.equal(isLocalQuestion('Do they repair punctures?'),false);
+console.log('Broad local question checks passed: new subjects, forced unrestricted research, exact cited links, official-service authority, signed rolling follow-ups, new-topic resets and outages.');

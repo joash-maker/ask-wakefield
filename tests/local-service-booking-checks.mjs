@@ -30,7 +30,7 @@ async function ask(q,previous,rolling=false){
  return {...res.body,messages:[...messages,{role:'assistant',content:res.body.reply}]};
 }
 let answer=await ask("Where’s a good barber?");assert.equal(answer.verification,'local-service-search');assert.match(answer.reply,/Gaffers/);
-const request=calls.find(c=>c.url.includes('anthropic.com')).body;assert.equal(request.tool_choice.type,'any');assert.equal(request.tools[0].allowed_domains,undefined);assert.match(request.system,/LOCAL BUSINESS DISCOVERY CONTRACT/);
+const request=calls.find(c=>c.url.includes('anthropic.com')).body;assert.equal(request.tool_choice.type,'any');assert.equal(request.tools[0].allowed_domains,undefined);assert.match(request.system,/LOCAL BUSINESS DISCOVERY CONTRACT/);assert.doesNotMatch(request.system,/GROUNDED LOCAL PLACE SELECTION|choose only from the exact entity cards/);
 answer=await ask("What's the best barber near city centre?",answer);assert.match(answer.reply,/Gaffers/);
 answer=await ask('Gaffers?',answer);assert.match(answer.reply,/Gaffers/);assert.equal(answer.verification,'booking-business-page');
 answer=await ask(url+'#ba_s=seo',answer);assert.equal(answer.verification,'booking-business-page');assert.equal(answer.sources[0].url,url);

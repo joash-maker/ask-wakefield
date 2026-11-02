@@ -5795,7 +5795,16 @@ Use these only to establish whether a long-running attraction/exhibition is actu
     const { reply, sources, searchEvidence, searched } = extractAnswer(data,useDietaryDiscovery(messages)||serviceMode||!!bookingTarget);
     if (serviceMode || bookingTarget) {
       const answer = searched ? localServiceSearchAnswer(reply,sources,searchEvidence,messages,serviceState,bookingTarget,diagnostic=>console.info('Local service extraction',JSON.stringify(diagnostic))) : null;
-      if (answer) return res.status(200).json(answer);
+      if (answer) {
+        // Search may resolve a named business to an individual booking profile.
+        // Read its menu now instead of waiting for the user to paste that link.
+        const resolvedProfile = !bookingTarget ? bookingRequest(messages,answer.state) : null;
+        if (resolvedProfile) {
+          const profile = await readBooksyProfile(resolvedProfile.url);
+          if (profile) return res.status(200).json(renderBookingBusiness(profile,messages,answer.state));
+        }
+        return res.status(200).json(answer);
+      }
       return res.status(200).json({reply:bookingTarget ? "I couldn’t read that business’s service menu or confirm it from the search results just now. I haven’t verified its services, prices or appointment availability." : "I couldn’t confirm a useful local shortlist from the sources I checked just now. That doesn’t mean there aren’t any options.",sources:[],followups:[],live:false,verification:'local-service-unverified'});
     }
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });

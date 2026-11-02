@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {booksyProfileUrl,parseBooksyProfile,bookingRequest,readBooksyProfile} from '../lib/booking-business.js';
-import {localServiceSearchAnswer} from '../lib/local-services.js';
+import {localServiceSearchAnswer,localServiceBusinessName} from '../lib/local-services.js';
 import {scopeConversation} from '../lib/conversation-scope.js';
 process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';process.env.OPENAI_FAILSAFE_ENABLED='false';
 const url='https://booksy.com/en-gb/42942_gaffers-barbering_barber_1494632_wakefield';
@@ -30,6 +30,13 @@ async function ask(q,previous,rolling=false){
  return {...res.body,messages:[...messages,{role:'assistant',content:res.body.reply}]};
 }
 let answer=await ask("Where’s a good barber?");assert.equal(answer.verification,'local-service-search');assert.match(answer.reply,/Gaffers/);
+for(const q of ['Looking for a barber in the city?','I need a barber?','Recommend a barber?','Find me a hairdresser?','Barbers?','A barber near Wakefield?','Any good nail salons?','Can you suggest a dog groomer?']){
+ assert.equal(localServiceBusinessName(q),null,q+' must not become a business identity filter');
+ const discovery=await ask(q);assert.equal(discovery.verification,'local-service-search',q);assert.match(discovery.reply,/Gaffers/,q);
+ if(q==='Looking for a barber in the city?')assert.equal(discovery.state.constraints.requestFrame.area,'Wakefield city centre');
+}
+assert.equal(localServiceBusinessName('Gaffers?'),'Gaffers');assert.equal(localServiceBusinessName('Gaffers Barbering?'),'Gaffers Barbering');
+assert.equal(localServiceBusinessName('What services does Gaffers Barbering offer?'),'Gaffers Barbering');assert.equal(localServiceBusinessName('What services do they offer?'),null);
 const request=calls.find(c=>c.url.includes('anthropic.com')).body;assert.equal(request.tool_choice.type,'any');assert.equal(request.tools[0].allowed_domains,undefined);assert.match(request.system,/LOCAL BUSINESS DISCOVERY CONTRACT/);assert.doesNotMatch(request.system,/GROUNDED LOCAL PLACE SELECTION|choose only from the exact entity cards/);
 answer=await ask("What's the best barber near city centre?",answer);assert.match(answer.reply,/Gaffers/);
 answer=await ask('Gaffers?',answer);assert.match(answer.reply,/Gaffers/);assert.equal(answer.verification,'booking-business-page');

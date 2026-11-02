@@ -44,4 +44,8 @@ mode='no-search';const failed=await ask(url);assert.equal(failed.verification,'l
 mode='redirect';assert.equal(await readBooksyProfile(url),null);
 const scoped=scopeConversation([...answer.messages,user('Where can we eat vegetarian food?')]);assert.equal(scoped.messages.length,1);
 const swapped=localServiceSearchAnswer(JSON.stringify({businesses:[{name:'Other Cuts',url:other,services:['Cut']}]}),[{title:'Other Cuts',url:other}],[{url:other,text:'Other Cuts offers Cut'}],[user('What services does Gaffers Barbering offer?')],{},null);assert.equal(swapped,null);
+const profileSource=[{title:'Gaffers Barbering - Wakefield - Booksy',url}];
+const lead=localServiceSearchAnswer('Search results available, but formatting failed.',profileSource,[],[user('Good barber in Wakefield?')],{},null);assert.match(lead.reply,/Gaffers/);assert.doesNotMatch(lead.reply,/Gaffers Haircut|Beard trim/);
+const wrapped=localServiceSearchAnswer('Result: '+JSON.stringify({businesses:[{name:'Gaffers Barbering',url,services:['Gaffers Haircut']} ]})+' End.',profileSource,[{url,text:evidence}],[user('Gaffers?')],{},null);assert.match(wrapped.reply,/Gaffers Haircut/);
+assert.equal(localServiceSearchAnswer('No structured answer',[{title:'Wrong Name - Wakefield - Booksy',url}],[],[user('Gaffers?')],{},null),null);
 console.log('Local service and booking checks passed: full barber/Gaffers/link/services replay, forced discovery, direct page reads, exact source excerpts, price qualifiers, rolling signed context, name locking, missing evidence and isolated profile parsing.');

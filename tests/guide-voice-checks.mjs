@@ -19,8 +19,12 @@ async function ask(messages){
  await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'guide-voice-'+(++serial)},socket:{},body:{messages}},res);
  assert.equal(res.code,200);
  assert.ok(requests.length>before,'This request must exercise the actual model transport');
- const request=requests.slice(before).find(r=>r.system?.includes(GUIDE_VOICE));
- assert.ok(request,'Public answer generation must receive the shared guide voice');
+ const request=requests.slice(before).find(r=>r.system?.includes(GUIDE_VOICE)||r.system?.includes('LOCAL QUESTION RESEARCH CONTRACT:'));
+ assert.ok(request,'Public prose must receive guide voice, or use structured retrieval followed by the evidence renderer');
+ if(request.system.includes('LOCAL QUESTION RESEARCH CONTRACT:')){
+  assert.match(request.system,/Return JSON after FINAL_RESPONSE:, no surrounding prose/);
+  assert.ok(request.tools?.length,'A retrieval contract must actually provide current-source research');
+ }
  assert.doesNotMatch(request.system,/MUST give 3-5|Give 3-5 options|Give 3-5 sensible/,'Later task guidance must not override the shorter shortlist');
  return request;
 }

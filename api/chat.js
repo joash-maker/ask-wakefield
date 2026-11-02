@@ -5065,7 +5065,7 @@ export default async function handler(req, res) {
   const cookieState = explicitStateReset ? null : stateFromCookie(req);
   const scoped = scopeConversation(messages);
   const latestQuestion=String(messages.filter(m=>m.role==='user').at(-1)?.content||'');
-  if(!requestTopic(latestQuestion)&&startsLocalQuestion(latestQuestion)&&!isRequestRefinement(latestQuestion)){
+  if(!requestTopic(latestQuestion)&&startsLocalQuestion(latestQuestion)){
     scoped.messages=[{role:'user',content:latestQuestion}];
     scoped.newRequest=true;
     scoped.newLocalRequest=true;
@@ -5316,7 +5316,7 @@ export default async function handler(req, res) {
 
   // Unknown local subjects get their own current-source research, rather than
   // a memory-only answer constrained to the curated attractions catalogue.
-  const broadLocalRequest = !requestTopic(currentText) && isLocalQuestion(currentText) && !isRequestRefinement(currentText)
+  const broadLocalRequest = !requestTopic(currentText) && isLocalQuestion(currentText) && (!isRequestRefinement(currentText)||startsLocalQuestion(currentText))
     && (!isLocalDiscoveryQuery(messages) || /^(?:where can|where do|who can|how do|find|looking for|i need|we need)\b/i.test(currentText));
   if ((broadLocalRequest || priorFrame?.topic === 'local') && !serviceMode && !bookingTarget
       && ['other','civic.property'].includes(route.intent)) {

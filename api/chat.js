@@ -1,3 +1,5 @@
+import {bookingRequest,readBooksyProfile,renderBookingBusiness} from '../lib/booking-business.js';
+import {localServiceMode,LOCAL_SERVICE_GUIDANCE,localServiceSearchAnswer} from '../lib/local-services.js';
 import {buildRequestContext,continuesRequest,requestContextText} from '../lib/request-context.js';
 import {familyPlanAnswer} from '../lib/family-planner.js';
 import { GUIDE_VOICE } from '../lib/guide-voice.js';
@@ -5072,6 +5074,13 @@ export default async function handler(req, res) {
   if (/^(?:thanks|thank you|thanks very much|cheers|no thanks)[.!?\s]*$/i.test(lastUserText(messages))) return res.status(200).json({reply:'You’re welcome.',sources:[],followups:[],live:false,verification:'conversation-acknowledgement'});
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  const serviceState = {...clientState,constraints:{...clientState.constraints,requestFrame:res.__awRequestFrame}};
+  const serviceMode = localServiceMode(messages,serviceState);
+  const bookingTarget = bookingRequest(messages,clientState);
+  if (bookingTarget) {
+    const profile = await readBooksyProfile(bookingTarget.url);
+    if (profile) return res.status(200).json(renderBookingBusiness(profile,messages,serviceState));
+  }
   const foodChoice = foodChoiceFollowUp(messages,clientState);
   if (foodChoice) { attachStateCookie(res,foodChoice.state); return res.status(200).json(foodChoice); }
   const restaurantFollowUp = await restaurantDietFollowUp(messages,clientState);
@@ -5523,9 +5532,9 @@ export default async function handler(req, res) {
     || (isCathedralToYspRouteQuery(messages) && hasRouteEvidence)
     || (shouldUseDistrictPlaces(messages) && verifiedPlaceCount > 0)
     || isComplexSaturdayDayPlanQuery(messages);
-  const useSearch = needsLiveSearch(messages)
-    && (!directlyResolved || isRestaurantDiscovery(messages))
-    && (isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages) || !hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
+  const useSearch = (serviceMode || Boolean(bookingTarget) || needsLiveSearch(messages))
+    && (!directlyResolved || serviceMode || bookingTarget || isRestaurantDiscovery(messages))
+    && (serviceMode || bookingTarget || isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages) || !hasEventSnapshots || needsEventPriceSearch || needsSpecificEventSearch || isWeekendPerformanceQuery(messages));
 
   if (isPharmacyOpenQuery(messages) && hasBusinessEvidence) {
     console.info('Pharmacy query resolved with direct first-party pharmacy sources.');
@@ -5728,7 +5737,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   const weekendPerformanceContext = isWeekendPerformanceQuery(messages)
     ? `\n\nWEEKEND PERFORMANCE DISCOVERY: The user wants gigs, concerts, live music or comedy, not merely the first eight generic event cards. Search current first-party venue and organiser event pages beyond the two aggregate feeds. Include only a title, actual matching Saturday/Sunday date, venue and direct event URL supported by an exact official page. A missing ticket price must not suppress the event; omit price or say unconfirmed. If no suitable event is verified, say so rather than padding with unrelated activities.`
     : '';
-  const directContext = `${requestContextText(res.__awRequestFrame)}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}${isRestaurantDiscovery(messages) ? RESTAURANT_GUIDANCE : ''}`;
+  const directContext = `${requestContextText(res.__awRequestFrame)}${wxDirectContext}${experienceEventsDirectContext}${cathedralDirectContext}${currentEventsContext}${freeVenueDirectContext}${eventDetailDirectContext}${userProvidedContext}${namedEventFirstPartyDirectContext}${accessibilityFirstPartyDirectContext}${runningFirstPartyDirectContext}${foodConstraintDirectContext}${businessFirstPartyDirectContext}${eveningServiceFirstPartyDirectContext}${routeFirstPartyDirectContext}${districtPlacesDirectContext}${complexPlanContext}${recommendationContext}${foodDecisionContext}${currentFoodContext}${specificFoodStartingPointContext}${wakefieldBusStationFoodContext}${accessibilityContext}${namedEventDetailContext}${propertyServiceContext}${timedActivityContext}${businessStatusContext}${eveningCoffeeDessertContext}${dogFriendlyContext}${dietaryContext}${childTimedContext}${walkingRouteContext}${liveTransportContext}${timedFoodAvailabilityContext}${routePlanningContext}${waterAccessContext}${trustedPlacesContext}${weekendPerformanceContext}${isLocalDiscoveryQuery(messages) ? LOCAL_DISCOVERY_GUIDANCE : ''}${isRestaurantDiscovery(messages) ? RESTAURANT_GUIDANCE : ''}${serviceMode||bookingTarget ? LOCAL_SERVICE_GUIDANCE : ''}${bookingTarget?'\nExact business profile to look up: '+bookingTarget.url+'\nA direct read failed. Use exact-profile search evidence, not a URL-based assumption.':''}`;
 
   const liveOutputContract = (useSearch || wxContext || experienceEventsContext || cathedralContext || userUrlContext || eventDetailContexts.length || hasBusinessEvidence || hasRouteEvidence || hasDistrictPlacesEvidence)
     ? '\n\nLIVE OUTPUT CONTRACT: Do any lookup or source checking silently. Your final user-facing answer MUST contain the exact marker FINAL_RESPONSE: immediately before the answer, with no analysis, search commentary or deliberation after that marker. The server removes everything before the marker.'
@@ -5748,7 +5757,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       max_uses: (isEventCostFollowUp(messages) || isNamedEventDetailQuery(messages) || isGeneralAccessibilityQuery(messages) || isDietaryOpenQuery(messages) || isDogFriendlyVenueQuery(messages) || (isPropertySpecificCouncilQuery(messages) && isTimedLocalActivityQuery(messages))) ? 7 : (isCurrentEventsQuery(messages) ? 5 : 6),
       // A newly named local venue may have an official domain outside the
       // curated list. Discover it, then apply the first-party evidence rule.
-      ...((isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages) || trustedPlacesContext.includes('No matching place records in this batch.')) ? {} : { allowed_domains: TRUSTED_DOMAINS }),
+      ...((serviceMode || bookingTarget || isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages) || trustedPlacesContext.includes('No matching place records in this batch.')) ? {} : { allowed_domains: TRUSTED_DOMAINS }),
       user_location: {
         type: 'approximate',
         city: 'Wakefield',
@@ -5760,7 +5769,7 @@ Use these only to establish whether a long-running attraction/exhibition is actu
   }
 
   // On supported Claude 4 models, discovery must invoke search rather than merely having it available.
-  if (useSearch && (isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages))
+  if (useSearch && (serviceMode || bookingTarget || isRestaurantDiscovery(messages) || isLocalDiscoveryQuery(messages))
       && /^claude-(?:haiku|sonnet|opus)-4(?:-|$)/.test(MODEL)) baseBody.tool_choice = { type: 'any' };
 
   try {
@@ -5783,7 +5792,12 @@ Use these only to establish whether a long-running attraction/exhibition is actu
       return res.status(status).json({ error: 'upstream_error', reply });
     }
 
-    const { reply, sources, searchEvidence, searched } = extractAnswer(data,useDietaryDiscovery(messages));
+    const { reply, sources, searchEvidence, searched } = extractAnswer(data,useDietaryDiscovery(messages)||serviceMode||!!bookingTarget);
+    if (serviceMode || bookingTarget) {
+      const answer = searched ? localServiceSearchAnswer(reply,sources,searchEvidence,messages,serviceState,bookingTarget) : null;
+      if (answer) return res.status(200).json(answer);
+      return res.status(200).json({reply:bookingTarget ? "I couldn’t read that business’s service menu or confirm it from the search results just now. I haven’t verified its services, prices or appointment availability." : "I couldn’t confirm a useful local shortlist from the sources I checked just now. That doesn’t mean there aren’t any options.",sources:[],followups:[],live:false,verification:'local-service-unverified'});
+    }
     if (isRestaurantDiscovery(messages) && (!searched || !sources.length)) return res.status(200).json({ reply: verificationFallback(messages), sources: [], live: false, verification: 'restaurant-discovery-unverified' });
     if (useBroadFoodDiscovery(messages)) {
       const discovered = foodDrinkSearchAnswer(reply,sources,searchEvidence,messages);

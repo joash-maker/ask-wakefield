@@ -13,7 +13,7 @@ globalThis.fetch=async(url,opts)=>{
  const civic=body.messages.some(m=>/missed bin/i.test(m.content));
  const s=civic?council:source;
  const reply=JSON.stringify(civic?{steps:[{text:'Report a missed bin collection to Wakefield Council.',url:s.url}]}:{businesses:[{name:'Fixture Cycles',url:s.url,services:['Puncture repairs']}]});
- return new Response(JSON.stringify({content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: '+reply,citations:[{url:s.url,title:s.title,cited_text:civic?'Report a missed bin collection to Wakefield Council.':'Fixture Cycles, Wakefield, Ossett, Horbury and Castleford. Puncture repairs and servicing.'}]}]}));
+ return new Response(JSON.stringify({content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: '+(mode==='two-stage'&&body.tools?'An unpublishable research draft with ratings and hours.':reply),citations:[{url:s.url,title:s.title,cited_text:civic?'Report a missed bin collection to Wakefield Council.':'Fixture Cycles, Wakefield, Ossett, Horbury and Castleford. Puncture repairs and servicing.'}]}]}));
 };
 const {default:handler}=await import('../api/chat.js');
 async function ask(q,previous,extra={}){
@@ -35,6 +35,7 @@ const fresh=await ask('Where can I get a passport photo in Castleford?',a);asser
 const councilAnswer=await ask('What is Wakefield Council’s official website?',a);assert.equal(councilAnswer.verification,'official-council-link');assert.equal(councilAnswer.state.constraints.requestFrame.topic,'council');assert.ok(!councilAnswer.state.constraints.localSources);
 const fromBarber={messages:[user('Where’s a good barber?'),{role:'assistant',content:'Gaffers Barbering.'}]};
 const changed=await ask('Where can I get my bike repaired?',fromBarber);assert.equal(changed.verification,'local-question-sourced');assert.equal(bodies.at(-1).messages.length,1);assert.doesNotMatch(bodies.at(-1).system,/Gaffers Barbering/);
+mode='two-stage';const before=bodies.length;const staged=await ask('Where can I get my bike repaired in Wakefield?');assert.equal(staged.verification,'local-question-sourced');assert.equal(bodies.length,before+2);assert.equal(bodies.at(-1).tools,undefined);assert.match(bodies.at(-1).messages[0].content,/Puncture repairs/);assert.doesNotMatch(staged.reply,/ratings|hours|unpublishable/);
 mode='no-search';const noSearch=await ask('Who can repair a washing machine?');assert.equal(noSearch.live,false);assert.equal(noSearch.sources.length,0);
 mode='outage';const outage=await ask('Where can I get a passport photo?');assert.equal(outage.verification,'local-question-unverified');assert.equal(outage.sources.length,0);
 const result={searched:true,reply:JSON.stringify({businesses:[{name:'Fixture Cycles',url:source.url,services:['Puncture repairs']}]}),sources:[source],searchEvidence:[{url:source.url,text:'Fixture Cycles repairs bikes in Wakefield. Puncture repairs.'}]};

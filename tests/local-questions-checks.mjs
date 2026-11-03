@@ -25,6 +25,7 @@ for(const q of ['Where can I get my bike repaired in Wakefield?','Where can I ge
  const a=await ask(q);assert.equal(a.verification,'local-question-sourced',q);assert.ok(a.sources.length);assert.ok(a.stateToken);
  const b=bodies.at(-1);assert.ok(b.tools?.length);assert.equal(b.tools[0].allowed_domains,undefined);assert.equal(b.tool_choice.type,'any');assert.match(b.system,/everyday life across Wakefield district/);assert.doesNotMatch(b.system,/choose only from the exact entity cards/);
  assert.equal(a.state.constraints.requestFrame.localQuestion,q);
+ if(/bike repaired/.test(q))assert.match(b.system,/cycle-technology\.co\.uk\/workshop/,'Repair discovery starts with relevant first-party leads, not an inferred service');
 }
 let a=await ask('Where can I get my bike repaired in Ossett?');
 for(const q of ['Do they repair punctures?','What are the prices?','How do I book?','Are they open today?','What services do they offer?','What is their address?']){
@@ -32,6 +33,7 @@ for(const q of ['Do they repair punctures?','What are the prices?','How do I boo
  assert.match(bodies.at(-1).system,/fixture-repairs/,'Signed source leads survive the rolling model window and are marked for rechecking');
 }
 const fresh=await ask('Where can I get a passport photo in Castleford?',a);assert.equal(fresh.state.constraints.requestFrame.area,'Castleford');assert.match(fresh.state.constraints.requestFrame.localQuestion,/passport/);assert.doesNotMatch(bodies.at(-1).messages.map(m=>m.content).join(' '),/bike|puncture/i);
+assert.doesNotMatch(bodies.at(-1).system,/cycle-technology\.co\.uk\/workshop/,'Repair seeds must not leak into a different topic');
 const councilAnswer=await ask('What is Wakefield Council’s official website?',a);assert.equal(councilAnswer.verification,'official-council-link');assert.equal(councilAnswer.state.constraints.requestFrame.topic,'council');assert.ok(!councilAnswer.state.constraints.localSources);
 const fromBarber={messages:[user('Where’s a good barber?'),{role:'assistant',content:'Gaffers Barbering.'}]};
 const changed=await ask('Where can I get my bike repaired?',fromBarber);assert.equal(changed.verification,'local-question-sourced');assert.equal(bodies.at(-1).messages.length,1);assert.doesNotMatch(bodies.at(-1).system,/Gaffers Barbering/);

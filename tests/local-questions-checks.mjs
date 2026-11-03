@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
 import {localQuestionAnswer,isLocalQuestion} from '../lib/local-questions.js';
+import https from 'node:https';
+import {EventEmitter} from 'node:events';
+import {Readable} from 'node:stream';
+https.request=(url,options,callback)=>{
+ const req=new EventEmitter();req.destroy=error=>{req.emit('error',error);req.emit('close');};
+ req.end=()=>queueMicrotask(()=>{
+  const response=Readable.from([Buffer.from('<html><title>Fixture Cycles Wakefield</title><body><h1>Fixture Cycles</h1><p>Fixture Cycles, Wakefield, Ossett, Horbury and Castleford. Puncture repairs and servicing.</p></body></html>')]);response.statusCode=200;response.headers={'content-type':'text/html'};response.on('end',()=>req.emit('close'));callback(response);
+ });return req;
+};
 process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';process.env.OPENAI_FAILSAFE_ENABLED='false';
 const user=content=>({role:'user',content});
 const source={url:'https://fixture-repairs.co.uk/repairs',title:'Fixture Cycles Wakefield'};

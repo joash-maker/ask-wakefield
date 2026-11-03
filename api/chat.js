@@ -1,4 +1,5 @@
 import {bookingRequest,readBooksyProfile,renderBookingBusiness} from '../lib/booking-business.js';
+import {seasonalEventTheme,seasonalEventAnswer} from '../lib/seasonal-events.js';
 import {researchLocalQuestion,isLocalQuestion,startsLocalQuestion} from '../lib/local-questions.js';
 import {localServiceMode,LOCAL_SERVICE_GUIDANCE,localServiceSearchAnswer} from '../lib/local-services.js';
 import {buildRequestContext,continuesRequest,requestContextText} from '../lib/request-context.js';
@@ -5081,6 +5082,13 @@ export default async function handler(req, res) {
   if (/^(?:thanks|thank you|thanks very much|cheers|no thanks)[.!?\s]*$/i.test(lastUserText(messages))) return res.status(200).json({reply:'You’re welcome.',sources:[],followups:[],live:false,verification:'conversation-acknowledgement'});
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
+  const seasonalTheme=seasonalEventTheme(currentText);
+  if(seasonalTheme){
+    res.__awRequestFrame.topic='events';
+    res.__awRequestFrame.eventTheme=seasonalTheme;
+    res.__awRequestFrame.eventFamily=Boolean(priorFrame?.eventFamily||messages.filter(m=>m.role==='user').some(m=>/\b(?:kids?|children|famil(?:y|ies))\b/i.test(m.content)));
+    return res.status(200).json(await seasonalEventAnswer(seasonalTheme,messages,res.__awRequestFrame,clientState));
+  }
   const serviceState = {...clientState,constraints:{...clientState.constraints,requestFrame:res.__awRequestFrame}};
   const serviceMode = localServiceMode(messages,serviceState);
   const bookingTarget = bookingRequest(messages,clientState);

@@ -17,6 +17,12 @@ const disguised=await verifyBusinessPages({...result,reply:JSON.stringify({busin
 const offered=shoppingOfferAnswer(JSON.parse(checked.reply),checked,{});assert.match(offered.reply,/Sale bikes £200/);assert.doesNotMatch(offered.reply,/Sale bikes £20(?:\D|$)/,'An invented cheaper price cannot match a larger real price by prefix');
 const noOffer=shoppingOfferAnswer({businesses:[{name:'Cycle Technology',url:actual,offers:[]}]},checked,{});assert.match(noOffer.reply,/couldn’t confirm a current deal/);assert.doesNotMatch(noOffer.reply,/published sale|£200/);
 assert.equal(shoppingOfferAnswer({businesses:rows},result,{}),null,'An attributed search excerpt alone is not a verified live offer page');
+const canonical='https://www.cycle-technology.co.uk/workshop/';
+const published={searched:true,reply:JSON.stringify({businesses:[{name:'Cycle Technology',url:canonical,services:['Bicycle repairs']}]}),sources:[{title:'Workshop | Cycle Technology',url:canonical}],searchEvidence:[{url:canonical,text:'Bicycle repairs in Wakefield.'}]};
+const blocked=await verifyBusinessPages(published,{read:async()=>({unavailable:true})});assert.equal(JSON.parse(blocked.reply).businesses.length,1);assert.equal(blocked.sources[0].pageRead,false,'A canonical first-party address may retain attributed search evidence when direct access is blocked');
+const missing=await verifyBusinessPages(published,{read:async()=>null});assert.equal(JSON.parse(missing.reply).businesses.length,0,'A missing page cannot fall back to a cached excerpt');
+const unregistered=await verifyBusinessPages(result,{read:async()=>({unavailable:true})});assert.equal(JSON.parse(unregistered.reply).businesses.length,0,'Blocked access must not legitimise a fabricated or unrelated URL');
+const excerptOffer=shoppingOfferAnswer({businesses:[{name:'Cycle Technology',url:canonical,offers:['Sale bikes £200']}]},{sources:[{title:'Sale | Cycle Technology',url:canonical,pageBusiness:'Cycle Technology',pageRead:false}],searchEvidence:[{url:canonical,text:'Cycle Technology Wakefield. Sale bikes £200'}]},{});assert.doesNotMatch(excerptOffer.reply,/Sale bikes £200/,'A search excerpt cannot establish a live offer');
 for(const ip of ['127.0.0.1','169.254.169.254','10.0.0.1','172.16.0.1','192.168.1.1','100.64.0.1','0.0.0.0','224.0.0.1','198.18.0.1','203.0.113.1','8.8.8.'])assert.equal(publicIPv4(ip),false,ip);
 assert.equal(publicIPv4('8.8.8.8'),true);
 let requested=[],mode='redirect';

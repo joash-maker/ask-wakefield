@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+// This replay's expected opening windows are for Wednesday, not the machine's current day.
+const NativeDate=Date;
+globalThis.Date=class extends NativeDate {constructor(...args){super(...(args.length?args:['2026-09-30T10:00:00Z']));}static now(){return NativeDate.parse('2026-09-30T10:00:00Z');}};
 import { scopeConversation } from '../lib/conversation-scope.js';
 import { publishedFoodRecommendation, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 
@@ -80,11 +83,8 @@ assert.equal(fallback.body.verification, 'published-place-options');
 assert.equal(fallback.headers['X-AskWakefield-Build'], 'v18-core-2026-10-01.1');
 console.log('Core tests passed: topic isolation, preserved refinements, Friday hours, overnight opening, closures, live discovery and provider-failure fallback.');
 
-const { familyPlanFollowUp: horburyFollowUp } = await import('../lib/askwakefield-places.js');
-const horburyReply = horburyFollowUp('Starting in Horbury, ages 7 and 4', {lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',ages:[]}}});
-assert.match(horburyReply.reply, /Secret Garden/);
-assert.match(horburyReply.reply, /£13.90/);
-assert.match(horburyFollowUp('Indoor activities nearby?', {lastIntent:'places.family_plan',constraints:horburyReply.constraints}).reply, /Secret Garden/);
+// Family planning and budget follow-ups are exercised through the real handler
+// in indoor-family-checks.mjs, rather than asserting the removed canned prices.
 
 const {nightlifeRecommendation,selectTrustedPlaces} = await import('../lib/askwakefield-places.js');
 assert.match(nightlifeRecommendation('Recommend bars in Wakefield',{}).reply,/Good Fortunes/);
@@ -113,16 +113,6 @@ const tanvisHoursContext = namedDiningFollowUp('What are the opening hours?', [u
 assert.match(tanvisHoursContext.reply,/Monday: 12:00/);
 
 assert.ok(selectTrustedPlaces('Recommend a Thai restaurant in Wakefield').some(p=>p.id==='AW-R004'));
-
-const bowlingState = horburyFollowUp('What about bowling?', {lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',origin:'Wakefield city centre',ages:[7,4]}}});
-const bowlingBudget = horburyFollowUp('Would that fit our £40, including getting there?',{lastIntent:'places.family_plan',constraints:bowlingState.constraints});
-assert.match(bowlingBudget.reply,/Tenpin Wakefield/);
-assert.match(bowlingBudget.reply,/£30/);
-assert.match(bowlingBudget.reply,/not quoted venue prices/);
-
-const neutralWeather = horburyFollowUp('Wakefield city centre, ages 7 and 4.',{lastIntent:'places.family_plan',constraints:{familyPlan:{budget:'£40',ages:[]}}});
-assert.doesNotMatch(neutralWeather.reply,/heavy rain|rain holds off/);
-assert.match(neutralWeather.reply,/For indoor play/);
 
 const afterFourQuestion = 'Can you give me a few places to go for dessert and coffee after work, anything open after 4pm?';
 const afterFourTime = requestedPlaceTimeConstraint([user(afterFourQuestion)]);
@@ -249,8 +239,10 @@ assert.match(broadThali.reply,/£13\.95/);
 assert.match(broadThali.reply,/£15\.95/);
 assert.doesNotMatch(broadThali.reply,/Taste of Dosa|The Spicy Biker/);
 const broadAnswer = await ask(broadQuestion,[...fullVenueContext,user(priceQuestion),assistant(priceAnswer.body.reply)]);
-assert.equal(broadAnswer.body.verification,'canonical-place-starter');
-assert.match(broadAnswer.body.reply,/Tanvi/);
+// Broad restaurant discovery now requires a current search. With both providers
+// unavailable in this fixture, it must fail safely rather than replay a stored quote.
+assert.equal(broadAnswer.statusCode,502);
+assert.equal(broadAnswer.body.error,'upstream_error');
 assert.doesNotMatch(broadAnswer.body.reply,/Taste of Dosa|The Spicy Biker/);
 const otherThali = districtThaliDiscovery('Any other Indian restaurants that serve thali?');
 assert.match(otherThali.reply,/do not have another independently verified/);

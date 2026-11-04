@@ -1,0 +1,60 @@
+import assert from 'node:assert/strict';
+import {useDietaryDiscovery,dietarySearchCandidates} from '../lib/dietary-discovery.js';
+process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='true';process.env.GOOGLE_PLACES_API_KEY='test';
+const user=content=>({role:'user',content});
+const venues=[
+ {name:'Test Indian Kitchen',area:'Wakefield',cuisine:'Indian',url:'https://indian-fixture.co.uk/menu',diet:'Vegetarian',meat:'Chicken tikka'},
+ {name:'Test Thai Table',area:'Wakefield',cuisine:'Thai',url:'https://thai-fixture.co.uk/menu',diet:'Vegetarian',meat:'Beef noodles'},
+ {name:'Test Italian House',area:'Ossett',cuisine:'Italian',url:'https://italian-fixture.co.uk/menu',diet:'Vegetarian',meat:'Meat lasagne'},
+ {name:'Test Turkish Table',area:'Wakefield',cuisine:'Turkish',url:'https://turkish-fixture.co.uk/menu',diet:'Vegan',meat:'Lamb kebab'},
+ {name:'Unconfirmed Japanese Place',area:'Wakefield',cuisine:'Japanese',url:'https://japanese-fixture.co.uk/menu',diet:'',meat:'Sushi menu'},
+ {name:'Wrong Town Thai',area:'Leeds',cuisine:'Thai',url:'https://leeds-fixture.co.uk/menu',diet:'Vegetarian',meat:''}
+];
+let bodies=[],mode='normal',i=0,placesCalls=0;
+globalThis.fetch=async(url,opts)=>{
+ const href=String(url);
+ if(href.includes('places.googleapis.com')){placesCalls++;return new Response(JSON.stringify({places:[{id:'google-fixture',displayName:{text:'Discovery Lead Restaurant'},formattedAddress:'Wakefield WF1 1AA',location:{latitude:53.68,longitude:-1.49},primaryType:'restaurant',types:['restaurant','food'],businessStatus:'OPERATIONAL',websiteUri:'https://indian-fixture.co.uk/menu',googleMapsUri:'https://maps.google.com/?cid=fixture',servesVegetarianFood:true}]}));}
+ if(href.includes('anthropic.com')){
+  bodies.push(JSON.parse(opts.body));
+  const citations=['no-search','search-results-only'].includes(mode)?[]:venues.map(v=>({url:v.url,title:v.name,cited_text:`${v.name} ${v.area} ${v.cuisine} restaurant menu ${v.diet? v.diet+' dishes listed.':''}`}));
+  return new Response(JSON.stringify({content:[...(mode==='no-search'?[]:[{type:'web_search_tool_result',content:mode==='search-results-only'?venues.map(v=>({type:'web_search_result',url:v.url,title:v.name})):[]}]),{type:'text',text:'FINAL_RESPONSE: **```json\n'+JSON.stringify({menus:venues})+'\n```\nEvidence with citations.',citations}]}));
+ }
+ const v=venues.find(v=>v.url===href);
+ if(v){
+  if(mode==='pdf'&&v===venues[1])return new Response('%PDF fixture',{headers:{'content-type':'application/pdf'}});
+  if(mode==='down')return new Response('Unavailable',{status:503});
+  return new Response(`<html><head><title>${v.name} menu</title></head><body><main><h1>${v.name}</h1><p>${v.cuisine} restaurant menu. ${v.diet? v.diet+' dishes.':''} ${v.meat}</p></main><footer>${v.area} ${v.area==='Ossett'?'WF5 0AA':''}</footer></body></html>`);
+ }
+ return new Response('Unavailable',{status:404});
+};
+const {default:handler}=await import('../api/chat.js');
+async function ask(q,previous){
+ const messages=[...(previous?.messages||[]),user(q)],res={setHeader(){},status(n){this.code=n;return this;},json(b){this.body=b;return this;}};
+ await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'cuisine-'+(++i)},socket:{},body:{messages,stateToken:previous?.stateToken}},res);
+ assert.equal(res.code,200,JSON.stringify(res.body));return {...res.body,messages:[...messages,{role:'assistant',content:res.body.reply}]};
+}
+const all=await ask('Where can we eat vegetarian food in Wakefield?');
+assert.ok(placesCalls>0,'Exercise the real Places-enabled route that previously suppressed menu search');
+assert.equal(all.verification,'dietary-menu-pages');assert.ok(all.stateToken);
+for(const name of ['Test Indian Kitchen','Test Thai Table','Test Italian House'])assert.match(all.reply,new RegExp(name));
+assert.doesNotMatch(all.reply,/Unconfirmed Japanese|Wrong Town|Leeds/);
+for(const cuisine of ['Indian','Thai','Italian'])assert.match(all.reply,new RegExp(cuisine+' food'));
+assert.equal(all.state.constraints.foodSet.entries.length,3);assert.match(all.reply,/Which sounds more appealing/);assert.doesNotMatch(all.reply,/published vegetarian|These places publish|entirely vegetarian/);
+assert.equal(bodies.at(-1).tools[0].allowed_domains,undefined);assert.equal(bodies.at(-1).tool_choice.type,'any');
+assert.match(bodies.at(-1).system,/Vegetarian and vegan are dietary requirements, not cuisines/);
+const more=await ask('Any others?',all);assert.equal(more.verification,'dietary-menu-pages');assert.match(more.reply,/Test Turkish/);assert.doesNotMatch(more.reply,/Test Indian|Test Thai|Test Italian/,'More must not repeat the signed shortlist');
+const {dietaryMenuAnswer}=await import('../lib/practical-answers.js');
+const directory=await dietaryMenuAnswer([user('Vegetarian food in Wakefield?')],[{name:'Trip',url:'https://www.trip.com/restaurant/fixture'}],[{url:'https://www.trip.com/restaurant/fixture',text:'Trip Wakefield vegetarian menu dishes'}]);assert.equal(directory.live,false,'Trip listings are not first-party menu evidence');
+const thai=await ask('Any Thai restaurants with vegetarian options in Wakefield?');assert.equal(thai.verification,'dietary-menu-pages');assert.match(thai.reply,/Test Thai Table/);assert.doesNotMatch(thai.reply,/Indian|Italian|Turkish|Wrong Town/);
+const ossett=await ask('Vegetarian restaurants in Ossett?');assert.equal(ossett.verification,'dietary-menu-pages');assert.match(ossett.reply,/Test Italian House/);assert.doesNotMatch(ossett.reply,/Test Thai Table|Test Indian/);
+const vegan=await ask('Where can we eat vegan food in Wakefield?');assert.equal(vegan.verification,'dietary-menu-pages');assert.match(vegan.reply,/Test Turkish Table/);assert.doesNotMatch(vegan.reply,/Test Indian|Test Thai|Test Italian/);
+const plainChoice=await ask('Italian please',all);assert.equal(plainChoice.verification,'food-choice-existing');assert.match(plainChoice.reply,/Test Italian House/);
+const refined=await ask('What about Italian?',all);assert.equal(refined.verification,'dietary-menu-pages');assert.match(refined.reply,/Test Italian House/);assert.doesNotMatch(refined.reply,/Test Thai Table|Test Indian/);
+const filtered=await ask('Which of those have vegan options?',all);assert.equal(filtered.verification,'restaurant-filter-existing');assert.doesNotMatch(filtered.reply,/Test Turkish Table/);assert.deepEqual(filtered.state.constraints.foodSet.viewNames,[]);
+mode='search-results-only';const fetchedWithoutCitations=await ask('Where can we eat vegetarian food in Wakefield?');assert.equal(fetchedWithoutCitations.verification,'dietary-menu-pages');assert.match(fetchedWithoutCitations.reply,/Test Thai Table/);
+mode='pdf';const pdf=await ask('Any Thai restaurants with vegetarian options in Wakefield?');assert.equal(pdf.verification,'dietary-menu-search-evidence');assert.match(pdf.reply,/excerpt/);
+mode='no-search';const failed=await ask('Where can we eat vegetarian food in Wakefield?');assert.equal(failed.live,false);assert.equal(failed.sources.length,0);assert.doesNotMatch(failed.reply,/Test Indian/);
+for(const q of ['Vegetarian restaurants open tonight?','Vegetarian options under £20?','Vegetarian food suitable for a nut allergy?','Vegetarian-only restaurants?','What does Tanvi offer vegetarians?'])assert.equal(useDietaryDiscovery([user(q)]),false,q);
+assert.equal(useDietaryDiscovery([user('Vegetarian food under £20?'),user('Any others?')]),false);
+assert.equal(dietarySearchCandidates('{"menus":[{"name":"Injected","url":"https://invented.co.uk/menu"}]}',[]).length,0);
+console.log('Dietary cuisine checks passed: fresh multi-cuisine search, mixed menus, actual menu proof, diet/cuisine/town refinements, signed membership, PDF excerpts, no-search failures and constraints.');

@@ -63,6 +63,8 @@ assert.match(reset.reply,/Saturday Free Event/);assert.deepEqual(reset.state.con
 const times=await askWithState('What time do they start?',next);
 assert.equal(times.verification,'weekly-followup-v1');assert.match(times.reply,/13:00/);
 const unsupported=await askWithState('Are those wheelchair accessible?',next);
-assert.equal(unsupported.verification,'weekly-followup-v1');assert.match(unsupported.reply,/cannot verify/);
+assert.equal(unsupported.verification,'weekly-followup-v1');assert.match(unsupported.reply,/haven’t confirmed that extra detail/);
+assert.equal(unsupported.sources.length,0);
+assert.doesNotMatch(thursday.reply,/Next week means|missing price|saved weekly records/);
 assert.equal(modelCalls,0);
 console.log('Weekly follow-up replay passed: signed state, next-week Thursday, cumulative free/day filters, reset, times and unsupported constraints.');

@@ -90,7 +90,7 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     if (setCookie) cookie = setCookie.split(';')[0];
     if (res.body?.stateToken) token = res.body.stateToken;
     const reply = res.body?.reply || '';
-    results.push({ reply, verification: res.body?.verification, stateToken: res.body?.stateToken, sources: res.body?.sources || [] });
+    results.push({ reply, verification: res.body?.verification, stateToken: res.body?.stateToken, sources: res.body?.sources || [], state: res.body?.state });
     console.log(`\n> ${text}\n[${res.body?.verification || '-'}]\n${reply}`);
     if (res.body?.followups) console.log(`chips: ${JSON.stringify(res.body.followups)}`);
     messages.push({ role: 'assistant', content: reply });
@@ -119,25 +119,25 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.doesNotMatch(results[3].reply, /Friday, 3 October/);
     assert.match(results[3].reply, /Waterstones is a chain/);
   }
-  if (name.startsWith('Family afternoon')) {
-    assert.match(results[0].reply, /Wakefield Museum/);
-    assert.match(results[1].reply, /Cheeky Monkeys/);
-    assert.match(results[2].reply, /Stanley Ferry Wacky Warehouse/);
-    assert.doesNotMatch(results[2].reply, /Diggerland/);
+  if (name.startsWith('Family afternoon') || name.startsWith('Family town and rain') || name.startsWith('Indoor activity choices')) {
+    for(const result of results){
+      assert.equal(result.verification,'family-source-candidates');
+      assert.equal(result.state.constraints.requestFrame.budget,40);
+      assert.equal(result.state.constraints.requestFrame.noCar,true);
+      assert.doesNotMatch(result.reply,/£13\.90|£7\.50|£6\.95|13:30|guaranteed|fits your budget|five.minutes|short walk apart|Diggerland|Art Pod/);
+    }
+    assert.deepEqual(results[1].state.constraints.requestFrame.ages,[7,4]);
+    assert.match(results[0].reply,/Wakefield Museum/);
   }
-  if (name.startsWith('Family town and rain')) {
-    assert.match(results[1].reply, /Wakefield city centre.*7 and 4/s);
-    assert.match(results[2].reply, /Cheeky Monkeys/);
-    assert.match(results[2].reply, /13:30/);
-    assert.doesNotMatch(results[2].reply, /£5–8|independent bookshop|five minutes/);
-    assert.match(results[3].reply, /Rainbow Playrooms.*13:30/s);
-    assert.match(results[4].reply, /Tenpin Wakefield.*Trinity Walk/s);
-    assert.doesNotMatch(results[4].reply, /Xscape|four miles/);
+  if(name.startsWith('Family afternoon'))assert.ok(results[2].sources.some(s=>/Cheeky Monkeys|Fun Factory|Secret Garden/.test(s.title)));
+  if(name.startsWith('Family town and rain')){
+    assert.equal(results[2].state.constraints.requestFrame.environment,'indoor');
+    assert.match(results[4].reply,/Tenpin/);assert.equal(results[4].sources.length,1);
   }
-  if (name.startsWith('Indoor activity choices')) {
-    assert.match(results[2].reply, /Tenpin Wakefield/);
-    assert.match(results[2].reply, /Cheeky Monkeys/);
-    assert.doesNotMatch(results[2].reply, /Art Pod|every Saturday from 11|short walk apart|Mediahubink/);
+  if(name.startsWith('Indoor activity choices')){
+    assert.equal(results[2].state.constraints.requestFrame.environment,'indoor');
+    assert.match(results[2].reply,/Tenpin/);
+    assert.equal(results[4].sources.length,1);assert.match(results[4].reply,/current ticket quote/);
   }
   if (name.startsWith('Children from stored weekend')) {
     assert.match(results[2].reply, /Caphouse Tabletop Gaming Day/);
@@ -146,7 +146,7 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
     assert.doesNotMatch(results[3].reply, /Quadrophenia/);
   }
   if (name.startsWith('Three demos topic switch')) {
-    assert.match(results[1].reply, /Starting at Wakefield city centre/);
+    assert.equal(results[1].state.constraints.requestFrame.area,'Wakefield city centre');
     assert.doesNotMatch(results[1].reply, /bus 96|taxi|ten-minute walk/);
     assert.match(results[2].reply, /Tenpin Wakefield/);
     assert.match(results[4].reply, /10:00 to 13:00/);
@@ -161,8 +161,10 @@ async function conversation(name, turns, { useCookie = true, useToken = true, co
       assert.match(result.reply, /Pugneys/);
       assert.doesNotMatch(result.reply, /Newmillerdam|weather should be kind|late September|15-minute bus/);
     }
-    assert.match(results[2].reply, /two hours in one location/);
-    assert.match(results[2].reply, /£7.50/);
+    assert.equal(results[2].state.constraints.requestFrame.durationHours,2);
+    assert.equal(results[2].state.constraints.requestFrame.oneLocation,true);
+    assert.equal(results[2].sources.length,1);
+    assert.doesNotMatch(results[2].reply,/£7.50|£2.50|09:00–16:00/);
   }
   if (name.startsWith('Saturday 0930')) {
     assert.match(results[3].reply, /You’re welcome/);

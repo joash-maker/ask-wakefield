@@ -12,7 +12,7 @@ const {default:handler}=await import('../api/chat.js');let token=null,messages=[
 for(const q of ["I need to get my kids some toys, where's the best place?",'My kids are 4 and 7','Toys today, toy shops.','Things like transformers, lego and things like that?','Is there a Smyths toys in Wakefield?','What other toy shops are in Wakefield?']){
  messages.push({role:'user',content:q});const res={setHeader(){},status(n){this.code=n;return this;},json(b){this.body=b;return this;}};
  await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'toy-'+messages.length},socket:{},body:{messages:messages.slice(-10),stateToken:token}},res);
- const a=res.body;assert.ok(['toy-shopping-stores','toy-shopping-official-store-page'].includes(a.verification),q);assert.doesNotMatch(a.reply,/Rainbow|Xscape|Thornes|should have|should stock|best bet|opens at|open this afternoon/i);assert.match(bodies.at(-1).system,/TOY SHOPPING/);assert.match(a.state.constraints.requestFrame.localQuestion,/get my kids some toys/);
+ const a=res.body;assert.ok(['toy-shopping-stores','toy-shopping-official-store-page','toy-shopping-verified-branch'].includes(a.verification),q);assert.doesNotMatch(a.reply,/Rainbow|Xscape|Thornes|should have|should stock|best bet|opens at|open this afternoon/i);assert.match(bodies.at(-1).system,/TOY SHOPPING/);assert.match(a.state.constraints.requestFrame.localQuestion,/get my kids some toys/);
  if(messages.length>2)assert.deepEqual(a.state.constraints.requestFrame.ages,[4,7]);
  if(/other toy shops/i.test(q))assert.ok(a.sources.every(s=>!/smyths/i.test(s.title)));
  if(/smyths/i.test(q)){assert.equal(a.sources.length,1);assert.match(a.reply,/Yes, I found/);}
@@ -26,3 +26,7 @@ const {confirmNamedToyStore}=await import('../lib/toy-shopping.js');
 const toyState={constraints:{requestFrame:{toyShopping:true}}};const named=[{role:'user',content:'Is there a Smyths toys in Wakefield?'}];
 assert.equal(confirmNamedToyStore({searched:false},named,toyState),null);
 assert.equal(confirmNamedToyStore({searched:true,sources:[{url:'https://invented.co.uk/wakefield',title:'Wakefield Smyths'}],searchEvidence:[{url:'https://invented.co.uk/wakefield',text:'Wakefield Smyths'}]},named,toyState),null);
+
+const {verifiedToyStoreAnswer}=await import('../lib/toy-shopping.js');
+assert.ok(verifiedToyStoreAnswer(named,toyState,new Date('2026-11-04T20:00:00Z')));
+assert.equal(verifiedToyStoreAnswer(named,toyState,new Date('2026-11-12T20:00:00Z')),null,'Expired branch record must return to current research');

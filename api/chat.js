@@ -1,4 +1,4 @@
-import {isToyShoppingRequest} from '../lib/toy-shopping.js';
+import {isToyShoppingRequest,verifiedToyStoreAnswer} from '../lib/toy-shopping.js';
 import {isDiningRequest,diningPreference} from '../lib/local-dining.js';
 import {bookingRequest,readBooksyProfile,renderBookingBusiness} from '../lib/booking-business.js';
 import {seasonalEventTheme,seasonalEventAnswer} from '../lib/seasonal-events.js';
@@ -5103,6 +5103,7 @@ export default async function handler(req, res) {
     const frame={...res.__awRequestFrame,topic:'local',toyShopping:true,localQuestion:priorFrame?.toyShopping?priorFrame.localQuestion:currentText.slice(0,600),toyBrands:[...new Set([...(priorFrame?.toyBrands||[]),...([...currentText.matchAll(/\b(lego|transformers)\b/gi)].map(m=>m[1].toUpperCase()))])]};
     res.__awRequestFrame=frame;
     const base=priorFrame?.toyShopping?clientState:normaliseClientState(null);
+    const knownStore=verifiedToyStoreAnswer(messages,{...base,constraints:{...base.constraints,requestFrame:frame}});if(knownStore)return res.status(200).json(knownStore);
     return res.status(200).json(await researchLocalQuestion(messages,{...base,constraints:{...base.constraints,requestFrame:frame}},{model:MODEL,clock:londonContext(),call:callAnthropic,extract:extractAnswer}));
   }
   // Menu-led dining keeps appetite, area and requests for more together.

@@ -21,7 +21,7 @@ let turn=0,bodies=[];
 globalThis.fetch=async(url,opts)=>{
  if(!String(url).includes('api.anthropic.com'))return new Response('Unavailable',{status:404});
  const body=JSON.parse(opts.body);bodies.push(body);
- const rows=mode==='recovery'&&!body.tools?[recovery]:turn===1?fixtures.slice(0,2):turn===2?fixtures.slice(0,3):fixtures;
+ const rows=mode==='expansion'?(body.system.includes('ADDITIONAL DISCOVERY PASS')?fixtures.slice(1):[fixtures[1]]):mode==='recovery'&&!body.tools?[recovery]:turn===1?fixtures.slice(0,2):turn===2?fixtures.slice(0,3):fixtures;
  return new Response(JSON.stringify({content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: '+JSON.stringify({businesses:rows}),citations:rows.map(p=>({url:p.url,title:p.name,cited_text:`${p.name}. ${p.address}. ${p.services.join('. ')}.`}))}]}));
 };
 const {default:handler}=await import('../api/chat.js');
@@ -31,7 +31,7 @@ assert.equal(a.verification,'dining-menu-choices');assert.equal(a.sources.length
 a=await ask('Any around the city centre?',a);
 assert.equal(a.state.constraints.requestFrame.area,'Wakefield city centre');assert.match(a.state.constraints.requestFrame.localQuestion,/burger or steak/);assert.equal(a.verification,'dining-menu-choices');assert.deepEqual(a.sources.map(p=>p.title),['Central Kitchen','Central Grill']);assert.doesNotMatch(a.reply,/District Steakhouse/);
 a=await ask("I'm sure there must be more choices and restaurants that do burgers or steaks?",a);
-assert.equal(a.verification,'dining-menu-choices');assert.deepEqual(a.sources.map(p=>p.title),['Another Kitchen']);assert.equal(a.state.constraints.requestFrame.area,'Wakefield city centre');assert.ok(bodies.at(-1).system.includes('Already shown dining choices'));assert.match(a.reply,/another option in the city centre/);
+assert.equal(a.verification,'dining-menu-choices');assert.deepEqual(a.sources.map(p=>p.title),['Another Kitchen']);assert.equal(a.state.constraints.requestFrame.area,'Wakefield city centre');assert.ok(bodies.at(-1).system.includes('Already shown dining choices'));assert.match(a.reply,/one more place for a burger or steak in the city centre/);
 const remembered=previousDiningChoices([{role:'user',content:'Any around the city centre?'}],{...a.state,lastIntent:'local.dining'});
 assert.ok(remembered);assert.match(remembered.reply,/menus checked earlier/);assert.equal(remembered.live,false);assert.equal(previousDiningChoices([],{constraints:{diningCheckedAt:Date.now()-31*60*1000,diningChoices:[]}}),null);
 assert.equal(continuesRequest('Any around the city centre?',{topic:'local',localDining:true}),true);
@@ -54,3 +54,12 @@ console.log('Dining choices: exact three-turn conversation, evidence-led choice,
 for(const q of ['Give a few suggestions for burgers in Wakefield city centre?', 'Burger recommendations in Wakefield?', 'Suggest restaurants for steak in Wakefield', 'Places for cheeseburgers in Wakefield?'])assert.equal(isDiningRequest(q),true,q);
 const suggestions=await ask('Give a few suggestions for burgers in Wakefield city centre?');
 assert.equal(suggestions.verification,'dining-menu-choices');assert.equal(suggestions.state.constraints.requestFrame.area,'Wakefield city centre');assert.ok(suggestions.sources.length>=2);assert.doesNotMatch(suggestions.reply,/business publishes|Business details|service you’re looking for/i);
+
+const five=Array.from({length:6},(_,i)=>({name:'Restaurant '+i,url:'https://restaurant'+i+'.co.uk/menu',services:['Classic Burger'],address:'25 Northgate, Wakefield',lead:false}));
+assert.equal(renderDiningChoices(five,[{role:'user',content:'Give me five burger options'}],state).sources.length,5);
+assert.equal(renderDiningChoices(five,[{role:'user',content:'A few burger suggestions'}],state).sources.length,3);
+
+mode='expansion';const searchesBefore=bodies.filter(b=>b.tools).length;
+const expanded=await ask('Give a few suggestions for burgers in Wakefield city centre?');
+assert.equal(expanded.sources.length,2,'The added search retains the first burger choice and finds the other burger restaurant, without adding the steak-only venue');
+assert.equal(bodies.filter(b=>b.tools).length-searchesBefore,2,'At most one additional search');

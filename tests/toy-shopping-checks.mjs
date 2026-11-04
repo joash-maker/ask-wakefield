@@ -30,3 +30,12 @@ assert.equal(confirmNamedToyStore({searched:true,sources:[{url:'https://invented
 const {verifiedToyStoreAnswer}=await import('../lib/toy-shopping.js');
 assert.ok(verifiedToyStoreAnswer(named,toyState,new Date('2026-11-04T20:00:00Z')));
 assert.equal(verifiedToyStoreAnswer(named,toyState,new Date('2026-11-12T20:00:00Z')),null,'Expired branch record must return to current research');
+
+const {renderToyShops}=await import('../lib/toy-shopping.js');
+const broadState={constraints:{requestFrame:{toyShopping:true}}};
+const justWorks=[{...rows[1],lead:false}];
+const broad=renderToyShops(justWorks,[{role:'user',content:"I need to get my kids some toys, where's the best place?"}],broadState,new Date('2026-11-04T20:00:00Z'));
+assert.deepEqual(broad.sources.map(s=>s.title),['Smyths Toys','The Works'],'Broad discovery must use the verified specialist, not just named lookup');
+const central=renderToyShops(justWorks,[],{constraints:{requestFrame:{toyShopping:true,area:'Wakefield city centre'}}},new Date('2026-11-04T20:00:00Z'));
+assert.ok(central.sources.every(s=>!/smyths/i.test(s.title)),'Do not insert the retail-park branch into a city-centre-only request');
+assert.equal(renderToyShops([],[],broadState,new Date('2026-11-12T00:00:00Z')),null,'Expired branch must not pad broad discovery');

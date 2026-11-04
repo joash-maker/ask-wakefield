@@ -50,3 +50,7 @@ const preference=await ask('Steak please',a);
 assert.equal(preference.verification,'dining-menu-choices');assert.equal(preference.state.constraints.requestFrame.diningPreference,'steak');assert.equal(preference.state.constraints.requestFrame.area,'Wakefield city centre');assert.deepEqual(preference.sources.map(p=>p.title),['Central Grill']);assert.doesNotMatch(preference.reply,/Classic Burger|Which are you leaning/);
 const fresh=await ask('Where can I get my bike repaired in Wakefield?',a);assert.ok(!fresh.state.constraints.requestFrame.localDining,'A fresh non-dining request clears food preferences');
 console.log('Dining choices: exact three-turn conversation, evidence-led choice, central area, fresh alternatives and topic reset passed.');
+
+for(const q of ['Give a few suggestions for burgers in Wakefield city centre?', 'Burger recommendations in Wakefield?', 'Suggest restaurants for steak in Wakefield', 'Places for cheeseburgers in Wakefield?'])assert.equal(isDiningRequest(q),true,q);
+const suggestions=await ask('Give a few suggestions for burgers in Wakefield city centre?');
+assert.equal(suggestions.verification,'dining-menu-choices');assert.equal(suggestions.state.constraints.requestFrame.area,'Wakefield city centre');assert.ok(suggestions.sources.length>=2);assert.doesNotMatch(suggestions.reply,/business publishes|Business details|service you’re looking for/i);

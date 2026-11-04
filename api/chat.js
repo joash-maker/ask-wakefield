@@ -1,3 +1,4 @@
+import {isToyShoppingRequest} from '../lib/toy-shopping.js';
 import {isDiningRequest,diningPreference} from '../lib/local-dining.js';
 import {bookingRequest,readBooksyProfile,renderBookingBusiness} from '../lib/booking-business.js';
 import {seasonalEventTheme,seasonalEventAnswer} from '../lib/seasonal-events.js';
@@ -5096,6 +5097,13 @@ export default async function handler(req, res) {
   if (bookingTarget) {
     const profile = await readBooksyProfile(bookingTarget.url);
     if (profile) return res.status(200).json(renderBookingBusiness(profile,messages,serviceState));
+  }
+  if(isToyShoppingRequest(currentText)||priorFrame?.toyShopping){
+    if(!process.env.ANTHROPIC_API_KEY)return res.status(503).json({error:'service_unavailable',reply:'The assistant is temporarily unavailable.'});
+    const frame={...res.__awRequestFrame,topic:'local',toyShopping:true,localQuestion:priorFrame?.toyShopping?priorFrame.localQuestion:currentText.slice(0,600),toyBrands:[...new Set([...(priorFrame?.toyBrands||[]),...([...currentText.matchAll(/\b(lego|transformers)\b/gi)].map(m=>m[1].toUpperCase()))])]};
+    res.__awRequestFrame=frame;
+    const base=priorFrame?.toyShopping?clientState:normaliseClientState(null);
+    return res.status(200).json(await researchLocalQuestion(messages,{...base,constraints:{...base.constraints,requestFrame:frame}},{model:MODEL,clock:londonContext(),call:callAnthropic,extract:extractAnswer}));
   }
   // Menu-led dining keeps appetite, area and requests for more together.
   // Existing dietary/allergy, budget and live-status handlers keep their scope.

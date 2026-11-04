@@ -586,7 +586,12 @@ function sendMessage(override) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/chat', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 25000;
+  // Research can include several current-source reads. Keep this request alive.
+  xhr.timeout = 120000;
+  var progressTimer = setTimeout(function() {
+    bBody.innerHTML = '<div class="searching"><div class="spin"></div>I’m still checking the sources. You don’t need to send your question again.</div>';
+  }, 12000);
+  xhr.onloadend = function() { clearTimeout(progressTimer); };
 
   xhr.onload = function() {
     try {
@@ -631,7 +636,7 @@ function sendMessage(override) {
       if (Array.isArray(data.followups)) renderFollowups(data.followups, bWrap);
       else getFollowups(text, reply, bWrap);
     } catch(e) {
-      if (!bBody.textContent || bBody.textContent.indexOf('Thinking') !== -1) {
+      if (!bBody.textContent || bBody.querySelector('.searching')) {
         bBody.innerHTML = fmt('Something went wrong with the response. Please try again.');
       }
     }
@@ -655,6 +660,7 @@ function sendMessage(override) {
   try {
     xhr.send(JSON.stringify({ messages: chatHistory, stateToken: stateToken }));
   } catch(e) {
+    clearTimeout(progressTimer);
     bBody.innerHTML = fmt('Failed to send request. Please try again.');
     isSending = false;
     sendBtn.disabled = false;

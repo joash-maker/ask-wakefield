@@ -1,3 +1,4 @@
+import {isDiningRequest} from '../lib/local-dining.js';
 import {bookingRequest,readBooksyProfile,renderBookingBusiness} from '../lib/booking-business.js';
 import {seasonalEventTheme,seasonalEventAnswer} from '../lib/seasonal-events.js';
 import {researchLocalQuestion,isLocalQuestion,startsLocalQuestion} from '../lib/local-questions.js';
@@ -5095,6 +5096,15 @@ export default async function handler(req, res) {
   if (bookingTarget) {
     const profile = await readBooksyProfile(bookingTarget.url);
     if (profile) return res.status(200).json(renderBookingBusiness(profile,messages,serviceState));
+  }
+  // Menu-led dining keeps appetite, area and requests for more together.
+  // Existing dietary/allergy, budget and live-status handlers keep their scope.
+  if ((isDiningRequest(currentText)||priorFrame?.localDining) && !/\b(?:vegetarian|vegan|halal|gluten|coeliac|allerg\w*|open|opening|hours?|tonight|today|tomorrow|prices?|costs?|budget|under|accessible|wheelchair|book|booking|reserve)\b|£/i.test(currentText)) {
+    if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({error:'service_unavailable',reply:'The assistant is temporarily unavailable.'});
+    const frame={...res.__awRequestFrame,topic:'local',localDining:true,localQuestion:priorFrame?.localDining?priorFrame.localQuestion:currentText.slice(0,600)};
+    res.__awRequestFrame=frame;
+    const base=priorFrame?.localDining?clientState:normaliseClientState(null);
+    return res.status(200).json(await researchLocalQuestion(messages,{...base,constraints:{...base.constraints,requestFrame:frame}},{model:MODEL,clock:londonContext(),call:callAnthropic,extract:extractAnswer}));
   }
   const foodChoice = foodChoiceFollowUp(messages,clientState);
   if (foodChoice) { attachStateCookie(res,foodChoice.state); return res.status(200).json(foodChoice); }

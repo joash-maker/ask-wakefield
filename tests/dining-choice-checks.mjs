@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import https from 'node:https';
 import {EventEmitter} from 'node:events';
 import {Readable} from 'node:stream';
-import {renderDiningChoices,isDiningRequest} from '../lib/local-dining.js';
+import {renderDiningChoices,isDiningRequest,previousDiningChoices} from '../lib/local-dining.js';
 import {continuesRequest} from '../lib/request-context.js';
 const fixtures=[
  {name:'District Steakhouse',url:'https://district-steak.co.uk/menu',address:'270 Wakefield Road, Wakefield',services:['Rump Steak']},
@@ -32,11 +32,14 @@ a=await ask('Any around the city centre?',a);
 assert.equal(a.state.constraints.requestFrame.area,'Wakefield city centre');assert.match(a.state.constraints.requestFrame.localQuestion,/burger or steak/);assert.equal(a.verification,'dining-menu-choices');assert.deepEqual(a.sources.map(p=>p.title),['Central Kitchen','Central Grill']);assert.doesNotMatch(a.reply,/District Steakhouse/);
 a=await ask("I'm sure there must be more choices and restaurants that do burgers or steaks?",a);
 assert.equal(a.verification,'dining-menu-choices');assert.deepEqual(a.sources.map(p=>p.title),['Another Kitchen']);assert.equal(a.state.constraints.requestFrame.area,'Wakefield city centre');assert.ok(bodies.at(-1).system.includes('Already shown dining choices'));assert.match(a.reply,/another option in the city centre/);
+const remembered=previousDiningChoices([{role:'user',content:'Any around the city centre?'}],{...a.state,lastIntent:'local.dining'});
+assert.ok(remembered);assert.match(remembered.reply,/menus checked earlier/);assert.equal(remembered.live,false);assert.equal(previousDiningChoices([],{constraints:{diningCheckedAt:Date.now()-31*60*1000,diningChoices:[]}}),null);
 assert.equal(continuesRequest('Any around the city centre?',{topic:'local',localDining:true}),true);
 assert.equal(isDiningRequest('Where can I get my bike repaired?'),false);
 assert.equal(continuesRequest('Any barbers in Wakefield?',{topic:'local',localDining:true}),false,'A different subject must clear dining state');
 const state={constraints:{requestFrame:{localDining:true,area:'Wakefield city centre',localQuestion:'burger or steak'}}};
 assert.equal(renderDiningChoices([{name:'Remote Place',url:'https://remote.co.uk',services:['Rump Steak'],address:'270 Wakefield Road, Wakefield'}],[{role:'user',content:'Any around the city centre?'}],state),null);
+assert.equal(renderDiningChoices([{name:'Central Kitchen',url:'https://central-kitchen.co.uk/menu',services:['Classic Burger'],address:'25 Northgate, Wakefield'}],[],{constraints:{requestFrame:{localDining:true,localQuestion:'burger',budget:15}}}),null,'A menu title cannot establish an in-budget meal');
 assert.equal(renderDiningChoices([{name:'Cafe',url:'https://cafe.co.uk',services:['Tea'],address:'25 Northgate, Wakefield'}],[],state),null);
 mode='recovery';
 const recovered=await ask('Any more choices?',a);

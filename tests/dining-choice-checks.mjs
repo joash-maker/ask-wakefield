@@ -38,6 +38,7 @@ assert.equal(continuesRequest('Any around the city centre?',{topic:'local',local
 assert.equal(isDiningRequest('Where can I get my bike repaired?'),false);
 assert.equal(continuesRequest('Any barbers in Wakefield?',{topic:'local',localDining:true}),false,'A different subject must clear dining state');
 const state={constraints:{requestFrame:{localDining:true,area:'Wakefield city centre',localQuestion:'burger or steak'}}};
+const duplicate=renderDiningChoices([{...fixtures[1],lead:false},{...fixtures[1],url:'https://central-kitchen.co.uk/other-menu',lead:false}],[{role:'user',content:'burger'}],state);assert.equal(duplicate.sources.length,1,'The same restaurant on different menu URLs is one choice');
 assert.equal(renderDiningChoices([{name:'Remote Place',url:'https://remote.co.uk',services:['Rump Steak'],address:'270 Wakefield Road, Wakefield'}],[{role:'user',content:'Any around the city centre?'}],state),null);
 assert.equal(renderDiningChoices([{name:'Central Kitchen',url:'https://central-kitchen.co.uk/menu',services:['Classic Burger'],address:'25 Northgate, Wakefield'}],[],{constraints:{requestFrame:{localDining:true,localQuestion:'burger',budget:15}}}),null,'A menu title cannot establish an in-budget meal');
 assert.equal(renderDiningChoices([{name:'Cafe',url:'https://cafe.co.uk',services:['Tea'],address:'25 Northgate, Wakefield'}],[],state),null);

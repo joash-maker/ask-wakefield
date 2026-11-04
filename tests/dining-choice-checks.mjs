@@ -10,16 +10,18 @@ const fixtures=[
  {name:'Central Grill',url:'https://central-grill.co.uk/menu',address:'10 Westgate, Wakefield',services:['Fillet Steak']},
  {name:'Another Kitchen',url:'https://another-kitchen.co.uk/menu',address:'12 Wood Street, Wakefield',services:['Cheese Burger']}
 ];
+let mode='normal';
+const recovery={name:'Smokehouse',url:'https://smokehousewakefield.co.uk/smokehouse-menus/',address:'18 Wood Street, Wakefield',services:['Jerk Chicken Burger','10oz Rib Eye']};
 https.request=(url,options,callback)=>{
  const req=new EventEmitter();req.destroy=e=>{req.emit('error',e);req.emit('close');};
- req.end=()=>queueMicrotask(()=>{const p=fixtures.find(p=>p.url===String(url));const res=Readable.from([Buffer.from(`<html><title>${p.name}</title><body><h1>${p.name}</h1><p>${p.address}. ${p.services.join('. ')}.</p></body></html>`)]);res.statusCode=200;res.headers={'content-type':'text/html'};res.on('end',()=>req.emit('close'));callback(res);});return req;
+ req.end=()=>queueMicrotask(()=>{const p=fixtures.find(p=>p.url===String(url))||(mode==='recovery'&&String(url)===recovery.url?recovery:{name:'Unavailable',address:'',services:[]});const res=Readable.from([Buffer.from(`<html><title>${p.name}</title><body><h1>${p.name}</h1><p>${p.address}. ${p.services.join('. ')}.</p></body></html>`)]);res.statusCode=p.name==='Unavailable'?404:200;res.headers={'content-type':'text/html'};res.on('end',()=>req.emit('close'));callback(res);});return req;
 };
 process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_ENABLED='false';process.env.OPENAI_FAILSAFE_ENABLED='false';
 let turn=0,bodies=[];
 globalThis.fetch=async(url,opts)=>{
  if(!String(url).includes('api.anthropic.com'))return new Response('Unavailable',{status:404});
  const body=JSON.parse(opts.body);bodies.push(body);
- const rows=turn===1?fixtures.slice(0,2):turn===2?fixtures.slice(0,3):fixtures;
+ const rows=mode==='recovery'&&!body.tools?[recovery]:turn===1?fixtures.slice(0,2):turn===2?fixtures.slice(0,3):fixtures;
  return new Response(JSON.stringify({content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'FINAL_RESPONSE: '+JSON.stringify({businesses:rows}),citations:rows.map(p=>({url:p.url,title:p.name,cited_text:`${p.name}. ${p.address}. ${p.services.join('. ')}.`}))}]}));
 };
 const {default:handler}=await import('../api/chat.js');
@@ -32,8 +34,13 @@ a=await ask("I'm sure there must be more choices and restaurants that do burgers
 assert.equal(a.verification,'dining-menu-choices');assert.deepEqual(a.sources.map(p=>p.title),['Another Kitchen']);assert.equal(a.state.constraints.requestFrame.area,'Wakefield city centre');assert.ok(bodies.at(-1).system.includes('Already shown dining choices'));assert.match(a.reply,/another option in the city centre/);
 assert.equal(continuesRequest('Any around the city centre?',{topic:'local',localDining:true}),true);
 assert.equal(isDiningRequest('Where can I get my bike repaired?'),false);
+assert.equal(continuesRequest('Any barbers in Wakefield?',{topic:'local',localDining:true}),false,'A different subject must clear dining state');
 const state={constraints:{requestFrame:{localDining:true,area:'Wakefield city centre',localQuestion:'burger or steak'}}};
 assert.equal(renderDiningChoices([{name:'Remote Place',url:'https://remote.co.uk',services:['Rump Steak'],address:'270 Wakefield Road, Wakefield'}],[{role:'user',content:'Any around the city centre?'}],state),null);
 assert.equal(renderDiningChoices([{name:'Cafe',url:'https://cafe.co.uk',services:['Tea'],address:'25 Northgate, Wakefield'}],[],state),null);
+mode='recovery';
+const recovered=await ask('Any more choices?',a);
+assert.equal(recovered.verification,'dining-menu-choices');assert.deepEqual(recovered.sources.map(p=>p.title),['Smokehouse']);assert.match(recovered.reply,/Jerk Chicken Burger/);
+mode='normal';
 const fresh=await ask('Where can I get my bike repaired in Wakefield?',a);assert.ok(!fresh.state.constraints.requestFrame.localDining,'A fresh non-dining request clears food preferences');
 console.log('Dining choices: exact three-turn conversation, evidence-led choice, central area, fresh alternatives and topic reset passed.');

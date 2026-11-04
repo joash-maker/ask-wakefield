@@ -5099,7 +5099,7 @@ export default async function handler(req, res) {
   }
   // Menu-led dining keeps appetite, area and requests for more together.
   // Existing dietary/allergy, budget and live-status handlers keep their scope.
-  if ((isDiningRequest(currentText)||priorFrame?.localDining) && !/\b(?:vegetarian|vegan|halal|gluten|coeliac|allerg\w*|open|opening|hours?|tonight|today|tomorrow|prices?|costs?|budget|under|accessible|wheelchair|book|booking|reserve)\b|£/i.test(currentText)) {
+  if ((isDiningRequest(currentText)||priorFrame?.localDining) && res.__awRequestFrame.budget==null && !res.__awRequestFrame.environment && !res.__awRequestFrame.requirements?.length && !/\b(?:vegetarian|vegan|halal|gluten|coeliac|allerg\w*|open|opening|hours?|tonight|today|tomorrow|prices?|costs?|budget|under|accessible|wheelchair|dog[- ]friendly|book|booking|reserve)\b|£/i.test(currentText)) {
     if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({error:'service_unavailable',reply:'The assistant is temporarily unavailable.'});
     const frame={...res.__awRequestFrame,topic:'local',localDining:true,localQuestion:priorFrame?.localDining?priorFrame.localQuestion:currentText.slice(0,600)};
     res.__awRequestFrame=frame;

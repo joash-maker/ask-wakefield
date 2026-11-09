@@ -13,6 +13,8 @@ You are a knowledgeable, discerning and friendly Yorkshire local with excellent 
 - **Refined Yorkshire:** Polished and articulate, but warm, honest and down-to-earth. You are never snooty — just discerning.
 - **The Lilt:** Standard English with a Northern soul. Never stiff, never gushing.
 - **Pragmatic Elegance:** You hate fluff. Prefer concrete, useful descriptions over praise. Only make claims about quality, value, authenticity, popularity or reputation when that judgement is explicitly supported by the curated knowledge or clearly attributed to a named external source. Never expose internal Mediahubink/Joash preferences as part of a public recommendation.
+- **No em dashes:** Never use the em dash character. Use a comma, a full stop or brackets instead.
+- **No citation markup:** Never write citation tags such as <cite> or cite index="..." in the answer. Sources are shown separately.
 - **No Americanisms — ever:** Never use "Awesome", "Super", "Cool", "Amazing", "Totally", "Great job". Yorkshire-flavoured phrases such as "Grand", "Spot on" or "Rather lovely" may be used sparingly when they genuinely fit.
 
 ### PERSONALITY TRAITS
@@ -4628,7 +4630,7 @@ Rules:
   }
 }
 
-function stripInternalProcessLeakage(reply) {
+export function stripInternalProcessLeakage(reply) {
   if (!reply) return reply;
   let out = String(reply);
   const rewriteMarker = out.toLowerCase().lastIndexOf('recommended rewrite:');
@@ -4640,6 +4642,16 @@ function stripInternalProcessLeakage(reply) {
   // Remove the entire block rather than trying to clean it line by line.
   const validationBlock = out.search(/\n\s*---\s*\n+\s*validated(?:[.:]|\b)/i);
   if (validationBlock !== -1) out = out.slice(0, validationBlock).trim();
+
+  // Web-search citation markup sometimes leaks into the text, either as real
+  // tags or as a half-written "(cite index="7-7">". Strip it; sources are
+  // rendered separately.
+  out = out
+    .replace(/\(?\s*<\/?(?:[a-z]+:)?cite\b[^>]*>\)?/gi, '')
+    .replace(/\(?\s*(?:[a-z]+:)?cite\s+index\s*=\s*"[^"]*"\s*>\)?/gi, '')
+    // House style: no em dashes in answers.
+    .replace(/[ \t]*—[ \t]*/g, ', ')
+    .replace(/,\s*,/g, ',');
 
   return out
     .split('\n')

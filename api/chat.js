@@ -1,3 +1,5 @@
+import { load } from 'cheerio';
+import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
@@ -493,6 +495,7 @@ function compactStateCard(card) {
     source: card?.source || null,
     sourceTier: card?.sourceTier || null,
     dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
+    occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
     startDate: card?.startDate || null,
     endDate: card?.endDate || null,
     ongoing: card?.ongoing === true,
@@ -584,6 +587,7 @@ function normaliseClientState(raw) {
     sourceTier: typeof card?.sourceTier === 'string' ? card.sourceTier.slice(0, 60) : null,
     date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
     dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
+    occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 14) : [],
     startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
     endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
     ongoing: card?.ongoing === true,
@@ -1987,7 +1991,7 @@ function isCurrentEventsQuery(messages) {
       && !/\b(what(?:'|’)s on|events?|gigs?|concerts?|festival|exhibition|show|market)\b/i.test(latest)) return false;
   if (isEventCostFollowUp(messages)) return true;
   const directWhatsOn = /\b(what(?:'|’)s on|wots on|anything on|what is happening|what(?:'|’)s happening|anything happening)\b/i.test(context);
-  const eventIntent = /\b(events?|things to do|something to do|anything to do|what can (?:we|i) do|free to do|live music|gig|gigs|concert|show|shows|theatre|comedy|festival|market|exhibition|workshop|family event|heritage open days?)\b/i.test(context);
+  const eventIntent = isLeisureDiscovery(context) || /\b(events?|things to do|something to do|anything to do|what can (?:we|i) do|free to do|live music|gig|gigs|concert|show|shows|theatre|comedy|festival|market|exhibition|workshop|family event|heritage open days?)\b/i.test(context);
   const currentWindow = /\b(today|tonight|tomorrow|this weekend|weekend|this week|next week|next (?:seven|7) days|next saturday|next sunday|later today|later tonight|right now|currently)\b/i.test(context);
   return directWhatsOn || (eventIntent && currentWindow);
 }
@@ -2189,6 +2193,15 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
   const pageTitle = h1 ? htmlToPlainText(h1[1]).trim() : String(expectedTitle || '').trim();
   if (expectedTitle && pageTitle && !titlesLikelySame(pageTitle, expectedTitle)) return null;
 
+  const $ = load(source);
+  $('nav,footer,script,style,[class*=\"related\"]').remove();
+  const header = $('.postHeading').first();
+  const content = $('section.postContent').not('.postContent--sessions').first();
+  const sessionDates = $('.postContent--sessions').find('div').map((_, el) => $(el).text()).get().join(' ').match(/\b\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4}\b/g) || [];
+  const occurrenceDates = [...new Set(sessionDates.map(value => {
+    const parsed = new Date(value.replace(/(\d)(?:st|nd|rd|th)\b/g, '$1') + ' 12:00:00 GMT');
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10);
+  }).filter(Boolean))];
   let scopedHtml = source;
   if (h1?.index != null) scopedHtml = source.slice(h1.index);
   const boundaries = [
@@ -2206,12 +2219,13 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
   }
   // Cut points land just after "<h2" etc.; drop the half tag so it cannot leak
   // into the venue name.
-  const detailText = htmlToPlainText(scopedHtml.slice(0, cut).replace(/<[^>]*$/, ''));
+  const detailText = header.length ? htmlToPlainText(header.html() || '') : htmlToPlainText(scopedHtml.slice(0, cut).replace(/<[^>]*$/, ''));
+  const ownText = header.length ? htmlToPlainText((header.html() || '') + (content.html() || '')) : htmlToPlainText(scopedHtml.split(/<(?:div|section|footer)\b[^>]*(?:class|id)=["'][^"']*(?:related|venue-details|footer)[^"']*["']/i)[0]);
   if (!detailText) return null;
 
-  const dateRange = detailText.match(/\b((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*[-–]\s*((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
   const timeRange = detailText.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
-  const price = priceStatusFromEventDetailText(detailText);
+  const condition = conditionalAdmission(ownText);
+  const price = condition ? { type: 'conditional', raw: condition } : priceStatusFromEventDetailText(detailText);
 
   let venue = null;
   if (timeRange) {
@@ -2221,8 +2235,9 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
     if (chunk && chunk.length <= 220) venue = chunk;
   }
 
-  const startDate = shortEventDateToIso(dateRange?.[1] || '');
-  const endDate = shortEventDateToIso(dateRange?.[2] || dateRange?.[1] || '');
+  const parsedRange = parseLooseExperienceDateRange(detailText);
+  const startDate = parsedRange.startDate;
+  const endDate = parsedRange.endDate;
   return {
     id: String(url || `${pageTitle}|${startDate || ''}`).slice(0, 500),
     entityType: 'event',
@@ -2236,7 +2251,9 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
     priceStatus: price.type,
     priceRaw: price.raw || null,
     sourceTier: 'first-party-detail',
-    detailText
+    detailText,
+    familyEvidenceText: ownText,
+    occurrenceDates
   };
 }
 
@@ -2271,30 +2288,8 @@ function htmlToPlainText(html) {
 }
 
 function weekendDateState() {
-  const now = new Date();
-  const weekday = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London',
-    weekday: 'short'
-  }).format(now);
-  const dayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[weekday];
-
-  let saturdayOffset;
-  let sundayOffset;
-  if (dayIndex === 6) {
-    saturdayOffset = 0;
-    sundayOffset = 1;
-  } else if (dayIndex === 0) {
-    saturdayOffset = -1;
-    sundayOffset = 0;
-  } else {
-    saturdayOffset = 6 - dayIndex;
-    sundayOffset = saturdayOffset + 1;
-  }
-
-  return {
-    saturday: formatLondonDate(new Date(now.getTime() + saturdayOffset * 24 * 60 * 60 * 1000)),
-    sunday: formatLondonDate(new Date(now.getTime() + sundayOffset * 24 * 60 * 60 * 1000))
-  };
+  const dates = londonCalendar();
+  return { saturday: dateLabel(dates.saturday), sunday: dateLabel(dates.sunday) };
 }
 
 function extractRelevantDateSegments(text, dates) {
@@ -2763,8 +2758,9 @@ function canonicaliseEventCardV16(card) {
     venue: card.venue || null,
     venueId: card.venueId || (card.venue ? `venue:${normaliseEventTitle(card.venue).replace(/\s+/g, '-')}` : null),
     availability: card.availability === 'sold-out' ? 'sold-out' : 'unknown',
-    priceStatus: ['free','paid','variable','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
+    priceStatus: ['free','paid','variable','conditional','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
     priceRaw: card.priceRaw || null,
+    occurrenceDates: Array.isArray(card.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
     dates: Array.isArray(card.dates) ? card.dates.slice(0, 3) : []
   };
 }
@@ -2818,6 +2814,7 @@ function weekendDatesForCardV16(card, saturdayIso, sundayIso) {
   if (!start || !end) return [];
   const dates = [];
   const single = start === end;
+  if (card.occurrenceDates?.length) return [saturdayIso, sundayIso].filter(iso => card.occurrenceDates.includes(iso));
   if (single) {
     if (start === saturdayIso) dates.push(saturdayIso);
     if (start === sundayIso) dates.push(sundayIso);
@@ -2833,7 +2830,7 @@ function weekendDatesForCardV16(card, saturdayIso, sundayIso) {
   return dates;
 }
 
-function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
+async function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
   const weekend = eventDateState();
   const saturdayIso = londonDateLabelToIso(weekend.saturday);
   const sundayIso = londonDateLabelToIso(weekend.sunday);
@@ -2843,7 +2840,14 @@ function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
     ...(experienceEventsContext?.listingEventCards || [])
   ];
   const todayIso = londonDateLabelToIso(weekend.today);
-  const cards = mergeExactEventCardsV16(raw)
+  // A Friday-start festival needs explicit Saturday sessions, not a guessed daily run.
+  const candidates = mergeExactEventCardsV16(raw);
+  await Promise.all(candidates.filter(card => card.startDate < saturdayIso && card.endDate >= saturdayIso && card.source === 'experience').slice(0, 6).map(async card => {
+    const context = await fetchEventDetailContextByUrl(card.sourceUrl, card.title);
+    const detail = context?.eventDetailCard;
+    if (detail?.occurrenceDates?.length) Object.assign(card, { occurrenceDates: detail.occurrenceDates });
+  }));
+  const cards = candidates
     .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => !todayIso || iso >= todayIso) }))
     .filter(card => card.dates.length > 0);
 
@@ -2970,6 +2974,7 @@ async function refreshEventCardsForPriceV16(cards) {
       ...card,
       priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : (card.priceStatus || 'unknown'),
       priceRaw: direct.priceRaw || card.priceRaw || null,
+      occurrenceDates: direct.occurrenceDates || [],
       start: direct.startTime || card.start || null,
       end: direct.endTime || card.end || null,
       startTime: direct.startTime || card.startTime || null,
@@ -3068,11 +3073,24 @@ function parseEventFollowUp(rawText, state) {
   if (!storedEventCards(state).length) return null;
   const text = String(rawText || '').toLowerCase().replace(/[’]/g, "'").trim();
   if (!text) return null;
+  const named = storedEventCards(state).filter(card => {
+    const name = normaliseEventTitle(card.title);
+    return name.split(' ').length >= 2 && (` ${normaliseEventTitle(text)} `).includes(` ${name} `);
+  }).sort((a, b) => b.title.length - a.title.length);
+  const namedOps = eventOpsFromText(text);
+  const namedRemainder = named.length ? normaliseEventTitle(text).replace(normaliseEventTitle(named[0].title), '') : text;
+  if (named.length && Object.keys(namedOps).length && !/\b(?:other|more|different|instead|alternatives?|recommend|suggest|compare)\b/i.test(text)
+      && !EVENT_FOLLOWUP_NEW_WINDOW.test(namedRemainder) && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(namedRemainder)) {
+    // Prefer the longest exact event title (Light Up Wakefield Parade before
+    // Light Up Wakefield). A named question must not filter the whole list.
+    return { ...namedOps, namedIds: named.filter(card => card.title.length === named[0].title.length).map(card => card.id) };
+  }
   if (EVENT_FOLLOWUP_TOPIC_SHIFT.test(text) || EVENT_FOLLOWUP_NEW_WINDOW.test(text) || EVENT_FOLLOWUP_AREA.test(text)) return null;
   const words = text.split(/\s+/).filter(Boolean).length;
   const refers = EVENT_FOLLOWUP_REFERENCE.test(text);
   if (!refers && words > 6) return null;
   const ops = eventOpsFromText(text);
+  if (Object.keys(ops).length && /\b(?:it|that event|this event)\b/i.test(text) && state.viewIds?.length === 1) return { ...ops, namedIds: state.viewIds };
   if (Object.keys(ops).length) return ops;
   // A question about the list we cannot map to a filter ("are they good for
   // kids?") is answered from the stored cards only, and only when it clearly
@@ -3119,6 +3137,7 @@ function eventPriceLabelV17(card) {
     case 'free': return 'free';
     case 'paid': return card.priceRaw ? `${card.priceRaw}` : 'ticketed (price on the event page)';
     case 'variable': return card.priceRaw ? `${card.priceRaw} (free for some, paid for others)` : 'free for some, paid for others';
+    case 'conditional': return card.priceRaw || 'free admission has eligibility conditions';
     case 'conflict': return 'sources disagree on price';
     default: return 'price not confirmed';
   }
@@ -3172,15 +3191,16 @@ async function verifyWeeklyFamilyCards(cards) {
     try {
       if (card.catalogueVerified && card.checkedAt && Date.now() - Date.parse(card.checkedAt) <= 48 * 3600000) return { ...card, familyCheck: 'read' };
       const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title, 12_000);
+      if (!context && card.familyVerified && card.checkedAt && Date.now() - Date.parse(card.checkedAt) >= 0 && Date.now() - Date.parse(card.checkedAt) <= 30 * 60000) return { ...card, familyCheck: 'earlier' };
       const text = String(context?.familyEvidenceText ?? context?.eventDetailText ?? context?.text ?? '');
       const titleAt = text.toLowerCase().indexOf(card.title.toLowerCase());
       const scoped = titleAt >= 0 ? text.slice(titleAt, titleAt + 7000).split(/More at WX|Related Events|You may also|Venue Details/i)[0] : '';
       const about = scoped.split(/\bAbout\b/i)[1] || scoped;
       const ageRange = scoped.match(/\bAGE RANGE\s*:\s*([\s\S]{0,180}?)(?=\b(?:Step|Join|Enjoy|This|About|PRICE|DATE)\b|$)/i)?.[1] || '';
       const publishedAudience = /\b(?:Children|Families)\b/i.test(ageRange);
-      const familyVerified = (publishedAudience || /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages(?: welcome)?|suitable for all ages|open to (?:kids|children))\b/i.test(about))
-        && !/\b(?:adults only|18\+|over[- ]18s only|not suitable for (?:children|kids)|not for (?:children|kids))\b/i.test(about);
-      return { ...card, familyVerified, familyCheck: context ? 'read' : 'unavailable' };
+      const familyVerified = (publishedAudience || /\bfamily[- ]friendly\b/i.test(scoped.split(/\bAbout\b/i)[0]) || /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages(?: welcome)?|suitable for all ages|open to (?:kids|children))\b/i.test(about))
+        && !/\b(?:adults only|18\+|over[- ]18s only|not suitable for (?:children|kids)|not for (?:children|kids))\b/i.test(scoped);
+      return { ...card, familyVerified, familyCheck: context ? 'read' : 'unavailable', checkedAt: context ? new Date().toISOString() : card.checkedAt };
     } catch { return { ...card, familyVerified: false, familyCheck: 'unavailable' }; }
   }));
 }
@@ -3204,25 +3224,15 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   if (needPrice) cards = await refreshEventCardsForPriceV16(cards);
 
   let familyUnconfirmed = 0;
-  if (filters.family) {
-    cards = await Promise.all(cards.map(async card => {
-      const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
-      const text = String(context?.fullText || context?.eventDetailText || context?.text || '');
-      const titleAt = text.toLowerCase().indexOf(card.title.toLowerCase());
-      const scoped = titleAt >= 0 ? text.slice(titleAt, titleAt + 7000).split(/More at WX|Related Events|You may also|Venue Details/i)[0] : '';
-      const about = scoped.split(/\bAbout\b/i)[1] || scoped;
-      const family = /\b(?:family[- ]friendly|for (?:all (?:the )?)?families|for (?:kids|children)|children aged|all ages welcome|suitable for all ages)\b/i.test(about)
-        && !/\b(?:adults only|18\+|over[- ]18s only)\b/i.test(about);
-      return { ...card, familyVerified: family };
-    }));
-  }
+  if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
+  if (firstAnswer) cards = cards.map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => iso >= londonDateLabelToIso(weekend.today)) })).filter(card => card.dates.length);
   let view = cards.filter(card => cardOccursOnV17(card, dayIso));
   let unconfirmed = [];
   if (filters.price === 'free') {
-    unconfirmed = view.filter(card => !['free', 'paid', 'variable'].includes(card.priceStatus));
+    unconfirmed = view.filter(card => !['free', 'paid', 'variable', 'conditional'].includes(card.priceStatus));
     view = view.filter(card => card.priceStatus === 'free');
   } else if (filters.price === 'paid') {
-    unconfirmed = view.filter(card => !['free', 'paid', 'variable'].includes(card.priceStatus));
+    unconfirmed = view.filter(card => !['free', 'paid', 'variable', 'conditional'].includes(card.priceStatus));
     view = view.filter(card => card.priceStatus === 'paid' || card.priceStatus === 'variable');
   }
 
@@ -3264,7 +3274,9 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
     let intro;
     if (filters.family) intro = `These ${priceWord ? `${priceWord} ` : ''}events have published family or children’s suitability${dayText}:`;
     else if (ops.showTime && (priceWord || filters.day) && !firstAnswer) intro = `Times for the ${priceWord ? `${priceWord} ` : ''}event${view.length === 1 ? '' : 's'}${dayText}:`;
-    else if (priceWord) intro = `${view.length === 1 ? 'This one is' : 'These are'} confirmed as ${priceWord}${dayText}${firstAnswer ? ' this weekend' : ''}:`;
+    else if (priceWord) intro = firstAnswer && priceWord === 'free'
+      ? `For a free outing this weekend (${dayLabelV17('saturday', saturdayIso)} and ${dayLabelV17('sunday', sundayIso)}), I’d look at ${view.length === 1 ? 'this option' : 'these options'}:`
+      : `${view.length === 1 ? 'This one is' : 'These are'} confirmed as ${priceWord}${dayText}:`;
     else if (filters.day) intro = `${firstAnswer ? 'On' : 'From that list, on'} ${dayLabelV17(filters.day, dayIso)}:`;
     else if (ops.showPrice) intro = firstAnswer ? 'This weekend, with prices from each event page:' : 'Prices from each event page:';
     else if (ops.showTime) intro = firstAnswer ? 'This weekend, with times:' : 'Start times from each event page:';
@@ -3275,7 +3287,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   if (unconfirmed.length) {
     parts.push(`I couldn't confirm the price for ${unconfirmed.map(card => card.title).join(', ')}. Worth checking ${unconfirmed.length === 1 ? 'its' : 'their'} event page before you go.`);
   }
-  if (ops.showPrice && !filters.price && view.some(card => !['free', 'paid', 'variable'].includes(card.priceStatus))) {
+  if (ops.showPrice && !filters.price && view.some(card => !['free', 'paid', 'variable', 'conditional'].includes(card.priceStatus))) {
     parts.push('Where it says price not confirmed, the event page did not publish a clear price.');
   }
 
@@ -3292,6 +3304,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
 async function handleStoredEventFollowUpV17(state, ops) {
   const allCards = storedEventCards(state);
   if (!allCards.length || !ops) return null;
+  if (ops.namedIds) return answerNamedStoredEvent(state, ops);
   if (ops.ask) return answerAboutStoredEventsV17(state, ops.question || '');
   const filters = ops.reset ? { price: null, day: null } : parseEventFilters(state?.lastFilter);
   if (ops.family) filters.family = true;
@@ -3302,6 +3315,30 @@ async function handleStoredEventFollowUpV17(state, ops) {
   result.state.area = state?.area || null;
   result.state.constraints = state?.constraints || null;
   return result;
+}
+
+// Direct questions about a listed event use its saved identity and exact page.
+// No broad discovery or model rewrite can replace the event or lose its dates.
+async function answerNamedStoredEvent(state, ops) {
+  let selected = storedEventCards(state).filter(card => ops.namedIds.includes(card.id));
+  if (ops.family) selected = await verifyWeeklyFamilyCards(selected);
+  if (ops.price || ops.showPrice) selected = await refreshEventCardsForPriceV16(selected);
+  if (ops.showTime) selected = await refreshEventCardsForTimeV16(selected);
+  const lines = selected.map(card => {
+    const family = ops.family ? card.familyVerified
+      ? `Yes. ${card.title} is listed as family-friendly${card.familyCheck === 'earlier' ? ' in the event details checked earlier in this chat' : ' on its official event page'}.`
+      : `I couldn’t confirm children’s suitability for ${card.title}${card.familyCheck === 'unavailable' ? ' because its event page could not be read just now' : ' from its published details'}.`
+      : card.title + '.';
+    const dates = card.dates?.length ? card.dates : [card.startDate].filter(Boolean);
+    const dateText = dates.map(date => dateLabel(date)).join(' and ');
+    const clock = eventTimeLabelV17(card);
+    const price = card.priceStatus === 'free' ? 'Free entry' : (ops.price || ops.showPrice || card.priceStatus === 'conditional') ? eventPriceLabelV17(card) : null;
+    return family + '\n' + [dateText, clock === 'time not published' ? null : clock, card.venue, price].filter(Boolean).join(' · ')
+      + `\n[Event details](${card.sourceUrl || card.url})`;
+  });
+  const updated = new Map(selected.map(card => [card.id, card]));
+  const nextState = { ...state, lastIntent: 'events.filter_existing', resultCards: storedEventCards(state).map(card => updated.get(card.id) || card), viewIds: selected.map(card => card.id) };
+  return { reply: lines.join('\n\n'), state: nextState, sources: eventSourcesV17(selected), followups: [] };
 }
 
 // Free-form questions about the stored list ("are they good for kids?"). The
@@ -3527,7 +3564,7 @@ async function fetchExperienceEventDetailContext(url, expectedTitle, timeoutMs =
     return {
       text: direct?.detailText || extractRelevantFirstPartyText(text, expectedTitle, 9000),
       fullText: text,
-      familyEvidenceText,
+      familyEvidenceText: direct?.familyEvidenceText || familyEvidenceText,
       eventDetailText: direct?.detailText || null,
       eventDetailCard: direct || null,
       structured,
@@ -3902,40 +3939,23 @@ function londonContext() {
     hour12: false
   }).format(now);
 
-  const today = formatLondonDate(now);
-  const tomorrow = formatLondonDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
-  const dayAfterTomorrow = formatLondonDate(new Date(now.getTime() + 48 * 60 * 60 * 1000));
-  const weekday = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London',
-    weekday: 'short'
-  }).format(now);
-  const dayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[weekday];
-
-  let saturdayOffset;
-  let sundayOffset;
-  if (dayIndex === 6) {
-    saturdayOffset = 0;
-    sundayOffset = 1;
-  } else if (dayIndex === 0) {
-    saturdayOffset = -1;
-    sundayOffset = 0;
-  } else {
-    saturdayOffset = 6 - dayIndex;
-    sundayOffset = saturdayOffset + 1;
-  }
-
-  const thisSaturday = formatLondonDate(new Date(now.getTime() + saturdayOffset * 24 * 60 * 60 * 1000));
-  const thisSunday = formatLondonDate(new Date(now.getTime() + sundayOffset * 24 * 60 * 60 * 1000));
+  const dates = londonCalendar(now);
+  const today = dateLabel(dates.today);
+  const tomorrow = dateLabel(dates.tomorrow);
+  const dayAfterTomorrow = dateLabel(dates.dayAfterTomorrow);
+  const thisSaturday = dateLabel(dates.saturday);
+  const thisSunday = dateLabel(dates.sunday);
   const currentWeek = eventWeekWindow('this week', now);
   const nextWeek = eventWeekWindow('next week', now);
   const sevenDays = eventWeekWindow('next seven days', now);
-  const followingSaturday = formatLondonDate(new Date(now.getTime() + (saturdayOffset + 7) * 24 * 60 * 60 * 1000));
+  const followingSaturday = dateLabel(dates.followingSaturday);
 
   return [
     `CURRENT UK DATE AND TIME: ${today}, ${time} Europe/London.`,
     `RELATIVE DATE MAP: Today = ${today}. Tonight = ${today}, interpreted as 17:00 onward unless the user gives another time. Tomorrow = ${tomorrow}. Day after tomorrow = ${dayAfterTomorrow}. This weekend = Saturday ${thisSaturday.replace(/^Saturday\s+/, '')} and Sunday ${thisSunday.replace(/^Sunday\s+/, '')}. Following Saturday = ${followingSaturday}.`,
     `WEEK DATE MAP: This week = ${currentWeek.start} through ${currentWeek.end} (Monday to Sunday). Next week = ${nextWeek.start} through ${nextWeek.end}. Next seven days = ${sevenDays.start} through ${sevenDays.end}, including today. Never mix these ranges or silently add next-week events.`,
     'DATE ACCURACY RULE: When the user uses a relative date or period listed above, use the exact mapped date(s). Do not calculate or infer the weekday/date yourself. "This weekend" means the Saturday and Sunday in the map, not tomorrow or the next two calendar days. If the phrase "next Saturday" is ambiguous in context, state the date you are using rather than hiding the interpretation.',
+    'EVENT TENSE RULE: An event happening in the requested future weekend is upcoming relative to TODAY. Never say we are in the middle of it, it is happening now or it has already started unless the verified dates include TODAY.',
     'TONIGHT FILTER RULE: For a request about something to do tonight, only present options whose verified opening/event time extends into the evening window from 17:00 onward. A place that closes at 17:00 is not a tonight recommendation.',
     'Use this context only when time or date matters. Do not start with a time-of-day greeting.'
   ].join('\n');
@@ -4221,7 +4241,11 @@ function priceStatusFromEventDetailText(text) {
   const scoped = String(text || '').replace(/\s+/g, ' ').trim();
   if (!scoped) return { type: 'unknown', raw: null };
 
-  const range = scoped.match(/£\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*[-–]\s*£?\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  const condition = conditionalAdmission(scoped);
+  if (condition) return { type: 'conditional', raw: condition };
+  const priceText = scoped.replace(/\bfree (?:parking|wifi|wi-fi|refreshments|trail maps?|maps?)\b/gi, '');
+
+  const range = priceText.match(/£\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*[-–]\s*£?\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
   if (range) {
     const a = Number(range[1].replace(',', '.'));
     const b = Number(range[2].replace(',', '.'));
@@ -4230,7 +4254,7 @@ function priceStatusFromEventDetailText(text) {
     return { type: 'paid', raw: range[0] };
   }
 
-  const money = scoped.match(/£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
+  const money = priceText.match(/£\s*([0-9]+(?:[.,][0-9]{1,2})?)/i);
   if (money) {
     const value = Number(money[1].replace(',', '.'));
     return value === 0 ? { type: 'free', raw: money[0] } : { type: 'paid', raw: money[0] };
@@ -4239,7 +4263,7 @@ function priceStatusFromEventDetailText(text) {
   // On an exact event page this scoped header is the event's own metadata, so
   // a standalone Free / Free event marker is safe once related-event sections
   // have been cut away.
-  if (/\bFree event\b/i.test(scoped) || /(?:^|\s)Free(?:\s|$)/i.test(scoped)) {
+  if (/\bFree event\b/i.test(priceText) || /(?:^|\s)Free(?:\s|$)/i.test(priceText)) {
     return { type: 'free', raw: 'Free' };
   }
   return { type: 'unknown', raw: null };
@@ -5133,7 +5157,7 @@ export default async function handler(req, res) {
   if (/\bhalf[ -]term\b/i.test(currentText) && !eventWeekWindow(currentText) && !storedWeek) {
     return res.status(200).json({ reply: 'Which dates would you like to plan for? School half-term dates vary. Tell me the dates and the children’s ages so I can check dated local listings.', sources: [], live: false, verification: 'half-term-dates-needed', state: clientState });
   }
-  const weekOps = storedWeek && clientState.lastIntent?.startsWith('events.')
+  const weekOps = !route.eventFollowUp?.namedIds && storedWeek && clientState.lastIntent?.startsWith('events.')
     ? (halfTermClarification ? { halfTerm: true } : weeklyFollowUp(currentText)) : null;
   if (weekOps) {
     const original = storedEventCards(clientState);
@@ -5316,7 +5340,7 @@ export default async function handler(req, res) {
     && !isWeekendPerformanceQuery(messages);
   if (weekendListRequest) {
     const supplement = await verifiedOctoberWeekendSupplementV16(eventDateState());
-    const collected = collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
+    const collected = await collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
     if (!collected.cards.length) {
       return res.status(200).json({
         reply: 'I could not verify a reliable weekend event set from the current official listings just now.',

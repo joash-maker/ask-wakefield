@@ -52,4 +52,6 @@ assert.equal(mentionsPreviousAnswer('Is Light Up Wakefield family-friendly?', we
   assert.equal(stripInternalProcessLeakage('Friday 13 – Saturday 14 November, 5pm–9pm'), 'Friday 13 – Saturday 14 November, 5pm–9pm', 'date ranges untouched');
 }
 
+assert.equal(scopeConversation(convo('Tell me about Tanvis', 'Tanvi’s Indian Cuisine on Northgate.', 'Does the restaurant offer delivery or takeaway?')).messages.length, 3, 'A definite reference to the restaurant keeps venue context');
+
 console.log('conversation-scope-checks: passed (event follow-up keeps context, new topics still reset, citation tags and em dashes stripped)');

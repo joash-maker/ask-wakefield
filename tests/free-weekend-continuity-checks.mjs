@@ -25,7 +25,7 @@ function detail(row) {
   const [title, , dates, time, venue, cost, about, family, sessions = []] = row;
   return `<html><nav>Family friendly. Free event.</nav><section class="postHeading"><h1>${title}</h1><div class="date">${dates}</div><div class="time">${time}</div><div class="venue">${venue}</div><div class="cost">${cost}</div></section><section class="postContent"><div class="labels">${cost === 'Free' ? 'Free event' : ''} ${family ? 'Family friendly' : ''}</div><h2>About</h2><p>${about}</p></section><section class="postContent postContent--sessions">${sessions.map(d => `<div>${d}</div><div>${time}</div>`).join('')}</section><main>Access facilities. Sat 1 Nov 2025</main><footer>Family friendly. Free event.</footer></html>`;
 }
-const listing = fixtures.map(([title, slug, dates, time, venue]) => `<h3><a href="${root}${slug}/">${title}</a></h3><p>Calendar ${dates}</p><p>Clock ${time}</p><p>Map pin ${venue}</p>`).join('');
+const listing = fixtures.map(([title, slug, dates, time, venue]) => `<h3><a href="${root}${slug}/">${title}</a></h3><p>Calendar ${dates}</p>${title === 'Light Up Wakefield' ? '' : `<p>Clock ${time}</p>`}<p>Map pin ${venue}</p>`).join('');
 const wxUrl = 'https://wxwakefield.co.uk/Whats-On/Details?event=light-up-wakefield';
 const wxRow = (title, slug, sold = false) => `<div class="events-col"><div class="event-item"><div class="img-wrapper"><a href="/Whats-On/Details?event=${slug}" aria-label="More info on ${title}">Photo</a></div><div class="event-text"><h2 class="event-title">${title}</h2><div>Friday 13 - Saturday 14 November 2026</div><div>Start time:5PM - End time:9PM</div><div class="price">FREE</div><p>Part of <a href="/Whats-On/Details?event=light-up-wakefield">Light Up Wakefield</a></p></div><a class="more-info" href="/Whats-On/Details?event=${slug}">More Info</a></div><div class="sold-out ${sold ? 'd-block' : 'd-none'}">Sold out</div></div>`;
 const wxListing = wxRow('Light Up Wakefield', 'light-up-wakefield')
@@ -91,6 +91,24 @@ for (const q of ['What fun things can we do this weekend?', 'Any free family act
   assert.equal(result.verification, 'cards-first-v17', q);
   assert.match(result.reply, /Light Up Wakefield/, q);
 }
+const week = await ask("What's on this week in Wakefield?");
+assert.equal(week.verification, 'weekly-cards-v1');
+assert.equal(week.state.resultCards.filter(c => c.title === 'Light Up Wakefield').length, 1, 'Weekly merge handles a missing clock on one source');
+assert.doesNotMatch(week.reply, /SEND-Friendly|Listed as sold out/);
+assert.match(week.reply, /Light Up Wakefield\nWakefield City Centre · Friday 13 November 2026 and Saturday 14 November 2026 · 17:00–21:00/);
+const friday = await ask('What about Friday?', week);
+assert.equal(friday.verification, 'weekly-followup-v1');
+assert.match(friday.reply, /Light Up Wakefield/);
+assert.doesNotMatch(friday.reply, /Sunday Family Fair|Saturday 14 November 2026/);
+assert.match(friday.reply, /Friday 13 November 2026 · 17:00–21:00/);
+const weeklyFamily = await ask('Is Light Up Wakefield family-friendly?', week);
+assert.match(weeklyFamily.reply, /Yes\. Light Up Wakefield/);
+assert.equal(weeklyFamily.sources.length, 1);
+const weeklyTime = await ask('What time does it start?', weeklyFamily);
+assert.equal(weeklyTime.sources.length, 1);
+assert.doesNotMatch(weeklyTime.reply, /Sunday Family Fair/);
+assert.match(weeklyTime.reply, /17:00–21:00/);
+
 for (const text of ['Free for Wakefield residents', 'Free entry for under 18s', 'Free admission to members', 'Free event. Standard admission applies.', 'Free with an exhibition ticket']) assert(conditionalAdmission(text), text);
 assert.equal(conditionalAdmission('Free entry. Everyone welcome.'), null);
 assert.equal(conditionalAdmission('Free parking and Wi-Fi.'), null);

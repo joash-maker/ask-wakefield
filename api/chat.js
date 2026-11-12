@@ -3238,6 +3238,19 @@ async function verifyWeeklyFamilyCards(cards) {
     } catch { return { ...card, familyVerified: false, familyCheck: 'unavailable' }; }
   }));
 }
+async function verifyWeeklySessionCards(cards, window) {
+  return Promise.all(cards.map(async card => {
+    if (card.ongoing || !card.startDate || card.startDate === card.endDate) return card;
+    const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
+    const detail = context?.eventDetailCard;
+    if (!detail?.occurrenceDates?.length) return card;
+    const occurrences = detail.occurrenceDates.filter(day => day >= window.from && day <= window.end);
+    return { ...card, occurrenceDates:detail.occurrenceDates, dates:occurrences,
+      start:detail.startTime || card.start, startTime:detail.startTime || card.startTime,
+      end:detail.endTime || card.end, endTime:detail.endTime || card.endTime };
+  }));
+}
+
 const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => label !== 'suit children' || /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text));
 const weeklyFamilyNote = 'These entries have published family or children’s suitability. Check the event pages for age limits, accompanying-adult rules and booking.';
 function weeklyFamilyEmpty(cards) {
@@ -5212,7 +5225,7 @@ export default async function handler(req, res) {
     if (filters.day) {
       // A broad published run is not proof of an occurrence on this weekday.
       view = dayIso && dayIso >= storedWeek.from
-        ? view.filter(card => card.startDate === dayIso && (card.endDate || card.startDate) === dayIso)
+        ? view.filter(card => (card.startDate === dayIso && (card.endDate || card.startDate) === dayIso) || card.occurrenceDates?.includes(dayIso)).map(card => ({ ...card, dates:[dayIso] }))
         : [];
     }
     if (filters.price) view = view.filter(card => filters.price === 'free'
@@ -5342,6 +5355,7 @@ export default async function handler(req, res) {
     ]);
     const ops = eventOpsFromText(currentText);
     let cards = selectWeekCards(catalogueCards && ops.family ? raw.filter(card => card.familyVerified) : raw, weekWindow);
+    cards = await verifyWeeklySessionCards(cards, weekWindow);
     // Do not silently relax constraints unsupported by this structured view.
     const unsupported = weeklyExtraConstraints(currentText);
     if (ops.price || ops.day || unsupported.length) {

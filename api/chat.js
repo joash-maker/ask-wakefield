@@ -2191,7 +2191,7 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
   const source = String(html || '');
   const h1 = source.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
   const pageTitle = h1 ? htmlToPlainText(h1[1]).trim() : String(expectedTitle || '').trim();
-  if (expectedTitle && pageTitle && !titlesLikelySame(pageTitle, expectedTitle)) return null;
+  if (expectedTitle && pageTitle && normaliseEventTitle(pageTitle) !== normaliseEventTitle(expectedTitle)) return null;
 
   const $ = load(source);
   $('nav,footer,script,style,[class*=\"related\"]').remove();
@@ -2389,7 +2389,7 @@ function wxEventDetailFromHtml(html, url, expectedTitle = '') {
 
   const h1 = source.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
   const pageTitle = h1 ? htmlToPlainText(h1[1]).trim() : String(expectedTitle || '').trim();
-  if (expectedTitle && pageTitle && !titlesLikelySame(pageTitle, expectedTitle)) return null;
+  if (expectedTitle && pageTitle && normaliseEventTitle(pageTitle) !== normaliseEventTitle(expectedTitle)) return null;
 
   // Start at the visible event heading, not the duplicate title in <head>.
   // Otherwise the navigation's 'Plan your visit' cuts away the whole event.
@@ -2400,18 +2400,18 @@ function wxEventDetailFromHtml(html, url, expectedTitle = '') {
   const boundaryMatch = scoped.match(/\bMore at WX\b|\bPlan your visit\b/i);
   if (boundaryMatch?.index != null && boundaryMatch.index > 0) scoped = scoped.slice(0, boundaryMatch.index);
 
-  const dateMatch = scoped.match(/\b((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/i);
+  const dates = parseLooseExperienceDateRange(scoped);
   const timeMatch = scoped.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
   const performanceMatch = scoped.match(/Performance Starts\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
   const price = priceStatusFromEventDetailText(scoped);
 
   return {
-    id: String(url || `${pageTitle}|${dateMatch?.[1] || ''}`).slice(0, 500),
+    id: String(url || `${pageTitle}|${dates.startDate || ''}`).slice(0, 500),
     entityType: 'event',
     title: pageTitle || expectedTitle || null,
     url: url || null,
-    startDate: shortEventDateToIso(dateMatch?.[1] || ''),
-    endDate: shortEventDateToIso(dateMatch?.[1] || ''),
+    startDate: dates.startDate,
+    endDate: dates.endDate,
     startTime: clockLabelTo24(timeMatch?.[1]) || null,
     endTime: clockLabelTo24(timeMatch?.[2]) || null,
     performanceStart: clockLabelTo24(performanceMatch?.[1]) || null,
@@ -2431,6 +2431,34 @@ export function extractWxListingEventCards(html, links = []) {
   for (const link of links || []) {
     const key = normaliseEventTitle(link?.label);
     if (key && link?.url && !linkByTitle.has(key)) linkByTitle.set(key, link.url);
+  }
+
+  const $ = load(String(html || ''));
+  const entries = $('.events-col').filter((_, el) => $(el).find('.event-item .event-title').length);
+  if (entries.length) {
+    entries.each((_, el) => {
+      const row = $(el), item = row.find('.event-item').first();
+      const title = item.find('.event-title').first().text().replace(/\s+/g, ' ').trim();
+      const metadata = item.find('.event-text').first();
+      const text = metadata.text().replace(/\s+/g, ' ');
+      const dates = parseLooseExperienceDateRange(text);
+      const href = item.find('a.more-info[href]').first().attr('href') || item.find('.img-wrapper a[href]').first().attr('href');
+      let url;
+      try { url = new URL(href, 'https://wxwakefield.co.uk').toString(); } catch { return; }
+      if (!title || !dates.startDate || !isSpecificWxEventUrl(url)) return;
+      const slug = new URL(url).searchParams.get('event');
+      const id = `wx:${slug}:${dates.startDate}`;
+      if (seen.has(id)) return;
+      seen.add(id);
+      const times = text.match(/Start time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)\s*[-–]\s*End time\s*:\s*([0-9]{1,2}(?::|\.)?[0-9]{0,2}\s*(?:am|pm)?)/i);
+      const price = priceStatusFromEventDetailText(metadata.find('.price').text());
+      cards.push({ id, sourceId:id, canonId:id, entityType:'event', title, url, sourceUrl:url,
+        startDate:dates.startDate, endDate:dates.endDate || dates.startDate,
+        startTime:clockLabelTo24(times?.[1]), endTime:clockLabelTo24(times?.[2]),
+        venue:'WX Wakefield Exchange', availability:row.find('.sold-out').filter((_, node) => !$(node).hasClass('d-none')).length ? 'sold-out' : 'unknown',
+        priceStatus:price.type, priceRaw:price.raw || null, source:'wx', sourceTier:'first-party-listing' });
+    });
+    return cards;
   }
 
   for (const section of eventHeadingSections(html)) {
@@ -2788,7 +2816,8 @@ function mergeExactEventCardsV16(cards = []) {
       priceStatus = card.priceStatus;
       priceRaw = card.priceRaw;
     }
-    const preferred = existing.sourceTier === 'first-party-detail' ? existing : (card.sourceTier === 'first-party-detail' ? card : existing);
+    const sameEventSlug = eventLinkSlug(existing.sourceUrl) === eventLinkSlug(card.sourceUrl);
+    const preferred = existing.sourceTier === 'first-party-detail' ? existing : (card.sourceTier === 'first-party-detail' ? card : (sameEventSlug && card.source === 'experience' ? card : existing));
     merged.set(key, {
       ...existing,
       ...preferred,
@@ -2849,7 +2878,7 @@ async function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
   }));
   const cards = candidates
     .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => !todayIso || iso >= todayIso) }))
-    .filter(card => card.dates.length > 0);
+    .filter(card => card.dates.length > 0 && card.availability !== 'sold-out');
 
   cards.sort((a, b) => {
     const ad = a.dates[0] || '9999';
@@ -2969,7 +2998,12 @@ async function refreshEventCardsForPriceV16(cards) {
     const url = card.sourceUrl || card.url;
     const context = await fetchEventDetailContextByUrl(url, card.title);
     const direct = context?.eventDetailCard || null;
-    if (!direct) return;
+    if (!direct) {
+      // A listing price cannot survive a failed exact-page identity check.
+      // Earlier verified detail records are not targeted by this refresh.
+      refreshed.set(card.id, { ...card, priceStatus: 'unknown', priceRaw: null });
+      return;
+    }
     refreshed.set(card.id, {
       ...card,
       priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : (card.priceStatus || 'unknown'),
@@ -3225,7 +3259,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
 
   let familyUnconfirmed = 0;
   if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
-  if (firstAnswer) cards = cards.map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => iso >= londonDateLabelToIso(weekend.today)) })).filter(card => card.dates.length);
+  if (firstAnswer) cards = mergeExactEventCardsV16(cards).map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => iso >= londonDateLabelToIso(weekend.today)) })).filter(card => card.dates.length);
   let view = cards.filter(card => cardOccursOnV17(card, dayIso));
   let unconfirmed = [];
   if (filters.price === 'free') {

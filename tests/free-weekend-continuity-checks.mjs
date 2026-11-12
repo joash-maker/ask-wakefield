@@ -26,11 +26,18 @@ function detail(row) {
   return `<html><nav>Family friendly. Free event.</nav><section class="postHeading"><h1>${title}</h1><div class="date">${dates}</div><div class="time">${time}</div><div class="venue">${venue}</div><div class="cost">${cost}</div></section><section class="postContent"><div class="labels">${cost === 'Free' ? 'Free event' : ''} ${family ? 'Family friendly' : ''}</div><h2>About</h2><p>${about}</p></section><section class="postContent postContent--sessions">${sessions.map(d => `<div>${d}</div><div>${time}</div>`).join('')}</section><main>Access facilities. Sat 1 Nov 2025</main><footer>Family friendly. Free event.</footer></html>`;
 }
 const listing = fixtures.map(([title, slug, dates, time, venue]) => `<h3><a href="${root}${slug}/">${title}</a></h3><p>Calendar ${dates}</p><p>Clock ${time}</p><p>Map pin ${venue}</p>`).join('');
+const wxUrl = 'https://wxwakefield.co.uk/Whats-On/Details?event=light-up-wakefield';
+const wxRow = (title, slug, sold = false) => `<div class="events-col"><div class="event-item"><div class="img-wrapper"><a href="/Whats-On/Details?event=${slug}" aria-label="More info on ${title}">Photo</a></div><div class="event-text"><h2 class="event-title">${title}</h2><div>Friday 13 - Saturday 14 November 2026</div><div>Start time:5PM - End time:9PM</div><div class="price">FREE</div><p>Part of <a href="/Whats-On/Details?event=light-up-wakefield">Light Up Wakefield</a></p></div><a class="more-info" href="/Whats-On/Details?event=${slug}">More Info</a></div><div class="sold-out ${sold ? 'd-block' : 'd-none'}">Sold out</div></div>`;
+const wxListing = wxRow('Light Up Wakefield', 'light-up-wakefield')
+  + wxRow('SEND-Friendly Creative Session - Light Up Wakefield', 'send-friendly-creative-session', true)
+  + wxRow('Separate Child Workshop - Light Up Wakefield', 'wrong-workshop');
 let modelCalls = 0, outage = false;
 globalThis.fetch = async url => {
   const u = String(url);
   if (u.includes('anthropic.com')) { modelCalls++; throw Error('This conversation must not reach the prose model'); }
   if (u === 'https://experiencewakefield.co.uk/whats-on/') return new Response(listing);
+  if (u === 'https://wxwakefield.co.uk/whats-on') return new Response(wxListing);
+  if (u === wxUrl || u.endsWith('event=wrong-workshop')) return new Response(outage ? 'Unavailable' : '<h1>Light Up Wakefield</h1><div>Friday 13 - Saturday 14 November 2026</div><div>Start time:5PM - End time:9PM</div><div>PRICE: Free</div><div>AGE RANGE: Families Children</div><p>A family-friendly festival.</p>', { status: outage ? 503 : 200 });
   const row = fixtures.find(r => u === root + r[1] + '/');
   if (row) return new Response(outage ? 'Unavailable' : detail(row), { status: outage ? 503 : 200 });
   return new Response('Not found', { status: 404 });
@@ -52,6 +59,8 @@ assert.match(first.reply, /Sunday Family Fair/);
 assert.match(first.reply, /Sunday,? 15 November/);
 assert.doesNotMatch(first.reply, /Resident Exhibition|Old Fair|middle of|right now|Friday 13/);
 assert.equal(first.state.lastFilter, 'price:free');
+assert.equal(first.state.resultCards.filter(c => c.title === 'Light Up Wakefield').length, 1, 'One festival across official sources');
+assert.doesNotMatch(first.reply, /SEND-Friendly|Separate Child Workshop/, 'Sold-out sessions and mismatched parent pages cannot qualify');
 assert(first.stateToken);
 const family = await ask('Is Light Up Wakefield family-friendly?', first);
 assert.equal(family.verification, 'cards-first-v17');

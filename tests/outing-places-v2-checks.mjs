@@ -22,6 +22,9 @@ assert.equal(dateIntervals({periods:[{open:{day:5,hour:16},close:{day:6,hour:1}}
 assert.equal(dateIntervals({periods:[{open:{day:5,hour:16},close:{day:6,hour:1}}]},'2026-11-14','2026-11-13')[0].end,60);
 assert.equal(clockLabel(1500),'1am the next morning');
 assert.equal(clockLabel(1440),'midnight');
+const continuous={periods:[{open:{day:4,hour:0,date:{year:2026,month:11,day:12}},close:{day:4,hour:0,date:{year:2026,month:11,day:19}}}]};
+assert.equal(dateIntervals(continuous,'2026-11-13','2026-11-13')[0].allDay,true);
+assert.equal(dateIntervals(continuous,'2026-11-14','2026-11-13')[0].allDay,true,'Continuous 24-hour periods can start more than one day before the requested date');
 const stale={periods:[{open:{day:5,hour:10,date:{year:2026,month:11,day:6}},close:{day:5,hour:23,date:{year:2026,month:11,day:6}}}]};
 assert.deepEqual(dateIntervals(stale,'2026-11-13','2026-11-13'),[]);
 const kitchenHours={secondaryHoursType:'KITCHEN',periods:[{open:{day:5,hour:12},close:{day:5,hour:20}},{open:{day:6,hour:12},close:{day:6,hour:20}}]};

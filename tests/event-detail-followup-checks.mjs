@@ -60,6 +60,8 @@ assert.equal(exact.verification,'outing-companion-v1');assert.match(exact.reply,
 assert.doesNotMatch(exact.reply,/HAUS|Castleford|Castle ford|Ferrybridge|Horbury|KRA:FT|most reliable|short drive/i);
 assert.match(exact.reply,/not hot chocolate on their current menus/);
 assert(exact.sources.length && exact.stateToken);
+const exactLater=await ask('Would that still work at 8:30pm?',exact);
+assert.match(exactLater.reply,/At 8:30pm.*Art House.*9pm/s);assert.doesNotMatch(exactLater.reply,/HAUS|Castleford|Ferrybridge/,'That refers to the last alternative, not the whole saved candidate pool');
 const warm=await ask('Somewhere to warm up would be good. What would you suggest?',familyParking);
 assert.equal(warm.verification,'outing-companion-v1');assert.match(warm.reply,/kids.*HAUS.*Art House/s);assert(warm.sources.length);
 assert.doesNotMatch(warm.reply,/Marmalade|Bob & Berts|check their current opening/i);

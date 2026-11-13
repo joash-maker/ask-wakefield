@@ -108,7 +108,7 @@ assert.equal(weeklyFamily.sources.length, 1);
 const weeklyTime = await ask('What time does it start?', weeklyFamily);
 assert.equal(weeklyTime.sources.length, 1);
 assert.doesNotMatch(weeklyTime.reply, /Sunday Family Fair/);
-assert.match(weeklyTime.reply, /17:00–21:00/);
+assert.match(weeklyTime.reply, /starts at 17:00.*runs until 21:00/s);
 
 for (const text of ['Free for Wakefield residents', 'Free entry for under 18s', 'Free admission to members', 'Free event. Standard admission applies.', 'Free with an exhibition ticket']) assert(conditionalAdmission(text), text);
 assert.equal(conditionalAdmission('Free entry. Everyone welcome.'), null);

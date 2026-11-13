@@ -25,7 +25,7 @@ globalThis.fetch=async(url,opts={})=>{
  if(u==='https://places.googleapis.com/v1/places:searchText') {
   const b=JSON.parse(opts.body);if(b.pageSize===1)return Response.json({places:[{location:origin}]});
   searches++;assert(opts.headers['X-Goog-FieldMask'].includes('servesDinner'));
-  return Response.json({places:[burger,{...burger,id:'outer',displayName:{text:'Ferrybridge Costa'},formattedAddress:'Ferrybridge Services',location:{latitude:53.7,longitude:-1.27}}]});
+  return Response.json({places:[burger,...Array.from({length:9},(_,i)=>({...burger,id:'local-'+i,displayName:{text:'Local Food '+i},formattedAddress:(i+2)+' Central Street, Wakefield WF1 1AB, UK',googleMapsUri:'https://maps.google.com/?cid='+i+'&g_mp='+('tracking'.repeat(35)),websiteUri:'https://local-food-'+i+'.co.uk/menus?utm_source='+('tracking'.repeat(30))})),{...burger,id:'outer',displayName:{text:'Ferrybridge Costa'},formattedAddress:'Ferrybridge Services',location:{latitude:53.7,longitude:-1.27}}]});
  }
  if(u===menuUrl)return new Response('<h1>Hot Chocolate</h1><p>Hot Chocolate with milk</p>');
  if(u.includes('anthropic.com')) {

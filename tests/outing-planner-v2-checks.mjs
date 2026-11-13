@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {validateOutingPlan,planOutingTurn,fallbackOutingPlan} from '../lib/outing-planner.js';
+const context={card:{id:'light',title:'Light Up Wakefield'},area:'Wakefield City Centre',dates:['2026-11-13','2026-11-14'],start:'17:00',end:'21:00'};
+assert.equal(validateOutingPlan({intent:'food_drink',needs:[]},context),null);
+assert.deepEqual(validateOutingPlan({intent:'food_drink',needs:['coffee'],date:'2026-12-01'},context),{intent:'unrelated'});
+assert.deepEqual(validateOutingPlan({intent:'food_drink',needs:['coffee'],newArea:true},context),{intent:'unrelated'});
+assert.equal(validateOutingPlan({intent:'invent_places',needs:['coffee']},context),null);
+const plan=validateOutingPlan({intent:'food_drink',needs:['coffee','private_fact','snack','coffee'],timing:'after',namedBrand:'Costa'},context);
+assert.deepEqual(plan.needs,['coffee','snack']);assert.equal(plan.timing,'after');
+let calls=0;
+const services={model:'test',call:async(body,opts)=>{calls++;assert(body.system.startsWith('OUTING_PLANNER_V2'));assert.equal(opts.timeoutMs,6500);assert.equal(body.tools,undefined);return {response:{ok:true},data:{content:[{type:'text',text:JSON.stringify({intent:'food_drink',needs:['snack','dinner'],timing:'after'})}]}};}};
+const output=await planOutingTurn([{role:'user',content:'We will probably be starving afterwards. Any ideas?'}],{constraints:{outing:{party:{children:true,ages:[7,4]}}}},context,services);
+assert.equal(output.intent,'food_drink');assert.equal(output.timing,'after');assert.equal(calls,1);
+for(const q of ['Can we grab a bite?','Anything quick to eat first?','Maybe a burger afterwards?','Any coffee and hot chocolate nearby?'])assert.equal(fallbackOutingPlan(q).intent,'food_drink',q);
+for(const q of ['Parking?','Any coffee in Castleford?','What bus gets us there?'])assert.equal(fallbackOutingPlan(q),null,q);
+console.log('Outing planner v2 passed: structured intent, no invented facts, time/area validation, bounded call, food/chain/dinner fallback and topic separation.');

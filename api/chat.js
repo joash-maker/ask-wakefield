@@ -1,5 +1,5 @@
 import { load } from 'cheerio';
-import { eventCoffeeContext, eventCoffeeOptions } from '../lib/event-coffee-context.js';
+import { answerOutingWarmup, enrichSelectedOuting } from '../lib/outing-companion.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
@@ -5161,17 +5161,11 @@ export default async function handler(req, res) {
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
-  const inheritedEventCoffee = eventCoffeeContext(messages, decodedToken || cookieState);
-  if (inheritedEventCoffee) {
-    const options = await eventCoffeeOptions(inheritedEventCoffee);
-    if (options) {
-      const prior = decodedToken || cookieState;
-      attachStateCookie(res, prior);
-      return res.status(200).json({reply:finaliseUserFacingReply(options.reply),sources:options.sources,live:true,verification:'event-coffee-options-v1',state:prior});
-    }
-    // Carry the specific date, location and time into the existing food lookup.
-    // The original user message is retained; no preference or source is invented.
-    messages = messages.map((m,i) => i === messages.length-1 ? {...m,content:m.content + `\nFor ${inheritedEventCoffee.card.title}, in ${inheritedEventCoffee.area}, on ${dateLabel(inheritedEventCoffee.dates[0])}, after ${inheritedEventCoffee.start}. Look for coffee during ${inheritedEventCoffee.start}–${inheritedEventCoffee.end}; give each place’s closing time.`} : m);
+  // Resolve outing refinements before event-list filters or topic resets.
+  const outingAnswer = await answerOutingWarmup(messages, decodedToken || cookieState, {model:MODEL,call:callAnthropic});
+  if (outingAnswer) {
+    attachStateCookie(res, outingAnswer.state);
+    return res.status(200).json({...outingAnswer,reply:finaliseUserFacingReply(outingAnswer.reply)});
   }
   const scoped = scopeConversation(messages);
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
@@ -5326,6 +5320,7 @@ export default async function handler(req, res) {
       });
     }
     if (handled) {
+      handled = await enrichSelectedOuting(handled, messages, {model:MODEL,call:callAnthropic});
       attachStateCookie(res, handled.state);
       return res.status(200).json({
         reply: finaliseUserFacingReply(handled.reply),

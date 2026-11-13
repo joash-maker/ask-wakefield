@@ -17,9 +17,12 @@ assert.doesNotMatch(JSON.stringify(evidence),/Bogus|Invented|untrusted/);
 assert.equal(extractEventDetailSections(html,url,'Different Festival'),null);
 assert.equal(eventDetailOperation('Any more events?'),null);
 let outage=false,modelCalls=0;
+const coffeeHtml='<h1>Light Up at The Art House</h1><p>13 November 2026 - 14 November 2026</p><p>Our Coffee House will be serving warming winter drinks and festive treats throughout the event.</p><p>Opening Times</p><p>Friday 13 November (16:00-21:00)</p><p>Saturday 14 November (9.30-21:00)</p>';
+let coffeeOutage=false;
 const listing=`<h3><a href="${url}">Light Up Wakefield</a></h3><p>Calendar Fri 13 Nov 2026 - Sat 14 Nov 2026</p><p>Clock 17:00 - 21:00</p><p>Map pin Wakefield City Centre</p><h3><a href="https://experiencewakefield.co.uk/event/sunday-fair/">Sunday Fair</a></h3><p>Calendar Sun 15 Nov 2026</p><p>Clock 10:00 - 15:00</p><p>Map pin Wakefield</p>`;
 globalThis.fetch=async u=>{
  const s=String(u);
+ if(s==='https://the-arthouse.org.uk/events/light-up-at-the-art-house/')return new Response(coffeeHtml,{status:coffeeOutage?503:200});
  if(s==='https://experiencewakefield.co.uk/whats-on/')return new Response(listing);
  if(s===url)return new Response(outage?'Unavailable':html,{status:outage?503:200});
  if(s.includes('anthropic.com')){modelCalls++;return Response.json({},{status:503});}
@@ -46,6 +49,18 @@ assert.doesNotMatch(parking.reply,/start time, route|two hours free|free parking
 assert(parking.sources.some(s=>s.url===url));assert(parking.sources.some(s=>s.url.includes('wakefield.gov.uk/')));
 const rolling=await ask('Is parking available near the event?',{...more,messages:more.messages.slice(-1)});
 assert.match(rolling.reply,/Trinity Walk/,'The selected event must survive a rolled message window');
+const coffee=await ask('Any coffee shops in the area open at that time?',parking);
+assert.equal(coffee.verification,'event-coffee-options-v1');
+assert.match(coffee.reply,/HAUS.*8pm/s);assert.match(coffee.reply,/Art House.*9pm/s);
+assert.match(coffee.reply,/city centre.*Light Up/s);
+assert.doesNotMatch(coffee.reply,/what time|tell me the time|Horbury|open now/i);
+assert.equal(coffee.sources.length,2);assert(coffee.stateToken);
+const rolledCoffee=await ask('Any coffee nearby then?',{...parking,messages:[]});
+assert.equal(rolledCoffee.verification,'event-coffee-options-v1','Signed event context must survive a rolled history');
+coffeeOutage=true;
+const partialCoffee=await ask('Any coffee nearby then?',parking);
+assert.match(partialCoffee.reply,/HAUS/);assert.doesNotMatch(partialCoffee.reply,/Art House/);
+coffeeOutage=false;
 outage=true;
 const retained=await ask('Is parking available near the event?',more);
 assert.match(retained.reply,/Trinity Walk/);assert.match(retained.reply,/checked earlier in this chat/);

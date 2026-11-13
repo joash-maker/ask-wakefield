@@ -1,4 +1,5 @@
 import { load } from 'cheerio';
+import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
@@ -3387,18 +3388,19 @@ async function answerSelectedEventDetail(state, selected, ops) {
   const sections = context?.eventSections || (reuse ? previous.sections : null);
   const evidence = sections || { programme:[], parking:[], parkingLinks:[] };
   const dateText = (card.dates?.length ? card.dates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
-  const meta = [dateText, card.start ? eventTimeLabelV17(card) : null, card.venue].filter(Boolean).join(' · ');
+
   let reply;
   if (ops.parking) {
     if (evidence.parking.length) {
-      reply = `For ${card.title}, the organiser’s parking guidance says:\n\n${evidence.parking.map(t => '- ' + t).join('\n')}\n\nI haven’t checked live spaces or evening closing times.`;
+      reply = parkingConversation(card.title, evidence.parking);
       if (evidence.parkingLinks.length) reply += '\n' + evidence.parkingLinks.map(l => `[${l.title}](${l.url})`).join('\n');
     } else reply = `I still have ${card.title}${card.venue ? ' at ' + card.venue : ''}, but ${context ? 'its event page does not give parking details I can confirm' : 'I couldn’t read its parking guidance just now'}. I haven’t confirmed a suitable car park.`;
   } else {
-    reply = `Here’s a bit more about ${card.title}.\n${meta}`;
+    const days = dateText || 'the published dates';
+    reply = `${card.title} runs on ${days}${card.start ? ', ' + eventTimeLabelV17(card) : ''}${card.venue ? ', at ' + card.venue : ''}.`;
     const price = context?.eventDetailCard?.priceStatus;
-    if (price === 'free') reply += ' · Free entry';
-    if (evidence.programme.length) reply += '\n\n' + evidence.programme.map(t => '- ' + t).join('\n');
+    if (price === 'free') reply += ' It’s free to attend.';
+    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme);
     else reply += `\n\n${context ? 'I could confirm the event details above, but couldn’t extract further programme details.' : 'I couldn’t read further programme details just now.'}`;
   }
   if (reuse) reply += '\n\nThese details were checked earlier in this chat. I couldn’t refresh the page just now.';

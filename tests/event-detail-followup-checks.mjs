@@ -36,7 +36,7 @@ async function ask(q,prior,extra={},expectedStatus=200){
 }
 const first=await ask("What's on this week in Wakefield?");assert.equal(first.verification,'weekly-cards-v1');
 const more=await ask('Can you tell me a bit more about Light Up Wakefield?',first);
-assert.equal(more.verification,'cards-first-v17');assert.match(more.reply,/Light Trail|interactive artworks/);assert.match(more.reply,/Light Switch-On.*5:30pm/);
+assert.equal(more.verification,'cards-first-v17');assert.match(more.reply,/Light Trail|interactive artworks/);assert.match(more.reply,/light switch-on.*5:30pm/i);
 assert.doesNotMatch(more.reply,/I hope that hits the mark|visit experiencewakefield|Sunday Fair|Bogus|Invented/);
 assert.equal(more.state.viewIds.length,1);assert(more.stateToken);
 const parking=await ask('Is parking available near the event?',more);

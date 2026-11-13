@@ -1,4 +1,6 @@
 import { load } from 'cheerio';
+import { planOutingTurn } from '../lib/outing-planner.js';
+import { discoverOutingPlaces } from '../lib/outing-places.js';
 import { answerOutingWarmup, enrichSelectedOuting } from '../lib/outing-companion.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
@@ -1182,6 +1184,10 @@ async function googlePlacesTextSearch(textQuery, {
     ];
     const richMap = {
       servesCoffee: 'places.servesCoffee',
+      servesDinner:'places.servesDinner',
+      servesLunch:'places.servesLunch',
+      takeout:'places.takeout',
+      currentSecondaryOpeningHours:'places.currentSecondaryOpeningHours',
       servesDessert: 'places.servesDessert',
       dineIn: 'places.dineIn',
       allowsDogs: 'places.allowsDogs',
@@ -4049,9 +4055,18 @@ function londonContext() {
   ].join('\n');
 }
 
-async function callAnthropic(body) {
+function outingServices() {
+  const services={model:MODEL,call:callAnthropic};
+  if(process.env.AW_OUTING_PLANNER_ENABLED!=='false') {
+    services.plan=(messages,state,context)=>planOutingTurn(messages,state,context,services);
+    services.discover=(context,plan,now)=>discoverOutingPlaces(context,plan,{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+  }
+  return services;
+}
+
+async function callAnthropic(body, {timeoutMs=22000}={}) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 22_000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -5162,7 +5177,7 @@ export default async function handler(req, res) {
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
   // Resolve outing refinements before event-list filters or topic resets.
-  const outingAnswer = await answerOutingWarmup(messages, decodedToken || cookieState, {model:MODEL,call:callAnthropic});
+  const outingAnswer = await answerOutingWarmup(messages, decodedToken || cookieState, outingServices());
   if (outingAnswer) {
     attachStateCookie(res, outingAnswer.state);
     return res.status(200).json({...outingAnswer,reply:finaliseUserFacingReply(outingAnswer.reply)});
@@ -5320,7 +5335,7 @@ export default async function handler(req, res) {
       });
     }
     if (handled) {
-      handled = await enrichSelectedOuting(handled, messages, {model:MODEL,call:callAnthropic});
+      handled = await enrichSelectedOuting(handled, messages, outingServices());
       attachStateCookie(res, handled.state);
       return res.status(200).json({
         reply: finaliseUserFacingReply(handled.reply),

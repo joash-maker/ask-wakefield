@@ -1,3 +1,4 @@
+process.env.AW_OUTING_PLANNER_ENABLED='false';
 import assert from 'node:assert/strict';
 import { conditionalAdmission, isLeisureDiscovery, londonCalendar } from '../lib/event-request-policy.js';
 const NativeDate = Date;

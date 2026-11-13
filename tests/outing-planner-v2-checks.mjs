@@ -24,4 +24,11 @@ for(const q of ['Haus?','How about HAUS?','And Haus?']){
 assert.equal(contextualOutingPlan('Costa?',null,prior).namedBrand,'Costa Coffee Wakefield');
 assert.equal(contextualOutingPlan('Thanks?',{intent:'unrelated'},prior).intent,'unrelated');
 assert.equal(contextualOutingPlan('Coffee before the lights?',{intent:'food_drink',needs:['coffee'],timing:'before'},prior).timing,'before');
+const active={...prior,eventId:'light'};
+const areaReference=contextualOutingPlan('Any place for like a coffee and hot chocolate for us to have in and around that area?',{intent:'unrelated'},active);
+assert.equal(areaReference.intent,'food_drink');assert.deepEqual(areaReference.needs,['coffee','hot_chocolate']);
+assert.equal(contextualOutingPlan('Wakefield, what we have been chatting about',{intent:'unrelated'},active).intent,'food_drink');
+assert.equal(contextualOutingPlan('Any coffee in Castleford near that event?',{intent:'unrelated'},active).intent,'unrelated');
+assert.equal(contextualOutingPlan('Any coffee near that event tomorrow?',{intent:'unrelated'},active).intent,'unrelated');
+assert.equal(contextualOutingPlan('Any parking near that event?',{intent:'parking'},active).intent,'parking');
 console.log('Outing planner v2 passed: structured intent, no invented facts, time/area validation, bounded call, food/chain/dinner fallback and topic separation.');

@@ -1,4 +1,5 @@
 import { load } from 'cheerio';
+import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
@@ -515,7 +516,9 @@ function compactStateCard(card) {
 function encodeStateToken(state) {
   try {
     for (const maxCards of [10, 8, 6, 4]) {
-      const cards = (state?.resultCards || []).slice(0, maxCards).map(compactStateCard);
+      const focusId = state?.constraints?.eventFocus?.id;
+      const ordered = focusId ? [...(state?.resultCards || []).filter(card => card.id === focusId), ...(state?.resultCards || []).filter(card => card.id !== focusId)] : (state?.resultCards || []);
+      const cards = ordered.slice(0, maxCards).map(compactStateCard);
       const kept = new Set(cards.map(card => card.id).filter(Boolean));
       const compact = {
         version: 3,
@@ -3112,12 +3115,23 @@ function parseEventFollowUp(rawText, state) {
     return name.split(' ').length >= 2 && (` ${normaliseEventTitle(text)} `).includes(` ${name} `);
   }).sort((a, b) => b.title.length - a.title.length);
   const namedOps = eventOpsFromText(text);
+  const detailOperation = eventDetailOperation(text);
+  if (detailOperation) namedOps[detailOperation] = true;
   const namedRemainder = named.length ? normaliseEventTitle(text).replace(normaliseEventTitle(named[0].title), '') : text;
-  if (named.length && Object.keys(namedOps).length && !/\b(?:other|more|different|instead|alternatives?|recommend|suggest|compare)\b/i.test(text)
-      && !EVENT_FOLLOWUP_NEW_WINDOW.test(namedRemainder) && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(namedRemainder)) {
+  if (named.length && Object.keys(namedOps).length && !/\b(?:other|different|instead|alternatives?|recommend|suggest|compare)\b/i.test(text)
+      && (detailOperation === 'details' || !/\bmore\b/i.test(text))
+      && !EVENT_FOLLOWUP_NEW_WINDOW.test(namedRemainder) && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(detailOperation === 'parking' ? namedRemainder.replace(/\b(?:parking|car parks?|park (?:my|our|the|a) car)\b/gi, '') : namedRemainder)) {
     // Prefer the longest exact event title (Light Up Wakefield Parade before
     // Light Up Wakefield). A named question must not filter the whole list.
     return { ...namedOps, namedIds: named.filter(card => card.title.length === named[0].title.length).map(card => card.id) };
+  }
+  const focusId = state.constraints?.eventFocus?.id || (state.viewIds?.length === 1 ? state.viewIds[0] : null);
+  const implicitDetail = /\b(?:it|this event|that event|the event|this festival|that festival|the festival|there)\b/i.test(text)
+    || detailOperation === 'parking' && text.split(/\s+/).length <= 12;
+  if (!named.length && detailOperation && implicitDetail && focusId && storedEventCards(state).some(c => c.id === focusId)
+      && !EVENT_FOLLOWUP_AREA.test(text) && !EVENT_FOLLOWUP_NEW_WINDOW.test(text)
+      && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(text.replace(/\b(?:parking|car parks?|park (?:my|our|the|a) car)\b/gi, ''))) {
+    return { [detailOperation]:true, namedIds:[focusId] };
   }
   if (EVENT_FOLLOWUP_TOPIC_SHIFT.test(text) || EVENT_FOLLOWUP_NEW_WINDOW.test(text) || EVENT_FOLLOWUP_AREA.test(text)) return null;
   const words = text.split(/\s+/).filter(Boolean).length;
@@ -3360,14 +3374,45 @@ async function handleStoredEventFollowUpV17(state, ops) {
   if (ops.day) filters.day = ops.day === 'both' ? null : ops.day;
   const result = await renderEventViewV17(allCards, filters, ops);
   result.state.area = state?.area || null;
-  result.state.constraints = state?.constraints || null;
+  result.state.constraints = state?.constraints ? { ...state.constraints, eventFocus:null } : null;
   return result;
+}
+
+async function answerSelectedEventDetail(state, selected, ops) {
+  const card = selected[0];
+  const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
+  const previous = state.constraints?.eventFocus;
+  const age = Date.now() - Date.parse(previous?.checkedAt || '');
+  const reuse = !context?.eventSections && previous?.id === card.id && age >= 0 && age <= 30 * 60000;
+  const sections = context?.eventSections || (reuse ? previous.sections : null);
+  const evidence = sections || { programme:[], parking:[], parkingLinks:[] };
+  const dateText = (card.dates?.length ? card.dates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
+  const meta = [dateText, card.start ? eventTimeLabelV17(card) : null, card.venue].filter(Boolean).join(' · ');
+  let reply;
+  if (ops.parking) {
+    if (evidence.parking.length) {
+      reply = `For ${card.title}, the organiser’s parking guidance says:\n\n${evidence.parking.map(t => '- ' + t).join('\n')}\n\nI haven’t checked live spaces or evening closing times.`;
+      if (evidence.parkingLinks.length) reply += '\n' + evidence.parkingLinks.map(l => `[${l.title}](${l.url})`).join('\n');
+    } else reply = `I still have ${card.title}${card.venue ? ' at ' + card.venue : ''}, but ${context ? 'its event page does not give parking details I can confirm' : 'I couldn’t read its parking guidance just now'}. I haven’t confirmed a suitable car park.`;
+  } else {
+    reply = `Here’s a bit more about ${card.title}.\n${meta}`;
+    const price = context?.eventDetailCard?.priceStatus;
+    if (price === 'free') reply += ' · Free entry';
+    if (evidence.programme.length) reply += '\n\n' + evidence.programme.map(t => '- ' + t).join('\n');
+    else reply += `\n\n${context ? 'I could confirm the event details above, but couldn’t extract further programme details.' : 'I couldn’t read further programme details just now.'}`;
+  }
+  if (reuse) reply += '\n\nThese details were checked earlier in this chat. I couldn’t refresh the page just now.';
+  const focus = { id:card.id, checkedAt:context?.eventSections ? new Date().toISOString() : previous?.checkedAt || null, sections:evidence };
+  const nextState = { ...state, lastIntent:'events.filter_existing', viewIds:[card.id], constraints:{ ...state.constraints, eventFocus:focus } };
+  reply += `\n\n[Event details](${card.sourceUrl || card.url})`;
+  return { reply, state:nextState, sources:[...eventSourcesV17([card]), ...(ops.parking ? evidence.parkingLinks : [])], followups:[] };
 }
 
 // Direct questions about a listed event use its saved identity and exact page.
 // No broad discovery or model rewrite can replace the event or lose its dates.
 async function answerNamedStoredEvent(state, ops) {
   let selected = storedEventCards(state).filter(card => ops.namedIds.includes(card.id));
+  if ((ops.details || ops.parking) && selected.length === 1) return answerSelectedEventDetail(state, selected, ops);
   if (ops.family) selected = await verifyWeeklyFamilyCards(selected);
   if (ops.price || ops.showPrice) selected = await refreshEventCardsForPriceV16(selected);
   if (ops.showTime) selected = await refreshEventCardsForTimeV16(selected);
@@ -3384,7 +3429,7 @@ async function answerNamedStoredEvent(state, ops) {
       + `\n[Event details](${card.sourceUrl || card.url})`;
   });
   const updated = new Map(selected.map(card => [card.id, card]));
-  const nextState = { ...state, lastIntent: 'events.filter_existing', resultCards: storedEventCards(state).map(card => updated.get(card.id) || card), viewIds: selected.map(card => card.id) };
+  const nextState = { ...state, lastIntent: 'events.filter_existing', resultCards: storedEventCards(state).map(card => updated.get(card.id) || card), viewIds: selected.map(card => card.id), constraints:{ ...state.constraints, eventFocus:selected.length === 1 ? { ...(state.constraints?.eventFocus?.id === selected[0].id ? state.constraints.eventFocus : {}), id:selected[0].id } : null } };
   return { reply: lines.join('\n\n'), state: nextState, sources: eventSourcesV17(selected), followups: [] };
 }
 
@@ -3614,6 +3659,7 @@ async function fetchExperienceEventDetailContext(url, expectedTitle, timeoutMs =
       familyEvidenceText: direct?.familyEvidenceText || familyEvidenceText,
       eventDetailText: direct?.detailText || null,
       eventDetailCard: direct || null,
+      eventSections: direct ? extractEventDetailSections(html, url, direct.title) : null,
       structured,
       source: { title: `Experience Wakefield — ${direct?.title || expectedTitle}`, url }
     };
@@ -3643,6 +3689,7 @@ async function fetchWxEventDetailContext(url, expectedTitle, timeoutMs = 5_500) 
       eventDetailText: direct.detailText,
       familyEvidenceText: /<h1\b/i.test(html) ? direct.detailText : '',
       eventDetailCard: direct,
+      eventSections: extractEventDetailSections(html, url, direct.title),
       structured: { eventCards: [direct] },
       source: { title: `Wakefield Exchange — ${direct.title || expectedTitle}`, url }
     };
@@ -5237,7 +5284,7 @@ export default async function handler(req, res) {
         ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17 })
         : filters.family ? weeklyFamilyEmpty(cards) : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
     const state = buildEventStateV16(cards, clientState, unsupported ? clientState.viewIds : view.map(card => card.id));
-    state.constraints = { ...clientState.constraints, eventWeek: { ...storedWeek, filters } };
+    state.constraints = { ...clientState.constraints, eventFocus:null, eventWeek: { ...storedWeek, filters } };
     state.lastIntent = 'events.filter_existing';
     attachStateCookie(res, state);
     return res.status(200).json({ reply: finaliseUserFacingReply(`${scope}\n\n${body}${filters.family && view.length && !unsupported ? '\n\n' + weeklyFamilyNote : ''}${weekOps.halfTerm ? '\n\nI have kept the original weekly date range above. School half-term dates vary, and I have not checked yours. Tell me your dates if your break differs.' : ''}`),
@@ -5368,7 +5415,7 @@ export default async function handler(req, res) {
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
     const view = filters.family ? cards.filter(card => card.familyVerified) : cards;
     const state = buildEventStateV16(cards, clientState, view.map(card => card.id));
-    state.constraints = { ...clientState.constraints, eventWeek: { ...weekWindow, filters } };
+    state.constraints = { ...clientState.constraints, eventFocus:null, eventWeek: { ...weekWindow, filters } };
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({

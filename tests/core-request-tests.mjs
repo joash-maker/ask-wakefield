@@ -2,6 +2,14 @@ import assert from 'node:assert/strict';
 import { scopeConversation } from '../lib/conversation-scope.js';
 import { publishedFoodRecommendation, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 
+// These fixtures ask about an upcoming Friday and compare stated clock times.
+// Freeze the civil date so running on Friday cannot change their meaning.
+const NativeDate = Date;
+globalThis.Date = class extends NativeDate {
+  constructor(...args) { super(...(args.length ? args : ['2026-11-12T12:00:00Z'])); }
+  static now() { return NativeDate.parse('2026-11-12T12:00:00Z'); }
+};
+
 process.env.ANTHROPIC_API_KEY = 'test-key';
 process.env.GOOGLE_PLACES_API_KEY = 'test-places-key';
 process.env.GOOGLE_PLACES_ENABLED = 'true';

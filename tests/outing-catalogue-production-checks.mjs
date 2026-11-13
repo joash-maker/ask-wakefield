@@ -16,6 +16,7 @@ const plans=new Map([
  ['Coffee places?',{needs:['coffee'],timing:'before'}],
  ['Haus?',{intent:'unrelated'}],
  ['Would that still work at 8:30pm?',{needs:['coffee'],timing:'during',referencePrevious:true}],
+ ['Would it work at 7pm?',{needs:['coffee'],timing:'during',referencePrevious:true}],
  ['Anything quick to eat first?',{needs:['snack'],timing:'before'}],
  ['We will probably be starving afterwards. Any ideas?',{needs:['dinner'],timing:'after'}],
  ['Would that still work at 10pm?',{needs:['dinner'],timing:'after',referencePrevious:true}],
@@ -70,6 +71,10 @@ assert.equal(haus.verification,'outing-food-v2');assert.match(haus.reply,/HAUS.*
 assert(haus.sources.some(s=>/reviewed business announcement/.test(s.title)));
 const lateHaus=await ask('Would that still work at 8:30pm?',haus);
 assert.match(lateHaus.reply,/HAUS closes at 8pm/);assert.doesNotMatch(lateHaus.reply,/McDonald/);
+assert.match(lateHaus.reply,/too late at 8:30pm/);assert.doesNotMatch(lateHaus.reply,/haven’t verified.*Wakefield City Centre/,'A closing-time answer about HAUS must not imply no alternatives exist across the city');
+assert(lateHaus.sources.some(s=>/reviewed business announcement/.test(s.title)),'Retain the source for a named closing-time answer');
+const earlierHaus=await ask('Would it work at 7pm?',lateHaus);
+assert.match(earlierHaus.reply,/At 7pm.*HAUS.*8pm/s);assert.doesNotMatch(earlierHaus.reply,/McDonald|Local Food/,'A rejected time must not erase the named place');
 const exactDetail=await ask('Can you tell me a bit more about Light Up Wakefield?',week);
 const exactCoffee=await ask('Coffee places?',exactDetail);
 assert.match(exactCoffee.reply,/While you’re at Light Up/);assert.doesNotMatch(exactCoffee.reply,/Before Light Up/);

@@ -3377,9 +3377,9 @@ async function handleStoredEventFollowUpV17(state, ops) {
   return result;
 }
 
-async function answerSelectedEventDetail(state, selected, ops) {
+async function answerSelectedEventDetail(state, selected, ops, verifiedContext = null) {
   const card = selected[0];
-  const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
+  const context = verifiedContext || await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
   const previous = state.constraints?.eventFocus;
   const age = Date.now() - Date.parse(previous?.checkedAt || '');
   const reuse = !context?.eventSections && previous?.id === card.id && age >= 0 && age <= 30 * 60000;
@@ -3406,6 +3406,29 @@ async function answerSelectedEventDetail(state, selected, ops) {
   const nextState = { ...state, lastIntent:'events.filter_existing', viewIds:[card.id], constraints:{ ...state.constraints, eventFocus:focus } };
   reply += `\n\n[Event details](${card.sourceUrl || card.url})`;
   return { reply, state:nextState, sources:[...eventSourcesV17([card]), ...(ops.parking ? evidence.parkingLinks : [])], followups:[] };
+}
+
+// A user can name an event that was not in the ten-item catalogue shortlist.
+// Resolve it from actual published links, then retain the same signed focus as
+// a listed event. A model answer alone cannot establish the selected entity.
+async function discoverSelectedEvent(messages, state) {
+  const q=lastUserText(messages);
+  if(!state?.lastIntent?.startsWith('events.') || storedEventCards(state).some(c=>(` ${normaliseEventTitle(q)} `).includes(` ${normaliseEventTitle(c.title)} `)))return null;
+  if(eventDetailOperation(q)!=='details' && !/\b(?:sounds good|go|going|visit|thinking of)\b/i.test(q))return null;
+  if(/\b(?:next week|next month|next year|last year|20\d{2})\b/i.test(q))return null;
+  const experience=await fetchExperienceWakefieldEventsContext();
+  let candidates=[...(experience?.listingEventCards||[]).map(c=>({title:c.title,url:c.sourceUrl||c.url})),...(experience?.eventLinks||[]).map(l=>({title:l.label,url:l.url}))];
+  const matches=items=>items.filter(c=>c.title&&normaliseEventTitle(c.title).split(' ').length>=2&&c.title.length<=180&&isSpecificEventDetailUrl(c.url)&&(` ${normaliseEventTitle(q)} `).includes(` ${normaliseEventTitle(c.title)} `));
+  let named=matches(candidates);
+  if(!named.length) {const wx=await fetchWxWhatsOnContext();named=matches([...(wx?.eventCards||[]).map(c=>({title:c.title,url:c.sourceUrl||c.url})),...(wx?.eventLinks||[]).map(l=>({title:l.label,url:l.url}))]);}
+  named.sort((a,b)=>b.title.length-a.title.length);
+  if(!named.length)return null;
+  const source=named[0],context=await fetchEventDetailContextByUrl(source.url,source.title);
+  const detail=context?.eventDetailCard;
+  if(!detail?.startDate||!detail?.endDate||detail.endDate<londonCalendar().today)return null;
+  const card=canonicaliseEventCardV16(detail);
+  const next={...state,lastIntent:'events.filter_existing',resultCards:[card,...storedEventCards(state).filter(c=>c.id!==card.id)].slice(0,MAX_STATE_CARDS),viewIds:[card.id],constraints:{...state.constraints,eventFocus:{id:card.id}}};
+  return answerSelectedEventDetail(next,[card],{details:true},context);
 }
 
 // Direct questions about a listed event use its saved identity and exact page.
@@ -5182,6 +5205,12 @@ export default async function handler(req, res) {
     attachStateCookie(res, outingAnswer.state);
     return res.status(200).json({...outingAnswer,reply:finaliseUserFacingReply(outingAnswer.reply)});
   }
+  const discoveredEvent=await discoverSelectedEvent(messages,decodedToken || cookieState);
+  if(discoveredEvent) {
+    const selected=await enrichSelectedOuting(discoveredEvent,messages,outingServices());
+    attachStateCookie(res,selected.state);
+    return res.status(200).json({...selected,reply:finaliseUserFacingReply(selected.reply),live:true,verification:'selected-event-discovery-v2'});
+  }
   const scoped = scopeConversation(messages);
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.
@@ -5310,7 +5339,7 @@ export default async function handler(req, res) {
   // V16.2 weekend-events invariant: once the cards-first path is enabled,
   // event follow-ups never fall through to the legacy prose-reconstruction path.
   // Membership comes only from persisted event IDs.
-  if (EVENT_CARDS_FIRST_ENABLED && route.intent === 'events.filter_existing') {
+  if ((EVENT_CARDS_FIRST_ENABLED || route.eventFollowUp?.namedIds?.length) && route.intent === 'events.filter_existing') {
     const hasStoredEvents = clientState?.resultCards?.some(card => card?.entityType === 'event');
     if (!hasStoredEvents) {
       return res.status(200).json({

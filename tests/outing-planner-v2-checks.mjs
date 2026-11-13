@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {validateOutingPlan,planOutingTurn,fallbackOutingPlan} from '../lib/outing-planner.js';
+import {validateOutingPlan,planOutingTurn,fallbackOutingPlan,contextualOutingPlan} from '../lib/outing-planner.js';
 const context={card:{id:'light',title:'Light Up Wakefield'},area:'Wakefield City Centre',dates:['2026-11-13','2026-11-14'],start:'17:00',end:'21:00'};
 assert.equal(validateOutingPlan({intent:'food_drink',needs:[]},context),null);
 assert.deepEqual(validateOutingPlan({intent:'food_drink',needs:['coffee'],date:'2026-12-01'},context),{intent:'unrelated'});
@@ -13,4 +13,15 @@ const output=await planOutingTurn([{role:'user',content:'We will probably be sta
 assert.equal(output.intent,'food_drink');assert.equal(output.timing,'after');assert.equal(calls,1);
 for(const q of ['Can we grab a bite?','Anything quick to eat first?','Maybe a burger afterwards?','Any coffee and hot chocolate nearby?'])assert.equal(fallbackOutingPlan(q).intent,'food_drink',q);
 for(const q of ['Parking?','Any coffee in Castleford?','What bus gets us there?'])assert.equal(fallbackOutingPlan(q),null,q);
+const prior={options:[{name:'HAUS'},{name:'Costa Coffee Wakefield'}],plan:{needs:['coffee'],timing:'during'}};
+assert.equal(contextualOutingPlan('Coffee places?',{intent:'food_drink',needs:['coffee'],timing:'before'},prior).timing,'during');
+assert.equal(contextualOutingPlan('Coffee places?',{intent:'food_drink',needs:['coffee'],timing:'before'},{}).timing,'during');
+assert.equal(contextualOutingPlan('Coffee places?',{intent:'food_drink',needs:['coffee'],timing:'before'},{...prior,plan:{needs:['coffee'],timing:'after'}}).timing,'after');
+for(const q of ['Haus?','How about HAUS?','And Haus?']){
+ const p=contextualOutingPlan(q,{intent:'unrelated'},prior);
+ assert.equal(p.intent,'food_drink');assert.equal(p.namedBrand,'HAUS');assert.equal(p.timing,'during');assert.deepEqual(p.needs,['coffee']);
+}
+assert.equal(contextualOutingPlan('Costa?',null,prior).namedBrand,'Costa Coffee Wakefield');
+assert.equal(contextualOutingPlan('Thanks?',{intent:'unrelated'},prior).intent,'unrelated');
+assert.equal(contextualOutingPlan('Coffee before the lights?',{intent:'food_drink',needs:['coffee'],timing:'before'},prior).timing,'before');
 console.log('Outing planner v2 passed: structured intent, no invented facts, time/area validation, bounded call, food/chain/dinner fallback and topic separation.');

@@ -13,6 +13,10 @@ const hours={periods:[{open:{day:5,hour:7},close:{day:5,hour:23}},{open:{day:6,h
 const burger={id:'central-mcd',displayName:{text:'McDonald’s Wakefield'},location:origin,businessStatus:'OPERATIONAL',formattedAddress:'1 Westgate, Wakefield WF1 1AA, UK',currentOpeningHours:hours,servesCoffee:true,servesDinner:true,servesDessert:true,goodForChildren:true,googleMapsUri:'https://maps.google.com/?cid=123',websiteUri:'https://www.mcdonalds.com/gb/en-gb.html'};
 const menuUrl='https://www.mcdonalds.com/gb/en-gb/product/hot-chocolate.html';
 const plans=new Map([
+ ['Coffee places?',{needs:['coffee'],timing:'before'}],
+ ['Haus?',{intent:'unrelated'}],
+ ['Would that still work at 8:30pm?',{needs:['coffee'],timing:'during',referencePrevious:true}],
+ ['Would it work at 7pm?',{needs:['coffee'],timing:'during',referencePrevious:true}],
  ['Anything quick to eat first?',{needs:['snack'],timing:'before'}],
  ['We will probably be starving afterwards. Any ideas?',{needs:['dinner'],timing:'after'}],
  ['Would that still work at 10pm?',{needs:['dinner'],timing:'after',referencePrevious:true}],
@@ -57,6 +61,25 @@ const week=await ask("What's on this week in Wakefield?");
 assert.equal(week.verification,'weekly-catalogue-v1');assert.doesNotMatch(week.reply,/Light Up/);
 const more=await ask('Light Up Wakefield sounds good. We are taking our children, aged 7 and 4. Tell me more.',week);
 assert.equal(more.verification,'selected-event-discovery-v2');assert(more.state.constraints.eventFocus?.id);assert.match(more.reply,/break with the kids.*McDonald/s);
+assert.match(more.reply,/Friday 13 November 2026 and Saturday 14 November 2026/,'Both published sessions must appear in the event summary');
+assert(more.sources.some(s=>/McDonald/.test(s.title)&&/branch listing/.test(s.title)),'A Places result must not be labelled as a venue announcement');
+const coffee=await ask('Coffee places?',more);
+assert.equal(coffee.verification,'outing-food-v2');assert.match(coffee.reply,/While you’re at Light Up/);assert.doesNotMatch(coffee.reply,/Before Light Up/);
+assert(coffee.state.constraints.outing.options.some(p=>p.name==='HAUS'),'A new branch shortlist must retain checked dated announcements');
+const haus=await ask('Haus?',coffee);
+assert.equal(haus.verification,'outing-food-v2');assert.match(haus.reply,/HAUS.*8pm/s);assert.doesNotMatch(haus.reply,/McDonald|Local Food|which venue|more detail|Before Light Up/i);
+assert(haus.sources.some(s=>/reviewed business announcement/.test(s.title)));
+const lateHaus=await ask('Would that still work at 8:30pm?',haus);
+assert.match(lateHaus.reply,/HAUS closes at 8pm/);assert.doesNotMatch(lateHaus.reply,/McDonald/);
+assert.match(lateHaus.reply,/too late at 8:30pm/);assert.doesNotMatch(lateHaus.reply,/haven’t verified.*Wakefield City Centre/,'A closing-time answer about HAUS must not imply no alternatives exist across the city');
+assert(lateHaus.sources.some(s=>/reviewed business announcement/.test(s.title)),'Retain the source for a named closing-time answer');
+const earlierHaus=await ask('Would it work at 7pm?',lateHaus);
+assert.match(earlierHaus.reply,/At 7pm.*HAUS.*8pm/s);assert.doesNotMatch(earlierHaus.reply,/McDonald|Local Food/,'A rejected time must not erase the named place');
+const exactDetail=await ask('Can you tell me a bit more about Light Up Wakefield?',week);
+const exactCoffee=await ask('Coffee places?',exactDetail);
+assert.match(exactCoffee.reply,/While you’re at Light Up/);assert.doesNotMatch(exactCoffee.reply,/Before Light Up/);
+const exactHaus=await ask('Haus?',exactCoffee);
+assert.match(exactHaus.reply,/^Yes\. .*HAUS.*8pm/s);assert.doesNotMatch(exactHaus.reply,/which venue|more detail|Before Light Up/i);
 const parking=await ask('How about parking?',more);assert.equal(parking.verification,'cards-first-v17');assert.match(parking.reply,/Trinity Walk/);assert.deepEqual(more.state.constraints.outing.party.ages,[7,4]);
 const first=await ask('Anything quick to eat first?',more);
 assert.equal(first.verification,'outing-food-v2');assert.match(first.reply,/Before Light Up.*McDonald.*food options/s);
@@ -70,4 +93,4 @@ const chocolate=await ask('Something warm for the little ones and caffeine for u
 assert.match(chocolate.reply,/menu.*hot chocolate.*branch availability/s);assert(menus>0);assert(chocolate.sources.some(s=>s.url===menuUrl));
 assert.doesNotMatch(chocolate.reply,/Ferrybridge|Castleford|nearest|short walk/);
 assert(plannerCalls>=5);assert(searches>=2);
-console.log('Production catalogue outing handler passed: signed weekly -> selected event -> proactive fast food -> eat first -> dinner afterwards -> late timing -> natural mixed request -> UK menu proof.');
+console.log('Production catalogue outing handler passed: exact weekly -> Light Up -> Coffee places? -> Haus?, both event dates, correct attribution, named closing-time checks, family/food discovery and signed context.');

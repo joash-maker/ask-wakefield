@@ -3385,7 +3385,7 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
   const reuse = !context?.eventSections && previous?.id === card.id && age >= 0 && age <= 30 * 60000;
   const sections = context?.eventSections || (reuse ? previous.sections : null);
   const evidence = sections || { programme:[], parking:[], parkingLinks:[] };
-  const dateText = (card.dates?.length ? card.dates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
+  const dateText = (card.dates?.length ? card.dates : card.occurrenceDates?.length ? card.occurrenceDates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
 
   let reply;
   if (ops.parking) {

@@ -32,6 +32,7 @@ const menu={url:'https://central-burgers.co.uk/menu',quote:'Hot Chocolate with m
 assert(verifyMenuEvidence(menu,verified,'<h1>Menu</h1><p>Hot Chocolate with milk</p>'));
 assert.equal(verifyMenuEvidence({...menu,url:'https://unrelated.co.uk/menu'},verified,'<p>Hot Chocolate with milk</p>'),null);
 assert.equal(verifyMenuEvidence(menu,verified,'<nav>Hot Chocolate with milk</nav>'),null);
+assert.equal(verifyMenuEvidence({url:'https://deliveroo.co.uk/other-venue',quote:menu.quote},{...verified,website:'https://deliveroo.co.uk/this-venue'},'<p>Hot Chocolate with milk</p>'),null,'A platform hostname cannot transfer one restaurant menu to another');
 assert.equal(verifyMenuEvidence({url:'https://mcdonalds.com/us/menu',quote:'Hot Chocolate with milk'},{...verified,website:'https://mcdonalds.com/gb/en-gb/'},'<p>Hot Chocolate with milk</p>'),null);
 let searches=0;
 const found=await discoverOutingPlaces(window,plan,{anchor:async()=>anchor,search:async(q,opts)=>{searches++;assert.equal(opts.districtRestriction,false);return [place,{...place,id:'outer',formattedAddress:'Castleford',location:anchor}];}},now);

@@ -10,6 +10,8 @@ assert.deepEqual(outingParty('Just the two of us',{children:true,ages:[7,4]}),{c
 assert(outingWarmupQuestion('Somewhere to warm up would be good. What would you suggest?',state));
 for(const q of ['Any coffee in Leeds?','Any coffee nearby tomorrow?','Any parking?','What bus can we take?'])assert(!outingWarmupQuestion(q,state),q);
 assert(!outingWarmupQuestion('Somewhere to warm up?',null));
+for(const q of ['Any coffee around that time?','Any hot chocolate in the evening?','Any coffee around the same time?'])assert(outingWarmupQuestion(q,state),q);
+for(const q of ['Any coffee around that time in Castleford?','Any coffee near Ferrybridge?','Any coffee around that time in Leeds?'])assert(!outingWarmupQuestion(q,state),q);
 for(const url of ['http://willow-coffee.co.uk/','https://127.0.0.1/','https://169.254.169.254/','https://localhost/','https://x.internal/','https://user:password@willow-coffee.co.uk/'])assert.equal(scoutUrl(url),null);
 const quote='Our family event in Wakefield City Centre on 13 November 2026 serves coffee and hot chocolate from 17:00 until 20:30.';
 const candidate={name:'Willow Coffee',url:'https://willow-coffee.co.uk/light-night/',start:'17:00',end:'20:30',quote};

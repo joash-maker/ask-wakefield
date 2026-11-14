@@ -286,3 +286,67 @@ The test branch now resolves a stored named event before broad prose generation.
 Parking after an unselected weekly shortlist asks which event. An unfinished “I’m heading to” keeps the signed list and asks only for the destination.
 
 Validation: all 23 test files pass. The handler fixture replays weekly list → ambiguous parking → unfinished destination → named evening plan → event parking, and rejects any call to the general prose model. Additional evidence tests reject a meal venue that opens after the proposed time and a café closed before the event ends. They also exercise source failures and party retention. These checks use fixtures. Live preview validation is recorded separately below when complete.
+
+### Live review follow-up replay
+
+Code commit: `a127efcccc2f7909f3257f45edcf068c2f23cc1a`. Preview: https://ask-wakefield-lbrdekfsd-joash-1034s-projects.vercel.app/#assistant
+
+Five live API turns passed: weekly list → ambiguous parking → unfinished destination → named evening plan → parking follow-up. The exact reviewed wording reached `outing-evening-plan-v1`. Its meal and drink options came from checked branch listings, with counter/kitchen uncertainty stated. No claim of table availability, kitchen service at the proposed time, parking availability or an independently found HAUS announcement is made. The selected event survived the final follow-up. Request durations: 15.7s, 10.5s, 10.7s, 13.0s, 14.7s.
+
+**You:** What's the parking like?
+
+**Ask Wakefield:**
+
+Which event are you heading to? I’ll check its parking guidance.
+
+**You:** I'm heading to
+
+**Ask Wakefield:**
+
+Where are you heading?
+
+**You:** I'm heading to Light Up Wakefield, help me plan a good evening
+
+**Ask Wakefield:**
+
+Light Up Wakefield runs on Saturday 14 November 2026, 17:00–21:00, at Wakefield City Centre. It’s free to attend.
+
+You can explore the Light Trail across the city centre, from interactive artworks and striking projections to illuminated experiences. Pick up a free trail map from the Event Hub at WX Wakefield Exchange.
+
+On Saturday 14 November, the parade starts at 5:30pm (about 30 minutes), at County Hall, Wood Street, Brook Street.
+
+[Event details](https://experiencewakefield.co.uk/event/light-up-wakefield/)
+
+Yes. For Light Up Wakefield, the organiser lists Trinity Walk and The Ridings Shopping Centre as parking options.
+
+WX Wakefield Exchange does not have a car park.
+
+I haven’t checked live spaces or evening closing times.
+[Official parking details](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/)
+
+Before the event (around 4pm, if you want a meal):
+At 4pm, you could make a meal part of the outing.
+
+[Qubana](https://maps.google.com/?cid=3111062932922388541&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA) (1-3 Wood St, Wakefield WF1 2EL) has coffee and dinner service. It’s listed open until midnight.
+
+Those are branch opening hours. Kitchen or food-counter closing times aren’t confirmed for every option.
+
+After 9pm (optional drink stop):
+At 9pm, you could stop for a drink.
+
+[Sip & Dip](https://maps.google.com/?cid=17039239708916401396&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA) (63 Westgate End, Wakefield WF2 9RL) has coffee. It’s listed open until midnight.
+
+Those are branch opening hours. Drink-counter service until closing isn’t confirmed.
+
+**You:** And parking for the event?
+
+**Ask Wakefield:**
+
+Yes. For Light Up Wakefield, the organiser lists Trinity Walk and The Ridings Shopping Centre as parking options.
+
+WX Wakefield Exchange does not have a car park.
+
+I haven’t checked live spaces or evening closing times.
+[Official parking details](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/)
+
+[Event details](https://experiencewakefield.co.uk/event/light-up-wakefield/)

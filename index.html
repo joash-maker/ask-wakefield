@@ -660,7 +660,7 @@ function sendMessage(override) {
       if (Array.isArray(data.followups)) renderFollowups(data.followups, bWrap);
       else getFollowups(text, reply, bWrap);
     } catch(e) {
-      if (!bBody.textContent || bBody.textContent.indexOf('Thinking') !== -1) {
+      if (!bBody.textContent || bBody.textContent.indexOf('Thinking') !== -1 || bBody.textContent.indexOf('checking the details') !== -1) {
         bBody.innerHTML = fmt('Something went wrong with the response. Your question is still in the box, so you can send it again.');
       }
       restoreFailed();

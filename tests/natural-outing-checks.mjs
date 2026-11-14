@@ -53,3 +53,17 @@ const reconciled=reconcileWeekCards([wx,exp]);assert.equal(reconciled.length,1);
 assert.equal(reconcileWeekCards([wx,{...exp,title:'Light Up Wakefield BSL Tours',sourceUrl:'https://experiencewakefield.co.uk/event/light-up-wakefield-bsl-tours/'}]).length,2);
 
 const programme=programmeConversation(['Switch-on: Friday 13 November · 5:30pm · Cathedral','Parade: Saturday 14 November · 5:30pm · County Hall'],{from:'2026-11-14',year:'2026'});assert.doesNotMatch(programme,/Friday/);assert.match(programme,/Saturday/);
+
+let extractionCalls=0;
+const extracted=await discoverAnnouncements(context,[branch],{model:'test',call:async body=>{
+ extractionCalls++;
+ if(body.system.startsWith('OUTING_ANNOUNCEMENTS_EXTRACT_V1')){assert.equal(body.tools,undefined);return {response:{ok:true},data:{content:[{type:'text',text:JSON.stringify({announcements:[candidate]})}]}};}
+ return {response:{ok:true},data:{content:[{type:'web_search_tool_result',content:[{url}]},{type:'text',text:'There is a dated announcement, but no JSON.'}]}};
+}},now);
+assert.equal(extractionCalls,2);assert.equal(extracted.length,1,'Search prose must recover through bounded extraction and actual-page verification');
+
+const drinkFrame={eventId:'lantern',options:[{name:'Willow Coffee'}],plan:{needs:['coffee'],timing:'during'}};
+const drift=contextualOutingPlan('Actually, quarter past seven?',{intent:'food_drink',needs:['snack','dinner'],timing:'before'},drinkFrame);
+assert.deepEqual(drift.needs,['coffee']);assert.equal(drift.timing,'during');assert.equal(drift.referencePrevious,true);
+const added=contextualOutingPlan('And hot chocolate for the little ones?',{intent:'food_drink',needs:['snack','coffee'],timing:'during'},drinkFrame);
+assert.deepEqual(added.needs,['hot_chocolate']);

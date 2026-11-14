@@ -67,3 +67,8 @@ const drift=contextualOutingPlan('Actually, quarter past seven?',{intent:'food_d
 assert.deepEqual(drift.needs,['coffee']);assert.equal(drift.timing,'during');assert.equal(drift.referencePrevious,true);
 const added=contextualOutingPlan('And hot chocolate for the little ones?',{intent:'food_drink',needs:['snack','coffee'],timing:'during'},drinkFrame);
 assert.deepEqual(added.needs,['hot_chocolate']);
+
+let leadReads=0;
+const closedLead={...branch,endMinute:960};
+const sourced=await enrichSelectedOuting({reply:'A checked event.',sources:[],state:{resultCards:[{...context.card,entityType:'event',venue:context.area,dates:context.dates,start:context.start,end:context.end}],viewIds:['lantern'],constraints:{eventFocus:{id:'lantern'}}}},[{role:'user',content:'Tell me more.'}],{...services,discover:async()=>[],sources:async()=>[closedLead],announcements:async(ctx,leads)=>{leadReads++;assert.equal(leads[0].endMinute,960);return discoverAnnouncements(ctx,leads,services,now);}},now);
+assert.equal(leadReads,1);assert.match(sourced.reply,/Willow Coffee.*8pm/s);assert.doesNotMatch(sourced.reply,/4pm/,'Closed ordinary hours are research leads, never event-opening claims');

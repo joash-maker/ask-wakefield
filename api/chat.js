@@ -4128,6 +4128,9 @@ function outingServices() {
   if(process.env.AW_OUTING_PLANNER_ENABLED!=='false') {
     services.plan=(messages,state,context)=>planOutingTurn(messages,state,context,services);
     services.discover=(context,plan,now)=>discoverOutingPlaces(context,plan,{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+    // Announcement leads include local cafés whose normal hours finish before
+    // the event. They are research sources, not open-evening recommendations.
+    services.sources=(context,now)=>discoverOutingPlaces({...context,windowStart:0,windowEnd:1440},{needs:['coffee'],timing:'during'},{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
     services.announcements=(context,branches,now)=>discoverAnnouncements(context,branches,services,now);
   }
   return services;

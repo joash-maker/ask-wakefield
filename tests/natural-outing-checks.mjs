@@ -5,7 +5,7 @@ import {outingTime} from '../lib/outing-time.js';
 import {contextualOutingPlan,fallbackOutingPlan} from '../lib/outing-planner.js';
 import {answerPlannedOuting} from '../lib/outing-food.js';
 import {enrichSelectedOuting} from '../lib/outing-companion.js';
-import {verifyAnnouncement,discoverAnnouncements} from '../lib/outing-announcements.js';
+import {verifyAnnouncement,discoverAnnouncements,ownedAnnouncementPages} from '../lib/outing-announcements.js';
 const now=new Date('2026-11-14T12:00:00Z');
 for(const [q,m] of [['What about half eight?',1230],['half past eight',1230],['quarter to nine',1245],['quarter past eight',1215],['eight thirty',1230],['8:30pm',1230],['at 20:30',1230],['at 8am',480],['midnight',1440]])assert.equal(outingTime(q),m,q);
 for(const q of ['the kids are eight','there are 8 of us','at 28:30','8:90pm'])assert.equal(outingTime(q),null,q);
@@ -72,3 +72,13 @@ let leadReads=0;
 const closedLead={...branch,endMinute:960};
 const sourced=await enrichSelectedOuting({reply:'A checked event.',sources:[],state:{resultCards:[{...context.card,entityType:'event',venue:context.area,dates:context.dates,start:context.start,end:context.end}],viewIds:['lantern'],constraints:{eventFocus:{id:'lantern'}}}},[{role:'user',content:'Tell me more.'}],{...services,discover:async()=>[],sources:async()=>[closedLead],announcements:async(ctx,leads)=>{leadReads++;assert.equal(leads[0].endMinute,960);return discoverAnnouncements(ctx,leads,services,now);}},now);
 assert.equal(leadReads,1);assert.match(sourced.reply,/Willow Coffee.*8pm/s);assert.doesNotMatch(sourced.reply,/4pm/,'Closed ordinary hours are research leads, never event-opening claims');
+
+globalThis.fetch=async url=>String(url)==='https://willow-coffee.co.uk/'?new Response('<a href="/lantern-weekend/">Lantern Weekend late opening</a><a href="https://unrelated.example/lantern-weekend/">Lantern Weekend</a>'):new Response(html);
+const owned=await ownedAnnouncementPages(context,[branch]);assert.equal(owned.length,1);assert.equal(owned[0].url,'https://willow-coffee.co.uk/lantern-weekend/');
+let ownedCalls=0;
+const indexMiss=await discoverAnnouncements(context,[branch],{model:'test',call:async body=>{
+ ownedCalls++;
+ if(body.system.startsWith('OUTING_ANNOUNCEMENTS_EXTRACT_V1'))return {response:{ok:true},data:{content:[{type:'text',text:JSON.stringify({announcements:[{...candidate,url:owned[0].url}]})}]}};
+ return {response:{ok:true},data:{content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'{"announcements":[]}'}]}};
+}},now);
+assert.equal(ownedCalls,2);assert.equal(indexMiss.length,1,'An unindexed announcement must be discovered from the local business website');

@@ -1,3 +1,4 @@
+import {programmeConversation} from '../lib/event-conversation-voice.js';
 import assert from 'node:assert/strict';
 import {reconcileWeekCards} from '../lib/event-week-window.js';
 import {outingTime} from '../lib/outing-time.js';
@@ -28,7 +29,7 @@ assert.equal(verifyAnnouncement(social,post,context,[branch]),null,'Social accou
 assert(verifyAnnouncement(social,post,context,[branch],'<a href="https://www.facebook.com/willow/">Facebook</a>'));
 let calls=0,reads=0;
 globalThis.fetch=async u=>{reads++;return new Response(html);};
-const services={model:'test',call:async(body,options)=>{calls++;assert.equal(body.tools[0].max_uses,2);assert.equal(options.timeoutMs,16000);return {response:{ok:true},data:{content:[{type:'web_search_tool_result',content:[{url}]},{type:'text',text:JSON.stringify({announcements:[candidate]})}]}};}};
+const services={model:'test',call:async(body,options)=>{calls++;assert.equal(body.tools[0].max_uses,2);assert.equal(options.timeoutMs,45000);return {response:{ok:true},data:{content:[{type:'web_search_tool_result',content:[{url}]},{type:'text',text:JSON.stringify({announcements:[candidate]})}]}};}};
 const found=await discoverAnnouncements(context,[branch],services,now);
 assert.equal(calls,1);assert.equal(reads,1);assert.equal(found.length,1);assert.equal(found[0].sourceKind,'discovered-business-announcement');assert.equal(found[0].hotChocolate,true);
 const enriched=await enrichSelectedOuting({reply:'A verified event.',sources:[],state:{resultCards:[{...context.card,entityType:'event',venue:context.area,dates:context.dates,start:context.start,end:context.end}],viewIds:['lantern'],constraints:{eventFocus:{id:'lantern'}}}},[{role:'user',content:'Lantern Weekend sounds lovely.'}],{...services,discover:async()=>[branch],announcements:(ctx,branches)=>discoverAnnouncements(ctx,branches,services,now)},now);
@@ -36,15 +37,19 @@ assert.match(enriched.reply,/Willow Coffee.*8pm/s);assert(enriched.sources.some(
 const late={...found[0],checkedAt:now.toISOString()};
 const open={...late,name:'Late Coffee',sourceUrl:'https://late-coffee.co.uk/',end:'22:00'};
 let state={constraints:{outing:{...previous,options:[late,open],checkedAt:now.toISOString(),currentIds:[url,open.sourceUrl]}}};
-const ask=async(q,plan)=>{const r=await answerPlannedOuting([{role:'user',content:q}],state,context,plan,{discover:async()=>[]},now);state=r.state;return r;};
+let newBusiness=false;
+const ask=async(q,plan)=>{const r=await answerPlannedOuting([{role:'user',content:q}],state,context,plan,{discover:async()=>newBusiness?[{...open,name:'Unrequested Cafe',sourceUrl:'https://unrequested-cafe.co.uk/'}]:[]},now);state=r.state;return r;};
 const half=await ask('What about half eight?',{intent:'food_drink',needs:['coffee'],timing:'during',referencePrevious:true});
 assert.match(half.reply,/At 8:30pm.*Late Coffee/s);assert.match(half.reply,/Willow Coffee closes at 8pm/);assert.doesNotMatch(half.reply,/Willow Coffee.*serving drinks/s);
+newBusiness=true;
 const next=await ask('And a hot chocolate?',{intent:'food_drink',needs:['coffee','hot_chocolate'],timing:'during',referencePrevious:true});
 assert.match(next.reply,/At 8:30pm.*Late Coffee/s);assert.doesNotMatch(next.reply,/Willow Coffee.*serving drinks/s);
-assert.equal(state.constraints.outing.requestedTime,'20:30');
+assert.equal(state.constraints.outing.requestedTime,'20:30');assert.doesNotMatch(next.reply,/Unrequested Cafe/,'Adding a drink detail must retain the latest places');
 console.log('Natural outing checks passed: British times, long refinements, independent multi-excerpt discovery, social ownership, source/date/identity guards, late options and retained time.');
 
 const wx={title:'Light Up Wakefield',sourceUrl:'https://wxwakefield.co.uk/Whats-On/Details?event=light-up-wakefield',startDate:'2026-11-13',endDate:'2026-11-14',venue:'WX Wakefield Exchange'};
 const exp={...wx,sourceUrl:'https://experiencewakefield.co.uk/event/light-up-wakefield/',startDate:null,ongoing:true,venue:'Wakefield City Centre'};
 const reconciled=reconcileWeekCards([wx,exp]);assert.equal(reconciled.length,1);assert.equal(reconciled[0].startDate,'2026-11-13');assert.equal(reconciled[0].ongoing,false);assert.equal(reconciled[0].venue,'Wakefield City Centre');
 assert.equal(reconcileWeekCards([wx,{...exp,title:'Light Up Wakefield BSL Tours',sourceUrl:'https://experiencewakefield.co.uk/event/light-up-wakefield-bsl-tours/'}]).length,2);
+
+const programme=programmeConversation(['Switch-on: Friday 13 November · 5:30pm · Cathedral','Parade: Saturday 14 November · 5:30pm · County Hall'],{from:'2026-11-14',year:'2026'});assert.doesNotMatch(programme,/Friday/);assert.match(programme,/Saturday/);

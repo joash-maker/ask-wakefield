@@ -111,6 +111,9 @@
   "functions": {
     "api/event-collector.js": {
       "maxDuration": 300
+    },
+    "api/chat.js": {
+      "maxDuration": 120
     }
   },
   "redirects": [

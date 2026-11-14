@@ -3435,7 +3435,7 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
     reply = `${card.title} runs on ${days}${card.start ? ', ' + eventTimeLabelV17(card) : ''}${card.venue ? ', at ' + card.venue : ''}.`;
     const price = context?.eventDetailCard?.priceStatus;
     if (price === 'free') reply += ' It’s free to attend.';
-    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme);
+    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme,{from:londonCalendar().today,year:card.endDate?.slice(0,4)});
     else reply += `\n\n${context ? 'I could confirm the event details above, but couldn’t extract further programme details.' : 'I couldn’t read further programme details just now.'}`;
   }
   if (reuse) reply += '\n\nThese details were checked earlier in this chat. I couldn’t refresh the page just now.';

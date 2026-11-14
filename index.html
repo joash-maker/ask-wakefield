@@ -611,9 +611,13 @@ function sendMessage(override) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/chat', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 25000;
+  xhr.timeout = 120000;
+  var progressTimer = setTimeout(function() {
+    bBody.innerHTML = '<div class="searching"><div class="spin"></div>I’m checking the details for you...</div>';
+  }, 12000);
 
   xhr.onload = function() {
+    clearTimeout(progressTimer);
     try {
       var data = JSON.parse(xhr.responseText);
       var reply = (data && data.reply) ? data.reply : "I'm sorry, I couldn't generate a response. Please try again.";
@@ -668,6 +672,7 @@ function sendMessage(override) {
   };
 
   xhr.onerror = function() {
+    clearTimeout(progressTimer);
     bBody.innerHTML = fmt("I couldn't connect. Check your signal and send your question again. It's still in the box.");
     restoreFailed();
     isSending = false;
@@ -675,6 +680,7 @@ function sendMessage(override) {
   };
 
   xhr.ontimeout = function() {
+    clearTimeout(progressTimer);
     bBody.innerHTML = fmt("I'm taking longer than expected. Your question is still in the box, so try sending it again in a moment.");
     restoreFailed();
     isSending = false;
@@ -684,6 +690,7 @@ function sendMessage(override) {
   try {
     xhr.send(JSON.stringify({ messages: chatHistory, stateToken: stateToken }));
   } catch(e) {
+    clearTimeout(progressTimer);
     bBody.innerHTML = fmt("That didn't send. Your question is still in the box, so try again.");
     restoreFailed();
     isSending = false;
@@ -737,12 +744,14 @@ function getFollowups(question, answer, afterEl) {
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.timeout = 10000;
   xhr.onload = function() {
+    clearTimeout(progressTimer);
     try {
       var data = JSON.parse(xhr.responseText);
       renderFollowups(data.followups, afterEl);
     } catch(e) {}
   };
-  xhr.onerror = xhr.ontimeout = function() {};
+  xhr.onerror = xhr.ontimeout = function() {
+    clearTimeout(progressTimer);};
   xhr.send(JSON.stringify({ question: question, answer: answer.substring(0, 300) }));
 }
 

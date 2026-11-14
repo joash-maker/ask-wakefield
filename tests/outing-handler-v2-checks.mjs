@@ -50,9 +50,9 @@ async function ask(q,prior){
 }
 const week=await ask("What's on this week in Wakefield?");
 const more=await ask('Light Up Wakefield sounds good. We are taking our children, aged 7 and 4. Tell me more.',week);
-assert.match(more.reply,/break with the kids.*McDonald/s);assert.deepEqual(more.state.constraints.outing.party.ages,[7,4]);
+assert.match(more.reply,/break with the kids.*HAUS/s);assert.deepEqual(more.state.constraints.outing.party.ages,[7,4]);
 const first=await ask('Anything quick to eat first?',more);
-assert.equal(first.verification,'outing-food-v2');assert.match(first.reply,/Before Light Up.*McDonald.*food options/s);
+assert.equal(first.verification,'outing-food-v2');assert(first.sources.some(s=>/branch listing/.test(s.title)),'Ordinary branches must retain branch-listing attribution');assert.match(first.reply,/Before Light Up.*McDonald.*food options/s);
 const after=await ask('We will probably be starving afterwards. Any ideas?',first);
 assert.match(after.reply,/After Light Up.*McDonald.*dinner service/s);assert.match(after.reply,/Kitchen or food-counter/);
 const late=await ask('Would that still work at 10pm?',after);

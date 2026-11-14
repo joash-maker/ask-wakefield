@@ -27,7 +27,7 @@ const seated=await ask('Somewhere to sit down with the kids would be good.',firs
 assert.equal(seated.verification,'outing-food-v2');assert.match(seated.reply,/dine-in service/);assert.deepEqual(seated.state.constraints.outing.party.children,true);
 const thanks=await ask('Cheers!',seated);assert.equal(thanks.verification,'outing-acknowledgement');
 const change=await ask('Actually, I meant Kirkgate station.',thanks);
-assert.equal(change.verification,'station-food-v1');assert.match(change.reply,/Kirkgate Coffee/);assert.doesNotMatch(change.reply,/Westgate Coffee/);
+assert.equal(change.verification,'station-food-v1');assert.match(change.reply,/with the kids/);assert.match(change.reply,/Kirkgate Coffee/);assert.doesNotMatch(change.reply,/Westgate Coffee/);
 const late=await ask('What about at half six?',change);
 assert.equal(late.verification,'outing-food-v2');assert.match(late.reply,/At 6:30pm.*Kirkgate Coffee/s);assert.doesNotMatch(late.reply,/5:30pm|Westgate Coffee/);
 const ambiguous=await ask('Is there a coffee shop near Wakefield train station?');assert.equal(ambiguous.verification,'station-choice');

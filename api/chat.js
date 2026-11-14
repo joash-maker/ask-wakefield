@@ -1,5 +1,6 @@
 import { load } from 'cheerio';
 import { planOutingTurn } from '../lib/outing-planner.js';
+import { discoverAnnouncements } from '../lib/outing-announcements.js';
 import { discoverOutingPlaces } from '../lib/outing-places.js';
 import { answerOutingWarmup, enrichSelectedOuting, selectedOuting } from '../lib/outing-companion.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
@@ -3116,6 +3117,11 @@ function parseEventFollowUp(rawText, state) {
   }).sort((a, b) => b.title.length - a.title.length);
   const namedOps = eventOpsFromText(text);
   const detailOperation = eventDetailOperation(text);
+  if (named.length && !Object.keys(namedOps).length && !detailOperation
+      && !EVENT_FOLLOWUP_NEW_WINDOW.test(text) && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(text)
+      && !/\b(?:not|don't|don’t|skip|avoid|hate|other|instead|different)\b/i.test(text)) {
+    return {details:true,namedIds:named.filter(c=>c.title.length===named[0].title.length).map(c=>c.id)};
+  }
   if (detailOperation) namedOps[detailOperation] = true;
   const namedRemainder = named.length ? normaliseEventTitle(text).replace(normaliseEventTitle(named[0].title), '') : text;
   if (named.length && Object.keys(namedOps).length && !/\b(?:other|different|instead|alternatives?|recommend|suggest|compare)\b/i.test(text)
@@ -3444,7 +3450,9 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
 async function discoverSelectedEvent(messages, state) {
   const q=lastUserText(messages);
   if(!state?.lastIntent?.startsWith('events.') || storedEventCards(state).some(c=>(` ${normaliseEventTitle(q)} `).includes(` ${normaliseEventTitle(c.title)} `)))return null;
-  if(eventDetailOperation(q)!=='details' && !eventOpsFromText(q).showTime && !/\b(?:sounds good|go|going|visit|thinking of)\b/i.test(q))return null;
+  if(eventDetailOperation(q)!=='details' && !eventOpsFromText(q).showTime && !/\b(?:sounds|looks|try|fancy|visit|going|thinking of)\b/i.test(q))return null;
+  if(q.trim().split(/\s+/).length<2 || /\b(?:parking|car parks?|coffee|bus|train|hot chocolate)\b/i.test(q) && !eventOpsFromText(q).showTime
+      || /\b(?:not|don't|don’t|skip|avoid|hate|other|instead|different)\b/i.test(q))return null;
   if(/\b(?:next week|next month|next year|last year|20\d{2})\b/i.test(q))return null;
   const experience=await fetchExperienceWakefieldEventsContext();
   let candidates=[...(experience?.listingEventCards||[]).map(c=>({title:c.title,url:c.sourceUrl||c.url})),...(experience?.eventLinks||[]).map(l=>({title:l.label,url:l.url}))];
@@ -4113,6 +4121,7 @@ function outingServices() {
   if(process.env.AW_OUTING_PLANNER_ENABLED!=='false') {
     services.plan=(messages,state,context)=>planOutingTurn(messages,state,context,services);
     services.discover=(context,plan,now)=>discoverOutingPlaces(context,plan,{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+    services.announcements=(context,branches,now)=>discoverAnnouncements(context,branches,services,now);
   }
   return services;
 }
@@ -5229,6 +5238,12 @@ export default async function handler(req, res) {
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
+  if ((decodedToken || cookieState)?.constraints?.eventFocus?.id
+      && /^(?:thanks(?: a lot)?|thank you(?: very much)?|cheers|great|lovely|brilliant|ok(?:ay)?|sounds good)[!.\s]*$/i.test(lastUserText(messages).trim())) {
+    const state=decodedToken || cookieState;
+    attachStateCookie(res,state);
+    return res.status(200).json({reply:/thanks|thank you|cheers/i.test(lastUserText(messages))?'You’re welcome.':'Sounds good.',state,sources:[],live:false,verification:'outing-acknowledgement'});
+  }
   // Resolve outing refinements before event-list filters or topic resets.
   const conversationState = await restoreIncompleteOuting(messages,decodedToken || cookieState);
   if (conversationState?.constraints?.eventFocus?.id && !selectedOuting(conversationState) && isOutingRecoveryRequest(lastUserText(messages))) {

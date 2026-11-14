@@ -75,6 +75,10 @@ assert.match(lateHaus.reply,/too late at 8:30pm/);assert.doesNotMatch(lateHaus.r
 assert(lateHaus.sources.some(s=>/reviewed business announcement/.test(s.title)),'Retain the source for a named closing-time answer');
 const earlierHaus=await ask('Would it work at 7pm?',lateHaus);
 assert.match(earlierHaus.reply,/At 7pm.*HAUS.*8pm/s);assert.doesNotMatch(earlierHaus.reply,/McDonald|Local Food/,'A rejected time must not erase the named place');
+const interest=await ask('Light Up Wakefield sounds lovely.',week);
+assert.equal(interest.verification,'selected-event-discovery-v2');assert.match(interest.reply,/Light Up.*McDonald/s);
+const acknowledged=await ask('Cheers!',haus);
+assert.equal(acknowledged.verification,'outing-acknowledgement');assert.equal(acknowledged.state.constraints.outing.currentIds[0],haus.state.constraints.outing.currentIds[0]);
 const exactDetail=await ask('Can you tell me a bit more about Light Up Wakefield?',week);
 const exactCoffee=await ask('Coffee places?',exactDetail);
 assert.match(exactCoffee.reply,/While you’re at Light Up/);assert.doesNotMatch(exactCoffee.reply,/Before Light Up/);

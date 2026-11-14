@@ -4,7 +4,7 @@ import {reconcileWeekCards} from '../lib/event-week-window.js';
 import {outingTime} from '../lib/outing-time.js';
 import {contextualOutingPlan,fallbackOutingPlan} from '../lib/outing-planner.js';
 import {answerPlannedOuting} from '../lib/outing-food.js';
-import {enrichSelectedOuting} from '../lib/outing-companion.js';
+import {enrichSelectedOuting,planSelectedEvening} from '../lib/outing-companion.js';
 import {verifyAnnouncement,discoverAnnouncements,ownedAnnouncementPages} from '../lib/outing-announcements.js';
 const now=new Date('2026-11-14T12:00:00Z');
 for(const [q,m] of [['What about half eight?',1230],['half past eight',1230],['quarter to nine',1245],['quarter past eight',1215],['eight thirty',1230],['8:30pm',1230],['at 20:30',1230],['at 8am',480],['midnight',1440]])assert.equal(outingTime(q),m,q);
@@ -82,3 +82,20 @@ const indexMiss=await discoverAnnouncements(context,[branch],{model:'test',call:
  return {response:{ok:true},data:{content:[{type:'web_search_tool_result',content:[]},{type:'text',text:'{"announcements":[]}'}]}};
 }},now);
 assert.equal(ownedCalls,2);assert.equal(indexMiss.length,1,'An unindexed announcement must be discovered from the local business website');
+
+const itineraryBase={reply:'Lantern Weekend runs 17:00–21:00.',sources:[{title:'Event',url:'https://official.example/event/'}],state:{resultCards:[{...context.card,entityType:'event',venue:context.area,dates:context.dates,start:context.start,end:context.end}],viewIds:['lantern'],constraints:{eventFocus:{id:'lantern'}}}};
+const staged=await planSelectedEvening(itineraryBase,[{role:'user',content:'Help plan our evening with children aged 7 and 4'}],{discover:async(ctx,plan)=>{
+ assert(ctx.party.children);assert.equal(plan.exactTime,true);
+ if(plan.timing==='before')return [{...open,name:'Meal opens too late',sourceKind:'branch-listing',services:['dinner'],startMinute:1000,endMinute:1380}];
+ return [{...open,name:'Cafe already closed',sourceKind:'branch-listing',startMinute:480,endMinute:1200}];
+}},now);
+assert.doesNotMatch(staged.reply,/Meal opens too late/);
+assert.doesNotMatch(staged.reply,/Cafe already closed.*serving/);
+assert.match(staged.reply,/haven’t verified a suitable/);
+assert.deepEqual(staged.state.constraints.outing.party.ages,[7,4]);
+const unavailable=await planSelectedEvening(itineraryBase,[{role:'user',content:'Plan a good evening'}],{discover:async()=>{throw new Error('lookup unavailable');}},now);
+assert.match(unavailable.reply,/Lantern Weekend runs 17:00–21:00/);
+assert.match(unavailable.reply,/couldn’t check a meal before/);
+assert.match(unavailable.reply,/couldn’t check a drink after/);
+assert.equal(unavailable.state.constraints.eventFocus.id,'lantern');
+console.log('Evening evidence checks passed: exact proposed slots, closed/late venues excluded, failed lookups preserve event and party.');

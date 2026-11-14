@@ -64,3 +64,23 @@ assert.match(chocolate.reply,/menu.*hot chocolate.*branch availability/s);assert
 assert.doesNotMatch(chocolate.reply,/Ferrybridge|Castleford|nearest|short walk/);
 assert(plannerCalls>=5);assert(searches>=2);
 console.log('Outing v2 handler passed: signed weekly -> selected event -> proactive fast food -> eat first -> dinner afterwards -> late timing -> natural mixed request -> UK menu proof.');
+
+const parkingChoice=await ask("What's the parking like?",week);
+assert.equal(parkingChoice.verification,'event-parking-choice');
+assert.doesNotMatch(parkingChoice.reply,/free parking|two hours|Council currently/);
+const unfinished=await ask("I'm heading to",parkingChoice);
+assert.equal(unfinished.verification,'incomplete-destination');
+assert.deepEqual(unfinished.state.resultCards.map(c=>[c.id,c.url,c.start,c.end]),week.state.resultCards.map(c=>[c.id,c.url,c.start,c.end]));
+const evening=await ask("I'm heading to Light Up Wakefield, help me plan a good evening",unfinished);
+assert.equal(evening.verification,'outing-evening-plan-v1');
+assert.match(evening.reply,/Light Up Wakefield.*17:00.*21:00/s);
+assert.match(evening.reply,/Trinity Walk.*Ridings/s);
+assert.match(evening.reply,/Before the event.*4pm.*McDonald/s);
+assert.match(evening.reply,/After 9pm.*At 9pm.*McDonald/s);
+assert.match(evening.reply,/Kitchen or food-counter closing times/);
+assert.match(evening.reply,/Drink-counter service/);
+assert.doesNotMatch(evening.reply,/Ferrybridge|Gyros Bros|Dolce Vita|should be open|won.t rush/);
+assert.equal(evening.state.constraints.eventFocus.id,more.state.constraints.eventFocus.id);
+const eveningParking=await ask("What's parking like for it?",evening);
+assert.match(eveningParking.reply,/Trinity Walk.*Ridings/s);
+console.log('Evening handler passed: weekly ambiguity -> unfinished destination -> named itinerary -> exact-time branch checks -> event parking.');

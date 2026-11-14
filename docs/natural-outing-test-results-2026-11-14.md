@@ -275,3 +275,14 @@ I haven’t checked live spaces or evening closing times.
 All 23 test files pass on final source. The immutable final-code preview is READY. Main remains 5df6a3f2ef9ddff73bec7e2e9120d197fa5acfcb. PR #13 remains draft; nothing in this test pass has been merged into production.
 
 The conversation candidate is reviewable. The independent-announcement feature has positive fixture coverage and real search/read attempts, but no qualifying independent announcement was recovered in the final live probe. The supplied HAUS hours are still correctly labelled as reviewed evidence. Public-post availability, index coverage and image-only material remain limits; do not claim the social-discovery requirement is fully proven.
+
+
+## Review follow-up: evening planning
+
+Joash’s preview replay exposed a separate route gap: a named request to plan an evening bypassed the checked outing route and produced unsupported opening, service and parking claims.
+
+The test branch now resolves a stored named event before broad prose generation. It uses the official event details and event parking, then checks one optional dinner stop at an hour before the start and one optional coffee stop at the finish. Both use exact-time, local branch checks. Branch hours remain distinct from kitchen/counter hours. Failed lookups keep the verified event plan and identify the missing stop. This is a simple suggested evening, not a verified walking itinerary or booking guarantee.
+
+Parking after an unselected weekly shortlist asks which event. An unfinished “I’m heading to” keeps the signed list and asks only for the destination.
+
+Validation: all 23 test files pass. The handler fixture replays weekly list → ambiguous parking → unfinished destination → named evening plan → event parking, and rejects any call to the general prose model. Additional evidence tests reject a meal venue that opens after the proposed time and a café closed before the event ends. They also exercise source failures and party retention. These checks use fixtures. Live preview validation is recorded separately below when complete.

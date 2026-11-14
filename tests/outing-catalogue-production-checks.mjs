@@ -44,6 +44,7 @@ globalThis.fetch=async(url,opts={})=>{
    return Response.json({content:[{type:'text',text:JSON.stringify(plans.has(q)?{intent:'food_drink',...plans.get(q)}:{intent:/parking/i.test(q)?'parking':'event'})}]});
   }
   if(b.system.startsWith('OUTING_MENU_CHECK_V2')){menus++;return Response.json({content:[{type:'web_search_tool_result',content:[{type:'web_search_result',url:menuUrl}]},{type:'text',text:JSON.stringify({menus:[{id:burger.id,url:menuUrl,quote:'Hot Chocolate with milk'}]})}]});}
+  if(b.messages?.some(m=>typeof m.content==='string'&&m.content.includes('What does BSL stand for?')))return Response.json({content:[{type:'text',text:'BSL stands for British Sign Language.'}]});
   throw new Error('Unexpected generic prose route');
  }
  return new Response('Not found',{status:404});
@@ -60,9 +61,9 @@ async function ask(q,prior){
 const week=await ask("What's on this week in Wakefield?");
 assert.equal(week.verification,'weekly-catalogue-v1');assert.doesNotMatch(week.reply,/Light Up/);
 const more=await ask('Light Up Wakefield sounds good. We are taking our children, aged 7 and 4. Tell me more.',week);
-assert.equal(more.verification,'selected-event-discovery-v2');assert(more.state.constraints.eventFocus?.id);assert.match(more.reply,/break with the kids.*McDonald/s);
+assert.equal(more.verification,'selected-event-discovery-v2');assert(more.state.constraints.eventFocus?.id);assert.match(more.reply,/break with the kids.*HAUS/s);
 assert.match(more.reply,/Friday 13 November 2026 and Saturday 14 November 2026/,'Both published sessions must appear in the event summary');
-assert(more.sources.some(s=>/McDonald/.test(s.title)&&/branch listing/.test(s.title)),'A Places result must not be labelled as a venue announcement');
+assert(more.sources.some(s=>/HAUS/.test(s.title)&&/reviewed business announcement/.test(s.title)),'Dated event opening takes priority and retains its actual provenance');
 const coffee=await ask('Coffee places?',more);
 assert.equal(coffee.verification,'outing-food-v2');assert.match(coffee.reply,/While you’re at Light Up/);assert.doesNotMatch(coffee.reply,/Before Light Up/);
 assert(coffee.state.constraints.outing.options.some(p=>p.name==='HAUS'),'A new branch shortlist must retain checked dated announcements');
@@ -75,6 +76,13 @@ assert.match(lateHaus.reply,/too late at 8:30pm/);assert.doesNotMatch(lateHaus.r
 assert(lateHaus.sources.some(s=>/reviewed business announcement/.test(s.title)),'Retain the source for a named closing-time answer');
 const earlierHaus=await ask('Would it work at 7pm?',lateHaus);
 assert.match(earlierHaus.reply,/At 7pm.*HAUS.*8pm/s);assert.doesNotMatch(earlierHaus.reply,/McDonald|Local Food/,'A rejected time must not erase the named place');
+const interest=await ask('Light Up Wakefield sounds lovely.',week);
+assert.equal(interest.verification,'selected-event-discovery-v2');assert.match(interest.reply,/Light Up.*HAUS/s);
+const acknowledged=await ask('Cheers!',haus);
+assert.equal(acknowledged.verification,'outing-acknowledgement');assert.equal(acknowledged.state.constraints.outing.currentIds[0],haus.state.constraints.outing.currentIds[0]);
+const aside=await ask('What does BSL stand for?',haus);
+assert.match(aside.reply,/British Sign Language/);assert.equal(aside.state.constraints.outing.eventId,haus.state.constraints.outing.eventId,'A factual aside must preserve the signed outing');
+const back=await ask('Would that still work at 8:30pm?',aside);assert.match(back.reply,/HAUS closes at 8pm/);
 const exactDetail=await ask('Can you tell me a bit more about Light Up Wakefield?',week);
 const exactCoffee=await ask('Coffee places?',exactDetail);
 assert.match(exactCoffee.reply,/While you’re at Light Up/);assert.doesNotMatch(exactCoffee.reply,/Before Light Up/);
@@ -82,7 +90,7 @@ const exactHaus=await ask('Haus?',exactCoffee);
 assert.match(exactHaus.reply,/^Yes\. .*HAUS.*8pm/s);assert.doesNotMatch(exactHaus.reply,/which venue|more detail|Before Light Up/i);
 const parking=await ask('How about parking?',more);assert.equal(parking.verification,'cards-first-v17');assert.match(parking.reply,/Trinity Walk/);assert.deepEqual(more.state.constraints.outing.party.ages,[7,4]);
 const first=await ask('Anything quick to eat first?',more);
-assert.equal(first.verification,'outing-food-v2');assert.match(first.reply,/Before Light Up.*McDonald.*food options/s);
+assert.equal(first.verification,'outing-food-v2');assert(first.sources.some(s=>/branch listing/.test(s.title)),'Ordinary branches must retain branch-listing attribution');assert.match(first.reply,/Before Light Up.*McDonald.*food options/s);
 const after=await ask('We will probably be starving afterwards. Any ideas?',first);
 assert.match(after.reply,/After Light Up.*McDonald.*dinner service/s);assert.match(after.reply,/Kitchen or food-counter/);
 const late=await ask('Would that still work at 10pm?',after);

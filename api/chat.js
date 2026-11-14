@@ -1,12 +1,14 @@
 import { load } from 'cheerio';
 import { planOutingTurn } from '../lib/outing-planner.js';
+import { discoverAnnouncements } from '../lib/outing-announcements.js';
 import { discoverOutingPlaces } from '../lib/outing-places.js';
-import { answerOutingWarmup, enrichSelectedOuting, selectedOuting } from '../lib/outing-companion.js';
+import { answerOutingWarmup, enrichSelectedOuting, selectedOuting, outingParty, eveningPlanQuestion, planSelectedEvening } from '../lib/outing-companion.js';
+import { answerPlannedOuting } from '../lib/outing-food.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
-import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
+import { eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -3116,6 +3118,11 @@ function parseEventFollowUp(rawText, state) {
   }).sort((a, b) => b.title.length - a.title.length);
   const namedOps = eventOpsFromText(text);
   const detailOperation = eventDetailOperation(text);
+  if (named.length && !Object.keys(namedOps).length && !detailOperation
+      && !EVENT_FOLLOWUP_NEW_WINDOW.test(text) && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(text)
+      && !/\b(?:not|don't|don’t|skip|avoid|hate|other|instead|different)\b/i.test(text)) {
+    return {details:true,namedIds:named.filter(c=>c.title.length===named[0].title.length).map(c=>c.id)};
+  }
   if (detailOperation) namedOps[detailOperation] = true;
   const namedRemainder = named.length ? normaliseEventTitle(text).replace(normaliseEventTitle(named[0].title), '') : text;
   if (named.length && Object.keys(namedOps).length && !/\b(?:other|different|instead|alternatives?|recommend|suggest|compare)\b/i.test(text)
@@ -3428,7 +3435,7 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
     reply = `${card.title} runs on ${days}${card.start ? ', ' + eventTimeLabelV17(card) : ''}${card.venue ? ', at ' + card.venue : ''}.`;
     const price = context?.eventDetailCard?.priceStatus;
     if (price === 'free') reply += ' It’s free to attend.';
-    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme);
+    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme,{from:londonCalendar().today,year:card.endDate?.slice(0,4)});
     else reply += `\n\n${context ? 'I could confirm the event details above, but couldn’t extract further programme details.' : 'I couldn’t read further programme details just now.'}`;
   }
   if (reuse) reply += '\n\nThese details were checked earlier in this chat. I couldn’t refresh the page just now.';
@@ -3444,7 +3451,9 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
 async function discoverSelectedEvent(messages, state) {
   const q=lastUserText(messages);
   if(!state?.lastIntent?.startsWith('events.') || storedEventCards(state).some(c=>(` ${normaliseEventTitle(q)} `).includes(` ${normaliseEventTitle(c.title)} `)))return null;
-  if(eventDetailOperation(q)!=='details' && !eventOpsFromText(q).showTime && !/\b(?:sounds good|go|going|visit|thinking of)\b/i.test(q))return null;
+  if(eventDetailOperation(q)!=='details' && !eventOpsFromText(q).showTime && !/\b(?:sounds|looks|try|fancy|visit|going|thinking of)\b/i.test(q))return null;
+  if(q.trim().split(/\s+/).length<2 || /\b(?:parking|car parks?|coffee|bus|train|hot chocolate)\b/i.test(q) && !eventOpsFromText(q).showTime
+      || /\b(?:not|don't|don’t|skip|avoid|hate|other|instead|different)\b/i.test(q))return null;
   if(/\b(?:next week|next month|next year|last year|20\d{2})\b/i.test(q))return null;
   const experience=await fetchExperienceWakefieldEventsContext();
   let candidates=[...(experience?.listingEventCards||[]).map(c=>({title:c.title,url:c.sourceUrl||c.url})),...(experience?.eventLinks||[]).map(l=>({title:l.label,url:l.url}))];
@@ -3465,6 +3474,12 @@ async function discoverSelectedEvent(messages, state) {
 // No broad discovery or model rewrite can replace the event or lose its dates.
 async function answerNamedStoredEvent(state, ops) {
   let selected = storedEventCards(state).filter(card => ops.namedIds.includes(card.id));
+  const reconciled=reconcileWeekCards(selected);
+  if(reconciled.length<selected.length){
+    const oldIds=new Set(selected.map(c=>c.id));
+    selected=reconciled;
+    state={...state,resultCards:[...storedEventCards(state).filter(c=>!oldIds.has(c.id)),...selected]};
+  }
   if ((ops.details || ops.parking || ops.showTime && !ops.family && !ops.price && !ops.showPrice) && selected.length === 1) return answerSelectedEventDetail(state, selected, ops);
   if (ops.family) selected = await verifyWeeklyFamilyCards(selected);
   if (ops.price || ops.showPrice) selected = await refreshEventCardsForPriceV16(selected);
@@ -4113,6 +4128,10 @@ function outingServices() {
   if(process.env.AW_OUTING_PLANNER_ENABLED!=='false') {
     services.plan=(messages,state,context)=>planOutingTurn(messages,state,context,services);
     services.discover=(context,plan,now)=>discoverOutingPlaces(context,plan,{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+    // Announcement leads include local cafés whose normal hours finish before
+    // the event. They are research sources, not open-evening recommendations.
+    services.sources=(context,now)=>discoverOutingPlaces({...context,windowStart:0,windowEnd:1440},{needs:['coffee'],timing:'during'},{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+    services.announcements=(context,branches,now)=>discoverAnnouncements(context,branches,services,now);
   }
   return services;
 }
@@ -5159,6 +5178,9 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
 }
 
 function buildResponseState(route, finalReply, evidence = {}, districtPlacesContext = null, priorState = null) {
+  // Answering a brief aside must not delete the signed outing. Explicit new
+  // requests have already cleared priorState in conversation scoping.
+  if(route.intent==='other' && priorState?.constraints?.outing) return {...priorState};
   let resultCards = [];
   if (route.intent.startsWith('events.')) resultCards = eventCardsFromEvidence(finalReply, { ...evidence, priorState });
   else if (route.intent === 'pharmacy.open' || route.intent === 'food.open_at') resultCards = verifiedPlaceCards(districtPlacesContext).slice(0, MAX_STATE_CARDS);
@@ -5229,6 +5251,57 @@ export default async function handler(req, res) {
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
+  const stationPrior=decodedToken || cookieState;
+  const stationQuestion=lastUserText(messages);
+  const stationName=stationQuestion.match(/\b(westgate|kirkgate)(?:\s+(?:train|railway))?\s+station\b/i)?.[1]
+    || (stationPrior?.constraints?.pendingStation ? stationQuestion.match(/^\s*(westgate|kirkgate)[?.!\s]*$/i)?.[1] : null);
+  const stationFood=/\b(?:coffee|cafe|café|hot chocolate)\b/i.test(stationQuestion) || stationPrior?.constraints?.outing?.anchor || stationPrior?.constraints?.pendingStation;
+  if(stationFood && /\bwakefield\s+(?:(?:train|railway)\s+)?station\b/i.test(stationQuestion) && !stationName){
+    const state={...normaliseClientState(null),constraints:{pendingStation:true}};
+    attachStateCookie(res,state);
+    return res.status(200).json({reply:'Do you mean Wakefield Westgate or Wakefield Kirkgate? I’ll keep the coffee search close to that station.',state,sources:[],live:false,verification:'station-choice'});
+  }
+  if(stationName && stationFood && !/\b(?:tomorrow|next|yesterday|20\d{2})\b/i.test(stationQuestion)){
+    const label=`Wakefield ${stationName[0].toUpperCase()+stationName.slice(1).toLowerCase()} station`;
+    const previous=stationPrior?.constraints?.outing;
+    const anchor={id:'station:'+stationName.toLowerCase(),label,date:londonCalendar().today,start:new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())};
+    const state={...normaliseClientState(null),lastIntent:'food.nearby',area:label,constraints:{outing:{anchor,party:outingParty(stationQuestion,previous?.party),seating:previous?.seating,plan:{intent:'food_drink',needs:previous?.plan?.needs || ['coffee'],timing:'during'}}}};
+    const result=await answerPlannedOuting(messages,state,selectedOuting(state),state.constraints.outing.plan,outingServices());
+    attachStateCookie(res,result.state);
+    return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply),verification:'station-food-v1'});
+  }
+  if (((decodedToken || cookieState)?.constraints?.eventFocus?.id || (decodedToken || cookieState)?.constraints?.outing?.anchor)
+      && /^(?:thanks(?: a lot)?|thank you(?: very much)?|cheers|great|lovely|brilliant|ok(?:ay)?|sounds good)[!.\s]*$/i.test(lastUserText(messages).trim())) {
+    const state=decodedToken || cookieState;
+    attachStateCookie(res,state);
+    return res.status(200).json({reply:/thanks|thank you|cheers/i.test(lastUserText(messages))?'You’re welcome.':'Sounds good.',state,sources:[],live:false,verification:'outing-acknowledgement'});
+  }
+  const priorEventState=decodedToken || cookieState;
+  const priorCards=storedEventCards(priorEventState);
+  const namedCurrentEvent=priorCards.some(c=>(` ${normaliseEventTitle(stationQuestion)} `).includes(` ${normaliseEventTitle(c.title)} `));
+  if(priorCards.length && !namedCurrentEvent && !priorEventState.constraints?.eventFocus?.id
+      && /^(?:what(?:['’]s| is) (?:the )?parking like|(?:and )?parking(?: for (?:it|the event))?)[?!.\s]*$/i.test(stationQuestion.trim())) {
+    attachStateCookie(res,priorEventState);
+    return res.status(200).json({reply:'Which event are you heading to? I’ll check its parking guidance.',state:priorEventState,sources:[],live:false,verification:'event-parking-choice'});
+  }
+  if(/^\s*(?:I(?:['’]m| am)|we(?:['’]re| are)) heading to[. …]*$/i.test(stationQuestion)) {
+    if(priorEventState)attachStateCookie(res,priorEventState);
+    return res.status(200).json({reply:'Where are you heading?',...(priorEventState?{state:priorEventState}:{}),sources:[],live:false,verification:'incomplete-destination'});
+  }
+  if(eveningPlanQuestion(stationQuestion) && priorEventState) {
+    const named=priorCards.filter(c=>(` ${normaliseEventTitle(stationQuestion)} `).includes(` ${normaliseEventTitle(c.title)} `)).sort((a,b)=>b.title.length-a.title.length);
+    const focus=named[0] || (!/\b(?:heading to|going to|castleford|pontefract|ossett|horbury|normanton|leeds)\b/i.test(stationQuestion) && priorCards.find(c=>c.id===priorEventState.constraints?.eventFocus?.id));
+    if(focus) {
+      const context=await fetchEventDetailContextByUrl(focus.sourceUrl || focus.url,focus.title);
+      const detail=await answerSelectedEventDetail(priorEventState,[focus],{details:true},context);
+      const parking=await answerSelectedEventDetail(detail.state,[focus],{parking:true},context);
+      detail.reply+='\n\n'+parking.reply.split('\n\n[Event details]')[0];
+      detail.sources=parking.sources;
+      const result=await planSelectedEvening(detail,messages,outingServices());
+      attachStateCookie(res,result.state);
+      return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply)});
+    }
+  }
   // Resolve outing refinements before event-list filters or topic resets.
   const conversationState = await restoreIncompleteOuting(messages,decodedToken || cookieState);
   if (conversationState?.constraints?.eventFocus?.id && !selectedOuting(conversationState) && isOutingRecoveryRequest(lastUserText(messages))) {

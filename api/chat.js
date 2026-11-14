@@ -2,12 +2,13 @@ import { load } from 'cheerio';
 import { planOutingTurn } from '../lib/outing-planner.js';
 import { discoverAnnouncements } from '../lib/outing-announcements.js';
 import { discoverOutingPlaces } from '../lib/outing-places.js';
-import { answerOutingWarmup, enrichSelectedOuting, selectedOuting } from '../lib/outing-companion.js';
+import { answerOutingWarmup, enrichSelectedOuting, selectedOuting, outingParty } from '../lib/outing-companion.js';
+import { answerPlannedOuting } from '../lib/outing-food.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
-import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
+import { eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -3473,6 +3474,12 @@ async function discoverSelectedEvent(messages, state) {
 // No broad discovery or model rewrite can replace the event or lose its dates.
 async function answerNamedStoredEvent(state, ops) {
   let selected = storedEventCards(state).filter(card => ops.namedIds.includes(card.id));
+  const reconciled=reconcileWeekCards(selected);
+  if(reconciled.length<selected.length){
+    const oldIds=new Set(selected.map(c=>c.id));
+    selected=reconciled;
+    state={...state,resultCards:[...storedEventCards(state).filter(c=>!oldIds.has(c.id)),...selected]};
+  }
   if ((ops.details || ops.parking || ops.showTime && !ops.family && !ops.price && !ops.showPrice) && selected.length === 1) return answerSelectedEventDetail(state, selected, ops);
   if (ops.family) selected = await verifyWeeklyFamilyCards(selected);
   if (ops.price || ops.showPrice) selected = await refreshEventCardsForPriceV16(selected);
@@ -5238,7 +5245,26 @@ export default async function handler(req, res) {
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
   const cookieState = stateFromCookie(req);
-  if ((decodedToken || cookieState)?.constraints?.eventFocus?.id
+  const stationPrior=decodedToken || cookieState;
+  const stationQuestion=lastUserText(messages);
+  const stationName=stationQuestion.match(/\b(westgate|kirkgate)(?:\s+(?:train|railway))?\s+station\b/i)?.[1]
+    || (stationPrior?.constraints?.pendingStation ? stationQuestion.match(/^\s*(westgate|kirkgate)[?.!\s]*$/i)?.[1] : null);
+  const stationFood=/\b(?:coffee|cafe|café|hot chocolate)\b/i.test(stationQuestion) || stationPrior?.constraints?.outing?.anchor || stationPrior?.constraints?.pendingStation;
+  if(stationFood && /\bwakefield\s+(?:(?:train|railway)\s+)?station\b/i.test(stationQuestion) && !stationName){
+    const state={...normaliseClientState(null),constraints:{pendingStation:true}};
+    attachStateCookie(res,state);
+    return res.status(200).json({reply:'Do you mean Wakefield Westgate or Wakefield Kirkgate? I’ll keep the coffee search close to that station.',state,sources:[],live:false,verification:'station-choice'});
+  }
+  if(stationName && stationFood && !/\b(?:tomorrow|next|yesterday|20\d{2})\b/i.test(stationQuestion)){
+    const label=`Wakefield ${stationName[0].toUpperCase()+stationName.slice(1).toLowerCase()} station`;
+    const previous=stationPrior?.constraints?.outing;
+    const anchor={id:'station:'+stationName.toLowerCase(),label,date:londonCalendar().today,start:new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())};
+    const state={...normaliseClientState(null),lastIntent:'food.nearby',area:label,constraints:{outing:{anchor,party:outingParty(stationQuestion,previous?.party),seating:previous?.seating,plan:{intent:'food_drink',needs:previous?.plan?.needs || ['coffee'],timing:'during'}}}};
+    const result=await answerPlannedOuting(messages,state,selectedOuting(state),state.constraints.outing.plan,outingServices());
+    attachStateCookie(res,result.state);
+    return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply),verification:'station-food-v1'});
+  }
+  if (((decodedToken || cookieState)?.constraints?.eventFocus?.id || (decodedToken || cookieState)?.constraints?.outing?.anchor)
       && /^(?:thanks(?: a lot)?|thank you(?: very much)?|cheers|great|lovely|brilliant|ok(?:ay)?|sounds good)[!.\s]*$/i.test(lastUserText(messages).trim())) {
     const state=decodedToken || cookieState;
     attachStateCookie(res,state);

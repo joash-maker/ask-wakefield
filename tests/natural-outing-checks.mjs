@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {reconcileWeekCards} from '../lib/event-week-window.js';
 import {outingTime} from '../lib/outing-time.js';
 import {contextualOutingPlan,fallbackOutingPlan} from '../lib/outing-planner.js';
 import {answerPlannedOuting} from '../lib/outing-food.js';
@@ -42,3 +43,8 @@ const next=await ask('And a hot chocolate?',{intent:'food_drink',needs:['coffee'
 assert.match(next.reply,/At 8:30pm.*Late Coffee/s);assert.doesNotMatch(next.reply,/Willow Coffee.*serving drinks/s);
 assert.equal(state.constraints.outing.requestedTime,'20:30');
 console.log('Natural outing checks passed: British times, long refinements, independent multi-excerpt discovery, social ownership, source/date/identity guards, late options and retained time.');
+
+const wx={title:'Light Up Wakefield',sourceUrl:'https://wxwakefield.co.uk/Whats-On/Details?event=light-up-wakefield',startDate:'2026-11-13',endDate:'2026-11-14',venue:'WX Wakefield Exchange'};
+const exp={...wx,sourceUrl:'https://experiencewakefield.co.uk/event/light-up-wakefield/',startDate:null,ongoing:true,venue:'Wakefield City Centre'};
+const reconciled=reconcileWeekCards([wx,exp]);assert.equal(reconciled.length,1);assert.equal(reconciled[0].startDate,'2026-11-13');assert.equal(reconciled[0].ongoing,false);assert.equal(reconciled[0].venue,'Wakefield City Centre');
+assert.equal(reconcileWeekCards([wx,{...exp,title:'Light Up Wakefield BSL Tours',sourceUrl:'https://experiencewakefield.co.uk/event/light-up-wakefield-bsl-tours/'}]).length,2);

@@ -5178,6 +5178,9 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
 }
 
 function buildResponseState(route, finalReply, evidence = {}, districtPlacesContext = null, priorState = null) {
+  // Answering a brief aside must not delete the signed outing. Explicit new
+  // requests have already cleared priorState in conversation scoping.
+  if(route.intent==='other' && priorState?.constraints?.outing) return {...priorState};
   let resultCards = [];
   if (route.intent.startsWith('events.')) resultCards = eventCardsFromEvidence(finalReply, { ...evidence, priorState });
   else if (route.intent === 'pharmacy.open' || route.intent === 'food.open_at') resultCards = verifiedPlaceCards(districtPlacesContext).slice(0, MAX_STATE_CARDS);

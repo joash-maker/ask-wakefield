@@ -44,6 +44,7 @@ globalThis.fetch=async(url,opts={})=>{
    return Response.json({content:[{type:'text',text:JSON.stringify(plans.has(q)?{intent:'food_drink',...plans.get(q)}:{intent:/parking/i.test(q)?'parking':'event'})}]});
   }
   if(b.system.startsWith('OUTING_MENU_CHECK_V2')){menus++;return Response.json({content:[{type:'web_search_tool_result',content:[{type:'web_search_result',url:menuUrl}]},{type:'text',text:JSON.stringify({menus:[{id:burger.id,url:menuUrl,quote:'Hot Chocolate with milk'}]})}]});}
+  if(b.messages?.some(m=>typeof m.content==='string'&&m.content.includes('What does BSL stand for?')))return Response.json({content:[{type:'text',text:'BSL stands for British Sign Language.'}]});
   throw new Error('Unexpected generic prose route');
  }
  return new Response('Not found',{status:404});
@@ -79,6 +80,9 @@ const interest=await ask('Light Up Wakefield sounds lovely.',week);
 assert.equal(interest.verification,'selected-event-discovery-v2');assert.match(interest.reply,/Light Up.*HAUS/s);
 const acknowledged=await ask('Cheers!',haus);
 assert.equal(acknowledged.verification,'outing-acknowledgement');assert.equal(acknowledged.state.constraints.outing.currentIds[0],haus.state.constraints.outing.currentIds[0]);
+const aside=await ask('What does BSL stand for?',haus);
+assert.match(aside.reply,/British Sign Language/);assert.equal(aside.state.constraints.outing.eventId,haus.state.constraints.outing.eventId,'A factual aside must preserve the signed outing');
+const back=await ask('Would that still work at 8:30pm?',aside);assert.match(back.reply,/HAUS closes at 8pm/);
 const exactDetail=await ask('Can you tell me a bit more about Light Up Wakefield?',week);
 const exactCoffee=await ask('Coffee places?',exactDetail);
 assert.match(exactCoffee.reply,/While you’re at Light Up/);assert.doesNotMatch(exactCoffee.reply,/Before Light Up/);

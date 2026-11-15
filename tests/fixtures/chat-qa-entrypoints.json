@@ -1,0 +1,200 @@
+[
+  {
+    "id": "starter-1",
+    "turns": [
+      "What free things can we do in Wakefield this weekend?"
+    ]
+  },
+  {
+    "id": "starter-2",
+    "turns": [
+      "Suggest indoor activities for a rainy day with children in the Wakefield district."
+    ]
+  },
+  {
+    "id": "starter-3",
+    "turns": [
+      "Help me find official parking information for Wakefield city centre."
+    ]
+  },
+  {
+    "id": "starter-4",
+    "turns": [
+      "What's on this week in Wakefield?"
+    ]
+  },
+  {
+    "id": "starter-5",
+    "turns": [
+      "What free or low-cost things can families do in Wakefield this week?"
+    ]
+  },
+  {
+    "id": "starter-6",
+    "turns": [
+      "Where can I get good food or coffee in Wakefield?"
+    ]
+  },
+  {
+    "id": "starter-7",
+    "turns": [
+      "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?"
+    ]
+  },
+  {
+    "id": "starter-8",
+    "turns": [
+      "What local clubs, walking groups and community groups can I join in Wakefield?"
+    ]
+  },
+  {
+    "id": "starter-9",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking or transport."
+    ]
+  },
+  {
+    "id": "starter-10",
+    "turns": [
+      "What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend."
+    ]
+  },
+  {
+    "id": "starter-11",
+    "turns": [
+      "Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want."
+    ]
+  },
+  {
+    "id": "starter-12",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source."
+    ]
+  },
+  {
+    "id": "activity-1",
+    "turns": [
+      "Help me find an activity in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-2",
+    "turns": [
+      "Help me find the right swimming lesson in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-3",
+    "turns": [
+      "Which Aspire gym or swimming facility is best for me in Wakefield?"
+    ]
+  },
+  {
+    "id": "activity-4",
+    "turns": [
+      "Tell me about Wakefield Harriers Junior Jets and other athletics options for children"
+    ]
+  },
+  {
+    "id": "activity-5",
+    "turns": [
+      "Help me find athletics for a teenager in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-6",
+    "turns": [
+      "Find me a running club in Wakefield that suits my ability"
+    ]
+  },
+  {
+    "id": "activity-7",
+    "turns": [
+      "Find a walking group near me in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-8",
+    "turns": [
+      "Find me a proper hiking or longer walking group around Wakefield"
+    ]
+  },
+  {
+    "id": "activity-9",
+    "turns": [
+      "Where can I play padel near Wakefield?"
+    ]
+  },
+  {
+    "id": "activity-10",
+    "turns": [
+      "Tell me about Calder Grove Cricket Club and how to get involved"
+    ]
+  },
+  {
+    "id": "activity-11",
+    "turns": [
+      "Find a junior football club in Wakefield for my child"
+    ]
+  },
+  {
+    "id": "activity-12",
+    "turns": [
+      "Tell me about Theatre Royal Wakefield Performance Academy for children"
+    ]
+  },
+  {
+    "id": "activity-13",
+    "turns": [
+      "Tell me about Code Club at Wakefield Library"
+    ]
+  },
+  {
+    "id": "activity-14",
+    "turns": [
+      "Find a Scout, Cub, Beaver or Squirrel group near me in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-15",
+    "turns": [
+      "Tell me about dance classes for children at ElliTe Studios Wakefield"
+    ]
+  },
+  {
+    "id": "activity-16",
+    "turns": [
+      "Tell me about The Verge House of Performance in Wakefield and which dance or performance track might suit my child"
+    ]
+  },
+  {
+    "id": "activity-17",
+    "turns": [
+      "Find martial arts or Taekwondo for a child in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-18",
+    "turns": [
+      "Where can an 11 to 15-year-old use a gym in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-19",
+    "turns": [
+      "Find English or maths tutoring for a child in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-20",
+    "turns": [
+      "Help me find music lessons for a child in Wakefield"
+    ]
+  },
+  {
+    "id": "activity-21",
+    "turns": [
+      "Tell me about Dad Matters and other parent support groups in Wakefield"
+    ]
+  }
+]

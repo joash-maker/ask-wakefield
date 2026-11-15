@@ -210,7 +210,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <h2 class="section-title" id="ask-title">What would you like to know?</h2>
       <p class="section-intro">Ask about events, family activities, food and coffee, sport, clubs, transport or local services. For things that change, Ask Wakefield checks current sources where available.</p>
     </div>
-    <div class="quick-asks" aria-label="Question ideas"><button type="button" onclick="askFromDiscover('What free things can we do in Wakefield this weekend?')">Free things this weekend ↗︎</button><button type="button" onclick="askFromDiscover('Suggest indoor activities for a rainy day in the Wakefield district.')">A rainy day with the kids ↗︎</button><button type="button" onclick="askFromDiscover('Help me find official parking information for Wakefield city centre.')">Parking in town ↗︎</button></div>
+    <div class="quick-asks" aria-label="Question ideas"><button type="button" onclick="askFromDiscover('What free things can we do in Wakefield this weekend?')">Free things this weekend ↗︎</button><button type="button" onclick="askFromDiscover('Suggest indoor activities for a rainy day with children in the Wakefield district.')">A rainy day with the kids ↗︎</button><button type="button" onclick="askFromDiscover('Help me find official parking information for Wakefield city centre.')">Parking in town ↗︎</button></div>
     <div class="section-note">Independent service. Source links where available. Check important details before travelling.</div>
   </div>
 
@@ -421,6 +421,7 @@ var chatHistory = [];
 var stateToken = null;
 var chipsGone = false;
 var isSending = false;
+var chatGeneration = 0;
 
 // SAVED CHAT
 // Keeps the current conversation for this tab only (sessionStorage), so a refresh
@@ -468,7 +469,7 @@ function restoreChat() {
   });
   msgsEl.querySelectorAll('.followup-chips').forEach(function(container) {
     container.querySelectorAll('.fu-chip').forEach(function(btn) {
-      btn.onclick = function() { container.remove(); sendMessage(btn.textContent); };
+      btn.onclick = function() { if (isSending || !navigator.onLine) return; container.remove(); sendMessage(btn.textContent); };
     });
   });
   msgsEl.scrollTop = msgsEl.scrollHeight;
@@ -608,16 +609,19 @@ function sendMessage(override) {
   }
 
   // XHR request
+  var generation = chatGeneration;
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/chat', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.timeout = 120000;
   var progressTimer = setTimeout(function() {
+    if (generation !== chatGeneration) return;
     bBody.innerHTML = '<div class="searching"><div class="spin"></div>I’m checking the details for you...</div>';
   }, 12000);
 
   xhr.onload = function() {
     clearTimeout(progressTimer);
+    if (generation !== chatGeneration) return;
     try {
       var data = JSON.parse(xhr.responseText);
       var reply = (data && data.reply) ? data.reply : "I'm sorry, I couldn't generate a response. Please try again.";
@@ -673,6 +677,7 @@ function sendMessage(override) {
 
   xhr.onerror = function() {
     clearTimeout(progressTimer);
+    if (generation !== chatGeneration) return;
     bBody.innerHTML = fmt("I couldn't connect. Check your signal and send your question again. It's still in the box.");
     restoreFailed();
     isSending = false;
@@ -681,6 +686,7 @@ function sendMessage(override) {
 
   xhr.ontimeout = function() {
     clearTimeout(progressTimer);
+    if (generation !== chatGeneration) return;
     bBody.innerHTML = fmt("I'm taking longer than expected. Your question is still in the box, so try sending it again in a moment.");
     restoreFailed();
     isSending = false;
@@ -718,7 +724,8 @@ sendBtn.onclick = function() { sendMessage(); };
 
 // FOLLOW-UPS
 function renderFollowups(followups, afterEl) {
-  if (!followups || !followups.length) return;
+  if (!Array.isArray(followups) || !followups.length || afterEl.isConnected === false) return;
+  followups = followups.filter(function(q) { return typeof q === 'string' && q.trim() && q.length <= 180; }).slice(0, 3);
   var container = document.createElement('div');
   container.className = 'followup-chips';
   var lbl = document.createElement('div');
@@ -729,7 +736,7 @@ function renderFollowups(followups, afterEl) {
     var btn = document.createElement('button');
     btn.className = 'fu-chip';
     btn.textContent = q;
-    btn.onclick = function() { container.remove(); sendMessage(q); };
+    btn.onclick = function() { if (isSending || !navigator.onLine) return; container.remove(); sendMessage(q); };
     container.appendChild(btn);
   });
   // Add follow-up suggestions without moving the reader away from the answer.
@@ -739,24 +746,25 @@ function renderFollowups(followups, afterEl) {
 }
 
 function getFollowups(question, answer, afterEl) {
+  var generation = chatGeneration;
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/followups', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.timeout = 10000;
   xhr.onload = function() {
-    clearTimeout(progressTimer);
+    if (generation !== chatGeneration || xhr.status < 200 || xhr.status >= 300) return;
     try {
       var data = JSON.parse(xhr.responseText);
       renderFollowups(data.followups, afterEl);
     } catch(e) {}
   };
-  xhr.onerror = xhr.ontimeout = function() {
-    clearTimeout(progressTimer);};
-  xhr.send(JSON.stringify({ question: question, answer: answer.substring(0, 300) }));
+  xhr.onerror = xhr.ontimeout = function() {};
+  try { xhr.send(JSON.stringify({ question: question, answer: answer.substring(0, 300) })); } catch(e) {}
 }
 
 // RESET CHAT
 function resetChat() {
+  chatGeneration++;
   clearSavedChat();
   chatHistory = [];
   stateToken = null;

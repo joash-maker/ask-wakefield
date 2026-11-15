@@ -1,4 +1,6 @@
 import { load } from 'cheerio';
+import { activityDiscovery } from '../lib/activity-discovery.js';
+import { chatNavigation } from '../lib/chat-navigation.js';
 import { planOutingTurn } from '../lib/outing-planner.js';
 import { discoverAnnouncements } from '../lib/outing-announcements.js';
 import { broadCoffeeDiscovery, renderCoffeeDiscovery } from '../lib/coffee-discovery.js';
@@ -1967,7 +1969,7 @@ function verificationFallback(messages) {
     return 'I could not verify a safe, permitted launch point from an official source just now, so I do not want to send you onto the wrong water. Pugneys Country Park currently prohibits entering the lake, including kayaking and paddleboarding. For navigable waterways around Wakefield, check the Canal & River Trust guidance for the Wakefield Branch of the Aire & Calder Navigation.';
   }
   if (/parking|free parking/.test(last)) {
-    return 'Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+    return 'I couldn’t verify the current terms for a particular car park. Check [Wakefield Council’s car-park guide](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/) and the signs at your chosen car park for hours, charges and ticket requirements. I haven’t checked live spaces.';
   }
   if (/tk\s?maxx?|store|shop/.test(last)) {
     return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
@@ -5267,14 +5269,17 @@ export default async function handler(req, res) {
   // edited to mark any event as free.
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
-  const cookieState = stateFromCookie(req);
+  // Modern clients send null for New chat. Only legacy clients that omit
+  // the token field may recover a conversation from the HttpOnly cookie.
+  const explicitReset=Object.prototype.hasOwnProperty.call(req.body || {},'stateToken') && req.body.stateToken===null;
+  const cookieState = explicitReset ? null : stateFromCookie(req);
   const stationPrior=decodedToken || cookieState;
   const stationQuestion=lastUserText(messages);
   const stationName=stationQuestion.match(/\b(westgate|kirkgate)(?:\s+(?:train|railway))?\s+station\b/i)?.[1]
     || (stationPrior?.constraints?.pendingStation ? stationQuestion.match(/^\s*(westgate|kirkgate)[?.!\s]*$/i)?.[1] : null);
   const stationFood=/\b(?:coffee|cafe|café|hot chocolate)\b/i.test(stationQuestion) || stationPrior?.constraints?.outing?.anchor || stationPrior?.constraints?.pendingStation;
   if(stationFood && /\bwakefield\s+(?:(?:train|railway)\s+)?station\b/i.test(stationQuestion) && !stationName){
-    const state={...normaliseClientState(null),constraints:{pendingStation:true}};
+    const state={...normaliseClientState(null),constraints:{pendingStation:true,outing:{party:outingParty(stationQuestion,stationPrior?.constraints?.outing?.party),seating:/\b(?:sit(?:ting)? down|seating)\b/i.test(stationQuestion),plan:{needs:['coffee'],timing:'during'}}}};
     attachStateCookie(res,state);
     return res.status(200).json({reply:'Do you mean Wakefield Westgate or Wakefield Kirkgate? I’ll keep the coffee search close to that station.',state,sources:[],live:false,verification:'station-choice'});
   }
@@ -5287,7 +5292,7 @@ export default async function handler(req, res) {
     attachStateCookie(res,result.state);
     return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply),verification:'station-food-v1'});
   }
-  if (((decodedToken || cookieState)?.constraints?.eventFocus?.id || (decodedToken || cookieState)?.constraints?.outing?.anchor)
+  if (((decodedToken || cookieState)?.constraints?.activitySearch || (decodedToken || cookieState)?.constraints?.coffeeDiscovery || (decodedToken || cookieState)?.constraints?.eventFocus?.id || (decodedToken || cookieState)?.constraints?.outing?.anchor)
       && /^(?:thanks(?: a lot)?|thank you(?: very much)?|cheers|great|lovely|brilliant|ok(?:ay)?|sounds good)[!.\s]*$/i.test(lastUserText(messages).trim())) {
     const state=decodedToken || cookieState;
     attachStateCookie(res,state);
@@ -5339,6 +5344,16 @@ export default async function handler(req, res) {
     const selected=await enrichSelectedOuting(discoveredEvent,messages,outingServices());
     attachStateCookie(res,selected.state);
     return res.status(200).json({...selected,reply:finaliseUserFacingReply(selected.reply),live:true,verification:'selected-event-discovery-v2'});
+  }
+  const navigation=chatNavigation(lastUserText(messages),conversationState);
+  if(navigation){
+    attachStateCookie(res,navigation.state);
+    return res.status(200).json(navigation);
+  }
+  const activity=await activityDiscovery(lastUserText(messages),conversationState);
+  if(activity){
+    attachStateCookie(res,activity.state);
+    return res.status(200).json({...activity,reply:finaliseUserFacingReply(activity.reply)});
   }
   const scoped = scopeConversation(messages);
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
@@ -5591,15 +5606,16 @@ export default async function handler(req, res) {
     cards = await verifyWeeklySessionCards(cards, weekWindow);
     // Do not silently relax constraints unsupported by this structured view.
     const unsupported = weeklyExtraConstraints(currentText);
-    if (ops.price || ops.day || unsupported.length) {
+    if (ops.day || unsupported.length) {
       return res.status(200).json({
         reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
         sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
       });
     }
-    const filters = { ...(ops.family ? { family: true } : {}), ...(cityArea ? {area:cityArea} : {}) };
+    const filters = { ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}) };
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
-    const view = filters.family ? cards.filter(card => card.familyVerified) : cards;
+    if(filters.price)cards=await refreshEventCardsForPriceV16(cards);
+    const view = cards.filter(card=>(!filters.family || card.familyVerified) && (!filters.price || card.priceStatus===filters.price));
     const state = buildEventStateV16(cards, clientState, view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventFocus:null, eventWeek: { ...weekWindow, filters } };
     state.lastIntent = 'events.whats_on';

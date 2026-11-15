@@ -58,3 +58,7 @@ assert(calls>0);
 const mismatch=renderCoffeeDiscovery([{role:'user',content:'Coffee places?'}],{places:[{id:'a',name:'Only Checked Cafe',businessStatus:'OPERATIONAL',servesCoffee:true,serviceVerified:true,googleMapsUri:'https://maps.google.com/?cid=1'}],sources:[{title:'Unrelated Cafe',url:'https://unrelated.example/'}]},null,'Wakefield city centre');
 assert.equal(mismatch.sources.length,1);assert.equal(mismatch.sources[0].title,'Only Checked Cafe - Google Places branch listing');
 console.log('Coffee discovery passed: exact source/name/address membership, general vs open-now intent, fresh Sunday hours, city geography, more pagination, signed area retention and unavailable/unknown evidence.');
+
+const resetRes={setHeader(){},status(code){this.code=code;return this;},json(body){this.body=body;return this;}};
+await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'coffee-explicit-reset',cookie:'aw_state='+first.stateToken},socket:{},body:{messages:[{role:'user',content:'Which of those are free?'}],stateToken:null}},resetRes);
+assert.equal(resetRes.code,200);assert.equal(resetRes.body.verification,'no-prior-list');

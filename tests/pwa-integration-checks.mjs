@@ -7,7 +7,7 @@ const fn=html.slice(html.indexOf('function sendMessage('),html.indexOf('\nfuncti
 const messages=[];let notices=0,request;
 const element=()=>({children:[],appendChild(child){this.children.push(child)},classList:{add(){}},style:{}});
 const timers=new Map(),cleared=[];let timerId=0;
-const ctx={saveChat(){},setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>{cleared.push(id);timers.delete(id);},fmt:x=>x,isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend',focus(){}},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
+const ctx={chatGeneration:0,saveChat(){},setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>{cleared.push(id);timers.delete(id);},fmt:x=>x,isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend',focus(){}},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
 vm.createContext(ctx);vm.runInContext(fn+';sendMessage();',ctx);
 assert.equal(ctx.inputEl.value,'Free things this weekend');assert.equal(ctx.isSending,false);assert.equal(ctx.sendBtn.disabled,false);assert.equal(ctx.chatHistory.length,0);assert.equal(messages.length,0);assert.equal(notices,1);
 ctx.navigator.onLine=true;vm.runInContext('sendMessage();',ctx);
@@ -26,3 +26,9 @@ for(const icon of manifest.icons)assert(existsSync(new URL('..'+icon.src,import.
 for(const asset of cached)assert(existsSync(new URL('..'+asset,import.meta.url)),asset);
 assert(html.includes('class="mobile-nav"'));assert(html.includes('Your district.'));assert(html.includes('--pwa-notice-bottom:calc(78px + env(safe-area-inset-bottom))'));
 console.log('Integration checks passed: actual offline/reconnect send, service worker install/cleanup, API bypass, network/offline navigation, assets and redesign preservation.');
+
+// A response from before New chat cannot overwrite a new conversation.
+ctx.inputEl.value='New question';vm.runInContext('sendMessage();',ctx);
+const stale=request;ctx.chatGeneration++;ctx.chatHistory=[];ctx.stateToken=null;ctx.isSending=true;
+stale.status=200;stale.responseText=JSON.stringify({reply:'Old answer',stateToken:'old-token'});stale.onload();
+assert.equal(ctx.chatHistory.length,0);assert.equal(ctx.stateToken,null);assert.equal(ctx.isSending,true);

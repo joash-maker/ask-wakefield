@@ -1,0 +1,317 @@
+[
+  {
+    "id": "activity-1",
+    "label": "activity-1",
+    "turns": [
+      {
+        "question": "Help me find an activity in Wakefield",
+        "status": 200,
+        "seconds": 11.3,
+        "reply": "I'd be happy to help you find something to do in Wakefield. To point you toward the right option, it'd help to know a bit more:\n\n- What kind of activity interests you, something outdoors, cultural, sporty, social, hands-on, or something else?\n- Are you thinking today, this weekend, or another time?\n- Are you looking on your own, with family, with friends, or with a specific group?\n- Any particular area of the district, or are you flexible across Wakefield?\n\nOnce I know a bit more, I can give you some concrete suggestions.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-2",
+    "label": "activity-2",
+    "turns": [
+      {
+        "question": "Help me find the right swimming lesson in Wakefield",
+        "status": 200,
+        "seconds": 11.5,
+        "reply": "I'd like to help you find a swimming lesson that suits you. To narrow down the best options, could you tell me:\n\n- Age group, is this for a child, teenager or adult?\n- What you're looking for, beginner lessons, improver sessions, specific stroke coaching, or something else?\n\nThat way I can point you toward the most relevant providers in the district.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-3",
+    "label": "activity-3",
+    "turns": [
+      {
+        "question": "Which Aspire gym or swimming facility is best for me in Wakefield?",
+        "status": 200,
+        "seconds": 13.6,
+        "reply": "I'd need to know what matters most to you to give a sensible answer. Are you after swimming, gym equipment, classes, or a mix? And do you have a preference for location, city centre, Ossett, Castleford or Normanton area?\n\nAspire runs four leisure centres across the district: Aspire@ThePark in Wakefield city centre (WF2 8QZ), Sun Lane in Ossett (WF5 9DZ), Minsthorpe near Normanton (WF9 2HL), and Castleford (WF10 1EB). Each will have pools and gym facilities, but their exact layouts, class schedules and peak times vary. Once you tell me your priority and preferred area, I can point you toward the right one. You can also ring Aspire on 01924 367 300 or check aspire.org.uk for the full facility breakdown at each site.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-6",
+    "label": "activity-6",
+    "turns": [
+      {
+        "question": "Find me a running club in Wakefield that suits my ability",
+        "status": 200,
+        "seconds": 8.3,
+        "reply": "I'd be happy to help you find a running club. To point you toward the right fit, it'd help to know: what's your current ability level, are you a beginner just starting out, somewhere in the middle, or more experienced?\n\nAlso, do you have a preference for the day and time you'd like to run?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-5",
+    "label": "activity-5",
+    "turns": [
+      {
+        "question": "Help me find athletics for a teenager in Wakefield",
+        "status": 200,
+        "seconds": 12.8,
+        "reply": "Athletics for teenagers in Wakefield, that's a solid choice. The main option is Wakefield District Harriers, a traditional athletics club that trains at Thornes Park. They offer track and field for different age groups and abilities, and teenagers typically feed into their junior or senior sections depending on age and experience.\n\nTo give you the most useful current details, training days, times, fees and how to join, I'd need to check their live schedule, as club sessions do shift. Their official site will have the exact session times for your teenager's age group.\n\nBeyond Harriers, Aspire runs leisure centres across the district (Ossett, Castleford, Minsthorpe, The Park in Wakefield) and offer gym, swimming and fitness facilities that support athletic training. Some also run sports camps in school holidays.\n\nWhat age is the teenager, and are they keen on track events, field events, or a mix? That'll help me point you toward the right fit.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-4",
+    "label": "activity-4",
+    "turns": [
+      {
+        "question": "Tell me about Wakefield Harriers Junior Jets and other athletics options for children",
+        "status": 200,
+        "seconds": 13.5,
+        "reply": "I can't verify current details about Wakefield Harriers Junior Jets from a live source, so I can't tell you whether it's still running, what days/times training happens, or age groups served. Athletics clubs update their junior programmes regularly.\n\nYour best move is to check Wakefield District Harriers' official site or contact them directly, they'll give you current junior squad info, registration and training schedules.\n\nBeyond that, Aspire (the council's leisure operator) runs sessions across four sites: Aspire@ThePark in Ossett, Sun Lane in Ossett, Minsthorpe and Castleford. They offer various sports and fitness classes. Call 01924 367 300 or visit aspire.org.uk to ask whether they run junior athletics or track-and-field sessions.\n\nWakefield Thornes parkrun is a free weekly running event on Saturday mornings at Thornes Park, but that's for adult runners rather than a junior athletics club structure, though some families do use it as a stepping stone.\n\nWhat's your child's age, and are you looking for competitive athletics, casual running, or general fitness coaching?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-7",
+    "label": "activity-7",
+    "turns": [
+      {
+        "question": "Find a walking group near me in Wakefield",
+        "status": 200,
+        "seconds": 11.5,
+        "reply": "I'd be happy to help you find a walking group in Wakefield. To give you the most useful options, I need to know a bit more:\n\n- Which part of Wakefield are you in or nearest to? (City centre, Horbury, Ossett, Castleford, Pontefract, or another area?)\n- Are you looking for a casual local walking group, or something more structured like a rambling club?\n- Any preference for day of the week or time of day?\n\nOnce I know your area, I can search for current groups and verify their meeting times for you.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-9",
+    "label": "activity-9",
+    "turns": [
+      {
+        "question": "Where can I play padel near Wakefield?",
+        "status": 200,
+        "seconds": 10.6,
+        "reply": "I couldn't find verified padel courts in the Wakefield district knowledge base. Padel is a growing sport but not yet widely available in this area.\n\nYour best options are to check:\n\n- Local leisure centres: Aspire runs several leisure facilities across the district (Ossett, Castleford, Minsthorpe and Wakefield city centre), they may have added padel courts or have plans. Ring them on 01924 367 300 or visit aspire.org.uk to ask.\n\n- Nearby cities: Leeds and Sheffield have dedicated padel clubs that may be worth the drive if you're keen. Search \"padel courts near me\" with your postcode on Google Maps or the Padel UK club finder.\n\n- Tennis clubs: Some tennis clubs are converting courts or adding padel alongside. Wakefield District Harriers and local leisure sites might point you toward any hybrid options.\n\nIf you find a padel venue opening in Wakefield, let me know, it's the kind of thing that changes quickly and would be useful to track.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-8",
+    "label": "activity-8",
+    "turns": [
+      {
+        "question": "Find me a proper hiking or longer walking group around Wakefield",
+        "status": 200,
+        "seconds": 12.0,
+        "reply": "For a proper hiking or longer walking group around Wakefield, I'd need to search live sources because club schedules and group activities change regularly. Let me check what's currently active.\n\nA few useful avenues to start with:\n\nWakefield District Harriers is an athletics and running club based locally, but I'd need to verify whether they run dedicated walking/hiking sessions or if it's primarily a running group. Their website will have current activity details.\n\nRamblers groups operate across the district, the Ramblers organisation has local groups that run regular walks of varying distances. Search ramblers.org.uk and filter for Wakefield-area groups, which should list their current walk schedules and difficulty levels.\n\nOpen-access moorland and country parks like Newmillerdam Country Park have waymarked trails, and local outdoor or hiking meetup groups sometimes organise walks there. Meetup.com and Facebook local-groups searches often surface active walking collectives.\n\nAspire Leisure (aspire.org.uk or 01924 367 300) runs some outdoor activities across Wakefield venues, so it's worth asking them whether they organise group walks.\n\nWhat sort of distance or terrain appeals to you, moorland, woodland, longer day walks, or something more gentle? And do you prefer a structured club atmosphere or a more casual drop-in meetup?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-11",
+    "label": "activity-11",
+    "turns": [
+      {
+        "question": "Find a junior football club in Wakefield for my child",
+        "status": 200,
+        "seconds": 9.2,
+        "reply": "I'd like to help you find a junior football club. To narrow down the search, a couple of quick things would help:\n\nWhat age is your child, and do you have a preferred area within the Wakefield district, Wakefield city centre, or somewhere like Horbury, Ossett, Castleford or another local area?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-12",
+    "label": "activity-12",
+    "turns": [
+      {
+        "question": "Tell me about Theatre Royal Wakefield Performance Academy for children",
+        "status": 200,
+        "seconds": 9.6,
+        "reply": "I'm not able to find current information about a Theatre Royal Wakefield Performance Academy. The Theatre Royal's official website lists their main performance programme and box office details, but I don't see a dedicated children's academy or structured performance course advertised there at the moment.\n\nIt's worth checking directly with the Theatre Royal to ask about any youth performance programmes, workshops or classes they may run. You can contact them via their box office at theatreroyalwakefield.co.uk or call them directly, they'll be able to tell you whether they offer anything like that now and what the age range and cost would be.\n\nIf you're looking for children's drama classes or performance training in the Wakefield district more broadly, I can search for local alternatives if that would help.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-10",
+    "label": "activity-10",
+    "turns": [
+      {
+        "question": "Tell me about Calder Grove Cricket Club and how to get involved",
+        "status": 200,
+        "seconds": 12.7,
+        "reply": "I can't verify current details about Calder Grove Cricket Club, membership, training days, fixtures or how to join, from reliable sources right now. Cricket clubs update their information regularly, so the best way forward is to contact them directly or check their official website/social media.\n\nIf you'd like, I can help you find other ways in. The England and Wales Cricket Board (ecb.org.uk) has a club finder tool, and Wakefield Council's leisure service Aspire runs cricket sessions at several centres across the district, try aspire.org.uk or call 01924 367 300 to ask what's available locally.\n\nWhat area of Wakefield are you based in? That might help narrow down nearby clubs and Aspire centres worth contacting.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-15",
+    "label": "activity-15",
+    "turns": [
+      {
+        "question": "Tell me about dance classes for children at ElliTe Studios Wakefield",
+        "status": 200,
+        "seconds": 10.1,
+        "reply": "I'm not able to verify current details for ElliTe Studios Wakefield from a trusted source right now. That doesn't mean it isn't there, it just means I can't confidently give you information about their dance classes, ages, times, prices or availability without checking first.\n\nThe best route is to contact them directly or visit their official page to ask about the classes that suit your child's age and interests. If you'd like, I can suggest some alternative ways to find dance classes in the Wakefield district, or point you toward a useful local resource. What age group are you looking for?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-13",
+    "label": "activity-13",
+    "turns": [
+      {
+        "question": "Tell me about Code Club at Wakefield Library",
+        "status": 200,
+        "seconds": 12.4,
+        "reply": "I can't find verified current information about Code Club at Wakefield Library in my knowledge base. Code Club is a real UK programme that teaches coding to young people, but I'd need to check the library's current offering to give you accurate details about sessions, ages, times, how to join and whether places are available.\n\nYour best options are:\n\n- Wakefield Library direct: Phone them or visit in person to ask about Code Club sessions, registration and any waiting list.\n- Wakefield Council: 0345 8 506 506 (Mon\u2013Fri 8:30am\u20135pm) can point you to current library programmes.\n- Code Club UK website: codeclubuk.org, search for Wakefield venues to see if the library is listed with current session details.\n\nIf you've got specific questions about what Code Club offers or how it works, I'm happy to help with those.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-14",
+    "label": "activity-14",
+    "turns": [
+      {
+        "question": "Find a Scout, Cub, Beaver or Squirrel group near me in Wakefield",
+        "status": 200,
+        "seconds": 11.4,
+        "reply": "I don't have a current directory of Scout groups, Cubs, Beavers or Squirrels in the Wakefield district in my knowledge base. Scout membership and group locations can change, and it's best to find your nearest group from an up-to-date source.\n\nThe quickest way is to visit scouts.org.uk and use their group finder tool, you can search by postcode or area. That will show you all active sections near you: Squirrels (age 4\u20136), Beavers (6\u20138), Cubs (8\u201310\u00b75), Scouts (10\u00b75\u201314), Venturers (14\u201317) and Explorers (17\u201325).\n\nIf you know your postcode, you can search it directly on their site. You'll see which groups have spaces available and can contact the local section leader for details about meeting times, fees and activities.\n\nIs there a particular area of Wakefield you're looking in, or would you like any other suggestions for youth activities in the district?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-16",
+    "label": "activity-16",
+    "turns": [
+      {
+        "question": "Tell me about The Verge House of Performance in Wakefield and which dance or performance track might suit my child",
+        "status": 200,
+        "seconds": 12.0,
+        "reply": "I can't verify current information about The Verge House of Performance in Wakefield from my knowledge base or a live search. It's possible it's a newer venue, operates under a different name, or I simply don't have details on it yet.\n\nTo find out what's suitable for your child, I'd suggest:\n- Searching the venue's own website or social media for their current programme and age guidance\n- Checking Experience Wakefield (experiencewakefield.co.uk) for Wakefield's performance listings\n- Looking at WX Wakefield Exchange (wxwakefield.co.uk/Whats-On) if the venue is linked to their booking system\n\nIf you can give me your child's age and what kind of performance they enjoy, dance, theatre, music, circus, I can suggest other verified Wakefield and district venues and events that might be a good fit instead.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-17",
+    "label": "activity-17",
+    "turns": [
+      {
+        "question": "Find martial arts or Taekwondo for a child in Wakefield",
+        "status": 200,
+        "seconds": 12.7,
+        "reply": "I don't have a verified current list of Taekwondo clubs or martial-arts providers in the Wakefield district in my curated knowledge base. Rather than guess at outdated contact details, here's how to find what's on offer:\n\nBest starting points:\n\n- Aspire (Wakefield Council's leisure service) runs classes across several sites including Ossett and Castleford. Ring 01924 367 300 or visit aspire.org.uk to check their current martial-arts, combat-sports or kids' activity timetables.\n- Wakefield Mumbler (wakefield.mumbler.co.uk) is the local family community and often lists current kids' classes and activity groups across the district, including martial arts.\n- Google Maps / local search for \"Taekwondo Wakefield\" or \"martial arts Wakefield\" will show current clubs with reviews, addresses and contact numbers.\n- British Taekwondo (britishtaekwondo.org.uk) has a club finder, search for affiliated clubs near Wakefield postcodes.\n\nWhen you find a club, check whether they run beginner sessions for children, what the age/belt requirements are, and whether there's a trial class.\n\nIs there a particular age or part of the Wakefield district you're looking in? That might help narrow it down.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-18",
+    "label": "activity-18",
+    "turns": [
+      {
+        "question": "Where can an 11 to 15-year-old use a gym in Wakefield",
+        "status": 200,
+        "seconds": 13.8,
+        "reply": "Gyms with junior memberships or supervised young-person access in the Wakefield district include:\n\nAspire Leisure centres run four facilities across the district, Aspire@ThePark in Wakefield city centre (WF2 8QZ), Ossett (WF5 9DZ), Minsthorpe (WF9 2HL) and Castleford (WF10 1EB). They offer swimming, sports halls and gym facilities. Junior gym access and age-specific memberships depend on the centre and the young person's age within that 11\u201315 range. Some centres may require supervision or junior induction; others may have dedicated junior gym sessions or times. You'd need to contact Aspire directly to confirm exact age thresholds, membership costs and any parental consent or supervision rules for your specific age group.\n\nPhone Aspire on 01924 367 300 or visit aspire.org.uk to discuss junior gym access and current pricing.\n\nSome independent gyms in Wakefield city centre may also offer junior memberships, though I'd recommend verifying current provision with Aspire first as the council-run centres are the main local option with multiple sites. For exact details on age-of-entry, induction requirements and whether an adult needs to be present, you'll need to call ahead, membership terms do vary.\n\nFor official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-19",
+    "label": "activity-19",
+    "turns": [
+      {
+        "question": "Find English or maths tutoring for a child in Wakefield",
+        "status": 200,
+        "seconds": 12.3,
+        "reply": "I don't have a curated list of tutoring services in my Wakefield knowledge base, so I can't give you verified local tutors or centres with current rates and availability.\n\nHere are the most practical ways to find English or maths tutoring:\n\nSearch platforms: Tutorful, Wyzant, Care.com and Tutor Hunt let you filter by location (Wakefield), subject and age group. You can see tutor profiles, rates and reviews.\n\nLocal tuition centres: Search Google Maps or your preferred search engine for \"maths tutor Wakefield\" or \"English tuition Wakefield\" to find established local centres. Check their current opening hours, whether they offer one-to-one or group tuition, and pricing before contacting them.\n\nSchools and councils: Ask your child's school if they recommend tutors or run catch-up programmes. Wakefield Council may have information on educational support services, you can contact them on 0345 8 506 506 (Mon\u2013Fri 8:30am\u20135pm).\n\nWord of mouth: Local parent groups such as Wakefield Mumbler (wakefield.mumbler.co.uk) often share tutor recommendations.\n\nWhat age is your child, and are you looking for one-to-one tutoring or group sessions?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-20",
+    "label": "activity-20",
+    "turns": [
+      {
+        "question": "Help me find music lessons for a child in Wakefield",
+        "status": 200,
+        "seconds": 10.9,
+        "reply": "I'd be happy to help you find music lessons for a child in Wakefield. To point you toward the best options, it's useful to know a bit more:\n\n- What age is the child, and what instrument or type of music are you interested in?\n- Would you prefer a private tutor, a music school, or a community group?\n- Do you have an area of Wakefield in mind, or are you flexible about location?\n\nThat said, here are some starting points worth exploring:\n\nWakefield Council's music service offers instrumental lessons for school-age children across the district. Visit wakefield.gov.uk or call 0345 8 506 506 to ask about current availability, instruments offered and fees.\n\nLocal independent music teachers are often advertised through community noticeboards, libraries and parent networks like Wakefield Mumbler (wakefield.mumbler.co.uk), which may have recommendations or posts from other families.\n\nLeisure centres run by Aspire (aspire.org.uk, 01924 367 300) sometimes offer music classes or know local tutors, worth a call to their main site at The Park, Sun Lane Ossett.\n\nSchool music departments can often recommend private tutors or school-based lesson schemes, especially if your child is already at a Wakefield school.\n\nOnce you've narrowed down what you're after, I can help you find specific venues or tutors.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-21",
+    "label": "activity-21",
+    "turns": [
+      {
+        "question": "Tell me about Dad Matters and other parent support groups in Wakefield",
+        "status": 200,
+        "seconds": 10.3,
+        "reply": "Dad Matters is a support group for fathers across West Yorkshire, including Wakefield. It's a friendly space where dads can connect, share experiences and get practical support on parenting, mental health and family life. They run regular meet-ups and online sessions.\n\nBeyond Dad Matters, Wakefield has a solid network of parent and family groups worth knowing about:\n\nWakefield Mumbler is the main hub, wakefield.mumbler.co.uk. It's a lively community for parents and carers with listings of baby and toddler groups, classes, family activities and local meet-ups across the district. Very useful for finding what's actually running week to week.\n\nSure Start centres (now integrated into early-help services) run baby and toddler sessions, parenting courses and family support. Check wakefield.gov.uk/childrens-services for your local centre.\n\nChildren's centres and libraries often host rhyme time, story sessions and parent-and-toddler groups, useful for informal meet-ups as well as activities. Library opening hours and group schedules are on the council website.\n\nPeer support and online groups exist for specific interests, postnatal support, single parents, additional needs, mental health and so on. Wakefield Mumbler and your GP/health visitor are good starting points to find the right fit.\n\nFor current Dad Matters meet-up times and locations in Wakefield, check their website or get in touch directly, schedules can shift. If you're looking for something specific (mental health support, single parents, additional needs parenting), let me know and I can point you toward verified groups or services.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  }
+]

@@ -90,3 +90,18 @@ assert.doesNotMatch(sundayReply,/Christmas Festival/);
 assert.match(sundayReply,/couldn’t verify any remaining one-day events/);
 assert.match(sundayReply,/Opening days and individual sessions are not confirmed/);
 console.log('Sunday checks passed: end-clock cutoff, London BST, missing and overnight clocks, concise runs and explicit visit uncertainty.');
+
+const offer='Would you like me to check what’s on next week?';
+assert(formatWeekCards([festival],sundayWindow).endsWith(offer));
+assert(formatWeekCards([],sundayWindow).endsWith(offer));
+assert(!formatWeekCards([],eventWeekWindow('this week',fri)).includes(offer));
+assert(!formatWeekCards([],eventWeekWindow('next week',new NativeDate('2026-11-15T12:00:00Z'))).includes(offer));
+globalThis.Date=class extends NativeDate {constructor(...args){super(...(args.length?args:['2026-11-15T12:00:00Z']))} static now(){return NativeDate.parse('2026-11-15T12:00:00Z')}};
+const sundayFirst=await askWithState("What's on this week in Wakefield?");
+assert(sundayFirst.reply.includes(offer));
+const yesResult={headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};
+await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'weekly-sunday-yes'},socket:{},body:{messages:[{role:'user',content:"What's on this week in Wakefield?"},{role:'assistant',content:sundayFirst.reply},{role:'user',content:'Yes please'}],stateToken:sundayFirst.stateToken}},yesResult);
+assert.equal(yesResult.statusCode,200);
+assert.equal(yesResult.body.state.constraints.eventWeek.kind,'next-week');
+assert(!yesResult.body.reply.includes(offer),'Do not repeat the offer in a next-week answer');
+console.log('Sunday offer checks passed: populated and empty lists, weekday/next-week exclusion, signed-state Yes acceptance.');

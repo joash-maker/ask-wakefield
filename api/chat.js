@@ -12,7 +12,7 @@ import { programmeConversation, parkingConversation } from '../lib/event-convers
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
-import { eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
+import { weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -5282,6 +5282,18 @@ export default async function handler(req, res) {
   // the token field may recover a conversation from the HttpOnly cookie.
   const explicitReset=Object.prototype.hasOwnProperty.call(req.body || {},'stateToken') && req.body.stateToken===null;
   const cookieState = explicitReset ? null : stateFromCookie(req);
+  // Resolve a short acceptance of our Sunday offer through the same
+  // structured next-week route as an explicit question, preserving filters.
+  const offerState = decodedToken || cookieState;
+  const offeredWeek = offerState?.constraints?.eventWeek;
+  const lastAssistant = messages.slice(0, -1).reverse().find(message => message.role === 'assistant')?.content || '';
+  if (weeklyNextWeekPrompt(offeredWeek) && offerState.lastIntent?.startsWith('events.')
+      && lastAssistant.includes(weeklyNextWeekPrompt(offeredWeek))
+      && /^(?:yes(?: please)?|please do|go ahead)[.!?\s]*$/i.test(lastUserText(messages).trim())) {
+    const filters = offeredWeek.filters || {};
+    const query = `What's on next week in ${filters.area ? 'Wakefield city centre' : 'Wakefield'}${filters.family ? ' for families' : ''}${filters.price === 'free' ? ', free events only' : filters.price === 'paid' ? ', ticketed events only' : ''}?`;
+    messages = [...messages.slice(0, -1), {role:'user', content:query}];
+  }
   const stationPrior=decodedToken || cookieState;
   const stationQuestion=lastUserText(messages);
   const stationName=stationQuestion.match(/\b(westgate|kirkgate)(?:\s+(?:train|railway))?\s+station\b/i)?.[1]

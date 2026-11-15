@@ -100,3 +100,7 @@ All 26 test files passed again, including new Sunday closing-boundary, BST, miss
 
 Latest verified code: cf335aee66d6906306cf8da4bc3da49fe2ca973e.
 Latest preview: https://ask-wakefield-88vgbg2lq-joash-1034s-projects.vercel.app/#assistant (Vercel authentication applies).
+
+## Sunday next-week offer
+
+Added the requested closing question to Sunday this-week answers, including empty lists: Would you like me to check what’s on next week? Weekday, single-day and next-week answers do not include the offer. Yes/Yes please after the offer uses the signed weekly state to open the structured next-week query and retains city/family/price filters. Verified with the weekly handler test and controlled Sunday clock.

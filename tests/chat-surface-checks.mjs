@@ -42,3 +42,5 @@ assert.equal(await activityDiscovery('Find an independent running club on Saturd
 console.log('Chat surface checks passed: all 12 starter handlers, all 20 directory Ask references, deterministic follow-up families, malformed requests, fallback callback, reset race, local-service/indoor source links and activity constraints.');
 
 assert.equal(await activityDiscovery('What is the weather tomorrow?',late.state,noSource),null);
+
+const child=await activityDiscovery('For a child aged 4',late.state,noSource);assert.deepEqual(child.state.constraints.activitySearch.ages,[4]);

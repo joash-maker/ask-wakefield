@@ -23,9 +23,22 @@ Scope: all 12 homepage chat entry points, all 21 activity-page Ask links, the fo
 - Free/low-cost family wording uses the structured calendar and verifies family suitability and free price. Explicit this-week wording takes priority over an incidental weekend mention.
 - Local-services navigation asks which service and supplies relevant official links. No generic free-parking guarantee is made.
 - Indoor starters provide source-linked visit ideas without asserting current sessions or hours. Existing detailed family itineraries retain their route.
-- Activity Ask links now use the same programme source references as the directory. A brief source paragraph is used only when it can actually be read. Programme availability, age eligibility, prices and exact session matches remain unconfirmed unless the source text establishes them. Unknown current information is not evidence that a programme does not exist.
+- Activity Ask links now use the same programme source references as the directory. Source paragraphs are not promoted into programme-wide rules. A live replay exposed an out-of-scope swimming paragraph, so the excerpt feature was removed. Programme availability, age eligibility, prices and exact session matches remain unconfirmed unless the source text establishes them. Unknown current information is not evidence that a programme does not exist.
 - Food and coffee conjunctive searches require both services. Acknowledgements preserve coffee context; ambiguous station choice retains children and seating.
 
 Reproducible cases: tests/fixtures/chat-qa-entrypoints.json and tests/fixtures/chat-qa-conversations.json. The preview harness scripts/qa-chat-preview.py accepts its temporary URL/access configuration through stdin and does not persist credentials in results.
 
 Final live results and remaining limits are appended after verification.
+
+
+## Further failures found by the 84-turn conversation replay
+
+- A rainy-day follow-up could absorb a new free-weekend query rather than switching to events.
+- Next Saturday escaped the structured date path and produced garbled, partially stripped prices. It now has a one-day civil-date window and retains family/free filters.
+- A paragraph from a swimming page was presented without its SEND-section context. Programme excerpt quotation was removed rather than generalising that rule to every child.
+- A Cathedral-to-YSP reply invented a five-minute walk, stand number and service frequency. That route now uses the checked destination travel fact with an explicit boundary around unverified operational details.
+- An access/budget itinerary invented Sunday museum opening, a fully accessible route and an expired Light Up event. It now retains the hard requirements and asks for the missing visit details before claiming a complete verified plan.
+- A dietary answer inferred gluten-free suitability from cuisine; a severe-allergy follow-up listed unverified plant-milk venues. Explicit dietary evidence is required, and an allergy suitability match is not inferred from vegan or plant-based labels.
+- A pharmacy question near Trinity Walk widened to other towns. The area now has a geographic anchor; named supermarket pharmacy questions use the exact branch source instead of unrelated discovery cards.
+
+These were content failures despite HTTP 200 responses. Retests follow on the corrected build. The programme source references remain a starter directory, not proof of current spaces or complete timetable coverage.

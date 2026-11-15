@@ -47,3 +47,5 @@ const child=await activityDiscovery('For a child aged 4',late.state,noSource);as
 
 const wrongTown=await activityDiscovery('Tell me about Theatre Royal Wakefield Performance Academy for children',null,async()=>new Response('<main><p>Our performance academy in Pontefract has spaces for your child.</p></main>'));
 assert.doesNotMatch(wrongTown.reply,/programme page says/);
+
+const indoors=chatNavigation('Suggest indoor activities for a rainy day with children in the Wakefield district.');assert.equal(chatNavigation('What free things can we do in Wakefield this weekend?',indoors.state),null);

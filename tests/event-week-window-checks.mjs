@@ -70,3 +70,5 @@ console.log('Weekly follow-up replay passed: signed state, next-week Thursday, c
 const broad=await askWithState("What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.");
 assert.equal(broad.verification,'weekly-cards-v1');
 assert.equal(broad.state.constraints.eventWeek.kind,'this-week');
+
+assert.deepEqual(eventWeekWindow('What about next Saturday?',new Date('2026-11-15T13:00:00Z')),{kind:'day',start:'2026-11-21',end:'2026-11-21',from:'2026-11-21',today:'2026-11-15'});

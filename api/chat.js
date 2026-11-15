@@ -1,4 +1,5 @@
 import { load } from 'cheerio';
+import { requirementAnswer } from '../lib/chat-requirements.js';
 import { activityDiscovery } from '../lib/activity-discovery.js';
 import { chatNavigation } from '../lib/chat-navigation.js';
 import { planOutingTurn } from '../lib/outing-planner.js';
@@ -789,6 +790,7 @@ function detectWakefieldArea(messages) {
     [/\btileyard(?: north)?\b/i, 'Tileyard North Wakefield'],
     [/\bbull ring\b/i, 'Bull Ring Wakefield'],
     [/\bwood street\b/i, 'Wood Street Wakefield'],
+    [/\btrinity walk\b/i, 'Trinity Walk Wakefield'],
     [/\bwestgate(?: station)?\b/i, 'Wakefield Westgate station'],
     [/\bwakefield cathedral\b|\bcathedral\b/i, 'Wakefield Cathedral'],
     [/\bcity centre\b|\btown centre\b|\bwakefield city\b/i, 'Wakefield city centre'],
@@ -824,6 +826,7 @@ function districtAreaQueryLabel(area) {
     'Tileyard North Wakefield': 'Tileyard North',
     'Bull Ring Wakefield': 'Bull Ring',
     'Wood Street Wakefield': 'Wood Street',
+    'Trinity Walk Wakefield': 'Trinity Walk Wakefield',
     'Wakefield Westgate station': 'Wakefield Westgate',
     'Wakefield Cathedral': 'Wakefield Cathedral',
     'Wakefield city centre': 'Wakefield city centre',
@@ -846,7 +849,7 @@ function districtAreaQueryLabel(area) {
 
 function isCoreWakefieldArea(area) {
   if (!area) return false;
-  return /^(?:Tileyard North Wakefield|Bull Ring Wakefield|Wood Street Wakefield|Wakefield Westgate station|Wakefield Cathedral|Wakefield city centre|Denby Dale Road Durkar Wakefield|Sandal Wakefield)$/i.test(area);
+  return /^(?:Tileyard North Wakefield|Bull Ring Wakefield|Wood Street Wakefield|Trinity Walk Wakefield|Wakefield Westgate station|Wakefield Cathedral|Wakefield city centre|Denby Dale Road Durkar Wakefield|Sandal Wakefield)$/i.test(area);
 }
 
 
@@ -914,7 +917,7 @@ function placeServiceConstraintStatus(place, messages) {
   const context = recentUserContext(messages, 5);
   if (isPharmacyOpenQuery(messages)) {
     const types = Array.isArray(place?.types) ? place.types : [];
-    return place?.primaryType === 'pharmacy' || types.includes('pharmacy');
+    return place?.primaryType === 'pharmacy' || types.includes('pharmacy') && !types.some(t=>['supermarket','grocery_store','shopping_mall'].includes(t));
   }
 
   const coffeeSweet = coffeeSweetRequirements(messages);
@@ -1308,7 +1311,7 @@ async function fetchWakefieldDistrictPlacesContext(messages, coffeeState = null)
   const runLocalSpecs = async () => {
     const anchor = await googlePlacesAnchorSearch(area);
     const label = districtAreaQueryLabel(area);
-    const city=area==='Wakefield city centre';
+    const city=area==='Wakefield city centre' || area==='Trinity Walk Wakefield';
     if(city && !anchor)return [];
     const inScope=items=>city?items.filter(p=>p.location && distanceMetres(anchor,p.location)<=1300 && !/\b(?:horbury|ossett|castleford|pontefract|ferrybridge|normanton|knottingley)\b/i.test(p.formattedAddress || '')):items;
     const batches = await Promise.all(specs.map(spec => {
@@ -1942,7 +1945,7 @@ function requiresVerifiedSource(messages) {
 function verificationFallback(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   if (isPropertySpecificCouncilQuery(messages) && hasApproximateLocationOnly(messages)) {
-    return "I can check the bin collection accurately, but I need the rental's full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
+    return "To identify the bin collection schedule, I need the property’s full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
   }
   if (isPropertySpecificCouncilQuery(messages)) {
     return 'I could not verify the current property-specific council information from the official lookup just now, so I do not want to guess a collection date. Please use Wakefield Council Where I Live with the full postcode or house number and street.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
@@ -5356,6 +5359,11 @@ export default async function handler(req, res) {
     attachStateCookie(res,navigation.state);
     return res.status(200).json(navigation);
   }
+  const requirement=requirementAnswer(lastUserText(messages),conversationState);
+  if(requirement){
+    attachStateCookie(res,requirement.state);
+    return res.status(200).json(requirement);
+  }
   const activity=await activityDiscovery(lastUserText(messages),conversationState);
   if(activity){
     attachStateCookie(res,activity.state);
@@ -5612,13 +5620,13 @@ export default async function handler(req, res) {
     cards = await verifyWeeklySessionCards(cards, weekWindow);
     // Do not silently relax constraints unsupported by this structured view.
     const unsupported = weeklyExtraConstraints(currentText);
-    if (ops.day || unsupported.length) {
+    if (ops.day && weekWindow.kind!=='day' || unsupported.length) {
       return res.status(200).json({
         reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
         sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
       });
     }
-    const filters = { ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}) };
+    const filters = { ...(weekWindow.kind==='day'?clientState.constraints?.eventWeek?.filters:{}), ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}) };
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
     if(filters.price)cards=await refreshEventCardsForPriceV16(cards);
     const view = cards.filter(card=>(!filters.family || card.familyVerified) && (!filters.price || card.priceStatus===filters.price));
@@ -5735,6 +5743,42 @@ export default async function handler(req, res) {
     const result=renderCoffeeDiscovery(messages,districtPlacesContext,clientState,route.area);
     attachStateCookie(res,result.state);
     return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply)});
+  }
+
+  if(isCathedralToYspRouteQuery(messages) && !/\b(?:train|rail)\b/i.test(currentText)) {
+    const context=routeContexts?.yspGettingHere;
+    const verified=/\b96\b/.test(context?.text || '');
+    const url='https://ysp.org.uk/visit-us/getting-here';
+    const reply=(verified?'YSP’s official travel page lists the 96 bus between Wakefield and Barnsley, stopping at Yorkshire Sculpture Park.':'I couldn’t verify the current bus route to YSP just now.')
+      +'\n\nUse [YSP’s getting-here guide]('+url+') and [West Yorkshire Metro](https://www.wymetro.com/) to check the service for your travel date, the boarding stop and the last return. I haven’t confirmed a departure time, frequency, stand number or walking connection from the Cathedral.';
+    const state={version:2,lastIntent:'transport',resultCards:[],constraints:{journey:{origin:'Wakefield Cathedral',destination:'Yorkshire Sculpture Park'}}};
+    attachStateCookie(res,state);
+    return res.status(200).json({reply,sources:[{title:'YSP getting-here guide',url}],state,followups:[],live:Boolean(context),verification:'ysp-route-v1'});
+  }
+
+  if((isPharmacyOpenQuery(messages) || /\bpharmac(?:y|ies)\b/i.test(currentText)) && /\b(?:asda|sainsbury(?:['’]?s)?)\b/i.test(currentText)) {
+    const asda=/\basda\b/i.test(currentText);
+    const context=asda?businessContexts.asdaWakefield:businessContexts.sainsburysMarshWay;
+    const url=asda?'https://storelocator.asda.com/yorkshire-%26-humber/wakefield/asdale-road':'https://stores.sainsburys.co.uk/2258/wakefield-marsh-way';
+    const name=asda?'ASDA Wakefield Superstore':'Sainsbury’s Wakefield Marsh Way';
+    const reply=(asda?'For the pharmacy at '+name+', use its exact branch page.':'I haven’t verified a pharmacy service at '+name+'. Its exact store service list is the relevant check.')
+      +'\n\n['+name+']('+url+')\n\nStore opening hours are not pharmacy-counter hours. I haven’t confirmed that a pharmacy there covers the time you requested.';
+    const state={version:2,lastIntent:'pharmacy.open',area:route.area,constraints:{time:route.timeConstraint},resultCards:[]};attachStateCookie(res,state);
+    return res.status(200).json({reply,sources:[{title:name+' - official branch page',url}],followups:[],state,live:Boolean(context),verification:'named-pharmacy-v1'});
+  }
+  if(/\b(?:gluten[- ]?free|coeliac|celiac)\b/i.test(recentUserContext(messages,5)) && isDietaryOpenQuery(messages)) {
+    const matches=Object.entries(foodConstraintContexts).filter(([,ctx])=>ctx?.text && /\bgluten[- ]free\b/i.test(ctx.text) && !/\b(?:not|no) gluten[- ]free\b/i.test(ctx.text));
+    const sources=matches.map(([,ctx])=>ctx.source).filter(s=>s?.url);
+    const reply=sources.length?'These venue listings explicitly mention gluten-free options:\n\n'+sources.map(s=>'['+s.title+']('+s.url+')').join('\n\n')+'\n\nI haven’t verified a particular dish, preparation controls or opening for your visit. If this is for coeliac disease or an allergy, confirm the ingredients and cross-contact arrangements with the venue.':'I haven’t verified a gluten-free match for this request. I won’t infer suitability from rice-based dishes or the type of cuisine.';
+    const state={version:2,lastIntent:'food.requirements',area:route.area,resultCards:[],constraints:{foodRequirements:{glutenFree:true}}};attachStateCookie(res,state);
+    return res.status(200).json({reply,sources,followups:[],state,live:sources.length>0,verification:'dietary-evidence-v1'});
+  }
+
+  if(route.intent==='pharmacy.open' && route.area==='Trinity Walk Wakefield' && !verifiedPlaceCards(districtPlacesContext).length){
+    const url='https://www.nhs.uk/service-search/pharmacy/find-a-pharmacy';
+    const reply='I couldn’t verify a pharmacy near Trinity Walk covering the time you requested. I haven’t substituted a pharmacy in another town. Use the [NHS pharmacy finder]('+url+') for current branch information. How far are you able to travel?';
+    const state={version:2,lastIntent:'pharmacy.open',area:route.area,constraints:{time:route.timeConstraint},resultCards:[]};attachStateCookie(res,state);
+    return res.status(200).json({reply,sources:[{title:'NHS pharmacy finder',url}],followups:[],state,live:false,verification:'pharmacy-local-unverified-v1'});
   }
 
   const structuredPlaceCards = STRUCTURED_CORE_ENABLED ? verifiedPlaceCards(districtPlacesContext) : [];

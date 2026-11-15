@@ -624,7 +624,8 @@ function sendMessage(override) {
     if (generation !== chatGeneration) return;
     try {
       var data = JSON.parse(xhr.responseText);
-      var reply = (data && data.reply) ? data.reply : "I'm sorry, I couldn't generate a response. Please try again.";
+      if (!data || typeof data.reply !== 'string' || !data.reply.trim()) throw new Error('Invalid chat response');
+      var reply = data.reply;
       bBody.innerHTML = fmt(reply);
       if (xhr.status < 200 || xhr.status >= 300) { throw new Error('HTTP ' + xhr.status); }
       chatHistory.push({ role: 'assistant', content: reply });

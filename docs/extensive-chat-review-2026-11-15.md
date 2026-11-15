@@ -91,3 +91,12 @@ Live traces are stored in docs/qa-2026-11-15 without credentials or signed state
 - Independent HAUS lookup after discovery remains outside the completed verification claims from this cycle.
 - No physical iPhone or Safari testing was performed. Browser checks used the available desktop Chrome environment.
 - Live source data can change. This is a substantial regression suite, not a guarantee for all future questions or facts.
+
+## Sunday shortlist follow-up, 15 November
+
+Joash's preview replay exposed a presentation gap: one dated Sunday event was followed by nine long runs, none with verified Sunday opening/session coverage. Added a maximum of three long runs to the weekly shortlist and an explicit opening/session caveat. A published end clock now excludes a one-day event at or after its finish in London time. Missing or ambiguous overnight clocks remain conservative. The cutoff is reapplied after detail enrichment, which can add times.
+
+All 26 test files passed again, including new Sunday closing-boundary, BST, missing-clock, overnight-clock and long-run-count checks. A live replay at approximately 14:38 London time returned the festival, correctly still before its published 15:00 finish, plus three clearly qualified long runs and four matching source links. The after-15:00 exclusion was verified with a controlled clock, not represented as a live post-closing observation. Total live turns across this cycle are now 205.
+
+Latest verified code: cf335aee66d6906306cf8da4bc3da49fe2ca973e.
+Latest preview: https://ask-wakefield-88vgbg2lq-joash-1034s-projects.vercel.app/#assistant (Vercel authentication applies).

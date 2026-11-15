@@ -3291,7 +3291,13 @@ async function verifyWeeklySessionCards(cards, window) {
   }));
 }
 
-const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => label !== 'suit children' || /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text));
+const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => {
+  if(label==='suit children')return /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text);
+  // A broad request to include several kinds of events describes coverage,
+  // not an exclusive activity-type filter.
+  if(label==='match a type of event' && /\binclude\b[^.!?]*\b(?:events?|exhibitions?)\b[^.!?]*\b(?:music|things happening)\b/i.test(text) && !/\b(?:only|must|just)\b/i.test(text))return false;
+  return true;
+});
 const weeklyFamilyNote = 'These entries have published family or children’s suitability. Check the event pages for age limits, accompanying-adult rules and booking.';
 function weeklyFamilyEmpty(cards) {
   if (!cards.length) return 'I could not read verified dated listings for this period, so I cannot confirm a family shortlist. This does not mean there are no family activities.';

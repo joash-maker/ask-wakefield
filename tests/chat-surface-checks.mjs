@@ -44,3 +44,6 @@ console.log('Chat surface checks passed: all 12 starter handlers, all 20 directo
 assert.equal(await activityDiscovery('What is the weather tomorrow?',late.state,noSource),null);
 
 const child=await activityDiscovery('For a child aged 4',late.state,noSource);assert.deepEqual(child.state.constraints.activitySearch.ages,[4]);
+
+const wrongTown=await activityDiscovery('Tell me about Theatre Royal Wakefield Performance Academy for children',null,async()=>new Response('<main><p>Our performance academy in Pontefract has spaces for your child.</p></main>'));
+assert.doesNotMatch(wrongTown.reply,/programme page says/);

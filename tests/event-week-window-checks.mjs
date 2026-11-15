@@ -66,3 +66,7 @@ const unsupported=await askWithState('Are those wheelchair accessible?',next);
 assert.equal(unsupported.verification,'weekly-followup-v1');assert.match(unsupported.reply,/cannot verify/);
 assert.equal(modelCalls,0);
 console.log('Weekly follow-up replay passed: signed state, next-week Thursday, cumulative free/day filters, reset, times and unsupported constraints.');
+
+const broad=await askWithState("What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.");
+assert.equal(broad.verification,'weekly-cards-v1');
+assert.equal(broad.state.constraints.eventWeek.kind,'this-week');

@@ -18,7 +18,7 @@ assert(sent.some(q=>/rainy day with children/.test(q)));
 assert(isLeisureDiscovery(sent.find(q=>/low-cost/.test(q))));
 // Real fallback-pill callback: success, HTTP errors, reset race, malformed data.
 const method=html.slice(html.indexOf('function getFollowups('),html.indexOf('// RESET CHAT'));
-let request,rendered=0;const ctx={chatGeneration:0,renderFollowups(){rendered++},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=()=>{};}};
+let request,rendered=0;const ctx={chatGeneration:0,chatHistory:[],renderFollowups(){rendered++},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=()=>{};}};
 vm.createContext(ctx);vm.runInContext(method+";getFollowups('Coffee?','Answer',{});",ctx);
 request.status=200;request.responseText=JSON.stringify({followups:['Any more?']});assert.doesNotThrow(()=>request.onload());assert.equal(rendered,1);
 request.status=500;request.onload();assert.equal(rendered,1);
@@ -49,3 +49,5 @@ const wrongTown=await activityDiscovery('Tell me about Theatre Royal Wakefield P
 assert.doesNotMatch(wrongTown.reply,/programme page says/);
 
 const indoors=chatNavigation('Suggest indoor activities for a rainy day with children in the Wakefield district.');assert.equal(chatNavigation('What free things can we do in Wakefield this weekend?',indoors.state),null);
+
+vm.runInContext("getFollowups('Coffee?','Answer',{});",ctx);request.status=200;request.responseText=JSON.stringify({followups:['Any more?']});ctx.chatHistory.push({role:'user',content:'New topic'});request.onload();assert.equal(rendered,1,'A late suggestion response must not attach to a newer turn');

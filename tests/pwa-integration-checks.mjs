@@ -4,10 +4,10 @@ import {readFileSync,existsSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 for(const [,script] of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(script);
 const fn=html.slice(html.indexOf('function sendMessage('),html.indexOf('\nfunction sendMsg('));
-const messages=[];let notices=0,request;
+const messages=[];let notices=0,request,removed=0;
 const element=()=>({children:[],appendChild(child){this.children.push(child)},classList:{add(){}},style:{}});
 const timers=new Map(),cleared=[];let timerId=0;
-const ctx={chatGeneration:0,saveChat(){},setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>{cleared.push(id);timers.delete(id);},fmt:x=>x,isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend',focus(){}},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
+const ctx={chatGeneration:0,saveChat(){},setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>{cleared.push(id);timers.delete(id);},fmt:x=>x,isSending:false,sendBtn:{disabled:false},inputEl:{value:'Free things this weekend',focus(){}},chatWrap:element(),chipsGone:false,chipsEl:element(),chatHistory:[],msgsEl:{querySelectorAll(){return [{remove(){removed++}}]},appendChild(x){messages.push(x)},scrollTop:0,scrollHeight:0},escapeHtml:x=>x,document:{createElement:element},window:{__askWakefieldShowOffline(){notices++}},navigator:{onLine:false},XMLHttpRequest:function(){request=this;this.open=()=>{};this.setRequestHeader=()=>{};this.send=(body)=>{this.body=JSON.parse(body)}},stateToken:'signed-token'};
 vm.createContext(ctx);vm.runInContext(fn+';sendMessage();',ctx);
 assert.equal(ctx.inputEl.value,'Free things this weekend');assert.equal(ctx.isSending,false);assert.equal(ctx.sendBtn.disabled,false);assert.equal(ctx.chatHistory.length,0);assert.equal(messages.length,0);assert.equal(notices,1);
 ctx.navigator.onLine=true;vm.runInContext('sendMessage();',ctx);
@@ -32,3 +32,5 @@ ctx.inputEl.value='New question';vm.runInContext('sendMessage();',ctx);
 const stale=request;ctx.chatGeneration++;ctx.chatHistory=[];ctx.stateToken=null;ctx.isSending=true;
 stale.status=200;stale.responseText=JSON.stringify({reply:'Old answer',stateToken:'old-token'});stale.onload();
 assert.equal(ctx.chatHistory.length,0);assert.equal(ctx.stateToken,null);assert.equal(ctx.isSending,true);
+
+assert(removed>0,'Sending a new question removes stale follow-up pills');

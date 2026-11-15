@@ -104,3 +104,9 @@ Latest preview: https://ask-wakefield-88vgbg2lq-joash-1034s-projects.vercel.app/
 ## Sunday next-week offer
 
 Added the requested closing question to Sunday this-week answers, including empty lists: Would you like me to check what’s on next week? Weekday, single-day and next-week answers do not include the offer. Yes/Yes please after the offer uses the signed weekly state to open the structured next-week query and retains city/family/price filters. Verified with the weekly handler test and controlled Sunday clock.
+
+## Daily date and music continuity
+
+The today → Anything for Monday? → Any music events? replay exposed a path that fell through to prose generation and widened Monday into later dates. Daily discovery now uses a single London civil-date window, persists it through a short music refinement, and requires an explicit occurrence on that date. A published multi-day end is not evidence of a performance on the final day. Unknown-start long runs are excluded from a dated performance shortlist. Music matching uses explicit event title/category/description evidence.
+
+Added tests/day-event-continuity-checks.mjs with the three-turn handler replay, false Monday jazz-run example, verified single-day concert and explicit repeated-occurrence cases. The controlled replay makes no model calls. All 27 test files pass.

@@ -12,7 +12,7 @@ import { programmeConversation, parkingConversation } from '../lib/event-convers
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
-import { weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
+import { eventDiscoveryWindow, confirmedDayCards, musicEventRequest, weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -5385,7 +5385,8 @@ export default async function handler(req, res) {
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.
   const savedState = conversationState;
-  const cityWeekRefinement = savedState?.constraints?.eventWeek && weeklyFollowUp(lastUserText(messages))?.area;
+  const dayRefinement = savedState?.constraints?.eventWeek?.kind === 'day' && eventDiscoveryWindow(lastUserText(messages),savedState.constraints.eventWeek);
+  const cityWeekRefinement = dayRefinement || savedState?.constraints?.eventWeek && weeklyFollowUp(lastUserText(messages))?.area;
   const clientState = scoped.newRequest && !cityWeekRefinement ? normaliseClientState(null) : (savedState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
@@ -5468,7 +5469,8 @@ export default async function handler(req, res) {
   if (/\bhalf[ -]term\b/i.test(currentText) && !eventWeekWindow(currentText) && !storedWeek) {
     return res.status(200).json({ reply: 'Which dates would you like to plan for? School half-term dates vary. Tell me the dates and the children’s ages so I can check dated local listings.', sources: [], live: false, verification: 'half-term-dates-needed', state: clientState });
   }
-  const weekOps = !route.eventFollowUp?.namedIds && storedWeek && clientState.lastIntent?.startsWith('events.')
+  const dayWindow = eventDiscoveryWindow(currentText, storedWeek);
+  const weekOps = !dayWindow && !route.eventFollowUp?.namedIds && storedWeek && clientState.lastIntent?.startsWith('events.')
     ? (halfTermClarification ? { halfTerm: true } : weeklyFollowUp(currentText)) : null;
   if (weekOps) {
     let original = storedEventCards(clientState);
@@ -5602,9 +5604,10 @@ export default async function handler(req, res) {
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
-  const catalogueWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages) ? eventWeekWindow(currentText) : null;
+  const dailyDiscovery = dayWindow?.kind === 'day' && (isCurrentEventsQuery(messages) || clientState.lastIntent?.startsWith('events.'));
+  const catalogueWindow = (isCurrentEventsQuery(messages) || dailyDiscovery) && !isNamedEventDetailQuery(messages) ? dayWindow : null;
   const catalogueCards = catalogueWindow ? await loadCatalogueWeek(catalogueWindow) : null;
-  if (!catalogueCards && isCurrentEventsQuery(messages)) {
+  if (!catalogueCards && (isCurrentEventsQuery(messages) || dailyDiscovery)) {
     // Fetch strong first-party/current event sources in parallel. This avoids
     // a broad search while still covering the district aggregator, WX and the
     // Cathedral's own dated events.
@@ -5618,27 +5621,29 @@ export default async function handler(req, res) {
   }
 
   // Weekly discovery must not fall through to prose that mixes calendar weeks.
-  const weekWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages)
-    ? eventWeekWindow(currentText) : null;
+  const weekWindow = (isCurrentEventsQuery(messages) || dailyDiscovery) && !isNamedEventDetailQuery(messages)
+    ? dayWindow : null;
   if (weekWindow) {
     const raw = mergeExactEventCardsV16(catalogueCards || [
       ...(wxContext?.eventCards || []),
       ...(experienceEventsContext?.listingEventCards || [])
     ]);
     const ops = eventOpsFromText(currentText);
-    const cityArea = wakefieldCityScope(currentText);
+    const cityArea = wakefieldCityScope(currentText) || (weekWindow.kind === 'day' ? clientState.constraints?.eventWeek?.filters?.area : null);
     const local = cityArea ? raw.filter(eventInWakefieldCity) : raw;
     let cards = selectWeekCards(catalogueCards && ops.family ? local.filter(card => card.familyVerified) : local, weekWindow);
     cards = await verifyWeeklySessionCards(cards, weekWindow);
     // Do not silently relax constraints unsupported by this structured view.
-    const unsupported = weeklyExtraConstraints(currentText);
+    const musicOnly = weekWindow.kind === 'day' && (musicEventRequest(currentText) || clientState.constraints?.eventWeek?.filters?.musicOnly && !/\b(?:all|any) events\b/i.test(currentText));
+    const unsupported = weeklyExtraConstraints(currentText).filter(label => !(musicOnly && label === 'match a type of event'));
+    if (weekWindow.kind === 'day') cards = confirmedDayCards(cards,weekWindow,musicOnly);
     if (ops.day && weekWindow.kind!=='day' || unsupported.length) {
       return res.status(200).json({
         reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
         sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
       });
     }
-    const filters = { ...(weekWindow.kind==='day'?clientState.constraints?.eventWeek?.filters:{}), ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}) };
+    const filters = { ...(weekWindow.kind==='day'?clientState.constraints?.eventWeek?.filters:{}), ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}), ...(weekWindow.kind === 'day' ? {musicOnly:Boolean(musicOnly)} : {}) };
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
     if(filters.price)cards=await refreshEventCardsForPriceV16(cards);
     // Detail verification can add an end clock. Reapply the current-time cutoff.
@@ -5649,7 +5654,7 @@ export default async function handler(req, res) {
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
+      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow, {musicOnly})) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
       sources: eventSourcesV17(view), followups: [], live: !catalogueCards && cards.length > 0,
       verification: catalogueCards ? 'weekly-catalogue-v1' : 'weekly-cards-v1', state
     });

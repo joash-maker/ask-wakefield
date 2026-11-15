@@ -1461,7 +1461,7 @@ function isCathedralToYspRouteQuery(messages) {
   const context = recentUserContext(messages, 5);
   return /\b(wakefield cathedral|cathedral)\b/i.test(context)
     && /\b(yorkshire sculpture park|ysp)\b/i.test(context)
-    && /\b(how do i get|how can i get|route|directions|without a car|public transport|get from)\b/i.test(context);
+    && /\b(how do i get|how can i get|route|directions|without a car|public transport|get from|by bus|bus journey)\b/i.test(context);
 }
 
 function isComplexSaturdayDayPlanQuery(messages) {
@@ -4002,7 +4002,7 @@ async function fetchEveningServiceFirstPartyContexts(messages) {
 }
 
 async function fetchRouteFirstPartyContexts(messages) {
-  if (!isRoutePlanningQuery(messages)) return { yspGettingHere: null };
+  if (!isRoutePlanningQuery(messages) && !isCathedralToYspRouteQuery(messages)) return { yspGettingHere: null };
   if (isCathedralToYspRouteQuery(messages)) {
     const yspGettingHere = await fetchSimpleFirstPartyContext(
       'https://ysp.org.uk/visit-us/getting-here',

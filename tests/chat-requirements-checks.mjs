@@ -23,3 +23,7 @@ for(const q of ['Which pharmacy is open after 6pm near Trinity Walk?',"What abou
  if(/sainsbury|asda/i.test(q))assert.equal(res.body.verification,'named-pharmacy-v1');else assert.equal(res.body.verification,'pharmacy-local-unverified-v1');
 }
 console.log('Requirements checks passed: access/free/budget continuity, severe-allergy limits, unrelated topic escape, pharmacy geography and exact named-branch lookup.');
+
+const routeRes={setHeader(){},status(c){this.code=c;return this},json(b){this.body=b;return this}};
+await handler({method:'POST',headers:{'x-forwarded-for':'ysp-shorthand'},socket:{},body:{messages:[{role:'user',content:'From Wakefield Cathedral to Yorkshire Sculpture Park tomorrow, by bus'}],stateToken:null}},routeRes);
+assert.equal(routeRes.code,200);assert.equal(routeRes.body.verification,'ysp-route-v1');assert.doesNotMatch(routeRes.body.reply,/5-minute|half-hourly|stand 10|will be running/);

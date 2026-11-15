@@ -1,7 +1,8 @@
 import { load } from 'cheerio';
 import { planOutingTurn } from '../lib/outing-planner.js';
 import { discoverAnnouncements } from '../lib/outing-announcements.js';
-import { discoverOutingPlaces } from '../lib/outing-places.js';
+import { broadCoffeeDiscovery, renderCoffeeDiscovery } from '../lib/coffee-discovery.js';
+import { discoverOutingPlaces, distanceMetres } from '../lib/outing-places.js';
 import { answerOutingWarmup, enrichSelectedOuting, selectedOuting, outingParty, eveningPlanQuestion, planSelectedEvening } from '../lib/outing-companion.js';
 import { answerPlannedOuting } from '../lib/outing-food.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
@@ -788,7 +789,7 @@ function detectWakefieldArea(messages) {
     [/\bwood street\b/i, 'Wood Street Wakefield'],
     [/\bwestgate(?: station)?\b/i, 'Wakefield Westgate station'],
     [/\bwakefield cathedral\b|\bcathedral\b/i, 'Wakefield Cathedral'],
-    [/\bcity centre\b|\btown centre\b/i, 'Wakefield city centre'],
+    [/\bcity centre\b|\btown centre\b|\bwakefield city\b/i, 'Wakefield city centre'],
     [/\bdenby dale road\b|\bdurkar\b/i, 'Denby Dale Road Durkar Wakefield'],
     [/\bsandal\b/i, 'Sandal Wakefield'],
     [/\bhorbury\b/i, 'Horbury Wakefield'],
@@ -904,7 +905,7 @@ function buildDistrictPlacesSearchSpecs(messages) {
   }
 
   const display = buildDistrictPlacesServiceQuery(messages);
-  return [{ textQuery: display, richFields: [] }];
+  return [{ textQuery: display, richFields: /\b(?:coffee|caf[eé]s?)\b/i.test(context)?['servesCoffee','servesLunch','servesDinner']:[] }];
 }
 
 function placeServiceConstraintStatus(place, messages) {
@@ -947,6 +948,11 @@ function placeServiceConstraintStatus(place, messages) {
     if (a.wheelchairAccessibleEntrance === true) return true;
     if (a.wheelchairAccessibleEntrance === false) return false;
     return null;
+  }
+
+  if (/\b(?:coffee|caf[eé]s?)\b/i.test(context)) {
+    if (/\bfood\s+or\s+(?:a\s+)?coffee\b/i.test(context)) return place.servesCoffee===true || place.servesLunch===true || place.servesDinner===true ? true : null;
+    return place.servesCoffee===true ? true : place.servesCoffee===false ? false : null;
   }
 
   return true;
@@ -1127,6 +1133,8 @@ function compactPlace(place, meta = {}) {
     nationalPhoneNumber: place?.nationalPhoneNumber || null,
     location: place?.location || null,
     servesCoffee: typeof place?.servesCoffee === 'boolean' ? place.servesCoffee : null,
+    servesLunch: typeof place?.servesLunch === 'boolean' ? place.servesLunch : null,
+    servesDinner: typeof place?.servesDinner === 'boolean' ? place.servesDinner : null,
     servesDessert: typeof place?.servesDessert === 'boolean' ? place.servesDessert : null,
     dineIn: typeof place?.dineIn === 'boolean' ? place.dineIn : null,
     allowsDogs: typeof place?.allowsDogs === 'boolean' ? place.allowsDogs : null,
@@ -1274,11 +1282,17 @@ function dedupePlaces(places) {
   return out;
 }
 
-async function fetchWakefieldDistrictPlacesContext(messages) {
-  if (!shouldUseDistrictPlaces(messages)) return null;
+async function fetchWakefieldDistrictPlacesContext(messages, coffeeState = null) {
+  if (!shouldUseDistrictPlaces(messages) && !broadCoffeeDiscovery(messages,coffeeState)) return null;
 
+  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return null;
+  // Signed coffee refinements can outlive the text-history window. Restore the
+  // service for retrieval without changing the user's displayed question.
+  if(coffeeState?.constraints?.coffeeDiscovery && !/\b(?:coffee|caf[eé]s?)\b/i.test(lastUserText(messages))) {
+    messages=messages.map((m,i)=>i===messages.length-1?{...m,content:m.content+' coffee'}:m);
+  }
   const service = buildDistrictPlacesServiceQuery(messages);
-  const area = detectWakefieldArea(messages);
+  const area = detectWakefieldArea(messages) || coffeeState?.constraints?.coffeeDiscovery?.area || null;
   const constraint = requestedPlaceTimeConstraint(messages);
   const openNow = constraint?.mode === 'now';
   const specs = buildDistrictPlacesSearchSpecs(messages);
@@ -1292,6 +1306,9 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
   const runLocalSpecs = async () => {
     const anchor = await googlePlacesAnchorSearch(area);
     const label = districtAreaQueryLabel(area);
+    const city=area==='Wakefield city centre';
+    if(city && !anchor)return [];
+    const inScope=items=>city?items.filter(p=>p.location && distanceMetres(anchor,p.location)<=1300 && !/\b(?:horbury|ossett|castleford|pontefract|ferrybridge|normanton|knottingley)\b/i.test(p.formattedAddress || '')):items;
     const batches = await Promise.all(specs.map(spec => {
       const opts = {
         pageSize: 12,
@@ -1309,11 +1326,11 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
         };
         opts.rankPreference = 'DISTANCE';
         opts.districtRestriction = false;
-        return googlePlacesTextSearch(spec.textQuery, opts)
-          .then(items => items.map(place => enrich(place, label)));
+        return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
+          .then(items => inScope(items).map(place => enrich(place, label)));
       }
       return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
-        .then(items => items.map(place => enrich(place, label)));
+        .then(items => inScope(items).map(place => enrich(place, label)));
     }));
     return dedupePlaces(batches.flat());
   };
@@ -5373,7 +5390,8 @@ export default async function handler(req, res) {
   // A missing start point prevents a transport promise, but should not result
   // in a blank answer. The response carries first-party links as source chips.
   const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
-  const groundedStarter = isEventTopic ? null : foodSpecificFollowUp(currentText, clientState)
+  const coffeeDiscovery = broadCoffeeDiscovery(messages,clientState);
+  const groundedStarter = isEventTopic || coffeeDiscovery ? null : foodSpecificFollowUp(currentText, clientState)
     || nightlifeRecommendation(currentText, clientState)
     || districtThaliDiscovery(currentText)
     || namedDiningThaliFollowUp(currentText, messages)
@@ -5662,7 +5680,7 @@ export default async function handler(req, res) {
     fetchBusinessFirstPartyContexts(messages),
     fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
-    fetchWakefieldDistrictPlacesContext(messages),
+    fetchWakefieldDistrictPlacesContext(messages,coffeeDiscovery?clientState:null),
     fetchTrustedUserUrlContext(messages)
   ]);
 
@@ -5689,6 +5707,12 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ reply: finaliseUserFacingReply(deterministic), sources: Array.from(sourceMap.values()).slice(0, 8), live: true, verification: 'structured', state });
     }
+  }
+
+  if(coffeeDiscovery) {
+    const result=renderCoffeeDiscovery(messages,districtPlacesContext,clientState,route.area);
+    attachStateCookie(res,result.state);
+    return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply)});
   }
 
   const structuredPlaceCards = STRUCTURED_CORE_ENABLED ? verifiedPlaceCards(districtPlacesContext) : [];

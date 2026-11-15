@@ -72,3 +72,21 @@ assert.equal(broad.verification,'weekly-cards-v1');
 assert.equal(broad.state.constraints.eventWeek.kind,'this-week');
 
 assert.deepEqual(eventWeekWindow('What about next Saturday?',new Date('2026-11-15T13:00:00Z')),{kind:'day',start:'2026-11-21',end:'2026-11-21',from:'2026-11-21',today:'2026-11-15'});
+
+// Sunday at/after closing: a still-published card must not become an upcoming event.
+const sundayWindow=eventWeekWindow('this week',new NativeDate('2026-11-15T15:05:00Z'));
+const festival={...card('Christmas Festival','2026-11-15'),startTime:'10:00',endTime:'15:00'};
+assert.equal(selectWeekCards([festival],sundayWindow,new NativeDate('2026-11-15T14:59:00Z')).length,1);
+assert.equal(selectWeekCards([festival],sundayWindow,new NativeDate('2026-11-15T15:00:00Z')).length,0);
+assert.equal(selectWeekCards([{...festival,endTime:null}],sundayWindow,new NativeDate('2026-11-15T16:00:00Z')).length,1,'Missing finish is not an inferred closing time');
+assert.equal(selectWeekCards([{...festival,startTime:'22:00',endTime:'02:00'}],sundayWindow,new NativeDate('2026-11-15T23:00:00Z')).length,1,'Ambiguous overnight clocks stay conservative');
+const summerWindow=eventWeekWindow('this week',new NativeDate('2026-06-28T14:00:00Z'));
+assert.equal(selectWeekCards([{...festival,startDate:'2026-06-28',endDate:'2026-06-28'}],summerWindow,new NativeDate('2026-06-28T14:00:00Z')).length,0,'Cutoff uses London BST, not UTC');
+const longRuns=Array.from({length:9},(_,i)=>({...ongoing,title:'Exhibition '+i,venue:'Gallery '+i,sourceUrl:'https://example.org/event/'+i,endDate:'2027-01-0'+(i+1)}));
+const sundayShortlist=selectWeekCards([festival,...longRuns],sundayWindow,new NativeDate('2026-11-15T15:05:00Z'));
+assert.equal(sundayShortlist.length,3,'Do not pad a thin Sunday list with nine long runs');
+const sundayReply=formatWeekCards(sundayShortlist,sundayWindow);
+assert.doesNotMatch(sundayReply,/Christmas Festival/);
+assert.match(sundayReply,/couldn’t verify any remaining one-day events/);
+assert.match(sundayReply,/Opening days and individual sessions are not confirmed/);
+console.log('Sunday checks passed: end-clock cutoff, London BST, missing and overnight clocks, concise runs and explicit visit uncertainty.');

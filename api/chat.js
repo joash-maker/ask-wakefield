@@ -5629,6 +5629,8 @@ export default async function handler(req, res) {
     const filters = { ...(weekWindow.kind==='day'?clientState.constraints?.eventWeek?.filters:{}), ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}) };
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
     if(filters.price)cards=await refreshEventCardsForPriceV16(cards);
+    // Detail verification can add an end clock. Reapply the current-time cutoff.
+    cards = selectWeekCards(cards, weekWindow);
     const view = cards.filter(card=>(!filters.family || card.familyVerified) && (!filters.price || card.priceStatus===filters.price));
     const state = buildEventStateV16(cards, clientState, view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventFocus:null, eventWeek: { ...weekWindow, filters } };

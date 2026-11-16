@@ -28,7 +28,7 @@ Production: `main`, deployment `dpl_7sADff4hY8QQfhWMjwhgWsjxdq6o`.
 
 Candidate application code: `aa61daedef4ebcbae723803f23be099f4d262ac8`, deployment `dpl_FU2wSFrCsjsxone5M5eEY5zDx8Vw`. Later commits up to `66662ab890420bab9b32076d6fe2921cc16107ef` contain documentation only. PR 13 remains draft and unmerged.
 
-Fresh protected-preview HTTP testing was blocked by automatic approval review rejecting creation of a temporary access link. No alternate access path was attempted after that rejection. Candidate results in this report are source/regression results, not a new live preview pass. Earlier live verification remains documented in the extensive chat review.
+Fresh protected-preview HTTP testing was initially blocked by automatic approval review. Joash then explicitly approved a 15-minute scoped access link. The follow-up run completed at approximately 15:06–15:11 London time and the link was revoked immediately afterwards. See the protected-preview findings below. No production access settings were changed.
 
 ## Findings in fix order
 
@@ -166,3 +166,39 @@ In the browser, Music + Under 5 correctly produced zero matches. Its Ask Wakefie
 - New fixes were not applied in this scrutiny pass. Application code and production remain unchanged.
 
 To rerun the two local reproductions from the repository root: create `/tmp/aw-site-audit`, then run `node docs/site-scrutiny-2026-11-16/reproduce.mjs` and `node docs/site-scrutiny-2026-11-16/directory-repro.mjs`. They mock external effects and do not submit records or send mail.
+
+
+## Protected-preview follow-up after explicit approval
+
+Tested application commit `aa61daedef4ebcbae723803f23be099f4d262ac8` at `https://ask-wakefield-l7y3m54xw-joash-1034s-projects.vercel.app/#assistant` using the approved short-lived link. Revocation succeeded before this report was saved. No access tokens are included in the evidence.
+
+- 10 conversations, 26 fresh preview API turns, all HTTP 200. This is transport success, not 26 content passes.
+- 31 route/asset requests. Public pages and assets returned the expected content; the two POST-only admin endpoints returned 405 to GET. All 25 checked static responses with corresponding repository files matched the reviewed source exactly.
+- The initial page-fetch pass lacked cookie handling and reached Vercel sign-in HTML. It was excluded from the availability results. The corrected pass used a cookie-aware opener and compared actual response content, not just HTTP status.
+- Production earlier used `weekly-catalogue-v1`; this preview used `weekly-cards-v1`. They exercise different retrieval paths. Environment/data parity needs checking before promotion.
+- This follow-up added HTTP/API evidence. It did not add physical-device, screen-reader, successful submission/email, or embedded-browser conversation verification.
+
+### Behaviours confirmed improved on the preview
+
+| Scenario | Observed behaviour |
+| --- | --- |
+| Today → Monday → music | Kept Monday 16 November for all turns; did not substitute later dates or infer a jazz performance from a run end |
+| Severe milk allergy | Did not infer safety from oat milk or a vegan label; linked official allergen information |
+| Accessible free outing + £20 total | Kept the access/free/budget requirements, asked for visit/group details and did not invent a complete guaranteed itinerary |
+| Swimming → age 4 → Castleford Sunday | Kept age and area, supplied the programme source and explicitly left exact session/availability unconfirmed |
+| Named Sainsbury's pharmacy | Used the named store service source and distinguished store hours from pharmacy-counter hours |
+| Parking after several Friday events | Asked which event instead of giving an unverified generic parking promise |
+| Generic city coffee discovery | Returned source-aligned named cards from the coffee discovery route |
+| Fake café + request to invent | Refused to fabricate opening times |
+
+These are narrower, truthful improvements. They do not establish complete outing plans, live class spaces, pharmacy walking distances or every possible conversation path.
+
+### Preview failures that remain
+
+1. **Haus remains unresolved.** Coffee discovery is grounded, but the short named follow-up falls back to prose generation and says it cannot verify Haus. The next hours question also fails. The existing canonical record is not being reached through this path.
+2. **The Festive Market clock is still wrong.** Both the initial weekly list and Friday refinement display 19:00–16:00. Occurrence-specific times remain a release blocker on the candidate, not only production.
+3. **New high-priority finding: incorrect library address.** After coffee → pothole → library, the preview located Wakefield Library at Castle Street, WF1 1PU, with no source cards. The Council's exact library page lists Wakefield One, Burton Street, WF1 2DD. Route local services through canonical records or an exact official page before asserting an address. Source: https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library.
+4. **Coffee plus hot chocolate can still leave the grounded discovery route.** The first turn of that conversation used `primary`, asserted venue hours and drink availability, and produced the broken sentence “All of these are of each other in the city centre.” The subsequent allergy guard worked, but it does not repair the first reply. Add this conjunctive drink request to the grounded route and check the wording after sanitisation.
+5. **The newly found site defects are unchanged.** Event form, activities page and widget served content matching the reviewed source. The false-success, validation/acknowledgement, labels, directory identity/filter and legacy-widget issues therefore remain in the candidate. This run did not write a submission or repeat the old endpoint's preflight check.
+
+The preview is safer in the tested contexts but still does not meet full-site release criteria. Evidence: [fresh preview conversations](protected-preview-chat-results.json) and [content-checked preview routes](protected-preview-routes.json). This follow-up changed documentation only; no implementation fixes or merge were performed.

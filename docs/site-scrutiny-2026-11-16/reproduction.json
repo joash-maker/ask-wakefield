@@ -1,0 +1,35 @@
+[
+  {
+    "case": "event-client-response",
+    "status": 400,
+    "successVisible": true,
+    "emailValidationBypassed": true,
+    "consentSent": false
+  },
+  {
+    "case": "event-client-response",
+    "status": 429,
+    "successVisible": true,
+    "emailValidationBypassed": true,
+    "consentSent": false
+  },
+  {
+    "case": "event-client-response",
+    "status": 500,
+    "successVisible": true,
+    "emailValidationBypassed": true,
+    "consentSent": false
+  },
+  {
+    "case": "event-client-response",
+    "status": 200,
+    "successVisible": true,
+    "emailValidationBypassed": true,
+    "consentSent": false
+  },
+  {
+    "case": "event-server-input",
+    "acceptsInvalidDateAndMissingConsent": true,
+    "acceptsEndBeforeStart": true
+  }
+]

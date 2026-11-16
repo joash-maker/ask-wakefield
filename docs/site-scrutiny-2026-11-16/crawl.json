@@ -1,0 +1,894 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "seconds": 4.72,
+    "url": "https://www.askwakefield.co.uk/",
+    "bytes": 64704,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Ask Wakefield | Local answers and things to do",
+    "h1": 1,
+    "lang": "en",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "/manifest.json",
+      "/icons/apple-touch-icon.png",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "#assistant",
+      "/",
+      "#discover",
+      "/activities",
+      "#contribute",
+      "#assistant",
+      "#assistant",
+      "#discover",
+      "https://mediahubink.com",
+      "/privacy",
+      "/submit-event",
+      "#discover",
+      "/images/card-whats-on.webp",
+      "/activities?category=after-school",
+      "/images/card-family.webp",
+      "/images/card-restaurants.webp",
+      "/activities",
+      "/activities?category=community",
+      "/submit-event",
+      "/submit-listing",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20Local%20Partner%20advertising",
+      "https://mediahubink.com",
+      "https://www.wakefield.gov.uk",
+      "/for-organisations",
+      "https://www.wakefield.gov.uk",
+      "https://mediahubink.com",
+      "mailto:hello@mediahubink.com",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections",
+      "/admin/listings",
+      "#assistant",
+      "#discover",
+      "/activities"
+    ],
+    "ids": [
+      "ask-title",
+      "assistant",
+      "backToTop",
+      "chips",
+      "contribute",
+      "contribute-title",
+      "copyChatBtn",
+      "discover",
+      "discover-title",
+      "messages",
+      "org-title",
+      "pwaNotice",
+      "sendBtn",
+      "trust-title",
+      "userInput",
+      "voiceBtn",
+      "welcomeMsg"
+    ]
+  },
+  {
+    "path": "/submit-event",
+    "status": 200,
+    "seconds": 4.72,
+    "url": "https://www.askwakefield.co.uk/submit-event",
+    "bytes": 13767,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Submit an Event \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/submit-event"
+    ],
+    "unlabelled": [
+      "eventName",
+      "eventType",
+      "startDate",
+      "endDate",
+      "startTime",
+      "endTime",
+      "venue",
+      "description",
+      "ticketPrice",
+      "eventUrl",
+      "submitterName",
+      "submitterEmail",
+      "organisation"
+    ],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "/terms",
+      "/privacy",
+      "mailto:hello@mediahubink.com",
+      "/",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections"
+    ],
+    "ids": [
+      "errorMsg",
+      "eventForm",
+      "formState",
+      "submitBtn",
+      "successState"
+    ]
+  },
+  {
+    "path": "/for-organisations",
+    "status": 200,
+    "seconds": 4.73,
+    "url": "https://www.askwakefield.co.uk/for-organisations",
+    "bytes": 10836,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "For Organisations \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/for-organisations"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "mailto:hello@mediahubink.com?subject=AI%20assistant%20enquiry",
+      "tel:07544833862",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/activities",
+    "status": 200,
+    "seconds": 4.73,
+    "url": "https://www.askwakefield.co.uk/activities",
+    "bytes": 44770,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Activities in Wakefield \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/activities"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/#discover",
+      "/?ask=Help%20me%20find%20an%20activity%20in%20Wakefield#assistant",
+      "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons",
+      "/?ask=Help%20me%20find%20the%20right%20swimming%20lesson%20in%20Wakefield#assistant",
+      "https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities",
+      "/?ask=Which%20Aspire%20gym%20or%20swimming%20facility%20is%20best%20for%20me%20in%20Wakefield%3F#assistant",
+      "https://wakefieldharriers.co.uk/junior-jets/",
+      "/?ask=Tell%20me%20about%20Wakefield%20Harriers%20Junior%20Jets%20and%20other%20athletics%20options%20for%20children#assistant",
+      "https://wakefieldharriers.co.uk/yards/",
+      "/?ask=Help%20me%20find%20athletics%20for%20a%20teenager%20in%20Wakefield#assistant",
+      "https://wakefieldharriers.co.uk/road-xc/",
+      "/?ask=Find%20me%20a%20running%20club%20in%20Wakefield%20that%20suits%20my%20ability#assistant",
+      "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable",
+      "/?ask=Find%20a%20walking%20group%20near%20me%20in%20Wakefield#assistant",
+      "https://ramblersyorkshire.org/area-groups/wakefield-and-district.html",
+      "/?ask=Find%20me%20a%20proper%20hiking%20or%20longer%20walking%20group%20around%20Wakefield#assistant",
+      "https://wakefieldsportsclub.com/padel/",
+      "/?ask=Where%20can%20I%20play%20padel%20near%20Wakefield%3F#assistant",
+      "https://caldergrove.play-cricket.com/home",
+      "/?ask=Tell%20me%20about%20Calder%20Grove%20Cricket%20Club%20and%20how%20to%20get%20involved#assistant",
+      "https://www.facebook.com/caldergrovecc/?locale=en_GB",
+      "https://www.instagram.com/caldergrovecc/",
+      "https://www.wakefieldafcjuniors.co.uk/teams",
+      "/?ask=Find%20a%20junior%20football%20club%20in%20Wakefield%20for%20my%20child#assistant",
+      "https://www.theatreroyalwakefield.co.uk/take-part/performance-academy",
+      "/?ask=Tell%20me%20about%20Theatre%20Royal%20Wakefield%20Performance%20Academy%20for%20children#assistant",
+      "https://www.wakefield.gov.uk/libraries-and-local-history/library-information/library-events/",
+      "/?ask=Tell%20me%20about%20Code%20Club%20at%20Wakefield%20Library#assistant",
+      "https://www.wakefieldscouts.org.uk/local-groups/",
+      "/?ask=Find%20a%20Scout%2C%20Cub%2C%20Beaver%20or%20Squirrel%20group%20near%20me%20in%20Wakefield#assistant",
+      "https://www.ellitestudios.co.uk/junior-dance-academy",
+      "/?ask=Tell%20me%20about%20dance%20classes%20for%20children%20at%20ElliTe%20Studios%20Wakefield#assistant",
+      "https://www.thevergehouse.com/",
+      "https://www.instagram.com/thevergedanceunit/",
+      "/?ask=Tell%20me%20about%20The%20Verge%20House%20of%20Performance%20in%20Wakefield%20and%20which%20dance%20or%20performance%20track%20might%20suit%20my%20child#assistant",
+      "https://www.wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities/taekwondo",
+      "/?ask=Find%20martial%20arts%20or%20Taekwondo%20for%20a%20child%20in%20Wakefield#assistant",
+      "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/junior-gym/",
+      "/?ask=Where%20can%20an%2011%20to%2015-year-old%20use%20a%20gym%20in%20Wakefield#assistant",
+      "https://www.kipmcgrath.co.uk/wakefield-west",
+      "/?ask=Find%20English%20or%20maths%20tutoring%20for%20a%20child%20in%20Wakefield#assistant",
+      "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/",
+      "/?ask=Help%20me%20find%20music%20lessons%20for%20a%20child%20in%20Wakefield#assistant",
+      "https://dadmattersyorkshire.uk/wakefield/",
+      "/?ask=Tell%20me%20about%20Dad%20Matters%20and%20other%20parent%20support%20groups%20in%20Wakefield#assistant",
+      "/?ask=Help%20me%20find%20an%20activity%20in%20Wakefield#assistant",
+      "/submit-listing",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections"
+    ],
+    "ids": [
+      "age",
+      "area",
+      "cards",
+      "category",
+      "communityLoad",
+      "count",
+      "day",
+      "empty",
+      "price"
+    ]
+  },
+  {
+    "path": "/submit-listing",
+    "status": 200,
+    "seconds": 4.71,
+    "url": "https://www.askwakefield.co.uk/submit-listing",
+    "bytes": 18355,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "List your club, activity or business \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/submit-listing"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/activities",
+      "/terms",
+      "/privacy",
+      "/activities",
+      "/",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections"
+    ],
+    "ids": [
+      "areaPostcode",
+      "category",
+      "cost",
+      "daysTimes",
+      "description",
+      "errorMsg",
+      "facebook",
+      "formState",
+      "instagram",
+      "listingForm",
+      "listingName",
+      "listingType",
+      "middleName",
+      "publicEmail",
+      "publicPhone",
+      "relationship",
+      "submitBtn",
+      "submitterEmail",
+      "submitterName",
+      "successState",
+      "tiktok",
+      "venue",
+      "website"
+    ]
+  },
+  {
+    "path": "/admin/listings",
+    "status": 200,
+    "seconds": 4.31,
+    "url": "https://www.askwakefield.co.uk/admin/listings",
+    "bytes": 10879,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "title": "Listings Admin \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [],
+    "unlabelled": [
+      "password",
+      "search",
+      "statusFilter"
+    ],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600&display=swap",
+      "/activities"
+    ],
+    "ids": [
+      "admin",
+      "approvedCount",
+      "changesCount",
+      "empty",
+      "featuredCount",
+      "list",
+      "login",
+      "loginBtn",
+      "loginError",
+      "logout",
+      "newCount",
+      "password",
+      "refresh",
+      "search",
+      "statusFilter"
+    ]
+  },
+  {
+    "path": "/privacy",
+    "status": 200,
+    "seconds": 4.32,
+    "url": "https://www.askwakefield.co.uk/privacy",
+    "bytes": 12353,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Privacy Notice \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/privacy"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "mailto:hello@mediahubink.com",
+      "https://www.mediahubink.com/privacy",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20data%20request",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20privacy%20request",
+      "https://ico.org.uk/make-a-complaint/",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections",
+      "mailto:hello@mediahubink.com"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/terms",
+    "status": 200,
+    "seconds": 4.32,
+    "url": "https://www.askwakefield.co.uk/terms",
+    "bytes": 10387,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Terms of Use \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/terms"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "mailto:hello@mediahubink.com",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections",
+      "mailto:hello@mediahubink.com"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/cookies",
+    "status": 200,
+    "seconds": 4.3,
+    "url": "https://www.askwakefield.co.uk/cookies",
+    "bytes": 7874,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Cookies & Storage \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/cookies"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20cookies",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections",
+      "mailto:hello@mediahubink.com"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/accessibility",
+    "status": 200,
+    "seconds": 4.25,
+    "url": "https://www.askwakefield.co.uk/accessibility",
+    "bytes": 6652,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Accessibility \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/accessibility"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20accessibility",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections",
+      "mailto:hello@mediahubink.com"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/corrections",
+    "status": 200,
+    "seconds": 4.57,
+    "url": "https://www.askwakefield.co.uk/corrections",
+    "bytes": 6827,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "title": "Corrections & Takedowns \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en-GB",
+    "duplicateIds": [],
+    "canonical": [
+      "https://www.askwakefield.co.uk/corrections"
+    ],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg",
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap",
+      "/_vercel/insights/script.js",
+      "/_vercel/speed-insights/script.js",
+      "/",
+      "/",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20correction",
+      "mailto:hello@mediahubink.com?subject=Ask%20Wakefield%20personal%20information%20request",
+      "/privacy",
+      "/privacy",
+      "/terms",
+      "/cookies",
+      "/accessibility",
+      "/corrections",
+      "mailto:hello@mediahubink.com"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/admin/events",
+    "status": 200,
+    "seconds": 4.64,
+    "url": "https://www.askwakefield.co.uk/admin/events",
+    "bytes": 9737,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "title": "Event catalogue | Ask Wakefield",
+    "h1": 1,
+    "lang": "en",
+    "duplicateIds": [],
+    "canonical": [],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/",
+      "/admin/listings"
+    ],
+    "ids": [
+      "count",
+      "enabled",
+      "events",
+      "filter",
+      "login",
+      "message",
+      "password",
+      "reload",
+      "scope",
+      "search",
+      "setup",
+      "signIn",
+      "signOut",
+      "sources",
+      "stats",
+      "workspace",
+      "workspaceSetup"
+    ]
+  },
+  {
+    "path": "/offline.html",
+    "status": 200,
+    "seconds": 4.52,
+    "url": "https://www.askwakefield.co.uk/offline.html",
+    "bytes": 1448,
+    "contentType": "text/html; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "title": "Offline \u2014 Ask Wakefield",
+    "h1": 1,
+    "lang": "en",
+    "duplicateIds": [],
+    "canonical": [],
+    "unlabelled": [],
+    "imagesWithoutAlt": [],
+    "refs": [
+      "/favicon.svg"
+    ],
+    "ids": []
+  },
+  {
+    "path": "/robots.txt",
+    "status": 200,
+    "seconds": 4.5,
+    "url": "https://www.askwakefield.co.uk/robots.txt",
+    "bytes": 110,
+    "contentType": "text/plain; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200,
+    "seconds": 4.58,
+    "url": "https://www.askwakefield.co.uk/sitemap.xml",
+    "bytes": 1056,
+    "contentType": "application/xml",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/manifest.json",
+    "status": 200,
+    "seconds": 4.82,
+    "url": "https://www.askwakefield.co.uk/manifest.json",
+    "bytes": 815,
+    "contentType": "application/json; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    },
+    "data": {
+      "id": "/",
+      "name": "Ask Wakefield",
+      "short_name": "Ask Wakefield",
+      "description": "Independent local AI assistant for the Wakefield district \u2014 what's on, families, food, sport, clubs and local services.",
+      "start_url": "/",
+      "scope": "/",
+      "display": "standalone",
+      "orientation": "any",
+      "theme_color": "#f7f8f3",
+      "background_color": "#f7f8f3",
+      "prefer_related_applications": false,
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        },
+        {
+          "src": "/icons/icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any"
+        },
+        {
+          "src": "/icons/icon-512-maskable.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "maskable"
+        }
+      ]
+    }
+  },
+  {
+    "path": "/sw.js",
+    "status": 200,
+    "seconds": 4.79,
+    "url": "https://www.askwakefield.co.uk/sw.js",
+    "bytes": 1861,
+    "contentType": "application/javascript; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/favicon.svg",
+    "status": 200,
+    "seconds": 4.75,
+    "url": "https://www.askwakefield.co.uk/favicon.svg",
+    "bytes": 371,
+    "contentType": "image/svg+xml",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/icons/icon-192.png",
+    "status": 200,
+    "seconds": 4.63,
+    "url": "https://www.askwakefield.co.uk/icons/icon-192.png",
+    "bytes": 7339,
+    "contentType": "image/png",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/icons/icon-512.png",
+    "status": 200,
+    "seconds": 4.68,
+    "url": "https://www.askwakefield.co.uk/icons/icon-512.png",
+    "bytes": 21555,
+    "contentType": "image/png",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/icons/apple-touch-icon.png",
+    "status": 200,
+    "seconds": 4.28,
+    "url": "https://www.askwakefield.co.uk/icons/apple-touch-icon.png",
+    "bytes": 6985,
+    "contentType": "image/png",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/api/status",
+    "status": 200,
+    "seconds": 4.85,
+    "url": "https://www.askwakefield.co.uk/api/status",
+    "bytes": 91,
+    "contentType": "application/json; charset=utf-8",
+    "headers": {
+      "cache-control": "no-store",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "data": {
+      "build": "v18-core-2026-10-01.1",
+      "livePlacesConfigured": true,
+      "stateSigningConfigured": true
+    }
+  },
+  {
+    "path": "/api/public-listings",
+    "status": 200,
+    "seconds": 4.16,
+    "url": "https://www.askwakefield.co.uk/api/public-listings",
+    "bytes": 15,
+    "contentType": "application/json; charset=utf-8",
+    "headers": {
+      "cache-control": "public",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "data": {
+      "listings": []
+    }
+  },
+  {
+    "path": "/api/event-catalogue",
+    "status": 405,
+    "seconds": 4.85,
+    "url": "https://www.askwakefield.co.uk/api/event-catalogue",
+    "bytes": 30,
+    "contentType": "application/json; charset=utf-8",
+    "headers": {
+      "cache-control": "no-store",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "data": {
+      "error": "Method not allowed"
+    }
+  },
+  {
+    "path": "/api/admin-listings",
+    "status": 405,
+    "seconds": 4.7,
+    "url": "https://www.askwakefield.co.uk/api/admin-listings",
+    "bytes": 30,
+    "contentType": "application/json; charset=utf-8",
+    "headers": {
+      "cache-control": "no-store",
+      "strict-transport-security": "max-age=63072000",
+      "x-robots-tag": "noindex, nofollow"
+    },
+    "data": {
+      "error": "Method not allowed"
+    }
+  },
+  {
+    "path": "/_vercel/insights/script.js",
+    "status": 200,
+    "seconds": 4.17,
+    "url": "https://www.askwakefield.co.uk/_vercel/insights/script.js",
+    "bytes": 4522,
+    "contentType": "application/javascript; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=2678400",
+      "strict-transport-security": "max-age=63072000; includeSubDomains; preload"
+    }
+  },
+  {
+    "path": "/_vercel/speed-insights/script.js",
+    "status": 200,
+    "seconds": 4.15,
+    "url": "https://www.askwakefield.co.uk/_vercel/speed-insights/script.js",
+    "bytes": 12567,
+    "contentType": "application/javascript; charset=utf-8",
+    "headers": {
+      "cache-control": "public, max-age=2678400",
+      "strict-transport-security": "max-age=63072000; includeSubDomains; preload"
+    }
+  },
+  {
+    "path": "/images/card-family.webp",
+    "status": 200,
+    "seconds": 4.19,
+    "url": "https://www.askwakefield.co.uk/images/card-family.webp",
+    "bytes": 285520,
+    "contentType": "image/webp",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/images/card-restaurants.webp",
+    "status": 200,
+    "seconds": 4.22,
+    "url": "https://www.askwakefield.co.uk/images/card-restaurants.webp",
+    "bytes": 149288,
+    "contentType": "image/webp",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  },
+  {
+    "path": "/images/card-whats-on.webp",
+    "status": 200,
+    "seconds": 4.21,
+    "url": "https://www.askwakefield.co.uk/images/card-whats-on.webp",
+    "bytes": 172012,
+    "contentType": "image/webp",
+    "headers": {
+      "cache-control": "public, max-age=0, must-revalidate",
+      "strict-transport-security": "max-age=63072000"
+    }
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/api/submit-event",
+    "status": 400,
+    "body": "{\"error\":\"Invalid or missing required fields\"}"
+  },
+  {
+    "path": "/api/submit-listing",
+    "status": 400,
+    "body": "{\"error\":\"Invalid or missing required fields\"}"
+  },
+  {
+    "path": "/api/admin-listings",
+    "status": 401,
+    "body": "{\"error\":\"Incorrect password\"}"
+  },
+  {
+    "path": "/api/event-catalogue",
+    "status": 401,
+    "body": "{\"error\":\"Authentication required\"}"
+  },
+  {
+    "path": "/api/chat",
+    "status": 400,
+    "body": "{\"error\":\"invalid_request\",\"reply\":\"Please enter a valid question.\"}"
+  },
+  {
+    "path": "/api/followups",
+    "status": 400,
+    "body": "{\"followups\":[]}"
+  }
+]

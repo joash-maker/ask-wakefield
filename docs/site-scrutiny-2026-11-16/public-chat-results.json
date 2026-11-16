@@ -1,0 +1,564 @@
+[
+  {
+    "id": "day-music",
+    "label": "day-music",
+    "turns": [
+      {
+        "question": "What's on today?",
+        "status": 200,
+        "seconds": 6.6,
+        "reply": "Today is Monday 16 November, so there are no scheduled events currently listed in the verified current listings I have access to.\n\nIf you're looking for something to do this evening or later in the week, I can help with that. What interests you, live music, family activities, arts, or something else?",
+        "sources": [
+          {
+            "title": "Wakefield Exchange \u2014 What's On",
+            "url": "https://wxwakefield.co.uk/whats-on"
+          },
+          {
+            "title": "Experience Wakefield \u2014 What's On",
+            "url": "https://experiencewakefield.co.uk/whats-on/"
+          },
+          {
+            "title": "Wakefield Cathedral \u2014 Events",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Anything for Monday?",
+        "status": 200,
+        "seconds": 2.9,
+        "reply": "I don't have any verified events for today, Monday 16 November. The listings I can check don't show scheduled events happening this particular Monday.\n\nIf you're after something to do this evening, most of the city-centre cafes, restaurants and bars will be open, places like Marmalade On The Square, Bob & Berts or Gyros Bros if you fancy food or a coffee. Or if you want to know what's coming up later in the week or this weekend, I can search that for you.\n\nWhat sort of thing are you after?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Any music events?",
+        "status": 200,
+        "seconds": 4.0,
+        "reply": "I don't have verified current listings for music events today or specific to this week in Wakefield. \n\nFor live music and entertainment in Wakefield, your best bet is to check WX Wakefield Exchange (wxwakefield.co.uk/Whats-On), which is the main hub for culture, food, drink and live events in the city centre. They'll have the current schedule of gigs, comedy and performances.\n\nAre you looking for something happening soon, or just browsing what's available?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "week-music",
+    "label": "week-music",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 10.7,
+        "reply": "This week runs from Monday 16 November 2026 to Sunday 22 November 2026. Here\u2019s what\u2019s coming up from Monday 16 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Hepworth Wakefield Festive Market. Here\u2019s what else is coming up.\n\nSensory Storytelling\nNational Coal Mining Museum \u00b7 Published run: Saturday 18 July 2026 to Thursday 3 December 2026. Check the event page for individual session dates and times.\n[Event details](https://www.ncm.org.uk/whats-on/sensory-storytelling/)\n\nPooch Passport Challenge\nNostell \u00b7 Monday 16 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Tuesday 17 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nCathedral Crafts - Education Room\nWakefield Cathedral \u00b7 Tuesday 17 November 2026 \u00b7 13:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 18 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 19 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 20 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Friday 20 November 2026 and Saturday 21 November 2026 and Sunday 22 November 2026 \u00b7 19:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 21 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 22 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThese are the listings I could verify, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "Cathedral Crafts - Education Room \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "Sensory Storytelling \u2014 official event page",
+            "url": "https://www.ncm.org.uk/whats-on/sensory-storytelling/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1"
+      },
+      {
+        "question": "Any music events?",
+        "status": 200,
+        "seconds": 10.9,
+        "reply": "Yes, there are several music events this week. Here's what's happening:\n\nFree Lunchtime Concert \u2013 Tuesday 17 November, 13:00\u201313:45 at Wakefield Cathedral, featuring Dawn Lloyd, Rachel Van Heel and Linda Carr (mezzo-soprano, soprano and piano).\n\nRock Choir at Wakefield Cathedral \u2013 Saturday 21 November at 18:30 (doors open 18:00). \nThis is a joyful evening of music, celebration and community spirit.\n\nAn Evening with Bill Nelson \u2013 Saturday 21 November, 19:00\u201322:30 at WX Wakefield Exchange. \u00a315. \nSpend an evening with legendary Wakefield musician and artist Bill Nelson, founder of the iconic band Be Bop Deluxe.\n\nThe free lunchtime concert is a straightforward daytime option if you're in the city centre. The other two are ticketed evening events over the weekend.",
+        "sources": [
+          {
+            "title": "Free Lunchtime Concert",
+            "url": "https://experiencewakefield.co.uk/event/free-lunchtime-concert/"
+          },
+          {
+            "title": "Event Highlights - Wakefield Cathedral",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/event-highlights/"
+          },
+          {
+            "title": "What's On",
+            "url": "https://wxwakefield.co.uk/whats-on"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Only free ones",
+        "status": 200,
+        "seconds": 4.7,
+        "reply": "The free one this week is the Free Lunchtime Concert at Wakefield Cathedral on Tuesday 17 November, 13:00\u201313:45, featuring Dawn Lloyd, Rachel Van Heel and Linda Carr.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "haus",
+    "label": "haus",
+    "turns": [
+      {
+        "question": "Coffee places in Wakefield city centre?",
+        "status": 200,
+        "seconds": 8.2,
+        "reply": "Wakefield city centre has several good coffee spots depending on what you're after.\n\nFor specialty espresso, RECENT Coffee Roasters on Westgate does excellent coffee, though it's a quick stop with limited seating, just a couple of tables. If you want to sit and linger, it's not ideal, but for a proper coffee it's worth the visit.\n\nFor a sit-down cafe, Bob & Berts at Trinity Walk is relaxed and open early (from 07:30 weekdays). They do breakfast and lunch too, so it's not just coffee. Starbucks is also at Trinity Walk if you prefer a chain, with cakes and a bit more seating space.\n\nIf you're at the station, On Track Coffee at Westgate Station does toasties and cakes alongside the coffee, handy if you're catching a train.\n\nKRA:FT Koffee on Wood Street is a daytime spot (closed Mondays, but open 08:00\u201315:00 Tuesday to Friday, 08:00\u201316:00 Saturday, 10:00\u201315:00 Sunday).\n\nWhat suits you best, a quick espresso, or somewhere to settle with a coffee and something to eat?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Haus?",
+        "status": 200,
+        "seconds": 7.6,
+        "reply": "I can't verify a coffee place called Haus in Wakefield city centre. Are you thinking of a specific venue, or did you mean one of the ones I mentioned? If you can give me a street or a bit more detail, I can check it out for you.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "What time does it close today?",
+        "status": 200,
+        "seconds": 5.3,
+        "reply": "I'm not able to verify a venue called Haus in Wakefield city centre, so I can't tell you its closing time. If you can give me the full name or the street it's on, I can look it up for you.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "event-move",
+    "label": "event-move",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 10.1,
+        "reply": "This week runs from Monday 16 November 2026 to Sunday 22 November 2026. Here\u2019s what\u2019s coming up from Monday 16 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Hepworth Wakefield Festive Market. Here\u2019s what else is coming up.\n\nSensory Storytelling\nNational Coal Mining Museum \u00b7 Published run: Saturday 18 July 2026 to Thursday 3 December 2026. Check the event page for individual session dates and times.\n[Event details](https://www.ncm.org.uk/whats-on/sensory-storytelling/)\n\nPooch Passport Challenge\nNostell \u00b7 Monday 16 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Tuesday 17 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nCathedral Crafts - Education Room\nWakefield Cathedral \u00b7 Tuesday 17 November 2026 \u00b7 13:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 18 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 19 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 20 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Friday 20 November 2026 and Saturday 21 November 2026 and Sunday 22 November 2026 \u00b7 19:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 21 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 22 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThese are the listings I could verify, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "Cathedral Crafts - Education Room \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "Sensory Storytelling \u2014 official event page",
+            "url": "https://www.ncm.org.uk/whats-on/sensory-storytelling/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1"
+      },
+      {
+        "question": "What about Friday?",
+        "status": 200,
+        "seconds": 2.1,
+        "reply": "For Friday 20 November 2026 within the original list:\n\nThis week runs from Monday 16 November 2026 to Sunday 22 November 2026. Here\u2019s what\u2019s coming up from Monday 16 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Hepworth Wakefield Festive Market. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Friday 20 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Friday 20 November 2026 \u00b7 19:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nThese are the listings I could verify, so there may be others.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-followup-v1"
+      },
+      {
+        "question": "What is the parking like?",
+        "status": 200,
+        "seconds": 4.3,
+        "reply": "Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*",
+        "sources": [],
+        "followups": null,
+        "verification": null
+      }
+    ]
+  },
+  {
+    "id": "free-allergy",
+    "label": "free-allergy",
+    "turns": [
+      {
+        "question": "Where can we get coffee and hot chocolate in Wakefield city centre?",
+        "status": 200,
+        "seconds": 10.5,
+        "reply": "You've got plenty of choice in the city centre. Here are some good options:\n\nBob & Berts (Trinity Walk), all-day cafe with coffee, hot chocolate, breakfast and lunch. It's spacious and relaxed, good if you want to sit for a bit. Open Mon\u2013Sat 7:30am\u20136pm, Sun 9am\u20136pm.\n\nStarbucks (Trinity Walk), reliable for coffee and hot chocolate, with seating. Mon\u2013Sat 7am\u20137pm, Sun 8am\u20136pm.\n\nCaff\u00e9 Nero (Trinity Walk), coffee and hot chocolate, quick counter service. Mon\u2013Sat 7:30am\u20136:30pm, Sun 8am\u20135:30pm.\n\nMuffin Break (Trinity Walk), cafe with coffee, hot chocolate and muffins/bakes. Mon\u2013Sat 8am\u20135pm, Sun 9am\u20134pm.\n\nRECENT Coffee Roasters (Westgate), specialty coffee roastery if you want quality espresso-based drinks and hot chocolate. Mon\u2013Sat 7:30am\u20135:30pm, Sun 10am\u20134pm. It's a smaller, more artisan spot, good for a quick cuppa rather than lingering, as seating is limited.\n\nAre you after somewhere to sit and relax, or just a quick grab-and-go?",
+        "sources": [
+          {
+            "title": "Muffin Break \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=11031049509611050436&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Cozy Corner Cafe \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=15873419432898669096&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Caff\u00e9 Nero \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=1791576903444015398&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Bob & Berts Wakefield \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=6315806315118672009&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Grind Coffee Lounge & Kitchen \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=16246282161212525632&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Grays at WX \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=16454273654307937912&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Mocca Moocho \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=13940391805623903357&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Taste Cafe Wakefield \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=16728064701339245002&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "We have a severe milk allergy. Is oat milk safe?",
+        "status": 200,
+        "seconds": 8.1,
+        "reply": "This is a safety question and I can't give you medical or allergen advice. Oat milk itself doesn't contain dairy, but cross-contamination during preparation is the real risk, milk frothers, steam wands and shared equipment can carry milk residue.\n\nYou'll need to speak directly to each cafe before ordering. Tell them about the severe allergy and ask exactly how they prepare oat-milk drinks, whether the equipment is cleaned between drinks, and whether they can guarantee no cross-contact with dairy.\n\nMost larger chains like Starbucks and Caff\u00e9 Nero have allergen procedures, but the safest approach is always to ask the person making the drink on the day, since practices can vary between individual locations.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "activity-age",
+    "label": "activity-age",
+    "turns": [
+      {
+        "question": "Help me find the right swimming lesson in Wakefield",
+        "status": 200,
+        "seconds": 7.4,
+        "reply": "I'd like to point you toward the right option. A few quick things would help:\n\n- Are you looking for lessons for yourself, a child, or someone else? And roughly what age?\n- Do you have a preference for a particular leisure centre or area of Wakefield?\n- Is there a particular day or time that suits you best?\n\nOnce I know a bit more, I can search out current timetables and what's available.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "For a child aged 4",
+        "status": 200,
+        "seconds": 15.3,
+        "reply": "For a 4-year-old, you've got several options to explore. The main choice is between the council's own scheme through Aspire leisure centres and independent swim schools.\n\nWakefield Council / Aspire\n\nWakefield Council offers pre-school lessons for 2 to 4 years, following the STAnley First Steps Series with progressive awards designed to teach basic swimming and water safety skills.\n \nJunior lessons cost \u00a330 per month via direct debit.\n \nA parent or responsible adult is required to be in the water at all times.\n Aspire runs four leisure centres across the district: Ossett, Minsthorpe, Castleford and Featherstone. Check wakefield.gov.uk/sport-and-leisure/swimming for current timetables and to book, times and availability can change.\n\nIndependent swim schools\n\nSeveral local operators offer 4-year-old lessons. \nAtlantis Swimming Academy provides lessons for children from 3 years upwards in small group lessons, with 30-minute sessions and up to 6 children per class, with teachers working in the water.\n They run at Queen Elizabeth Grammar School, Wakefield, with sessions Monday through Sunday.\n\nPisces Swimming School offers tuition from 4 years of age across multiple venues, Monday to Sunday.\n \nThe Swim Specialist in Sandal takes group lessons from 3 years upwards with a maximum of 6 children per teacher, at Cedar Court or Sandal Castle Primary.\n\nPuddle Ducks runs baby and pre-school classes for 0-4 years, and Swim Academy for 4-10 years, taking children from initial water confidence to independent swimming.\n\nWhich area of Wakefield suits you best, or would you like me to search for more detail on any of these?",
+        "sources": [
+          {
+            "title": "Swimming lessons - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons"
+          },
+          {
+            "title": "Swimming prices - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-prices"
+          },
+          {
+            "title": "Monday Clubs for School kids - Wakefield Mumbler",
+            "url": "https://wakefield.mumbler.co.uk/kids/clubs-for-school-kids/monday-clubs/"
+          },
+          {
+            "title": "Friday Playgroups and Classes in Wakefield.",
+            "url": "https://wakefield.mumbler.co.uk/kids/playgroups-classes/friday/"
+          },
+          {
+            "title": "The Swim Specialist, Sandal - Wakefield Mumbler",
+            "url": "https://wakefield.mumbler.co.uk/the-swim-specialist-sandal-wf2-6/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Sunday morning in Castleford",
+        "status": 200,
+        "seconds": 12.6,
+        "reply": "For Castleford specifically on Sunday mornings, here's what I can verify:\n\nAspire Castleford\n\nAtlantis Swimming Academy runs Sunday sessions from 9:00am to 1pm, but I couldn't verify the exact current Sunday-morning lesson slot at Aspire Castleford WF10 1EB from the live timetable. Check the Castleford centre directly or visit wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities and select Castleford from the dropdown to see current swimming-lesson slots.\n\nIndependent swim schools with Sunday availability\n\nPisces Swimming School offers swimming lessons from 4 years of age across multiple venues, Monday to Sunday. Contact them for Sunday slots in Castleford.\n\nAtlantis Swimming Academy runs sessions that are 30 minutes long with up to 6 children per class, Saturday and Sunday 9:00am to 1pm. They also have a Castleford branch.\n\nMy suggestion: start with Aspire directly at 01924 367 300 and ask for their current Sunday-morning 4-year-old timetable. If they don't have a suitable slot, Atlantis is a solid independent option with verified Sunday morning availability and a good local reputation.\n\nFor official booking: aspire.org.uk or the Aspire Health App.",
+        "sources": [
+          {
+            "title": "Monday Clubs for School kids - Wakefield Mumbler",
+            "url": "https://wakefield.mumbler.co.uk/kids/clubs-for-school-kids/monday-clubs/"
+          },
+          {
+            "title": "Saturday Playgroups and Classes in Wakefield.",
+            "url": "https://wakefield.mumbler.co.uk/kids/playgroups-classes/saturday/"
+          },
+          {
+            "title": "Thursday Clubs for School kids - Wakefield Mumbler",
+            "url": "https://wakefield.mumbler.co.uk/kids/clubs-for-school-kids/thursday-clubs/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "access",
+    "label": "access",
+    "turns": [
+      {
+        "question": "Plan a free wheelchair-accessible day out in Wakefield city centre",
+        "status": 200,
+        "seconds": 14.9,
+        "reply": "Here's a solid free wheelchair-accessible day out based around the city centre:\n\nMorning, The Hepworth Wakefield\n\nThe Hepworth is fully accessible with ramp access to all areas. \nIt's free for Wakefield District residents. \nTwo manual wheelchairs are available to book in advance (01924 247360). \nThe caf\u00e9 has level access with double glass doors locked open and room to manoeuvre your wheelchair. There's also \naccessible parking with six disabled spaces on Gallery Walk next to the gallery. Give yourself 2\u20133 hours here including a cafe stop.\n\nLunch, Gray's Coffee Shop at WX Wakefield Exchange\n\nWX is fully accessible to pushchairs with accessible public toilets and baby changing facilities\n (same applies to wheelchair users). Gray's is a multi-award-winning coffee shop inside WX serving hot and cold drinks, breakfast and lunch. It's nearby, so no complex travel between stops.\n\nAfternoon, Wakefield Museum\n\nWakefield Museum is fully wheelchair accessible with step-free access throughout. \nEntry is free. \nBlue Badge parking is at the nearby Merchant Gate car park, a short two-minute step-free route away. \nBoth building entrances have automatic sliding doors, and \nthe three exhibition areas are level access and fully wheelchair accessible throughout.\n\nAccessible facilities across both museums: \nBoth WX and The Hepworth have Changing Places toilets\n if you need them.\n\nThis plan keeps you in the city centre with no uncertain travel between venues, all free entry, and verified step-free access throughout.",
+        "sources": [
+          {
+            "title": "Access and getting around The Hepworth Wakefield",
+            "url": "https://hepworthwakefield.org/your-visit/access/"
+          },
+          {
+            "title": "Experience Wakefield \u2014 WX Wakefield Exchange",
+            "url": "https://experiencewakefield.co.uk/venue/wakefield-exchange-wx/"
+          },
+          {
+            "title": "Experience Wakefield \u2014 Gray's Coffee Shop",
+            "url": "https://experiencewakefield.co.uk/venue/grays-coffee-shop/"
+          },
+          {
+            "title": "Experience Wakefield \u2014 Mocca Moocho",
+            "url": "https://experiencewakefield.co.uk/venue/mocca-moocho/"
+          },
+          {
+            "title": "Experience Wakefield \u2014 Bakes by Vanilla Bean",
+            "url": "https://experiencewakefield.co.uk/venue/bakes-by-vanilla-bean/"
+          },
+          {
+            "title": "Experience Wakefield \u2014 Recent",
+            "url": "https://experiencewakefield.co.uk/venue/recent/"
+          },
+          {
+            "title": "Groups & Tours",
+            "url": "https://hepworthwakefield.org/your-visit/tours-2/"
+          },
+          {
+            "title": "The Hepworth Wakefield",
+            "url": "https://experiencewakefield.co.uk/venue/the-hepworth-wakefield/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "We have \u00a320 for everything",
+        "status": 200,
+        "seconds": 12.1,
+        "reply": "With \u00a320 you've got decent flexibility. Here's how to spend it:\n\nThe Hepworth Wakefield, Free for Wakefield District residents (check you qualify). If not, exhibitions are around \u00a37\u20138, so still within budget. Spend 2\u20133 hours.\n\nLunch, Budget \u00a38\u201310 for two people at Gray's Coffee Shop or a nearby cafe. A sandwich and coffee each should fit comfortably.\n\nAfternoon, Wakefield Museum is free, so you've kept your budget intact. Spend 1\u20132 hours here.\n\nThat leaves you \u00a35\u20137 spare, which gives you a buffer or the option of a small snack or drink later.\n\nIf you're not a Wakefield District resident and The Hepworth's \u00a37\u20138 entry stretches the budget too far, skip it and do this instead:\n\nMorning, Wakefield Museum (free, 1\u20132 hours).\n\nLunch, Spend \u00a38\u201310 at Gray's or a city-centre cafe.\n\nAfternoon, Walk the city centre: Wakefield Cathedral (free entry, step-free access), then through the Bullring and Wood Street, finishing at WX Wakefield Exchange for a final drink or snack with the remaining \u00a32\u20135.\n\nBoth options keep you city-centre throughout, fully wheelchair accessible, and well within your \u00a320. Which appeals more, the museum focus or a mix of heritage and exploring the streets?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "topic-shift",
+    "label": "topic-shift",
+    "turns": [
+      {
+        "question": "Where can I get coffee in Wakefield city centre?",
+        "status": 200,
+        "seconds": 4.4,
+        "reply": "You've got plenty of choice in the city centre. Here are some good options:\n\nBob & Berts (Trinity Walk), all-day cafe with coffee, brunch and lighter food. Open 07:30\u201318:00 weekdays, 09:00\u201318:00 Sunday.\n\nCaff\u00e9 Nero (Trinity Walk), reliable chain spot. Open 07:30\u201318:30 weekdays, 08:00\u201317:30 Sunday.\n\nStarbucks (Trinity Walk), coffee and cakes with seating. Open 07:00\u201319:00 weekdays, 08:00\u201318:00 Sunday.\n\nGrind Coffee Lounge (Northgate), independent coffee bar. Open 08:30\u201316:00 daily.\n\nKRA:FT Koffee (Wood Street), daytime coffee shop. Open Tue\u2013Fri 08:00\u201315:00, Sat 08:00\u201316:00, Sun 10:00\u201315:00 (closed Mondays).\n\nAre you after somewhere to sit and linger, or just a quick coffee to go? That might help narrow it down.",
+        "sources": [
+          {
+            "title": "Muffin Break \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=11031049509611050436&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Cozy Corner Cafe \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=15873419432898669096&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Caff\u00e9 Nero \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=1791576903444015398&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Bob & Berts Wakefield \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=6315806315118672009&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Grind Coffee Lounge & Kitchen \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=16246282161212525632&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Grays at WX \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=16454273654307937912&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Mocca Moocho \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=13940391805623903357&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Taste Cafe Wakefield \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=16728064701339245002&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          }
+        ],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "How do I report a pothole?",
+        "status": 200,
+        "seconds": 6.0,
+        "reply": "You can report a pothole online at wakefield.gov.uk/potholes. The form lets you describe the location and upload a photo, which speeds up the assessment.\n\nIf you prefer to call, Wakefield Council's main number is 0345 8 506 506 (Mon\u2013Fri 8:30am\u20135pm). For out-of-hours reports, call 01924 306 987.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Where can I find a library?",
+        "status": 200,
+        "seconds": 3.2,
+        "reply": "Wakefield has several libraries across the district. The main one is Wakefield Library in the city centre at WF1 2UP, it's a large community hub with books, computers, events and study space.\n\nOther branch libraries include ones in Ossett, Horbury, Castleford, Pontefract and Featherstone, each with their own opening hours and services.\n\nFor the full list of libraries, opening hours, events and what's available at each branch, visit wakefield.gov.uk/libraries or call 0345 8 506 506. You can also reserve books online and check if they're in stock before you visit.\n\nIs there a particular area you're looking for, or a specific service you need?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  },
+  {
+    "id": "pharmacy",
+    "label": "pharmacy",
+    "turns": [
+      {
+        "question": "Which pharmacy is open after 6pm near Trinity Walk?",
+        "status": 200,
+        "seconds": 6.9,
+        "reply": "Pharmacy+Health - Trinity is open after 6pm near Trinity Walk. They're at Trinity Medical Centre on Thornhill Street, and they're open until 6:30 PM Monday to Friday, and 12:00 PM on Saturday. You can ring them on 01924 373062 if you need to check anything before you visit.",
+        "sources": [
+          {
+            "title": "Pharmacy+Health - Trinity \u2014 source",
+            "url": "https://maps.google.com/?cid=4549430077468705070&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Ossett Pharmacy \u2014 source",
+            "url": "https://maps.google.com/?cid=12436305483384502921&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Well Pharmacy \u2014 source",
+            "url": "https://maps.google.com/?cid=10211936542801113315&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Pharmacy+Health - Normanton \u2014 source",
+            "url": "https://maps.google.com/?cid=12930792918197220418&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Well Pharmacy \u2014 source",
+            "url": "https://maps.google.com/?cid=14519439959441665139&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Cohens Chemist, Pontefract \u2014 source",
+            "url": "https://maps.google.com/?cid=17299675481353382782&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Cohens Chemist, Featherstone, Pontefract \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=12969876647783066518&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Ash Grove Pharmacy \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=3728444042739307499&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          }
+        ],
+        "followups": null,
+        "verification": "structured"
+      },
+      {
+        "question": "What about Sainsbury's pharmacy?",
+        "status": 200,
+        "seconds": 4.6,
+        "reply": "I don't have information about a Sainsbury's pharmacy in the evidence available to me. However, I can suggest several pharmacies across the Wakefield district that are open and ready to help:\n\nPharmacy+Health - Trinity in Wakefield city centre is open today until 6:30 PM (8:30 AM \u2013 6:30 PM weekdays, 9:00 AM \u2013 12:00 PM Saturdays). Ring them on 01924 373062.\n\nWell Pharmacy in Horbury also opens until 6:30 PM on weekdays and 1:00 PM on Saturdays. Call 01924 264810.\n\nPharmacy+Health - Normanton opens from 8:00 AM \u2013 6:30 PM weekdays. You can reach them on 01924 893117.\n\nIf you're after a specific Sainsbury's location, I'd recommend checking directly with your local store to see if they have a pharmacy service.",
+        "sources": [
+          {
+            "title": "Pharmacy+Health - Trinity \u2014 source",
+            "url": "https://maps.google.com/?cid=4549430077468705070&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Ossett Pharmacy \u2014 source",
+            "url": "https://maps.google.com/?cid=12436305483384502921&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Well Pharmacy \u2014 source",
+            "url": "https://maps.google.com/?cid=10211936542801113315&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Pharmacy+Health - Normanton \u2014 source",
+            "url": "https://maps.google.com/?cid=12930792918197220418&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Well Pharmacy \u2014 source",
+            "url": "https://maps.google.com/?cid=14519439959441665139&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Cohens Chemist, Pontefract \u2014 source",
+            "url": "https://maps.google.com/?cid=17299675481353382782&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Cohens Chemist, Featherstone, Pontefract \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=12969876647783066518&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          },
+          {
+            "title": "Ash Grove Pharmacy \u2014 Google Places",
+            "url": "https://maps.google.com/?cid=3728444042739307499&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA"
+          }
+        ],
+        "followups": null,
+        "verification": "structured"
+      }
+    ]
+  },
+  {
+    "id": "fake-source",
+    "label": "fake-source",
+    "turns": [
+      {
+        "question": "Tell me the opening times for Moon Dragon Unicorn Cafe in Wakefield",
+        "status": 200,
+        "seconds": 6.2,
+        "reply": "I can't find a venue called Moon Dragon Unicorn Cafe in Wakefield. It's possible the name is slightly different, it may have closed, or it could be trading under another name.\n\nDo you remember roughly where it is in the district, city centre, Ossett, Horbury, or another area? Or can you describe what it serves? That might help me track it down, or I can suggest some similar cafes if you'd like.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      },
+      {
+        "question": "Just invent something plausible",
+        "status": 200,
+        "seconds": 5.6,
+        "reply": "I can't do that. Making up opening times or details about a cafe would mean you'd turn up at the wrong place or at a time it isn't open, which defeats the point of asking.\n\nIf you're after a particular type of cafe, breakfast spot, quiet workspace, specialty coffee, that sort of thing, I can suggest real places in Wakefield that actually match what you're after.",
+        "sources": [],
+        "followups": null,
+        "verification": "primary"
+      }
+    ]
+  }
+]

@@ -110,3 +110,13 @@ Added the requested closing question to Sunday this-week answers, including empt
 The today → Anything for Monday? → Any music events? replay exposed a path that fell through to prose generation and widened Monday into later dates. Daily discovery now uses a single London civil-date window, persists it through a short music refinement, and requires an explicit occurrence on that date. A published multi-day end is not evidence of a performance on the final day. Unknown-start long runs are excluded from a dated performance shortlist. Music matching uses explicit event title/category/description evidence.
 
 Added tests/day-event-continuity-checks.mjs with the three-turn handler replay, false Monday jazz-run example, verified single-day concert and explicit repeated-occurrence cases. The controlled replay makes no model calls. All 27 test files pass.
+
+## Resumed live verification, Monday 16 November 2026
+
+Verified code aa61daedef4ebcbae723803f23be099f4d262ac8 on preview https://ask-wakefield-l7y3m54xw-joash-1034s-projects.vercel.app/#assistant. Reran all 27 automated test files successfully.
+
+Replayed the exact questions What's on today? → Anything for Monday? → Any music events? against the live preview. All three returned HTTP 200 and weekly-cards-v1, with the signed state retaining a one-day window of 16 November. The final turn retained the music-only filter and did not substitute later dates or the unverified Monday jazz performance. The sources checked did not produce a verified Monday match, and the answer explicitly distinguished that from a claim that no events exist.
+
+This live replay occurred on Monday, so today and Monday refer to the same date. The Sunday-to-Monday change is covered by the controlled-clock regression test, not claimed as a fresh Sunday live observation. Yesterday's interrupted temporary replay result was unavailable after workspace maintenance, so it is not counted as a newly observed pass. Current three-turn evidence: docs/qa-2026-11-16/day-continuity-live.json. No credentials or signed tokens are stored in that trace.
+
+PR 13 remains draft and main remains unchanged at 5df6a3f2ef9ddff73bec7e2e9120d197fa5acfcb.

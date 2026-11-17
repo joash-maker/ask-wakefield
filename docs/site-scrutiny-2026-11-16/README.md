@@ -1,5 +1,7 @@
 # Ask Wakefield site and chat scrutiny
 
+Historical baseline. For the 17 November repairs and remaining release checks, see [the fix verification report](../site-scrutiny-2026-11-17/README.md). The reproduction scripts below target the original behaviour. Use the new scrutiny regression tests against the repaired code.
+
 Reviewed 16 November 2026, approximately 10:17–10:25 London time.
 
 ## Assessment

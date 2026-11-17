@@ -1,10 +1,12 @@
+import {sessionTimesFromHtml,cleanSessionTimes,timesForCard} from '../lib/event-session-times.js';
+import {namedLocalPlace} from '../lib/named-local-place.js';
 import { load } from 'cheerio';
 import { requirementAnswer } from '../lib/chat-requirements.js';
 import { activityDiscovery } from '../lib/activity-discovery.js';
 import { chatNavigation } from '../lib/chat-navigation.js';
 import { planOutingTurn } from '../lib/outing-planner.js';
 import { discoverAnnouncements } from '../lib/outing-announcements.js';
-import { broadCoffeeDiscovery, renderCoffeeDiscovery } from '../lib/coffee-discovery.js';
+import { broadCoffeeDiscovery, renderCoffeeDiscovery, verifyHotChocolate } from '../lib/coffee-discovery.js';
 import { discoverOutingPlaces, distanceMetres } from '../lib/outing-places.js';
 import { answerOutingWarmup, enrichSelectedOuting, selectedOuting, outingParty, eveningPlanQuestion, planSelectedEvening } from '../lib/outing-companion.js';
 import { answerPlannedOuting } from '../lib/outing-food.js';
@@ -499,6 +501,7 @@ function compactStateCard(card) {
     sourceTier: card?.sourceTier || null,
     dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
     occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
+    sessionTimes: cleanSessionTimes(card?.sessionTimes),
     startDate: card?.startDate || null,
     endDate: card?.endDate || null,
     ongoing: card?.ongoing === true,
@@ -532,7 +535,9 @@ function encodeStateToken(state) {
         constraints: state?.constraints || null,
         resultCards: cards
       };
-      const payload = deflateRawSync(Buffer.from(JSON.stringify(compact), 'utf8')).toString('base64url');
+      const json=JSON.stringify(compact);
+      if(Buffer.byteLength(json,'utf8')>30000)continue;
+      const payload = deflateRawSync(Buffer.from(json, 'utf8')).toString('base64url');
       const token = `${STATE_TOKEN_PREFIX}.${payload}.${signStatePayload(payload)}`;
       if (token.length <= STATE_TOKEN_MAX_CHARS) return token;
     }
@@ -593,6 +598,7 @@ function normaliseClientState(raw) {
     date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
     dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
     occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 14) : [],
+    sessionTimes: cleanSessionTimes(card?.sessionTimes),
     startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
     endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
     ongoing: card?.ongoing === true,
@@ -2250,7 +2256,10 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
   const ownText = header.length ? htmlToPlainText((header.html() || '') + (content.html() || '')) : htmlToPlainText(scopedHtml.split(/<(?:div|section|footer)\b[^>]*(?:class|id)=["'][^"']*(?:related|venue-details|footer)[^"']*["']/i)[0]);
   if (!detailText) return null;
 
-  const timeRange = detailText.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+  const publishedRange = detailText.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+  // A multi-day header can combine the first start with the final finish.
+  // It is not evidence of a session running overnight.
+  const timeRange = publishedRange && publishedRange[2].padStart(5,'0') >= publishedRange[1].padStart(5,'0') ? publishedRange : null;
   const condition = conditionalAdmission(ownText);
   const price = condition ? { type: 'conditional', raw: condition } : priceStatusFromEventDetailText(detailText);
 
@@ -2280,7 +2289,8 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
     sourceTier: 'first-party-detail',
     detailText,
     familyEvidenceText: ownText,
-    occurrenceDates
+    occurrenceDates,
+    sessionTimes:sessionTimesFromHtml(source)
   };
 }
 
@@ -2816,6 +2826,7 @@ function canonicaliseEventCardV16(card) {
     priceStatus: ['free','paid','variable','conditional','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
     priceRaw: card.priceRaw || null,
     occurrenceDates: Array.isArray(card.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
+    sessionTimes: cleanSessionTimes(card?.sessionTimes),
     dates: Array.isArray(card.dates) ? card.dates.slice(0, 3) : []
   };
 }
@@ -2901,7 +2912,7 @@ async function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
   await Promise.all(candidates.filter(card => card.startDate < saturdayIso && card.endDate >= saturdayIso && card.source === 'experience').slice(0, 6).map(async card => {
     const context = await fetchEventDetailContextByUrl(card.sourceUrl, card.title);
     const detail = context?.eventDetailCard;
-    if (detail?.occurrenceDates?.length) Object.assign(card, { occurrenceDates: detail.occurrenceDates });
+    if (detail?.occurrenceDates?.length) Object.assign(card, { occurrenceDates: detail.occurrenceDates, sessionTimes:detail.sessionTimes });
   }));
   const cards = candidates
     .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => !todayIso || iso >= todayIso) }))
@@ -2975,6 +2986,7 @@ async function verifiedOctoberWeekendSupplementV16(weekend) {
 }
 
 function eventTimeLabelV16(card) {
+  if (card?.start && card?.end && card.end < card.start) return 'session times not verified';
   if (card?.start && card?.end) return `${card.start}–${card.end}`;
   return card?.start || card?.end || null;
 }
@@ -3035,7 +3047,7 @@ async function refreshEventCardsForPriceV16(cards) {
       ...card,
       priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : (card.priceStatus || 'unknown'),
       priceRaw: direct.priceRaw || card.priceRaw || null,
-      occurrenceDates: direct.occurrenceDates || [],
+      occurrenceDates: direct.occurrenceDates || [], sessionTimes:direct.sessionTimes || [],
       start: direct.startTime || card.start || null,
       end: direct.endTime || card.end || null,
       startTime: direct.startTime || card.startTime || null,
@@ -3221,6 +3233,8 @@ function eventPriceLabelV17(card) {
 }
 
 function eventTimeLabelV17(card) {
+  const times=timesForCard(card);card={...card,...times};
+  if (card?.start && card?.end && card.end < card.start) return 'session times not verified';
   if (card?.start && card?.end) return `${card.start}–${card.end}`;
   if (card?.start) return `from ${card.start}`;
   return 'time not published';
@@ -3287,10 +3301,12 @@ async function verifyWeeklySessionCards(cards, window) {
     const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
     const detail = context?.eventDetailCard;
     if (!detail?.occurrenceDates?.length) return card;
+    const mixedClock = /\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/.exec(detail.detailText || '');
+    const ambiguous = mixedClock && mixedClock[2].padStart(5,'0') < mixedClock[1].padStart(5,'0');
     const occurrences = detail.occurrenceDates.filter(day => day >= window.from && day <= window.end);
-    return { ...card, occurrenceDates:detail.occurrenceDates, dates:occurrences,
-      start:detail.startTime || card.start, startTime:detail.startTime || card.startTime,
-      end:detail.endTime || card.end, endTime:detail.endTime || card.endTime };
+    return { ...card, occurrenceDates:detail.occurrenceDates, sessionTimes:detail.sessionTimes, dates:occurrences,
+      start:ambiguous ? null : detail.startTime || card.start, startTime:ambiguous ? null : detail.startTime || card.startTime,
+      end:ambiguous ? null : detail.endTime || card.end, endTime:ambiguous ? null : detail.endTime || card.endTime };
   }));
 }
 
@@ -3347,6 +3363,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   const priceWord = filters.price === 'free' ? 'free' : (filters.price === 'paid' ? 'ticketed' : '');
   const showPrice = Boolean(ops.showPrice) || filters.price === 'paid';
   const lines = view.map(card => {
+    const dates=dayIso?[dayIso]:card.dates;card={...card,dates,...timesForCard({...card,dates})};
     const meta = [
       filters.day ? null : eventDateLabelV17(card),
       ops.showTime ? (card.start ? `starts at ${card.start}` : 'start time not verified') : eventTimeLabelV17(card),
@@ -3416,7 +3433,7 @@ async function handleStoredEventFollowUpV17(state, ops) {
 function completeEventCard(card, detail) {
   return detail ? { ...card, startDate:detail.startDate || card.startDate, endDate:detail.endDate || card.endDate,
       start:detail.startTime || card.start, end:detail.endTime || card.end,
-      venue:detail.venue || card.venue, occurrenceDates:detail.occurrenceDates?.length ? detail.occurrenceDates : card.occurrenceDates,
+      venue:detail.venue || card.venue, occurrenceDates:detail.occurrenceDates?.length ? detail.occurrenceDates : card.occurrenceDates, sessionTimes:detail.sessionTimes || card.sessionTimes,
       priceStatus:detail.priceStatus && detail.priceStatus !== 'unknown' ? detail.priceStatus : card.priceStatus,
       sourceTier:'first-party-detail' } : card;
 }
@@ -3441,12 +3458,13 @@ async function restoreIncompleteOuting(messages, state) {
 async function answerSelectedEventDetail(state, selected, ops, verifiedContext = null) {
   const original = selected[0];
   const context = verifiedContext || await fetchEventDetailContextByUrl(original.sourceUrl || original.url, original.title);
-  const card = completeEventCard(original,context?.eventDetailCard);
+  let card = completeEventCard(original,context?.eventDetailCard);
   const previous = state.constraints?.eventFocus;
   const age = Date.now() - Date.parse(previous?.checkedAt || '');
   const reuse = !context?.eventSections && previous?.id === card.id && age >= 0 && age <= 30 * 60000;
   const sections = context?.eventSections || (reuse ? previous.sections : null);
   const evidence = sections || { programme:[], parking:[], parkingLinks:[] };
+  card = {...card,...timesForCard(card)};
   const dateText = (card.dates?.length ? card.dates : card.occurrenceDates?.length ? card.occurrenceDates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
 
   let reply;
@@ -5376,6 +5394,8 @@ export default async function handler(req, res) {
     attachStateCookie(res,requirement.state);
     return res.status(200).json(requirement);
   }
+  const namedPlace=await namedLocalPlace(lastUserText(messages),conversationState,messages);
+  if(namedPlace){attachStateCookie(res,namedPlace.state);return res.status(200).json(namedPlace);}
   const activity=await activityDiscovery(lastUserText(messages),conversationState);
   if(activity){
     attachStateCookie(res,activity.state);
@@ -5497,7 +5517,7 @@ export default async function handler(req, res) {
     if (filters.day) {
       // A broad published run is not proof of an occurrence on this weekday.
       view = dayIso && dayIso >= storedWeek.from
-        ? view.filter(card => (card.startDate === dayIso && (card.endDate || card.startDate) === dayIso) || card.occurrenceDates?.includes(dayIso)).map(card => ({ ...card, dates:[dayIso] }))
+        ? view.filter(card => (card.startDate === dayIso && (card.endDate || card.startDate) === dayIso) || card.occurrenceDates?.includes(dayIso)).map(card => {const selected={...card,dates:[dayIso]};return {...selected,...timesForCard(selected),startTime:timesForCard(selected).start,endTime:timesForCard(selected).end};})
         : [];
     }
     if (filters.price) view = view.filter(card => filters.price === 'free'
@@ -5759,7 +5779,7 @@ export default async function handler(req, res) {
   }
 
   if(coffeeDiscovery) {
-    const result=renderCoffeeDiscovery(messages,districtPlacesContext,clientState,route.area);
+    const result=renderCoffeeDiscovery(messages,/\bhot chocolate\b/i.test(currentText)||clientState.constraints?.coffeeDiscovery?.hotChocolate?await verifyHotChocolate(districtPlacesContext):districtPlacesContext,clientState,route.area);
     attachStateCookie(res,result.state);
     return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply)});
   }

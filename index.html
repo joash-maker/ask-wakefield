@@ -144,6 +144,15 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
+<script>if(new URLSearchParams(location.search).get('embed')==='1')document.documentElement.classList.add('aw-embedded');</script>
+<style>
+.aw-embedded body{padding:0!important;background:#17191c;overflow:hidden}
+.aw-embedded body>:not(.assistant-section):not(script):not(style){display:none!important}
+.aw-embedded .assistant-section{display:block!important;max-width:none;padding:0!important;margin:0}
+.aw-embedded .assistant-section>.section-head,.aw-embedded .assistant-links{display:none!important}
+.aw-embedded .chat-wrap,.aw-embedded .chat-wrap.chat-active{height:100dvh;max-height:100dvh;border:0;border-radius:0;scroll-margin:0}
+.aw-embedded .chat-header{padding:12px}.aw-embedded .messages{padding:12px}
+</style>
 <a class="skip" href="#assistant">Skip to the assistant</a>
 <nav class="site-nav" aria-label="Main navigation"><div class="nav-inner"><a class="wordmark" href="/">ask<span>wakefield</span><span aria-hidden="true">.</span></a><div class="nav-links"><a href="#discover">Explore the district</a><a href="/activities">Clubs &amp; activities</a><a class="nav-contribute" href="#contribute">Get listed</a><a class="nav-ask" href="#assistant">Ask a question ↗︎</a></div></div></nav>
 

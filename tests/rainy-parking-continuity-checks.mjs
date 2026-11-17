@@ -14,7 +14,7 @@ assert.equal(second.sources.length,3);
 const legacy=chatNavigation(secondQuestion,{lastIntent:'other'},[{role:'user',content:firstQuestion},{role:'assistant',content:'Some indoor ideas.'},{role:'user',content:secondQuestion}]);
 assert.match(legacy.reply,/Wakefield Museum/);assert.match(legacy.reply,/Merchant Gate/,'Recover the immediate rainy-day request from a pre-fix conversation');
 assert.equal(chatNavigation("What's on this weekend?",second.state),null);
-assert.equal(chatNavigation('How do I report a pothole?',second.state),null);
+assert.match(chatNavigation('How do I report a pothole?',second.state).reply,/road reporting service/);
 assert.equal(chatNavigation('What is the weather tomorrow?',second.state),null);
 assert.match(chatNavigation('Help me find official parking information for Wakefield city centre').reply,/Where in the city centre/);
 // Exercise the complete client → signed state → handler flow without paid lookups.

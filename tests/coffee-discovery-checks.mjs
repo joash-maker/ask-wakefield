@@ -5,7 +5,8 @@ process.env.ANTHROPIC_API_KEY='test';process.env.GOOGLE_PLACES_API_KEY='test';pr
 process.env.AW_EVENT_CATALOGUE_ENABLED='false';
 const {broadCoffeeDiscovery,renderCoffeeDiscovery}=await import('../lib/coffee-discovery.js');
 for(const q of ['Where can I get good food or coffee in Wakefield?',"I'm sure there's more coffee shops around Wakefield city",'Any cafes in the city centre?'])assert.equal(broadCoffeeDiscovery([{role:'user',content:q}]),true,q);
-for(const q of ['What is coffee?','Where can I get vegan coffee?','Plan coffee and art','Independent coffee near Wakefield','Coffee for children','Where can I get hot chocolate and coffee?', 'Starting with brunch and someone recommended a coffee shop/bar called Example'])assert.equal(broadCoffeeDiscovery([{role:'user',content:q}]),false,q);
+for(const q of ['What is coffee?','Where can I get vegan coffee?','Plan coffee and art','Independent coffee near Wakefield','Coffee for children','Starting with brunch and someone recommended a coffee shop/bar called Example'])assert.equal(broadCoffeeDiscovery([{role:'user',content:q}]),false,q);
+assert.equal(broadCoffeeDiscovery([{role:'user',content:'Where can I get hot chocolate and coffee?'}]),true);
 const anchor={latitude:53.683,longitude:-1.497};
 const places=Array.from({length:12},(_,i)=>({id:'coffee-'+i,displayName:{text:'Fixture Coffee '+i},businessStatus:'OPERATIONAL',location:{latitude:53.683+i*.0003,longitude:-1.497},formattedAddress:(i+1)+' Fixture Street, Wakefield WF1 1AA, UK',googleMapsUri:'https://maps.google.com/?cid='+i+'&g_mp=tracking',servesCoffee:true,servesLunch:i%2===0,currentOpeningHours:{openNow:i%2===0,weekdayDescriptions:['Monday: 07:00–16:00','Sunday: 09:00–15:00'],periods:[{open:{day:0,hour:9},close:{day:0,hour:15}}]}}));
 let broken=false,unknownServices=false,calls=0,genericCalls=0;

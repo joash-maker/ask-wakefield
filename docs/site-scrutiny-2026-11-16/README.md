@@ -202,3 +202,9 @@ These are narrower, truthful improvements. They do not establish complete outing
 5. **The newly found site defects are unchanged.** Event form, activities page and widget served content matching the reviewed source. The false-success, validation/acknowledgement, labels, directory identity/filter and legacy-widget issues therefore remain in the candidate. This run did not write a submission or repeat the old endpoint's preflight check.
 
 The preview is safer in the tested contexts but still does not meet full-site release criteria. Evidence: [fresh preview conversations](protected-preview-chat-results.json) and [content-checked preview routes](protected-preview-routes.json). This follow-up changed documentation only; no implementation fixes or merge were performed.
+
+## Rainy-day and parking follow-up fix, 17 November
+
+Fixed the reported rainy-day → Wakefield city-centre + ample parking refinement. The original natural rainy-day question had bypassed the indoor route because it also matched generic leisure discovery. Parking wording then displaced the activity intent. Indoor navigation now retains the city-centre/parking context, supplies Museum and Library source references plus Merchant Gate guidance, and distinguishes a parking option from live space availability. It does not assume children for a general rainy-day request. The immediate prior rainy-day question can also recover this context from a pre-fix conversation.
+
+Added tests/rainy-parking-continuity-checks.mjs with the exact two-turn handler replay, signed state, legacy history, unrelated-topic escape and no invented space guarantee. All 28 test files passed. This is a focused fix, not closure of the other scrutiny findings. Verification used controlled handler/source tests; a fresh protected-preview chat run is not claimed here. Main remains unchanged.

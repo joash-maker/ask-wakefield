@@ -5366,7 +5366,7 @@ export default async function handler(req, res) {
     attachStateCookie(res,selected.state);
     return res.status(200).json({...selected,reply:finaliseUserFacingReply(selected.reply),live:true,verification:'selected-event-discovery-v2'});
   }
-  const navigation=chatNavigation(lastUserText(messages),conversationState);
+  const navigation=chatNavigation(lastUserText(messages),conversationState,messages);
   if(navigation){
     attachStateCookie(res,navigation.state);
     return res.status(200).json(navigation);

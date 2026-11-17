@@ -54,3 +54,16 @@ New session facts participate in collected-record hashes, so changed session evi
 - Four further defects were found and fixed: the broad services pill matched the library shortcut, a named event-time question lost the weekly Friday filter, an activity `Any more?` escaped hard requirements, and an existing catalogue row exposed `Dates for the diary` as an event. Dedicated regressions now cover these. The full 32-file suite passes.
 - One live event submission labelled `AW QA TEST DO NOT PUBLISH 20261117T161156Z` saved successfully. The provider accepted both submitter and operator notification requests. Inbox delivery remains unconfirmed. Initial same-origin access redirects were corrected in the test client before the successful application request. No real public event was represented by this disposable record.
 - The test recipient address and temporary access secret are deliberately omitted from committed evidence.
+
+
+## Corrected deployment verification
+
+Application commit `6dd89eb1e2e41b4163dfd343fb0ead2276c9b02c`, deployment `dpl_EZtk6c79CDCppmDKe9frtMjKzHHt`, tested preview https://ask-wakefield-jhthqpncm-joash-1034s-projects.vercel.app/#assistant.
+
+All four targeted corrected checks passed across seven additional live API turns, all HTTP 200. The services pill asks which service is needed. The named Festive Market time reply retains Friday 20 November, starts at 19:00 and ends at 22:00. Activity `Any more?` retains area, music, under-5, Monday and free requirements without claiming an unverified match. `Dates for the diary` no longer appears as a dated event. Evidence is in `corrected-preview-results.json`. Combined live coverage was 40 turns, with the first 33 exposing four defects and the final seven confirming their repairs.
+
+The live submission was independently re-read from the event sheet: exactly one matching record at row 6, consent Yes, both notification outcomes accepted. Its review status was changed from New to `QA test - do not publish`, retaining the audit record while excluding it from ordinary review. Inbox delivery remains unconfirmed, with no matching message visible through the connected Gmail search. That search does not prove non-delivery to the designated mailbox.
+
+The original deployment's temporary access was revoked before replacing it with access to the rebuilt preview for only the time remaining in the same approved 15-minute window. That replacement access was also revoked immediately after verification. No production protection settings were changed. Main remains unchanged and PR 13 remains draft.
+
+Operational checks still open: actual inbox receipt confirmation, the separate-origin HTTPS embed, remaining September-source refreshes, physical-device/Safari/screen-reader checks, and distributed submission locking if an exactly-once guarantee is required. No perfection or whole-site accessibility certification is claimed.

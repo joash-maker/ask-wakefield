@@ -2,112 +2,112 @@
   {
     "file": "tests/chat-requirements-checks.mjs",
     "passed": true,
-    "seconds": 0.39
+    "seconds": 0.32
   },
   {
     "file": "tests/chat-surface-checks.mjs",
     "passed": true,
-    "seconds": 0.13
+    "seconds": 0.09
   },
   {
     "file": "tests/city-outing-continuity-checks.mjs",
     "passed": true,
-    "seconds": 0.47
+    "seconds": 0.49
   },
   {
     "file": "tests/coffee-discovery-checks.mjs",
     "passed": true,
-    "seconds": 0.29
+    "seconds": 0.28
   },
   {
     "file": "tests/conversation-harness.mjs",
     "passed": true,
-    "seconds": 0.76
+    "seconds": 0.49
   },
   {
     "file": "tests/conversation-scope-checks.mjs",
     "passed": true,
-    "seconds": 0.2
+    "seconds": 0.15
   },
   {
     "file": "tests/copy-links-checks.mjs",
     "passed": true,
-    "seconds": 0.08
+    "seconds": 0.05
   },
   {
     "file": "tests/core-request-tests.mjs",
     "passed": true,
-    "seconds": 0.3
+    "seconds": 0.25
   },
   {
     "file": "tests/day-event-continuity-checks.mjs",
     "passed": true,
-    "seconds": 0.3
+    "seconds": 0.25
   },
   {
     "file": "tests/event-catalogue-handler-checks.mjs",
     "passed": true,
-    "seconds": 0.29
+    "seconds": 0.32
   },
   {
     "file": "tests/event-coffee-context-checks.mjs",
     "passed": true,
-    "seconds": 0.28
+    "seconds": 0.19
   },
   {
     "file": "tests/event-collector-checks.mjs",
     "passed": true,
-    "seconds": 0.25
+    "seconds": 0.22
   },
   {
     "file": "tests/event-detail-followup-checks.mjs",
     "passed": true,
-    "seconds": 0.42
+    "seconds": 0.29
   },
   {
     "file": "tests/event-listing-parser-checks.mjs",
     "passed": true,
-    "seconds": 0.21
+    "seconds": 0.18
   },
   {
     "file": "tests/event-week-window-checks.mjs",
     "passed": true,
-    "seconds": 0.3
+    "seconds": 0.29
   },
   {
     "file": "tests/free-weekend-continuity-checks.mjs",
     "passed": true,
-    "seconds": 0.36
+    "seconds": 0.33
   },
   {
     "file": "tests/natural-outing-checks.mjs",
     "passed": true,
-    "seconds": 0.28
+    "seconds": 0.22
   },
   {
     "file": "tests/ongoing-handler-checks.mjs",
     "passed": true,
-    "seconds": 0.27
+    "seconds": 0.23
   },
   {
     "file": "tests/outing-catalogue-production-checks.mjs",
     "passed": true,
-    "seconds": 0.4
+    "seconds": 0.49
   },
   {
     "file": "tests/outing-companion-checks.mjs",
     "passed": true,
-    "seconds": 0.26
+    "seconds": 0.31
   },
   {
     "file": "tests/outing-handler-v2-checks.mjs",
     "passed": true,
-    "seconds": 0.31
+    "seconds": 0.35
   },
   {
     "file": "tests/outing-places-v2-checks.mjs",
     "passed": true,
-    "seconds": 0.2
+    "seconds": 0.21
   },
   {
     "file": "tests/outing-planner-v2-checks.mjs",
@@ -117,17 +117,17 @@
   {
     "file": "tests/pwa-focused-checks.mjs",
     "passed": true,
-    "seconds": 0.05
+    "seconds": 0.06
   },
   {
     "file": "tests/pwa-integration-checks.mjs",
     "passed": true,
-    "seconds": 0.06
+    "seconds": 0.05
   },
   {
     "file": "tests/rainy-parking-continuity-checks.mjs",
     "passed": true,
-    "seconds": 0.19
+    "seconds": 0.18
   },
   {
     "file": "tests/scrutiny-content-checks.mjs",
@@ -135,23 +135,28 @@
     "seconds": 0.26
   },
   {
+    "file": "tests/scrutiny-live-regressions.mjs",
+    "passed": true,
+    "seconds": 0.17
+  },
+  {
     "file": "tests/scrutiny-submission-checks.mjs",
     "passed": true,
-    "seconds": 0.16
+    "seconds": 0.15
   },
   {
     "file": "tests/scrutiny-surface-checks.mjs",
     "passed": true,
-    "seconds": 0.26
+    "seconds": 0.2
   },
   {
     "file": "tests/station-outing-checks.mjs",
     "passed": true,
-    "seconds": 0.23
+    "seconds": 0.21
   },
   {
     "file": "tests/weekly-family-checks.mjs",
     "passed": true,
-    "seconds": 0.32
+    "seconds": 0.27
   }
 ]

@@ -1,0 +1,237 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 66804
+  },
+  {
+    "path": "/submit-event",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 15086
+  },
+  {
+    "path": "/for-organisations",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 10919
+  },
+  {
+    "path": "/activities",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 46535
+  },
+  {
+    "path": "/submit-listing",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 18887
+  },
+  {
+    "path": "/admin/listings",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 10879
+  },
+  {
+    "path": "/privacy",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 12353
+  },
+  {
+    "path": "/terms",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 10387
+  },
+  {
+    "path": "/cookies",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 7874
+  },
+  {
+    "path": "/accessibility",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 6652
+  },
+  {
+    "path": "/corrections",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 6827
+  },
+  {
+    "path": "/admin/events",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 9737
+  },
+  {
+    "path": "/offline.html",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 1448
+  },
+  {
+    "path": "/robots.txt",
+    "status": 200,
+    "contentType": "text/plain; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 110
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200,
+    "contentType": "application/xml",
+    "matchesReviewedSource": true,
+    "bytes": 1056
+  },
+  {
+    "path": "/manifest.json",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 815
+  },
+  {
+    "path": "/sw.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 1861
+  },
+  {
+    "path": "/favicon.svg",
+    "status": 200,
+    "contentType": "image/svg+xml",
+    "matchesReviewedSource": true,
+    "bytes": 371
+  },
+  {
+    "path": "/icons/icon-192.png",
+    "status": 200,
+    "contentType": "image/png",
+    "matchesReviewedSource": true,
+    "bytes": 7339
+  },
+  {
+    "path": "/icons/icon-512.png",
+    "status": 200,
+    "contentType": "image/png",
+    "matchesReviewedSource": true,
+    "bytes": 21555
+  },
+  {
+    "path": "/icons/apple-touch-icon.png",
+    "status": 200,
+    "contentType": "image/png",
+    "matchesReviewedSource": true,
+    "bytes": 6985
+  },
+  {
+    "path": "/api/status",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "matchesReviewedSource": null,
+    "bytes": 92
+  },
+  {
+    "path": "/api/public-listings",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "matchesReviewedSource": null,
+    "bytes": 15
+  },
+  {
+    "path": "/api/event-catalogue",
+    "status": 405,
+    "contentType": "application/json; charset=utf-8",
+    "matchesReviewedSource": null,
+    "bytes": 30
+  },
+  {
+    "path": "/api/admin-listings",
+    "status": 405,
+    "contentType": "application/json; charset=utf-8",
+    "matchesReviewedSource": null,
+    "bytes": 30
+  },
+  {
+    "path": "/_vercel/insights/script.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "matchesReviewedSource": null,
+    "bytes": 4518
+  },
+  {
+    "path": "/_vercel/speed-insights/script.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "matchesReviewedSource": null,
+    "bytes": 20277
+  },
+  {
+    "path": "/images/card-family.webp",
+    "status": 200,
+    "contentType": "image/webp",
+    "matchesReviewedSource": true,
+    "bytes": 285520
+  },
+  {
+    "path": "/images/card-restaurants.webp",
+    "status": 200,
+    "contentType": "image/webp",
+    "matchesReviewedSource": true,
+    "bytes": 149288
+  },
+  {
+    "path": "/images/card-whats-on.webp",
+    "status": 200,
+    "contentType": "image/webp",
+    "matchesReviewedSource": true,
+    "bytes": 172012
+  },
+  {
+    "path": "/widget.js",
+    "status": 200,
+    "contentType": "application/javascript; charset=utf-8",
+    "matchesReviewedSource": true,
+    "bytes": 3106
+  },
+  {
+    "path": "/api/submit-event",
+    "method": "POST",
+    "status": 400,
+    "body": "{\"error\":\"Check the required fields, consent and event dates\"}"
+  },
+  {
+    "path": "/api/submit-listing",
+    "method": "POST",
+    "status": 400,
+    "body": "{\"error\":\"Invalid or missing required fields\"}"
+  },
+  {
+    "path": "/api/admin-listings",
+    "method": "POST",
+    "status": 401,
+    "body": "{\"error\":\"Incorrect password\"}"
+  }
+]

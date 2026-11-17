@@ -41,3 +41,16 @@ The reported code defects are repaired on `test/natural-outing-conversations`. T
 6. Retry/rate locks are per process and receipt reads are durable, but Sheets append is not an atomic distributed claim. Simultaneous requests on separate cold instances can still race. A distributed transactional store is required before claiming exactly-once submissions or distributed rate enforcement.
 
 New session facts participate in collected-record hashes, so changed session evidence can invalidate an older manual approval. Recollect and review as usual. Ambiguous end-before-start summary clocks are withheld, not reinterpreted as overnight sessions.
+
+
+## Fresh deployed run after Joash approved access and supplied a recipient
+
+17 November, deployment `dpl_ERqY6q9TyFJKJYLx3DmbwsL4B4Fo`, application commit `1909a569d3f47e5e3bff7725787ca3e0e9b0486f`.
+
+- 20 conversations, 33 live API turns, including all 12 shipped starter actions. All HTTP 200. This is transport success, not 33 content passes. See `fresh-preview-results.json`.
+- The preview now actually returned `weekly-catalogue-v1`, confirming the catalogue path at runtime.
+- 34 route and invalid-input/auth checks. All 25 static responses with a corresponding local file matched the reviewed source. Non-POST admin requests returned 405, empty submissions 400 and unauthenticated listing-admin POST 401. A mistaken probe of a nonexistent `/api/event-review` route was excluded from the site inventory.
+- Named Haus and its Tuesday hours, rainy-day/city-centre parking continuity, coffee/hot-chocolate evidence, library address, allergy uncertainty and Monday music continuity behaved conservatively.
+- Four further defects were found and fixed: the broad services pill matched the library shortcut, a named event-time question lost the weekly Friday filter, an activity `Any more?` escaped hard requirements, and an existing catalogue row exposed `Dates for the diary` as an event. Dedicated regressions now cover these. The full 32-file suite passes.
+- One live event submission labelled `AW QA TEST DO NOT PUBLISH 20261117T161156Z` saved successfully. The provider accepted both submitter and operator notification requests. Inbox delivery remains unconfirmed. Initial same-origin access redirects were corrected in the test client before the successful application request. No real public event was represented by this disposable record.
+- The test recipient address and temporary access secret are deliberately omitted from committed evidence.

@@ -66,3 +66,42 @@ const unsupported=await askWithState('Are those wheelchair accessible?',next);
 assert.equal(unsupported.verification,'weekly-followup-v1');assert.match(unsupported.reply,/cannot verify/);
 assert.equal(modelCalls,0);
 console.log('Weekly follow-up replay passed: signed state, next-week Thursday, cumulative free/day filters, reset, times and unsupported constraints.');
+
+const broad=await askWithState("What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.");
+assert.equal(broad.verification,'weekly-cards-v1');
+assert.equal(broad.state.constraints.eventWeek.kind,'this-week');
+
+assert.deepEqual(eventWeekWindow('What about next Saturday?',new Date('2026-11-15T13:00:00Z')),{kind:'day',start:'2026-11-21',end:'2026-11-21',from:'2026-11-21',today:'2026-11-15'});
+
+// Sunday at/after closing: a still-published card must not become an upcoming event.
+const sundayWindow=eventWeekWindow('this week',new NativeDate('2026-11-15T15:05:00Z'));
+const festival={...card('Christmas Festival','2026-11-15'),startTime:'10:00',endTime:'15:00'};
+assert.equal(selectWeekCards([festival],sundayWindow,new NativeDate('2026-11-15T14:59:00Z')).length,1);
+assert.equal(selectWeekCards([festival],sundayWindow,new NativeDate('2026-11-15T15:00:00Z')).length,0);
+assert.equal(selectWeekCards([{...festival,endTime:null}],sundayWindow,new NativeDate('2026-11-15T16:00:00Z')).length,1,'Missing finish is not an inferred closing time');
+assert.equal(selectWeekCards([{...festival,startTime:'22:00',endTime:'02:00'}],sundayWindow,new NativeDate('2026-11-15T23:00:00Z')).length,1,'Ambiguous overnight clocks stay conservative');
+const summerWindow=eventWeekWindow('this week',new NativeDate('2026-06-28T14:00:00Z'));
+assert.equal(selectWeekCards([{...festival,startDate:'2026-06-28',endDate:'2026-06-28'}],summerWindow,new NativeDate('2026-06-28T14:00:00Z')).length,0,'Cutoff uses London BST, not UTC');
+const longRuns=Array.from({length:9},(_,i)=>({...ongoing,title:'Exhibition '+i,venue:'Gallery '+i,sourceUrl:'https://example.org/event/'+i,endDate:'2027-01-0'+(i+1)}));
+const sundayShortlist=selectWeekCards([festival,...longRuns],sundayWindow,new NativeDate('2026-11-15T15:05:00Z'));
+assert.equal(sundayShortlist.length,3,'Do not pad a thin Sunday list with nine long runs');
+const sundayReply=formatWeekCards(sundayShortlist,sundayWindow);
+assert.doesNotMatch(sundayReply,/Christmas Festival/);
+assert.match(sundayReply,/couldn’t verify any remaining one-day events/);
+assert.match(sundayReply,/Opening days and individual sessions are not confirmed/);
+console.log('Sunday checks passed: end-clock cutoff, London BST, missing and overnight clocks, concise runs and explicit visit uncertainty.');
+
+const offer='Would you like me to check what’s on next week?';
+assert(formatWeekCards([festival],sundayWindow).endsWith(offer));
+assert(formatWeekCards([],sundayWindow).endsWith(offer));
+assert(!formatWeekCards([],eventWeekWindow('this week',fri)).includes(offer));
+assert(!formatWeekCards([],eventWeekWindow('next week',new NativeDate('2026-11-15T12:00:00Z'))).includes(offer));
+globalThis.Date=class extends NativeDate {constructor(...args){super(...(args.length?args:['2026-11-15T12:00:00Z']))} static now(){return NativeDate.parse('2026-11-15T12:00:00Z')}};
+const sundayFirst=await askWithState("What's on this week in Wakefield?");
+assert(sundayFirst.reply.includes(offer));
+const yesResult={headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};
+await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'weekly-sunday-yes'},socket:{},body:{messages:[{role:'user',content:"What's on this week in Wakefield?"},{role:'assistant',content:sundayFirst.reply},{role:'user',content:'Yes please'}],stateToken:sundayFirst.stateToken}},yesResult);
+assert.equal(yesResult.statusCode,200);
+assert.equal(yesResult.body.state.constraints.eventWeek.kind,'next-week');
+assert(!yesResult.body.reply.includes(offer),'Do not repeat the offer in a next-week answer');
+console.log('Sunday offer checks passed: populated and empty lists, weekday/next-week exclusion, signed-state Yes acceptance.');

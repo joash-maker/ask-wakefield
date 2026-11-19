@@ -1,0 +1,49 @@
+[
+  {
+    "id": "journey-final",
+    "label": "journey-final",
+    "turns": [
+      {
+        "question": "Help me plan a journey in Wakefield",
+        "status": 200,
+        "seconds": 11.3,
+        "reply": "Where are you starting, where are you heading, and when do you want to travel? Also let me know whether you want to go by bus, train, car or on foot.",
+        "sources": [],
+        "followups": [],
+        "verification": "local-navigation-v1"
+      },
+      {
+        "question": "From Wakefield Cathedral to Yorkshire Sculpture Park tomorrow, by bus",
+        "status": 200,
+        "seconds": 10.0,
+        "reply": "YSP\u2019s official travel page lists the 96 bus between Wakefield and Barnsley, stopping at Yorkshire Sculpture Park.\n\nUse [YSP\u2019s getting-here guide](https://ysp.org.uk/visit-us/getting-here) and [West Yorkshire Metro](https://www.wymetro.com/) to check the service for your travel date, the boarding stop and the last return. I haven\u2019t confirmed a departure time, frequency, stand number or walking connection from the Cathedral.",
+        "sources": [
+          {
+            "title": "YSP getting-here guide",
+            "url": "https://ysp.org.uk/visit-us/getting-here"
+          }
+        ],
+        "followups": [],
+        "verification": "ysp-route-v1"
+      },
+      {
+        "question": "What time is the last bus back?",
+        "status": 200,
+        "seconds": 9.6,
+        "reply": "I still have the journey between Wakefield Cathedral and Yorkshire Sculpture Park. I haven\u2019t verified the last, first or next bus for your travel date. Check the current service using [West Yorkshire Metro](https://www.wymetro.com/) and [YSP\u2019s getting-here guide](https://ysp.org.uk/visit-us/getting-here).",
+        "sources": [
+          {
+            "title": "West Yorkshire Metro",
+            "url": "https://www.wymetro.com/"
+          },
+          {
+            "title": "YSP getting-here guide",
+            "url": "https://ysp.org.uk/visit-us/getting-here"
+          }
+        ],
+        "followups": [],
+        "verification": "local-navigation-v1"
+      }
+    ]
+  }
+]

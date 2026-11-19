@@ -1,0 +1,35 @@
+[
+  {
+    "id": "today-monday-music",
+    "label": "today-monday-music",
+    "turns": [
+      {
+        "question": "What's on today?",
+        "status": 200,
+        "seconds": 15.1,
+        "reply": "For Monday 16 November 2026:\n\nI couldn't verify any matching event listings from the current sources I checked. This does not mean there are no events.",
+        "sources": [],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      },
+      {
+        "question": "Anything for Monday?",
+        "status": 200,
+        "seconds": 12.8,
+        "reply": "For Monday 16 November 2026:\n\nI couldn't verify any matching event listings from the current sources I checked. This does not mean there are no events.",
+        "sources": [],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      },
+      {
+        "question": "Any music events?",
+        "status": 200,
+        "seconds": 13.2,
+        "reply": "For Monday 16 November 2026:\n\nI couldn't verify any matching music event listings from the current sources I checked. This does not mean there are no events.",
+        "sources": [],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      }
+    ]
+  }
+]

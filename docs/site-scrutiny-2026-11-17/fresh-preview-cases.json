@@ -1,0 +1,135 @@
+[
+  {
+    "id": "pill-1",
+    "turns": [
+      "What free things can we do in Wakefield this weekend?"
+    ]
+  },
+  {
+    "id": "pill-2",
+    "turns": [
+      "Suggest indoor activities for a rainy day with children in the Wakefield district."
+    ]
+  },
+  {
+    "id": "pill-3",
+    "turns": [
+      "Help me find official parking information for Wakefield city centre."
+    ]
+  },
+  {
+    "id": "pill-4",
+    "turns": [
+      "What's on this week in Wakefield?"
+    ]
+  },
+  {
+    "id": "pill-5",
+    "turns": [
+      "What free or low-cost things can families do in Wakefield this week?"
+    ]
+  },
+  {
+    "id": "pill-6",
+    "turns": [
+      "Where can I get good food or coffee in Wakefield?"
+    ]
+  },
+  {
+    "id": "pill-7",
+    "turns": [
+      "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?"
+    ]
+  },
+  {
+    "id": "pill-8",
+    "turns": [
+      "What local clubs, walking groups and community groups can I join in Wakefield?"
+    ]
+  },
+  {
+    "id": "pill-9",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking or transport."
+    ]
+  },
+  {
+    "id": "pill-10",
+    "turns": [
+      "What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend."
+    ]
+  },
+  {
+    "id": "pill-11",
+    "turns": [
+      "Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want."
+    ]
+  },
+  {
+    "id": "pill-12",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source."
+    ]
+  },
+  {
+    "id": "coffee-haus",
+    "turns": [
+      "Where can I get coffee in Wakefield city centre?",
+      "I'm sure there are more coffee shops around Wakefield city",
+      "Haus?",
+      "What time does it close today?"
+    ]
+  },
+  {
+    "id": "rain-parking",
+    "turns": [
+      "What can I do on a rainy day in Wakefield?",
+      "Anything in the Wakefield city centre to do with ample parking, too."
+    ]
+  },
+  {
+    "id": "session-times",
+    "turns": [
+      "What's on this week in Wakefield?",
+      "What about Friday?",
+      "What time does The Hepworth Wakefield Festive Market start?"
+    ]
+  },
+  {
+    "id": "coffee-chocolate",
+    "turns": [
+      "Where can I get coffee and hot chocolate in Wakefield city centre?",
+      "Which are open now?"
+    ]
+  },
+  {
+    "id": "library-escape",
+    "turns": [
+      "Where can I get good food or coffee in Wakefield?",
+      "How do I report a pothole?",
+      "Where is Wakefield Library?"
+    ]
+  },
+  {
+    "id": "directory-handoff",
+    "turns": [
+      "Help me find an activity in Wakefield. Activity: Music. Age: Under 5. Day: Monday. Cost: Free. Keep these as requirements and verify a match.",
+      "Any more?"
+    ]
+  },
+  {
+    "id": "day-music",
+    "turns": [
+      "What's on today?",
+      "Anything for Monday?",
+      "Any music events?"
+    ]
+  },
+  {
+    "id": "allergy",
+    "turns": [
+      "Where can I get coffee and hot chocolate in Wakefield city centre?",
+      "One child has a severe nut allergy. Can you guarantee the hot chocolate is safe?"
+    ]
+  }
+]

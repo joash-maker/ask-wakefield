@@ -1,12 +1,20 @@
+import {sessionTimesFromHtml,cleanSessionTimes,timesForCard} from '../lib/event-session-times.js';
+import {namedLocalPlace} from '../lib/named-local-place.js';
 import { load } from 'cheerio';
+import { requirementAnswer } from '../lib/chat-requirements.js';
+import { activityDiscovery } from '../lib/activity-discovery.js';
+import { chatNavigation } from '../lib/chat-navigation.js';
 import { planOutingTurn } from '../lib/outing-planner.js';
-import { discoverOutingPlaces } from '../lib/outing-places.js';
-import { answerOutingWarmup, enrichSelectedOuting, selectedOuting } from '../lib/outing-companion.js';
+import { discoverAnnouncements } from '../lib/outing-announcements.js';
+import { broadCoffeeDiscovery, renderCoffeeDiscovery, verifyHotChocolate } from '../lib/coffee-discovery.js';
+import { discoverOutingPlaces, distanceMetres } from '../lib/outing-places.js';
+import { answerOutingWarmup, enrichSelectedOuting, selectedOuting, outingParty, eveningPlanQuestion, planSelectedEvening } from '../lib/outing-companion.js';
+import { answerPlannedOuting } from '../lib/outing-food.js';
 import { programmeConversation, parkingConversation } from '../lib/event-conversation-voice.js';
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
-import { eventWeekWindow, selectWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
+import { eventDiscoveryWindow, confirmedDayCards, musicEventRequest, weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -493,6 +501,7 @@ function compactStateCard(card) {
     sourceTier: card?.sourceTier || null,
     dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
     occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
+    sessionTimes: cleanSessionTimes(card?.sessionTimes),
     startDate: card?.startDate || null,
     endDate: card?.endDate || null,
     ongoing: card?.ongoing === true,
@@ -526,7 +535,9 @@ function encodeStateToken(state) {
         constraints: state?.constraints || null,
         resultCards: cards
       };
-      const payload = deflateRawSync(Buffer.from(JSON.stringify(compact), 'utf8')).toString('base64url');
+      const json=JSON.stringify(compact);
+      if(Buffer.byteLength(json,'utf8')>30000)continue;
+      const payload = deflateRawSync(Buffer.from(json, 'utf8')).toString('base64url');
       const token = `${STATE_TOKEN_PREFIX}.${payload}.${signStatePayload(payload)}`;
       if (token.length <= STATE_TOKEN_MAX_CHARS) return token;
     }
@@ -587,6 +598,7 @@ function normaliseClientState(raw) {
     date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
     dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
     occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 14) : [],
+    sessionTimes: cleanSessionTimes(card?.sessionTimes),
     startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
     endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
     ongoing: card?.ongoing === true,
@@ -784,9 +796,10 @@ function detectWakefieldArea(messages) {
     [/\btileyard(?: north)?\b/i, 'Tileyard North Wakefield'],
     [/\bbull ring\b/i, 'Bull Ring Wakefield'],
     [/\bwood street\b/i, 'Wood Street Wakefield'],
+    [/\btrinity walk\b/i, 'Trinity Walk Wakefield'],
     [/\bwestgate(?: station)?\b/i, 'Wakefield Westgate station'],
     [/\bwakefield cathedral\b|\bcathedral\b/i, 'Wakefield Cathedral'],
-    [/\bcity centre\b|\btown centre\b/i, 'Wakefield city centre'],
+    [/\bcity centre\b|\btown centre\b|\bwakefield city\b/i, 'Wakefield city centre'],
     [/\bdenby dale road\b|\bdurkar\b/i, 'Denby Dale Road Durkar Wakefield'],
     [/\bsandal\b/i, 'Sandal Wakefield'],
     [/\bhorbury\b/i, 'Horbury Wakefield'],
@@ -819,6 +832,7 @@ function districtAreaQueryLabel(area) {
     'Tileyard North Wakefield': 'Tileyard North',
     'Bull Ring Wakefield': 'Bull Ring',
     'Wood Street Wakefield': 'Wood Street',
+    'Trinity Walk Wakefield': 'Trinity Walk Wakefield',
     'Wakefield Westgate station': 'Wakefield Westgate',
     'Wakefield Cathedral': 'Wakefield Cathedral',
     'Wakefield city centre': 'Wakefield city centre',
@@ -841,7 +855,7 @@ function districtAreaQueryLabel(area) {
 
 function isCoreWakefieldArea(area) {
   if (!area) return false;
-  return /^(?:Tileyard North Wakefield|Bull Ring Wakefield|Wood Street Wakefield|Wakefield Westgate station|Wakefield Cathedral|Wakefield city centre|Denby Dale Road Durkar Wakefield|Sandal Wakefield)$/i.test(area);
+  return /^(?:Tileyard North Wakefield|Bull Ring Wakefield|Wood Street Wakefield|Trinity Walk Wakefield|Wakefield Westgate station|Wakefield Cathedral|Wakefield city centre|Denby Dale Road Durkar Wakefield|Sandal Wakefield)$/i.test(area);
 }
 
 
@@ -902,14 +916,14 @@ function buildDistrictPlacesSearchSpecs(messages) {
   }
 
   const display = buildDistrictPlacesServiceQuery(messages);
-  return [{ textQuery: display, richFields: [] }];
+  return [{ textQuery: display, richFields: /\b(?:coffee|caf[eé]s?)\b/i.test(context)?['servesCoffee','servesLunch','servesDinner']:[] }];
 }
 
 function placeServiceConstraintStatus(place, messages) {
   const context = recentUserContext(messages, 5);
   if (isPharmacyOpenQuery(messages)) {
     const types = Array.isArray(place?.types) ? place.types : [];
-    return place?.primaryType === 'pharmacy' || types.includes('pharmacy');
+    return place?.primaryType === 'pharmacy' || types.includes('pharmacy') && !types.some(t=>['supermarket','grocery_store','shopping_mall'].includes(t));
   }
 
   const coffeeSweet = coffeeSweetRequirements(messages);
@@ -945,6 +959,11 @@ function placeServiceConstraintStatus(place, messages) {
     if (a.wheelchairAccessibleEntrance === true) return true;
     if (a.wheelchairAccessibleEntrance === false) return false;
     return null;
+  }
+
+  if (/\b(?:coffee|caf[eé]s?)\b/i.test(context)) {
+    if (/\bfood\s+or\s+(?:a\s+)?coffee\b/i.test(context)) return place.servesCoffee===true || place.servesLunch===true || place.servesDinner===true ? true : null;
+    return place.servesCoffee===true ? true : place.servesCoffee===false ? false : null;
   }
 
   return true;
@@ -1125,6 +1144,8 @@ function compactPlace(place, meta = {}) {
     nationalPhoneNumber: place?.nationalPhoneNumber || null,
     location: place?.location || null,
     servesCoffee: typeof place?.servesCoffee === 'boolean' ? place.servesCoffee : null,
+    servesLunch: typeof place?.servesLunch === 'boolean' ? place.servesLunch : null,
+    servesDinner: typeof place?.servesDinner === 'boolean' ? place.servesDinner : null,
     servesDessert: typeof place?.servesDessert === 'boolean' ? place.servesDessert : null,
     dineIn: typeof place?.dineIn === 'boolean' ? place.dineIn : null,
     allowsDogs: typeof place?.allowsDogs === 'boolean' ? place.allowsDogs : null,
@@ -1272,11 +1293,17 @@ function dedupePlaces(places) {
   return out;
 }
 
-async function fetchWakefieldDistrictPlacesContext(messages) {
-  if (!shouldUseDistrictPlaces(messages)) return null;
+async function fetchWakefieldDistrictPlacesContext(messages, coffeeState = null) {
+  if (!shouldUseDistrictPlaces(messages) && !broadCoffeeDiscovery(messages,coffeeState)) return null;
 
+  if (!GOOGLE_PLACES_ENABLED || !GOOGLE_PLACES_API_KEY) return null;
+  // Signed coffee refinements can outlive the text-history window. Restore the
+  // service for retrieval without changing the user's displayed question.
+  if(coffeeState?.constraints?.coffeeDiscovery && !/\b(?:coffee|caf[eé]s?)\b/i.test(lastUserText(messages))) {
+    messages=messages.map((m,i)=>i===messages.length-1?{...m,content:m.content+' coffee'}:m);
+  }
   const service = buildDistrictPlacesServiceQuery(messages);
-  const area = detectWakefieldArea(messages);
+  const area = detectWakefieldArea(messages) || coffeeState?.constraints?.coffeeDiscovery?.area || null;
   const constraint = requestedPlaceTimeConstraint(messages);
   const openNow = constraint?.mode === 'now';
   const specs = buildDistrictPlacesSearchSpecs(messages);
@@ -1290,6 +1317,9 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
   const runLocalSpecs = async () => {
     const anchor = await googlePlacesAnchorSearch(area);
     const label = districtAreaQueryLabel(area);
+    const city=area==='Wakefield city centre' || area==='Trinity Walk Wakefield';
+    if(city && !anchor)return [];
+    const inScope=items=>city?items.filter(p=>p.location && distanceMetres(anchor,p.location)<=1300 && !/\b(?:horbury|ossett|castleford|pontefract|ferrybridge|normanton|knottingley)\b/i.test(p.formattedAddress || '')):items;
     const batches = await Promise.all(specs.map(spec => {
       const opts = {
         pageSize: 12,
@@ -1307,11 +1337,11 @@ async function fetchWakefieldDistrictPlacesContext(messages) {
         };
         opts.rankPreference = 'DISTANCE';
         opts.districtRestriction = false;
-        return googlePlacesTextSearch(spec.textQuery, opts)
-          .then(items => items.map(place => enrich(place, label)));
+        return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
+          .then(items => inScope(items).map(place => enrich(place, label)));
       }
       return googlePlacesTextSearch(`${spec.textQuery} in ${label}`, opts)
-        .then(items => items.map(place => enrich(place, label)));
+        .then(items => inScope(items).map(place => enrich(place, label)));
     }));
     return dedupePlaces(batches.flat());
   };
@@ -1437,7 +1467,7 @@ function isCathedralToYspRouteQuery(messages) {
   const context = recentUserContext(messages, 5);
   return /\b(wakefield cathedral|cathedral)\b/i.test(context)
     && /\b(yorkshire sculpture park|ysp)\b/i.test(context)
-    && /\b(how do i get|how can i get|route|directions|without a car|public transport|get from)\b/i.test(context);
+    && /\b(how do i get|how can i get|route|directions|without a car|public transport|get from|by bus|bus journey)\b/i.test(context);
 }
 
 function isComplexSaturdayDayPlanQuery(messages) {
@@ -1921,7 +1951,7 @@ function requiresVerifiedSource(messages) {
 function verificationFallback(messages) {
   const last = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
   if (isPropertySpecificCouncilQuery(messages) && hasApproximateLocationOnly(messages)) {
-    return "I can check the bin collection accurately, but I need the rental's full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
+    return "To identify the bin collection schedule, I need the property’s full postcode or its house number and street. 'Near' a landmark is not enough to identify the property, and I do not want to guess. If your question also includes a local club or activity, I could not verify that current schedule from a trusted source just now.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*";
   }
   if (isPropertySpecificCouncilQuery(messages)) {
     return 'I could not verify the current property-specific council information from the official lookup just now, so I do not want to guess a collection date. Please use Wakefield Council Where I Live with the full postcode or house number and street.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
@@ -1948,7 +1978,7 @@ function verificationFallback(messages) {
     return 'I could not verify a safe, permitted launch point from an official source just now, so I do not want to send you onto the wrong water. Pugneys Country Park currently prohibits entering the lake, including kayaking and paddleboarding. For navigable waterways around Wakefield, check the Canal & River Trust guidance for the Wakefield Branch of the Aire & Calder Navigation.';
   }
   if (/parking|free parking/.test(last)) {
-    return 'Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*';
+    return 'I couldn’t verify the current terms for a particular car park. Check [Wakefield Council’s car-park guide](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/) and the signs at your chosen car park for hours, charges and ticket requirements. I haven’t checked live spaces.';
   }
   if (/tk\s?maxx?|store|shop/.test(last)) {
     return 'I could not verify that retailer from a current first-party listing just now, so I do not want to guess. Please check the retailer or the relevant Wakefield shopping centre directory.';
@@ -2226,7 +2256,10 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
   const ownText = header.length ? htmlToPlainText((header.html() || '') + (content.html() || '')) : htmlToPlainText(scopedHtml.split(/<(?:div|section|footer)\b[^>]*(?:class|id)=["'][^"']*(?:related|venue-details|footer)[^"']*["']/i)[0]);
   if (!detailText) return null;
 
-  const timeRange = detailText.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+  const publishedRange = detailText.match(/\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/i);
+  // A multi-day header can combine the first start with the final finish.
+  // It is not evidence of a session running overnight.
+  const timeRange = publishedRange && publishedRange[2].padStart(5,'0') >= publishedRange[1].padStart(5,'0') ? publishedRange : null;
   const condition = conditionalAdmission(ownText);
   const price = condition ? { type: 'conditional', raw: condition } : priceStatusFromEventDetailText(detailText);
 
@@ -2256,7 +2289,8 @@ function experienceEventDetailFromHtml(html, url, expectedTitle = '') {
     sourceTier: 'first-party-detail',
     detailText,
     familyEvidenceText: ownText,
-    occurrenceDates
+    occurrenceDates,
+    sessionTimes:sessionTimesFromHtml(source)
   };
 }
 
@@ -2792,6 +2826,7 @@ function canonicaliseEventCardV16(card) {
     priceStatus: ['free','paid','variable','conditional','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
     priceRaw: card.priceRaw || null,
     occurrenceDates: Array.isArray(card.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
+    sessionTimes: cleanSessionTimes(card?.sessionTimes),
     dates: Array.isArray(card.dates) ? card.dates.slice(0, 3) : []
   };
 }
@@ -2877,7 +2912,7 @@ async function collectWeekendEventCardsV16(experienceEventsContext, wxContext) {
   await Promise.all(candidates.filter(card => card.startDate < saturdayIso && card.endDate >= saturdayIso && card.source === 'experience').slice(0, 6).map(async card => {
     const context = await fetchEventDetailContextByUrl(card.sourceUrl, card.title);
     const detail = context?.eventDetailCard;
-    if (detail?.occurrenceDates?.length) Object.assign(card, { occurrenceDates: detail.occurrenceDates });
+    if (detail?.occurrenceDates?.length) Object.assign(card, { occurrenceDates: detail.occurrenceDates, sessionTimes:detail.sessionTimes });
   }));
   const cards = candidates
     .map(card => ({ ...card, dates: weekendDatesForCardV16(card, saturdayIso, sundayIso).filter(iso => !todayIso || iso >= todayIso) }))
@@ -2951,6 +2986,7 @@ async function verifiedOctoberWeekendSupplementV16(weekend) {
 }
 
 function eventTimeLabelV16(card) {
+  if (card?.start && card?.end && card.end < card.start) return 'session times not verified';
   if (card?.start && card?.end) return `${card.start}–${card.end}`;
   return card?.start || card?.end || null;
 }
@@ -3011,7 +3047,7 @@ async function refreshEventCardsForPriceV16(cards) {
       ...card,
       priceStatus: direct.priceStatus && direct.priceStatus !== 'unknown' ? direct.priceStatus : (card.priceStatus || 'unknown'),
       priceRaw: direct.priceRaw || card.priceRaw || null,
-      occurrenceDates: direct.occurrenceDates || [],
+      occurrenceDates: direct.occurrenceDates || [], sessionTimes:direct.sessionTimes || [],
       start: direct.startTime || card.start || null,
       end: direct.endTime || card.end || null,
       startTime: direct.startTime || card.startTime || null,
@@ -3116,6 +3152,11 @@ function parseEventFollowUp(rawText, state) {
   }).sort((a, b) => b.title.length - a.title.length);
   const namedOps = eventOpsFromText(text);
   const detailOperation = eventDetailOperation(text);
+  if (named.length && !Object.keys(namedOps).length && !detailOperation
+      && !EVENT_FOLLOWUP_NEW_WINDOW.test(text) && !EVENT_FOLLOWUP_TOPIC_SHIFT.test(text)
+      && !/\b(?:not|don't|don’t|skip|avoid|hate|other|instead|different)\b/i.test(text)) {
+    return {details:true,namedIds:named.filter(c=>c.title.length===named[0].title.length).map(c=>c.id)};
+  }
   if (detailOperation) namedOps[detailOperation] = true;
   const namedRemainder = named.length ? normaliseEventTitle(text).replace(normaliseEventTitle(named[0].title), '') : text;
   if (named.length && Object.keys(namedOps).length && !/\b(?:other|different|instead|alternatives?|recommend|suggest|compare)\b/i.test(text)
@@ -3192,6 +3233,8 @@ function eventPriceLabelV17(card) {
 }
 
 function eventTimeLabelV17(card) {
+  const times=timesForCard(card);card={...card,...times};
+  if (card?.start && card?.end && card.end < card.start) return 'session times not verified';
   if (card?.start && card?.end) return `${card.start}–${card.end}`;
   if (card?.start) return `from ${card.start}`;
   return 'time not published';
@@ -3258,14 +3301,22 @@ async function verifyWeeklySessionCards(cards, window) {
     const context = await fetchEventDetailContextByUrl(card.sourceUrl || card.url, card.title);
     const detail = context?.eventDetailCard;
     if (!detail?.occurrenceDates?.length) return card;
+    const mixedClock = /\b(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\b/.exec(detail.detailText || '');
+    const ambiguous = mixedClock && mixedClock[2].padStart(5,'0') < mixedClock[1].padStart(5,'0');
     const occurrences = detail.occurrenceDates.filter(day => day >= window.from && day <= window.end);
-    return { ...card, occurrenceDates:detail.occurrenceDates, dates:occurrences,
-      start:detail.startTime || card.start, startTime:detail.startTime || card.startTime,
-      end:detail.endTime || card.end, endTime:detail.endTime || card.endTime };
+    return { ...card, occurrenceDates:detail.occurrenceDates, sessionTimes:detail.sessionTimes, dates:occurrences,
+      start:ambiguous ? null : detail.startTime || card.start, startTime:ambiguous ? null : detail.startTime || card.startTime,
+      end:ambiguous ? null : detail.endTime || card.end, endTime:ambiguous ? null : detail.endTime || card.endTime };
   }));
 }
 
-const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => label !== 'suit children' || /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text));
+const weeklyExtraConstraints = text => unsupportedEventConstraintsV17(text).filter(label => {
+  if(label==='suit children')return /\b(toddlers?|teens?|\d+[- ]?year|aged? \d+)\b/i.test(text);
+  // A broad request to include several kinds of events describes coverage,
+  // not an exclusive activity-type filter.
+  if(label==='match a type of event' && /\binclude\b[^.!?]*\b(?:events?|exhibitions?)\b[^.!?]*\b(?:music|things happening)\b/i.test(text) && !/\b(?:only|must|just)\b/i.test(text))return false;
+  return true;
+});
 const weeklyFamilyNote = 'These entries have published family or children’s suitability. Check the event pages for age limits, accompanying-adult rules and booking.';
 function weeklyFamilyEmpty(cards) {
   if (!cards.length) return 'I could not read verified dated listings for this period, so I cannot confirm a family shortlist. This does not mean there are no family activities.';
@@ -3312,6 +3363,7 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   const priceWord = filters.price === 'free' ? 'free' : (filters.price === 'paid' ? 'ticketed' : '');
   const showPrice = Boolean(ops.showPrice) || filters.price === 'paid';
   const lines = view.map(card => {
+    const dates=dayIso?[dayIso]:card.dates;card={...card,dates,...timesForCard({...card,dates})};
     const meta = [
       filters.day ? null : eventDateLabelV17(card),
       ops.showTime ? (card.start ? `starts at ${card.start}` : 'start time not verified') : eventTimeLabelV17(card),
@@ -3381,7 +3433,7 @@ async function handleStoredEventFollowUpV17(state, ops) {
 function completeEventCard(card, detail) {
   return detail ? { ...card, startDate:detail.startDate || card.startDate, endDate:detail.endDate || card.endDate,
       start:detail.startTime || card.start, end:detail.endTime || card.end,
-      venue:detail.venue || card.venue, occurrenceDates:detail.occurrenceDates?.length ? detail.occurrenceDates : card.occurrenceDates,
+      venue:detail.venue || card.venue, occurrenceDates:detail.occurrenceDates?.length ? detail.occurrenceDates : card.occurrenceDates, sessionTimes:detail.sessionTimes || card.sessionTimes,
       priceStatus:detail.priceStatus && detail.priceStatus !== 'unknown' ? detail.priceStatus : card.priceStatus,
       sourceTier:'first-party-detail' } : card;
 }
@@ -3406,12 +3458,16 @@ async function restoreIncompleteOuting(messages, state) {
 async function answerSelectedEventDetail(state, selected, ops, verifiedContext = null) {
   const original = selected[0];
   const context = verifiedContext || await fetchEventDetailContextByUrl(original.sourceUrl || original.url, original.title);
-  const card = completeEventCard(original,context?.eventDetailCard);
+  let card = completeEventCard(original,context?.eventDetailCard);
   const previous = state.constraints?.eventFocus;
   const age = Date.now() - Date.parse(previous?.checkedAt || '');
   const reuse = !context?.eventSections && previous?.id === card.id && age >= 0 && age <= 30 * 60000;
   const sections = context?.eventSections || (reuse ? previous.sections : null);
   const evidence = sections || { programme:[], parking:[], parkingLinks:[] };
+  const week=state.constraints?.eventWeek;
+  const selectedDay=week?.filters?.day ? weekdayInWindow(week.filters.day,week) : null;
+  if(selectedDay && (card.occurrenceDates?.includes(selectedDay) || card.startDate===selectedDay))card={...card,dates:[selectedDay]};
+  card = {...card,...timesForCard(card)};
   const dateText = (card.dates?.length ? card.dates : card.occurrenceDates?.length ? card.occurrenceDates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
 
   let reply;
@@ -3428,7 +3484,7 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
     reply = `${card.title} runs on ${days}${card.start ? ', ' + eventTimeLabelV17(card) : ''}${card.venue ? ', at ' + card.venue : ''}.`;
     const price = context?.eventDetailCard?.priceStatus;
     if (price === 'free') reply += ' It’s free to attend.';
-    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme);
+    if (evidence.programme.length) reply += '\n\n' + programmeConversation(evidence.programme,{from:londonCalendar().today,year:card.endDate?.slice(0,4)});
     else reply += `\n\n${context ? 'I could confirm the event details above, but couldn’t extract further programme details.' : 'I couldn’t read further programme details just now.'}`;
   }
   if (reuse) reply += '\n\nThese details were checked earlier in this chat. I couldn’t refresh the page just now.';
@@ -3444,7 +3500,9 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
 async function discoverSelectedEvent(messages, state) {
   const q=lastUserText(messages);
   if(!state?.lastIntent?.startsWith('events.') || storedEventCards(state).some(c=>(` ${normaliseEventTitle(q)} `).includes(` ${normaliseEventTitle(c.title)} `)))return null;
-  if(eventDetailOperation(q)!=='details' && !eventOpsFromText(q).showTime && !/\b(?:sounds good|go|going|visit|thinking of)\b/i.test(q))return null;
+  if(eventDetailOperation(q)!=='details' && !eventOpsFromText(q).showTime && !/\b(?:sounds|looks|try|fancy|visit|going|thinking of)\b/i.test(q))return null;
+  if(q.trim().split(/\s+/).length<2 || /\b(?:parking|car parks?|coffee|bus|train|hot chocolate)\b/i.test(q) && !eventOpsFromText(q).showTime
+      || /\b(?:not|don't|don’t|skip|avoid|hate|other|instead|different)\b/i.test(q))return null;
   if(/\b(?:next week|next month|next year|last year|20\d{2})\b/i.test(q))return null;
   const experience=await fetchExperienceWakefieldEventsContext();
   let candidates=[...(experience?.listingEventCards||[]).map(c=>({title:c.title,url:c.sourceUrl||c.url})),...(experience?.eventLinks||[]).map(l=>({title:l.label,url:l.url}))];
@@ -3465,6 +3523,12 @@ async function discoverSelectedEvent(messages, state) {
 // No broad discovery or model rewrite can replace the event or lose its dates.
 async function answerNamedStoredEvent(state, ops) {
   let selected = storedEventCards(state).filter(card => ops.namedIds.includes(card.id));
+  const reconciled=reconcileWeekCards(selected);
+  if(reconciled.length<selected.length){
+    const oldIds=new Set(selected.map(c=>c.id));
+    selected=reconciled;
+    state={...state,resultCards:[...storedEventCards(state).filter(c=>!oldIds.has(c.id)),...selected]};
+  }
   if ((ops.details || ops.parking || ops.showTime && !ops.family && !ops.price && !ops.showPrice) && selected.length === 1) return answerSelectedEventDetail(state, selected, ops);
   if (ops.family) selected = await verifyWeeklyFamilyCards(selected);
   if (ops.price || ops.showPrice) selected = await refreshEventCardsForPriceV16(selected);
@@ -3959,7 +4023,7 @@ async function fetchEveningServiceFirstPartyContexts(messages) {
 }
 
 async function fetchRouteFirstPartyContexts(messages) {
-  if (!isRoutePlanningQuery(messages)) return { yspGettingHere: null };
+  if (!isRoutePlanningQuery(messages) && !isCathedralToYspRouteQuery(messages)) return { yspGettingHere: null };
   if (isCathedralToYspRouteQuery(messages)) {
     const yspGettingHere = await fetchSimpleFirstPartyContext(
       'https://ysp.org.uk/visit-us/getting-here',
@@ -4113,6 +4177,10 @@ function outingServices() {
   if(process.env.AW_OUTING_PLANNER_ENABLED!=='false') {
     services.plan=(messages,state,context)=>planOutingTurn(messages,state,context,services);
     services.discover=(context,plan,now)=>discoverOutingPlaces(context,plan,{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+    // Announcement leads include local cafés whose normal hours finish before
+    // the event. They are research sources, not open-evening recommendations.
+    services.sources=(context,now)=>discoverOutingPlaces({...context,windowStart:0,windowEnd:1440},{needs:['coffee'],timing:'during'},{search:googlePlacesTextSearch,anchor:googlePlacesAnchorSearch},now);
+    services.announcements=(context,branches,now)=>discoverAnnouncements(context,branches,services,now);
   }
   return services;
 }
@@ -5159,6 +5227,9 @@ function eventCardsFromEvidence(finalReply, evidence = {}) {
 }
 
 function buildResponseState(route, finalReply, evidence = {}, districtPlacesContext = null, priorState = null) {
+  // Answering a brief aside must not delete the signed outing. Explicit new
+  // requests have already cleared priorState in conversation scoping.
+  if(route.intent==='other' && priorState?.constraints?.outing) return {...priorState};
   let resultCards = [];
   if (route.intent.startsWith('events.')) resultCards = eventCardsFromEvidence(finalReply, { ...evidence, priorState });
   else if (route.intent === 'pharmacy.open' || route.intent === 'food.open_at') resultCards = verifiedPlaceCards(districtPlacesContext).slice(0, MAX_STATE_CARDS);
@@ -5228,7 +5299,73 @@ export default async function handler(req, res) {
   // edited to mark any event as free.
   const suppliedToken = typeof req.body?.stateToken === 'string' && req.body.stateToken.length > 0;
   const decodedToken = suppliedToken ? decodeStateToken(req.body.stateToken) : null;
-  const cookieState = stateFromCookie(req);
+  // Modern clients send null for New chat. Only legacy clients that omit
+  // the token field may recover a conversation from the HttpOnly cookie.
+  const explicitReset=Object.prototype.hasOwnProperty.call(req.body || {},'stateToken') && req.body.stateToken===null;
+  const cookieState = explicitReset ? null : stateFromCookie(req);
+  // Resolve a short acceptance of our Sunday offer through the same
+  // structured next-week route as an explicit question, preserving filters.
+  const offerState = decodedToken || cookieState;
+  const offeredWeek = offerState?.constraints?.eventWeek;
+  const lastAssistant = messages.slice(0, -1).reverse().find(message => message.role === 'assistant')?.content || '';
+  if (weeklyNextWeekPrompt(offeredWeek) && offerState.lastIntent?.startsWith('events.')
+      && lastAssistant.includes(weeklyNextWeekPrompt(offeredWeek))
+      && /^(?:yes(?: please)?|please do|go ahead)[.!?\s]*$/i.test(lastUserText(messages).trim())) {
+    const filters = offeredWeek.filters || {};
+    const query = `What's on next week in ${filters.area ? 'Wakefield city centre' : 'Wakefield'}${filters.family ? ' for families' : ''}${filters.price === 'free' ? ', free events only' : filters.price === 'paid' ? ', ticketed events only' : ''}?`;
+    messages = [...messages.slice(0, -1), {role:'user', content:query}];
+  }
+  const stationPrior=decodedToken || cookieState;
+  const stationQuestion=lastUserText(messages);
+  const stationName=stationQuestion.match(/\b(westgate|kirkgate)(?:\s+(?:train|railway))?\s+station\b/i)?.[1]
+    || (stationPrior?.constraints?.pendingStation ? stationQuestion.match(/^\s*(westgate|kirkgate)[?.!\s]*$/i)?.[1] : null);
+  const stationFood=/\b(?:coffee|cafe|café|hot chocolate)\b/i.test(stationQuestion) || stationPrior?.constraints?.outing?.anchor || stationPrior?.constraints?.pendingStation;
+  if(stationFood && /\bwakefield\s+(?:(?:train|railway)\s+)?station\b/i.test(stationQuestion) && !stationName){
+    const state={...normaliseClientState(null),constraints:{pendingStation:true,outing:{party:outingParty(stationQuestion,stationPrior?.constraints?.outing?.party),seating:/\b(?:sit(?:ting)? down|seating)\b/i.test(stationQuestion),plan:{needs:['coffee'],timing:'during'}}}};
+    attachStateCookie(res,state);
+    return res.status(200).json({reply:'Do you mean Wakefield Westgate or Wakefield Kirkgate? I’ll keep the coffee search close to that station.',state,sources:[],live:false,verification:'station-choice'});
+  }
+  if(stationName && stationFood && !/\b(?:tomorrow|next|yesterday|20\d{2})\b/i.test(stationQuestion)){
+    const label=`Wakefield ${stationName[0].toUpperCase()+stationName.slice(1).toLowerCase()} station`;
+    const previous=stationPrior?.constraints?.outing;
+    const anchor={id:'station:'+stationName.toLowerCase(),label,date:londonCalendar().today,start:new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())};
+    const state={...normaliseClientState(null),lastIntent:'food.nearby',area:label,constraints:{outing:{anchor,party:outingParty(stationQuestion,previous?.party),seating:previous?.seating,plan:{intent:'food_drink',needs:previous?.plan?.needs || ['coffee'],timing:'during'}}}};
+    const result=await answerPlannedOuting(messages,state,selectedOuting(state),state.constraints.outing.plan,outingServices());
+    attachStateCookie(res,result.state);
+    return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply),verification:'station-food-v1'});
+  }
+  if (((decodedToken || cookieState)?.constraints?.activitySearch || (decodedToken || cookieState)?.constraints?.coffeeDiscovery || (decodedToken || cookieState)?.constraints?.eventFocus?.id || (decodedToken || cookieState)?.constraints?.outing?.anchor)
+      && /^(?:thanks(?: a lot)?|thank you(?: very much)?|cheers|great|lovely|brilliant|ok(?:ay)?|sounds good)[!.\s]*$/i.test(lastUserText(messages).trim())) {
+    const state=decodedToken || cookieState;
+    attachStateCookie(res,state);
+    return res.status(200).json({reply:/thanks|thank you|cheers/i.test(lastUserText(messages))?'You’re welcome.':'Sounds good.',state,sources:[],live:false,verification:'outing-acknowledgement'});
+  }
+  const priorEventState=decodedToken || cookieState;
+  const priorCards=storedEventCards(priorEventState);
+  const namedCurrentEvent=priorCards.some(c=>(` ${normaliseEventTitle(stationQuestion)} `).includes(` ${normaliseEventTitle(c.title)} `));
+  if(priorCards.length && !namedCurrentEvent && !priorEventState.constraints?.eventFocus?.id
+      && /^(?:what(?:['’]s| is) (?:the )?parking like|(?:and )?parking(?: for (?:it|the event))?)[?!.\s]*$/i.test(stationQuestion.trim())) {
+    attachStateCookie(res,priorEventState);
+    return res.status(200).json({reply:'Which event are you heading to? I’ll check its parking guidance.',state:priorEventState,sources:[],live:false,verification:'event-parking-choice'});
+  }
+  if(/^\s*(?:I(?:['’]m| am)|we(?:['’]re| are)) heading to[. …]*$/i.test(stationQuestion)) {
+    if(priorEventState)attachStateCookie(res,priorEventState);
+    return res.status(200).json({reply:'Where are you heading?',...(priorEventState?{state:priorEventState}:{}),sources:[],live:false,verification:'incomplete-destination'});
+  }
+  if(eveningPlanQuestion(stationQuestion) && priorEventState) {
+    const named=priorCards.filter(c=>(` ${normaliseEventTitle(stationQuestion)} `).includes(` ${normaliseEventTitle(c.title)} `)).sort((a,b)=>b.title.length-a.title.length);
+    const focus=named[0] || (!/\b(?:heading to|going to|castleford|pontefract|ossett|horbury|normanton|leeds)\b/i.test(stationQuestion) && priorCards.find(c=>c.id===priorEventState.constraints?.eventFocus?.id));
+    if(focus) {
+      const context=await fetchEventDetailContextByUrl(focus.sourceUrl || focus.url,focus.title);
+      const detail=await answerSelectedEventDetail(priorEventState,[focus],{details:true},context);
+      const parking=await answerSelectedEventDetail(detail.state,[focus],{parking:true},context);
+      detail.reply+='\n\n'+parking.reply.split('\n\n[Event details]')[0];
+      detail.sources=parking.sources;
+      const result=await planSelectedEvening(detail,messages,outingServices());
+      attachStateCookie(res,result.state);
+      return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply)});
+    }
+  }
   // Resolve outing refinements before event-list filters or topic resets.
   const conversationState = await restoreIncompleteOuting(messages,decodedToken || cookieState);
   if (conversationState?.constraints?.eventFocus?.id && !selectedOuting(conversationState) && isOutingRecoveryRequest(lastUserText(messages))) {
@@ -5250,11 +5387,29 @@ export default async function handler(req, res) {
     attachStateCookie(res,selected.state);
     return res.status(200).json({...selected,reply:finaliseUserFacingReply(selected.reply),live:true,verification:'selected-event-discovery-v2'});
   }
+  const navigation=chatNavigation(lastUserText(messages),conversationState,messages);
+  if(navigation){
+    attachStateCookie(res,navigation.state);
+    return res.status(200).json(navigation);
+  }
+  const requirement=requirementAnswer(lastUserText(messages),conversationState);
+  if(requirement){
+    attachStateCookie(res,requirement.state);
+    return res.status(200).json(requirement);
+  }
+  const namedPlace=await namedLocalPlace(lastUserText(messages),conversationState,messages);
+  if(namedPlace){attachStateCookie(res,namedPlace.state);return res.status(200).json(namedPlace);}
+  const activity=await activityDiscovery(lastUserText(messages),conversationState);
+  if(activity){
+    attachStateCookie(res,activity.state);
+    return res.status(200).json({...activity,reply:finaliseUserFacingReply(activity.reply)});
+  }
   const scoped = scopeConversation(messages);
   messages = scoped.messages.map(m => m.role === 'user' ? { ...m, content: m.content.replace(/\bdeserts?\b/gi, 'dessert') } : m);
   // A new request never inherits a previous list, itinerary or cookie-only chat.
   const savedState = conversationState;
-  const cityWeekRefinement = savedState?.constraints?.eventWeek && weeklyFollowUp(lastUserText(messages))?.area;
+  const dayRefinement = savedState?.constraints?.eventWeek?.kind === 'day' && eventDiscoveryWindow(lastUserText(messages),savedState.constraints.eventWeek);
+  const cityWeekRefinement = dayRefinement || savedState?.constraints?.eventWeek && weeklyFollowUp(lastUserText(messages))?.area;
   const clientState = scoped.newRequest && !cityWeekRefinement ? normaliseClientState(null) : (savedState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
@@ -5300,7 +5455,8 @@ export default async function handler(req, res) {
   // A missing start point prevents a transport promise, but should not result
   // in a blank answer. The response carries first-party links as source chips.
   const isEventTopic = /^events\./.test(route.intent || '') || /\bwhat(?:['’]s| is)\s+on\b/i.test(currentText);
-  const groundedStarter = isEventTopic ? null : foodSpecificFollowUp(currentText, clientState)
+  const coffeeDiscovery = broadCoffeeDiscovery(messages,clientState);
+  const groundedStarter = isEventTopic || coffeeDiscovery ? null : foodSpecificFollowUp(currentText, clientState)
     || nightlifeRecommendation(currentText, clientState)
     || districtThaliDiscovery(currentText)
     || namedDiningThaliFollowUp(currentText, messages)
@@ -5336,7 +5492,8 @@ export default async function handler(req, res) {
   if (/\bhalf[ -]term\b/i.test(currentText) && !eventWeekWindow(currentText) && !storedWeek) {
     return res.status(200).json({ reply: 'Which dates would you like to plan for? School half-term dates vary. Tell me the dates and the children’s ages so I can check dated local listings.', sources: [], live: false, verification: 'half-term-dates-needed', state: clientState });
   }
-  const weekOps = !route.eventFollowUp?.namedIds && storedWeek && clientState.lastIntent?.startsWith('events.')
+  const dayWindow = eventDiscoveryWindow(currentText, storedWeek);
+  const weekOps = !dayWindow && !route.eventFollowUp?.namedIds && storedWeek && clientState.lastIntent?.startsWith('events.')
     ? (halfTermClarification ? { halfTerm: true } : weeklyFollowUp(currentText)) : null;
   if (weekOps) {
     let original = storedEventCards(clientState);
@@ -5363,7 +5520,7 @@ export default async function handler(req, res) {
     if (filters.day) {
       // A broad published run is not proof of an occurrence on this weekday.
       view = dayIso && dayIso >= storedWeek.from
-        ? view.filter(card => (card.startDate === dayIso && (card.endDate || card.startDate) === dayIso) || card.occurrenceDates?.includes(dayIso)).map(card => ({ ...card, dates:[dayIso] }))
+        ? view.filter(card => (card.startDate === dayIso && (card.endDate || card.startDate) === dayIso) || card.occurrenceDates?.includes(dayIso)).map(card => {const selected={...card,dates:[dayIso]};return {...selected,...timesForCard(selected),startTime:timesForCard(selected).start,endTime:timesForCard(selected).end};})
         : [];
     }
     if (filters.price) view = view.filter(card => filters.price === 'free'
@@ -5470,9 +5627,10 @@ export default async function handler(req, res) {
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
-  const catalogueWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages) ? eventWeekWindow(currentText) : null;
+  const dailyDiscovery = dayWindow?.kind === 'day' && (isCurrentEventsQuery(messages) || clientState.lastIntent?.startsWith('events.'));
+  const catalogueWindow = (isCurrentEventsQuery(messages) || dailyDiscovery) && !isNamedEventDetailQuery(messages) ? dayWindow : null;
   const catalogueCards = catalogueWindow ? await loadCatalogueWeek(catalogueWindow) : null;
-  if (!catalogueCards && isCurrentEventsQuery(messages)) {
+  if (!catalogueCards && (isCurrentEventsQuery(messages) || dailyDiscovery)) {
     // Fetch strong first-party/current event sources in parallel. This avoids
     // a broad search while still covering the district aggregator, WX and the
     // Cathedral's own dated events.
@@ -5486,35 +5644,40 @@ export default async function handler(req, res) {
   }
 
   // Weekly discovery must not fall through to prose that mixes calendar weeks.
-  const weekWindow = isCurrentEventsQuery(messages) && !isNamedEventDetailQuery(messages)
-    ? eventWeekWindow(currentText) : null;
+  const weekWindow = (isCurrentEventsQuery(messages) || dailyDiscovery) && !isNamedEventDetailQuery(messages)
+    ? dayWindow : null;
   if (weekWindow) {
     const raw = mergeExactEventCardsV16(catalogueCards || [
       ...(wxContext?.eventCards || []),
       ...(experienceEventsContext?.listingEventCards || [])
     ]);
     const ops = eventOpsFromText(currentText);
-    const cityArea = wakefieldCityScope(currentText);
+    const cityArea = wakefieldCityScope(currentText) || (weekWindow.kind === 'day' ? clientState.constraints?.eventWeek?.filters?.area : null);
     const local = cityArea ? raw.filter(eventInWakefieldCity) : raw;
     let cards = selectWeekCards(catalogueCards && ops.family ? local.filter(card => card.familyVerified) : local, weekWindow);
     cards = await verifyWeeklySessionCards(cards, weekWindow);
     // Do not silently relax constraints unsupported by this structured view.
-    const unsupported = weeklyExtraConstraints(currentText);
-    if (ops.price || ops.day || unsupported.length) {
+    const musicOnly = weekWindow.kind === 'day' && (musicEventRequest(currentText) || clientState.constraints?.eventWeek?.filters?.musicOnly && !/\b(?:all|any) events\b/i.test(currentText));
+    const unsupported = weeklyExtraConstraints(currentText).filter(label => !(musicOnly && label === 'match a type of event'));
+    if (weekWindow.kind === 'day') cards = confirmedDayCards(cards,weekWindow,musicOnly);
+    if (ops.day && weekWindow.kind!=='day' || unsupported.length) {
       return res.status(200).json({
         reply: `${formatWeekCards([], weekWindow).split('\n')[0]}\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.`,
         sources: [], live: false, verification: 'weekly-constraints-unverified', state: clientState
       });
     }
-    const filters = { ...(ops.family ? { family: true } : {}), ...(cityArea ? {area:cityArea} : {}) };
+    const filters = { ...(weekWindow.kind==='day'?clientState.constraints?.eventWeek?.filters:{}), ...(ops.family ? { family: true } : {}), ...(ops.price?{price:ops.price}:{}), ...(cityArea ? {area:cityArea} : {}), ...(weekWindow.kind === 'day' ? {musicOnly:Boolean(musicOnly)} : {}) };
     if (filters.family) cards = await verifyWeeklyFamilyCards(cards);
-    const view = filters.family ? cards.filter(card => card.familyVerified) : cards;
+    if(filters.price)cards=await refreshEventCardsForPriceV16(cards);
+    // Detail verification can add an end clock. Reapply the current-time cutoff.
+    cards = selectWeekCards(cards, weekWindow);
+    const view = cards.filter(card=>(!filters.family || card.familyVerified) && (!filters.price || card.priceStatus===filters.price));
     const state = buildEventStateV16(cards, clientState, view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventFocus:null, eventWeek: { ...weekWindow, filters } };
     state.lastIntent = 'events.whats_on';
     attachStateCookie(res, state);
     return res.status(200).json({
-      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow)) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
+      reply: finaliseUserFacingReply((filters.family && !view.length ? formatWeekCards([], weekWindow).split('\n\n')[0] + '\n\n' + weeklyFamilyEmpty(cards) : formatWeekCards(view, weekWindow, {musicOnly})) + (filters.family && view.length ? '\n\n' + weeklyFamilyNote : '') + (catalogueCards ? '\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.' : !wxContext?.eventCards?.length ? '\n\nI could not read verified dated records from the WX listing this time, so this shortlist may miss events there.' : '')),
       sources: eventSourcesV17(view), followups: [], live: !catalogueCards && cards.length > 0,
       verification: catalogueCards ? 'weekly-catalogue-v1' : 'weekly-cards-v1', state
     });
@@ -5589,7 +5752,7 @@ export default async function handler(req, res) {
     fetchBusinessFirstPartyContexts(messages),
     fetchEveningServiceFirstPartyContexts(messages),
     fetchRouteFirstPartyContexts(messages),
-    fetchWakefieldDistrictPlacesContext(messages),
+    fetchWakefieldDistrictPlacesContext(messages,coffeeDiscovery?clientState:null),
     fetchTrustedUserUrlContext(messages)
   ]);
 
@@ -5616,6 +5779,48 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ reply: finaliseUserFacingReply(deterministic), sources: Array.from(sourceMap.values()).slice(0, 8), live: true, verification: 'structured', state });
     }
+  }
+
+  if(coffeeDiscovery) {
+    const result=renderCoffeeDiscovery(messages,/\bhot chocolate\b/i.test(currentText)||clientState.constraints?.coffeeDiscovery?.hotChocolate?await verifyHotChocolate(districtPlacesContext):districtPlacesContext,clientState,route.area);
+    attachStateCookie(res,result.state);
+    return res.status(200).json({...result,reply:finaliseUserFacingReply(result.reply)});
+  }
+
+  if(isCathedralToYspRouteQuery(messages) && !/\b(?:train|rail)\b/i.test(currentText)) {
+    const context=routeContexts?.yspGettingHere;
+    const verified=/\b96\b/.test(context?.text || '');
+    const url='https://ysp.org.uk/visit-us/getting-here';
+    const reply=(verified?'YSP’s official travel page lists the 96 bus between Wakefield and Barnsley, stopping at Yorkshire Sculpture Park.':'I couldn’t verify the current bus route to YSP just now.')
+      +'\n\nUse [YSP’s getting-here guide]('+url+') and [West Yorkshire Metro](https://www.wymetro.com/) to check the service for your travel date, the boarding stop and the last return. I haven’t confirmed a departure time, frequency, stand number or walking connection from the Cathedral.';
+    const state={version:2,lastIntent:'transport',resultCards:[],constraints:{journey:{origin:'Wakefield Cathedral',destination:'Yorkshire Sculpture Park'}}};
+    attachStateCookie(res,state);
+    return res.status(200).json({reply,sources:[{title:'YSP getting-here guide',url}],state,followups:[],live:Boolean(context),verification:'ysp-route-v1'});
+  }
+
+  if((isPharmacyOpenQuery(messages) || /\bpharmac(?:y|ies)\b/i.test(currentText)) && /\b(?:asda|sainsbury(?:['’]?s)?)\b/i.test(currentText)) {
+    const asda=/\basda\b/i.test(currentText);
+    const context=asda?businessContexts.asdaWakefield:businessContexts.sainsburysMarshWay;
+    const url=asda?'https://storelocator.asda.com/yorkshire-%26-humber/wakefield/asdale-road':'https://stores.sainsburys.co.uk/2258/wakefield-marsh-way';
+    const name=asda?'ASDA Wakefield Superstore':'Sainsbury’s Wakefield Marsh Way';
+    const reply=(asda?'For the pharmacy at '+name+', use its exact branch page.':'I haven’t verified a pharmacy service at '+name+'. Its exact store service list is the relevant check.')
+      +'\n\n['+name+']('+url+')\n\nStore opening hours are not pharmacy-counter hours. I haven’t confirmed that a pharmacy there covers the time you requested.';
+    const state={version:2,lastIntent:'pharmacy.open',area:route.area,constraints:{time:route.timeConstraint},resultCards:[]};attachStateCookie(res,state);
+    return res.status(200).json({reply,sources:[{title:name+' - official branch page',url}],followups:[],state,live:Boolean(context),verification:'named-pharmacy-v1'});
+  }
+  if(/\b(?:gluten[- ]?free|coeliac|celiac)\b/i.test(recentUserContext(messages,5)) && isDietaryOpenQuery(messages)) {
+    const matches=Object.entries(foodConstraintContexts).filter(([,ctx])=>ctx?.text && /\bgluten[- ]free\b/i.test(ctx.text) && !/\b(?:not|no) gluten[- ]free\b/i.test(ctx.text));
+    const sources=matches.map(([,ctx])=>ctx.source).filter(s=>s?.url);
+    const reply=sources.length?'These venue listings explicitly mention gluten-free options:\n\n'+sources.map(s=>'['+s.title+']('+s.url+')').join('\n\n')+'\n\nI haven’t verified a particular dish, preparation controls or opening for your visit. If this is for coeliac disease or an allergy, confirm the ingredients and cross-contact arrangements with the venue.':'I haven’t verified a gluten-free match for this request. I won’t infer suitability from rice-based dishes or the type of cuisine.';
+    const state={version:2,lastIntent:'food.requirements',area:route.area,resultCards:[],constraints:{foodRequirements:{glutenFree:true}}};attachStateCookie(res,state);
+    return res.status(200).json({reply,sources,followups:[],state,live:sources.length>0,verification:'dietary-evidence-v1'});
+  }
+
+  if(route.intent==='pharmacy.open' && route.area==='Trinity Walk Wakefield' && !verifiedPlaceCards(districtPlacesContext).length){
+    const url='https://www.nhs.uk/service-search/pharmacy/find-a-pharmacy';
+    const reply='I couldn’t verify a pharmacy near Trinity Walk covering the time you requested. I haven’t substituted a pharmacy in another town. Use the [NHS pharmacy finder]('+url+') for current branch information. How far are you able to travel?';
+    const state={version:2,lastIntent:'pharmacy.open',area:route.area,constraints:{time:route.timeConstraint},resultCards:[]};attachStateCookie(res,state);
+    return res.status(200).json({reply,sources:[{title:'NHS pharmacy finder',url}],followups:[],state,live:false,verification:'pharmacy-local-unverified-v1'});
   }
 
   const structuredPlaceCards = STRUCTURED_CORE_ENABLED ? verifiedPlaceCards(districtPlacesContext) : [];

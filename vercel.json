@@ -111,6 +111,15 @@
   "functions": {
     "api/event-collector.js": {
       "maxDuration": 300
+    },
+    "api/chat.js": {
+      "maxDuration": 120
+    },
+    "api/submit-event.js": {
+      "maxDuration": 60
+    },
+    "api/submit-listing.js": {
+      "maxDuration": 60
     }
   },
   "redirects": [

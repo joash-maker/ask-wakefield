@@ -1,68 +1,35 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const data = sanitiseSubmission(req.body);
-  if (!data) return res.status(400).json({ error: 'Invalid or missing required fields' });
-
-  try {
-    const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-    const sheetId = process.env.EVENTS_SHEET_ID;
-
-    // Get access token using JWT
-    const token = await getAccessToken(serviceAccount);
-
-    const row = [
-      data.timestamp || new Date().toISOString(),
-      data.eventName,
-      data.eventType,
-      data.startDate,
-      data.endDate,
-      data.startTime,
-      data.endTime,
-      data.venue,
-      data.description,
-      data.ticketPrice,
-      data.eventUrl,
-      data.submitterName,
-      data.submitterEmail,
-      data.organisation,
-      'New'
-    ].map(sheetSafe);
-
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A:O:append?valueInputOption=USER_ENTERED`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values: [row] })
-      }
-    );
-
-    if (!response.ok) {
-      const err = await response.json();
-      console.error('Sheets error:', err);
-      return res.status(500).json({ error: 'Failed to write to sheet' });
-    }
-
-    // Send emails via Resend
-    await sendEmails(data);
-
-    return res.status(200).json({ ok: true });
-
-  } catch (error) {
-    console.error('Submit event error:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
+import {submissionFetch,submissionAllowed,submissionOnce,submissionKey,validCivilDate,notificationSummary} from '../lib/submission-guard.js';
+export default async function handler(req,res){
+ res.setHeader('Cache-Control','no-store');
+ res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');
+ if(req.method==='OPTIONS')return res.status(200).end();
+ if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
+ const data=sanitiseSubmission(req.body);if(!data)return res.status(400).json({error:'Check the required fields, consent and event dates'});
+ if(!submissionAllowed(req)){res.setHeader('Retry-After','60');return res.status(429).json({error:'Please wait a minute before submitting again'});}
+ if(!process.env.GOOGLE_SERVICE_ACCOUNT_JSON||!process.env.EVENTS_SHEET_ID)return res.status(503).json({error:'Submission service unavailable'});
+ const key=submissionKey(data);
+ try{
+  const result=await submissionOnce('event:'+key,async()=>{
+   const token=await getAccessToken(JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON));
+   const root=`https://sheets.googleapis.com/v4/spreadsheets/${process.env.EVENTS_SHEET_ID}/values/`;
+   // The original 15 columns retain their order. New metadata follows them.
+   const headers=await submissionFetch(root+'Sheet1!P1:S1?valueInputOption=RAW',{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[['Consent','Submission ID','Submitter notification','Operator notification']]})});if(!headers.ok)throw new Error('Could not record submission metadata');
+   const prior=await submissionFetch(root+'Sheet1!A2:S',{headers:{Authorization:`Bearer ${token}`}});
+   if(!prior.ok)throw new Error('Could not check submission receipts');
+   const rows=(await prior.json()).values||[];
+   const existing=rows.find(row=>row[16]===key && Date.now()-Date.parse(row[0])>=0 && Date.now()-Date.parse(row[0])<900000);
+   if(existing)return {ok:true,duplicate:true,notification:{submitter:existing[17]||'pending',operator:existing[18]||'pending'}};
+   const values=[data.timestamp,data.eventName,data.eventType,data.startDate,data.endDate,data.startTime,data.endTime,data.venue,data.description,data.ticketPrice,data.eventUrl,data.submitterName,data.submitterEmail,data.organisation,'New',data.consent,key,'pending','pending'].map(sheetSafe);
+   const saved=await submissionFetch(root+'Sheet1!A:S:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[values]})});
+   if(!saved.ok)throw new Error('Could not save event');
+   const receipt=await saved.json();const notification=await sendEmails(data);
+   const row=receipt.updates?.updatedRange?.match(/!(?:\$)?A(?:\$)?(\d+)/)?.[1];
+   if(row){try{const status=await submissionFetch(root+`Sheet1!R${row}:S${row}?valueInputOption=RAW`,{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[notification.submitter,notification.operator]]})});if(!status.ok)console.error('Event receipt notification status not recorded');}catch{console.error('Event receipt notification status not recorded');}}
+   return {ok:true,notification};
+  });
+  return res.status(200).json(result);
+ }catch(error){console.error('Event submission failed:',error.message);return res.status(503).json({error:'Could not confirm receipt. Please retry with the same details or contact us.'});}
 }
-
 
 function cleanText(value, max = 1000) {
   return String(value ?? '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, max);
@@ -83,10 +50,14 @@ function safeHttpUrl(value) {
   }
 }
 
-function sanitiseSubmission(input) {
-  if (!input || typeof input !== 'object') return null;
+export function sanitiseSubmission(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  if(['eventName','eventType','startDate','venue','description','submitterName','submitterEmail'].some(k=>typeof input[k]!=='string'))return null;
+  const limits={eventName:160,eventType:80,startDate:20,endDate:20,startTime:20,endTime:20,venue:220,description:1800,ticketPrice:100,eventUrl:500,submitterName:120,submitterEmail:254,organisation:160};
+  if(Object.entries(limits).some(([key,max])=>input[key]!=null&&(typeof input[key]!=='string'||input[key].length>max)))return null;
   const out = {
-    timestamp: cleanText(input.timestamp, 60) || new Date().toISOString(),
+    timestamp: new Date().toISOString(),
+    consent: input.consent === 'Yes' ? 'Yes' : 'No',
     eventName: cleanText(input.eventName, 160),
     eventType: cleanText(input.eventType, 80),
     startDate: cleanText(input.startDate, 20),
@@ -102,6 +73,12 @@ function sanitiseSubmission(input) {
     organisation: cleanText(input.organisation, 160) || 'Not specified'
   };
 
+  if(input.eventUrl && input.eventUrl!=='Not provided' && !safeHttpUrl(input.eventUrl))return null;
+  const clock=v=>['Not specified','TBC'].includes(v)||/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+  if(!clock(out.startTime)||!clock(out.endTime))return null;
+  if(out.endDate==='Single day'&&/^\d/.test(out.startTime)&&/^\d/.test(out.endTime)&&out.endTime<out.startTime)return null;
+  if (out.consent !== 'Yes' || !validCivilDate(out.startDate) || (out.endDate !== 'Single day' && (!validCivilDate(out.endDate) || out.endDate < out.startDate))) return null;
+  if (!['Arts & Culture','Music & Live Performance','Food & Drink','Family & Children','Sports & Fitness','Community & Charity','Markets & Shopping','Business & Networking','Festivals & Celebrations','Other'].includes(out.eventType)) return null;
   if (!out.eventName || !out.eventType || !out.startDate || !out.venue || !out.description || !out.submitterName || !validEmail(out.submitterEmail)) return null;
   return out;
 }
@@ -120,9 +97,9 @@ function sheetSafe(value) {
   return /^[=+\-@]/.test(text) ? `'${text}` : text;
 }
 
-async function sendEmails(data) {
+export async function sendEmails(data) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return;
+  if (!key) return notificationSummary([]);
 
   const e = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, escapeHtml(v)]));
   const safeEventUrl = safeHttpUrl(data.eventUrl);
@@ -170,17 +147,21 @@ async function sendEmails(data) {
     }
   ];
 
+  const outcomes=[];
   for (const email of emails) {
     try {
-      await fetch('https://api.resend.com/emails', {
+      const response=await submissionFetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(email)
       });
+      outcomes.push(response.ok?'accepted':'failed');
+      if(!response.ok)console.error('Event notification provider rejected request:',response.status);
     } catch (e) {
-      console.error('Email send error:', e);
+      outcomes.push('failed');console.error('Event notification request failed');
     }
   }
+  return notificationSummary(outcomes);
 }
 
 async function getAccessToken(serviceAccount) {
@@ -222,12 +203,13 @@ async function getAccessToken(serviceAccount) {
   const jwt = `${unsigned}.${signature}`;
 
   // Exchange JWT for access token
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+  const tokenResponse = await submissionFetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
   });
 
   const tokenData = await tokenResponse.json();
+  if(!tokenResponse.ok || !tokenData.access_token)throw new Error('Submission authentication failed');
   return tokenData.access_token;
 }

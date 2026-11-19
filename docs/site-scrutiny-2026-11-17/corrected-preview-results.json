@@ -1,0 +1,1503 @@
+[
+  {
+    "id": "services-pill",
+    "label": "services-pill",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.",
+        "status": 200,
+        "seconds": 9.6,
+        "reply": "What do you need help with: bin collections, parking, a journey, or another council service? For bins, the answer depends on your property. For transport, I\u2019ll need your start, destination and travel time.",
+        "sources": [
+          {
+            "title": "Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/"
+          },
+          {
+            "title": "Bin collection lookup",
+            "url": "https://www.wakefield.gov.uk/bincollections"
+          },
+          {
+            "title": "Wakefield car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [
+          "Help me find my bin collection day",
+          "Help me find official parking information for Wakefield city centre",
+          "Help me plan a journey in Wakefield"
+        ],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.services",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": true,
+            "indoorGuide": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "generic-heading",
+    "label": "generic-heading",
+    "turns": [
+      {
+        "question": "What's on today?",
+        "status": 200,
+        "seconds": 9.5,
+        "reply": "For Tuesday 17 November 2026:\n\nTennants Auctioneers Valuation Event\nFarmer Copleys \u00b7 Tuesday 17 November 2026\n[Event details](https://farmercopleys.co.uk/events/tennants-auctioneers/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Tennants Auctioneers Valuation Event \u2014 official event page",
+            "url": "https://farmercopleys.co.uk/events/tennants-auctioneers/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-17",
+              "end": "2026-11-17",
+              "from": "2026-11-17",
+              "today": "2026-11-17",
+              "filters": {
+                "musicOnly": false
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "6ede527c8e32fd07423a6174",
+              "sourceId": "copleys",
+              "canonId": "copleys",
+              "entityType": "event",
+              "title": "Tennants Auctioneers Valuation Event",
+              "kind": "scheduled",
+              "url": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "sourceUrl": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-17",
+              "endDate": "2026-11-17",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T06:18:22.199Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Farmer Copleys",
+              "venueId": "venue:farmer-copleys",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-17"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-17"
+              ]
+            }
+          ],
+          "viewIds": [
+            "6ede527c8e32fd07423a6174"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "constrained-more",
+    "label": "constrained-more",
+    "turns": [
+      {
+        "question": "Help me find an activity in Wakefield. Activity: Music. Age: Under 5. Day: Monday. Cost: Free. Keep these as requirements and verify a match.",
+        "status": 200,
+        "seconds": 10.0,
+        "reply": "I\u2019ve kept your requirements: music in wakefield, under 5, monday, free.\n\nThe directory did not have an exact match for those filters. I haven\u2019t confirmed a current session that meets them.\n\nThese programme pages are starting points to check, rather than confirmed matches:\n\n[Wakefield Music Services tuition](https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/)",
+        "sources": [
+          {
+            "title": "Wakefield Music Services tuition - programme source",
+            "url": "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-handoff-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "activity.discovery",
+          "area": "wakefield",
+          "resultCards": [],
+          "constraints": {
+            "activitySearch": {
+              "ids": [
+                "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+              ],
+              "handoff": {
+                "area": "wakefield",
+                "activity": "music",
+                "age": "under 5",
+                "day": "monday",
+                "cost": "free"
+              }
+            }
+          }
+        }
+      },
+      {
+        "question": "Any more?",
+        "status": 200,
+        "seconds": 7.0,
+        "reply": "I still have your requirements: wakefield, music, under 5, monday, free. I haven\u2019t verified another session that meets all of them. The programme links are starting points, not confirmed free or age/day matches.",
+        "sources": [
+          {
+            "title": "Wakefield Music Services tuition - programme source",
+            "url": "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-handoff-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "activity.discovery",
+          "resultCards": [],
+          "viewIds": [],
+          "lastFilter": null,
+          "constraints": {
+            "activitySearch": {
+              "ids": [
+                "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+              ],
+              "handoff": {
+                "area": "wakefield",
+                "activity": "music",
+                "age": "under 5",
+                "day": "monday",
+                "cost": "free"
+              }
+            }
+          },
+          "area": "wakefield"
+        }
+      }
+    ]
+  },
+  {
+    "id": "named-friday-time",
+    "label": "named-friday-time",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 15.9,
+        "reply": "This week runs from Monday 16 November 2026 to Sunday 22 November 2026. Here\u2019s what\u2019s coming up from Tuesday 17 November 2026.\n\nIf you fancy an evening out, I\u2019d start with Nostell Ghost Walks. Here\u2019s what else is coming up.\n\nTennants Auctioneers Valuation Event\nFarmer Copleys \u00b7 Tuesday 17 November 2026\n[Event details](https://farmercopleys.co.uk/events/tennants-auctioneers/)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 18 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nWacky Wednesdays (Under 5s)\nNational Coal Mining Museum \u00b7 Wednesday 18 November 2026\n[Event details](https://www.ncm.org.uk/whats-on/wacky-wednesday/)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 19 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nFree Guided Tour\nWakefield Cathedral \u00b7 Thursday 19 November 2026 \u00b7 11:00\u201312:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 20 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Friday 20 November 2026 19:00\u201322:00 and Saturday 21 November 2026 10:00\u201316:00 and Sunday 22 November 2026 10:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 21 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 21 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 22 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Tennants Auctioneers Valuation Event \u2014 official event page",
+            "url": "https://farmercopleys.co.uk/events/tennants-auctioneers/"
+          },
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "Wacky Wednesdays (Under 5s) \u2014 official event page",
+            "url": "https://www.ncm.org.uk/whats-on/wacky-wednesday/"
+          },
+          {
+            "title": "Free Guided Tour \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-16",
+              "end": "2026-11-22",
+              "from": "2026-11-17",
+              "today": "2026-11-17",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "6ede527c8e32fd07423a6174",
+              "sourceId": "copleys",
+              "canonId": "copleys",
+              "entityType": "event",
+              "title": "Tennants Auctioneers Valuation Event",
+              "kind": "scheduled",
+              "url": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "sourceUrl": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-17",
+              "endDate": "2026-11-17",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T06:18:22.199Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Farmer Copleys",
+              "venueId": "venue:farmer-copleys",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4b6dcd7f5bc4428cb489acaa",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-18",
+              "endDate": "2026-11-18",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "eec54fc1b03cba5faed4a773",
+              "sourceId": "ncm",
+              "canonId": "ncm",
+              "entityType": "event",
+              "title": "Wacky Wednesdays (Under 5s)",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-18",
+              "endDate": "2026-11-18",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-17T05:58:55.150Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "384b18c3396867d36f63e392",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Free Guided Tour",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-19",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:52:48.165Z",
+              "start": "11:00",
+              "end": "12:00",
+              "startTime": "11:00",
+              "endTime": "12:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8f29500219a89ed2ee623f7b",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-19",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f456e95094905e115bafb0e",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-20",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "5a202dc84ff77f565067c9ba",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-21",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "ba2eebba85456356608b509e",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-22",
+              "endDate": "2026-11-22",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-17T05:43:12.230Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs ",
+              "occurrenceDates": [
+                "2026-11-20",
+                "2026-11-21",
+                "2026-11-22",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-20",
+                  "start": "19:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-21",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-22",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-20",
+                "2026-11-21",
+                "2026-11-22"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:43:12.230Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-21",
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-21",
+                  "start": "17:30",
+                  "end": "19:30"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-21"
+              ]
+            }
+          ],
+          "viewIds": [
+            "6ede527c8e32fd07423a6174",
+            "4b6dcd7f5bc4428cb489acaa",
+            "eec54fc1b03cba5faed4a773",
+            "384b18c3396867d36f63e392",
+            "8f29500219a89ed2ee623f7b",
+            "4f456e95094905e115bafb0e",
+            "5a202dc84ff77f565067c9ba",
+            "ba2eebba85456356608b509e",
+            "89e39f62d07cc5827a34c96e",
+            "f43213dcdfab589a461befac"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What about Friday?",
+        "status": 200,
+        "seconds": 10.7,
+        "reply": "For Friday 20 November 2026 within the original list:\n\nThis week runs from Monday 16 November 2026 to Sunday 22 November 2026. Here\u2019s what\u2019s coming up from Tuesday 17 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Hepworth Wakefield Festive Market. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Friday 20 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Friday 20 November 2026 19:00\u201322:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-followup-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-16",
+              "end": "2026-11-22",
+              "from": "2026-11-17",
+              "today": "2026-11-17",
+              "filters": {
+                "day": "friday"
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "6ede527c8e32fd07423a6174",
+              "sourceId": "unknown:tennants-auctioneers-valuation-event:2026-11-17",
+              "canonId": "unknown:tennants-auctioneers-valuation-event:2026-11-17",
+              "entityType": "event",
+              "title": "Tennants Auctioneers Valuation Event",
+              "kind": "scheduled",
+              "url": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "sourceUrl": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-17",
+              "endDate": "2026-11-17",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T06:18:22.199Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Farmer Copleys",
+              "venueId": "venue:farmer-copleys",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4b6dcd7f5bc4428cb489acaa",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-18",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-18",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-18",
+              "endDate": "2026-11-18",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "eec54fc1b03cba5faed4a773",
+              "sourceId": "unknown:wacky-wednesdays-under-5s:2026-11-18",
+              "canonId": "unknown:wacky-wednesdays-under-5s:2026-11-18",
+              "entityType": "event",
+              "title": "Wacky Wednesdays (Under 5s)",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-18",
+              "endDate": "2026-11-18",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-17T05:58:55.150Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "384b18c3396867d36f63e392",
+              "sourceId": "unknown:free-guided-tour:2026-11-19",
+              "canonId": "unknown:free-guided-tour:2026-11-19",
+              "entityType": "event",
+              "title": "Free Guided Tour",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-19",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:52:48.165Z",
+              "start": "11:00",
+              "end": "12:00",
+              "startTime": "11:00",
+              "endTime": "12:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8f29500219a89ed2ee623f7b",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-19",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-19",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-19",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f456e95094905e115bafb0e",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-20",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-20",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-20",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "5a202dc84ff77f565067c9ba",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-21",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-21",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-21",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "ba2eebba85456356608b509e",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-22",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-22",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-22",
+              "endDate": "2026-11-22",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience:the-hepworth-wakefield-festive-market:2026-11-20",
+              "canonId": "experience:the-hepworth-wakefield-festive-market:2026-11-20",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-17T05:43:12.230Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s",
+              "occurrenceDates": [
+                "2026-11-20",
+                "2026-11-21",
+                "2026-11-22",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-20",
+                  "start": "19:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-21",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-22",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-20",
+                "2026-11-21"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience:nostell-ghost-walks:2026-11-21",
+              "canonId": "experience:nostell-ghost-walks:2026-11-21",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:43:12.230Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-21",
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-21",
+                  "start": "17:30",
+                  "end": "19:30"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-21"
+              ]
+            }
+          ],
+          "viewIds": [
+            "4f456e95094905e115bafb0e",
+            "89e39f62d07cc5827a34c96e"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What time does The Hepworth Wakefield Festive Market start?",
+        "status": 200,
+        "seconds": 11.1,
+        "reply": "The Hepworth Wakefield Festive Market starts at 19:00 on Friday 20 November 2026, at Tileyard North. It runs until 22:00.\n\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)",
+        "sources": [
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "cards-first-v17",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "resultCards": [
+            {
+              "id": "6ede527c8e32fd07423a6174",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Tennants Auctioneers Valuation Event",
+              "name": null,
+              "kind": null,
+              "url": "https://farmercopleys.co.uk/events/tennants-auctioneers/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-17",
+              "endDate": "2026-11-17",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T06:18:22.199Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Farmer Copleys",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "4b6dcd7f5bc4428cb489acaa",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "name": null,
+              "kind": null,
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-18",
+              "endDate": "2026-11-18",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "eec54fc1b03cba5faed4a773",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Wacky Wednesdays (Under 5s)",
+              "name": null,
+              "kind": null,
+              "url": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-18",
+              "endDate": "2026-11-18",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-17T05:58:55.150Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "384b18c3396867d36f63e392",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Free Guided Tour",
+              "name": null,
+              "kind": null,
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-19",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:52:48.165Z",
+              "start": "11:00",
+              "end": "12:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "8f29500219a89ed2ee623f7b",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "name": null,
+              "kind": null,
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-19",
+              "endDate": "2026-11-19",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "4f456e95094905e115bafb0e",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "name": null,
+              "kind": null,
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-20",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "5a202dc84ff77f565067c9ba",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "name": null,
+              "kind": null,
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-21",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "ba2eebba85456356608b509e",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "name": null,
+              "kind": null,
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-22",
+              "endDate": "2026-11-22",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:31:24.163Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "name": null,
+              "kind": null,
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": null,
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "date": null,
+              "dates": [
+                "2026-11-20"
+              ],
+              "occurrenceDates": [
+                "2026-11-20",
+                "2026-11-21",
+                "2026-11-22",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-20",
+                  "start": "19:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-21",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-22",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-17T05:43:12.230Z",
+              "start": "19:00",
+              "end": "22:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "name": null,
+              "kind": null,
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": null,
+              "source": "experience",
+              "sourceTier": null,
+              "date": null,
+              "dates": [
+                "2026-11-21"
+              ],
+              "occurrenceDates": [
+                "2026-11-21",
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-21",
+                  "start": "17:30",
+                  "end": "19:30"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-17T05:43:12.230Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            }
+          ],
+          "viewIds": [
+            "89e39f62d07cc5827a34c96e"
+          ],
+          "lastFilter": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "89e39f62d07cc5827a34c96e",
+              "checkedAt": "2026-11-17T16:18:34.544Z",
+              "sections": {
+                "programme": [
+                  "Make a day of it with art activities for kids, live music, pop-up portraits, printmaking with YUK FUN and the Marc Chagall: The Circus exhibition.",
+                  "Buy an exhibition ticket and get FREE entry to the Festive Market."
+                ],
+                "parking": [],
+                "parkingLinks": []
+              }
+            },
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-16",
+              "end": "2026-11-22",
+              "from": "2026-11-17",
+              "today": "2026-11-17",
+              "filters": {
+                "day": "friday"
+              }
+            },
+            "outing": {
+              "eventId": "89e39f62d07cc5827a34c96e",
+              "party": {
+                "children": false,
+                "ages": []
+              },
+              "requirements": [],
+              "activeTopic": "event"
+            }
+          },
+          "area": null
+        }
+      }
+    ]
+  }
+]

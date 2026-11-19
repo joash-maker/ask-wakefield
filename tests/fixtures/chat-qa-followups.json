@@ -1,0 +1,121 @@
+[
+  {
+    "id": "followup-1",
+    "turns": [
+      "What free things can we do in Wakefield this weekend?",
+      "What time do they start?"
+    ]
+  },
+  {
+    "id": "followup-2",
+    "turns": [
+      "What free things can we do in Wakefield this weekend?",
+      "Which ones are on Sunday?"
+    ]
+  },
+  {
+    "id": "followup-3",
+    "turns": [
+      "What free things can we do in Wakefield this weekend?",
+      "Show the full list again"
+    ]
+  },
+  {
+    "id": "followup-4",
+    "turns": [
+      "Suggest indoor activities for a rainy day with children in the Wakefield district.",
+      "What free things can we do in Wakefield this weekend?"
+    ]
+  },
+  {
+    "id": "followup-5",
+    "turns": [
+      "Suggest indoor activities for a rainy day with children in the Wakefield district.",
+      "Help me find an activity in Wakefield"
+    ]
+  },
+  {
+    "id": "followup-6",
+    "turns": [
+      "Where can I get good food or coffee in Wakefield?",
+      "Any more?"
+    ]
+  },
+  {
+    "id": "followup-7",
+    "turns": [
+      "Where can I get good food or coffee in Wakefield?",
+      "Which are open now?"
+    ]
+  },
+  {
+    "id": "followup-8",
+    "turns": [
+      "Where can I get good food or coffee in Wakefield?",
+      "What are their opening hours?"
+    ]
+  },
+  {
+    "id": "followup-9",
+    "turns": [
+      "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?",
+      "Find a running club in Wakefield"
+    ]
+  },
+  {
+    "id": "followup-10",
+    "turns": [
+      "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?",
+      "Help me find the right swimming lesson in Wakefield"
+    ]
+  },
+  {
+    "id": "followup-11",
+    "turns": [
+      "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?",
+      "Where can I play padel near Wakefield?"
+    ]
+  },
+  {
+    "id": "followup-12",
+    "turns": [
+      "What local clubs, walking groups and community groups can I join in Wakefield?",
+      "Find a walking group near me in Wakefield"
+    ]
+  },
+  {
+    "id": "followup-13",
+    "turns": [
+      "What local clubs, walking groups and community groups can I join in Wakefield?",
+      "Find me a proper hiking or longer walking group around Wakefield"
+    ]
+  },
+  {
+    "id": "followup-14",
+    "turns": [
+      "What local clubs, walking groups and community groups can I join in Wakefield?",
+      "Tell me about Dad Matters and other parent support groups in Wakefield"
+    ]
+  },
+  {
+    "id": "followup-15",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking or transport.",
+      "Help me find my bin collection day"
+    ]
+  },
+  {
+    "id": "followup-16",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking or transport.",
+      "Help me find official parking information for Wakefield city centre"
+    ]
+  },
+  {
+    "id": "followup-17",
+    "turns": [
+      "Help me with a Wakefield local service such as bins, parking or transport.",
+      "Help me plan a journey in Wakefield"
+    ]
+  }
+]

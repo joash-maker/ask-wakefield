@@ -1,0 +1,391 @@
+[
+  {
+    "id": "starter-1",
+    "label": "Free things this weekend \u2197\ufe0e",
+    "turns": [
+      {
+        "question": "What free things can we do in Wakefield this weekend?",
+        "status": 200,
+        "seconds": 14.0,
+        "reply": "For a free outing this weekend (Saturday, 14 November and Sunday, 15 November), I\u2019d look at this option:\n\n- My Eco Baby CIC Christmas Festival, Sunday, 15 November, 10:00\u201315:00, WX Wakefield Exchange",
+        "sources": [
+          {
+            "title": "My Eco Baby CIC Christmas Festival \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival"
+          }
+        ],
+        "followups": [
+          "What time do they start?",
+          "Which ones are on Sunday?",
+          "Show the full list again"
+        ],
+        "verification": "cards-first-v17"
+      }
+    ]
+  },
+  {
+    "id": "starter-3",
+    "label": "Parking in town \u2197\ufe0e",
+    "turns": [
+      {
+        "question": "Help me find official parking information for Wakefield city centre.",
+        "status": 200,
+        "seconds": 15.6,
+        "reply": "Wakefield Council currently offers up to two hours free parking in some Council-owned off-street car parks, but the exact car parks and restrictions matter. You still need to obtain and display a ticket where the scheme applies. Please check the Council car-parks page and the signs at the car park before leaving your vehicle.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*",
+        "sources": [],
+        "followups": null,
+        "verification": null,
+        "generatedFollowups": [
+          "Which car parks offer free parking?",
+          "Are there parking restrictions on Sundays?",
+          "How do I display parking tickets?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-2",
+    "label": "A rainy day with the kids \u2197\ufe0e",
+    "turns": [
+      {
+        "question": "Suggest indoor activities for a rainy day in the Wakefield district.",
+        "status": 200,
+        "seconds": 17.3,
+        "reply": "Here are some solid indoor options across Wakefield for a rainy day:\n\nREEL Cinema Wakefield at The Ridings Shopping Centre is straightforward, pick a film, settle in. It's open daily from 10 minutes before the first screening onwards, so times vary. Booking online usually works well.\n\nTenpin Wakefield in Trinity Walk offers bowling, arcade games and food (pizza, loaded fries, burgers). Open 10:00\u201300:00 most days, later on Fridays and Saturdays. It's accessible for all ages and you can turn up without booking, though online booking is available.\n\nDown to Earth Pottery Caf\u00e9 at The Ridings is a pottery-painting studio with afternoon tea and pizza packages, good if you want a creative activity. Open Thursday to Sunday (Thursday 15:00\u201320:00, Friday\u2013Sunday 10:00\u201317:00). Sessions are bookable and there's a \u00a35 deposit towards your finished piece.\n\nEscapable at The Ridings runs escape-room games (some suitable from age 8+). Game difficulty and age suitability vary, so check which rooms work for your group. Book a time slot in advance.\n\nWakefield Library on Burton Street is free and has a children's section if there are kids with you. Open most days 09:00\u201319:00 (closed Sundays).\n\nWhat ages are you planning for, or do you want something particular, like a creative activity, physical game or just browsing?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary",
+        "generatedFollowups": [
+          "What are Tenpin Wakefield's operating hours?",
+          "Does Wakefield have any museums?",
+          "Are there indoor sports facilities available?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-4",
+    "label": "What's on",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 11.5,
+        "reply": "This week runs from Monday 9 November 2026 to Sunday 15 November 2026. Here\u2019s what\u2019s coming up from Sunday 15 November 2026.\n\nMy Eco Baby CIC Christmas Festival\nWX Wakefield Exchange \u00b7 Sunday 15 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival)\n\nLonger-running listings\n\nInspired by Nature\nFrickley Country Park \u00b7 Ongoing until Wednesday 18 November 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/inspired-by-nature-frickley/)\n\nPontefract Ghost Walk\nThe Counting House Pontefract \u00b7 Ongoing until Thursday 17 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/pontefract-ghost-walk/)\n\nPontefract Castle Explorer Tours\nPontefract Castle \u00b7 Ongoing until Sunday 20 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/pontefract-castle-explorer-tours/)\n\nMakers Wonderland\nThe Art House \u00b7 Ongoing until Wednesday 23 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/makers-wonderland/)\n\nVillagers: Sculpting the Community\nNational Coal Mining Museum \u00b7 Ongoing until Sunday 24 January 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/villagers-sculpting-the-community/)\n\nOlivia Bax: Double Take\nYorkshire Sculpture Park \u00b7 Ongoing until Sunday 14 March 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/olivia-bax-double-take/)\n\nHold to this Earth: Works by Contemporary Indigenous North American Artists from Tia Collection\nYorkshire Sculpture Park \u00b7 Ongoing until Sunday 18 April 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/hold-to-this-earth/)\n\nPlastic Fantastic?\nWakefield Museum \u00b7 Ongoing until Sunday 27 June 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/plastic-fantastic/)\n\nDamien Hirst\nYorkshire Sculpture Park \u00b7 Ongoing until Wednesday 1 September 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/damien-hirst/)\n\nThese are the listings I could verify, so there may be others.",
+        "sources": [
+          {
+            "title": "My Eco Baby CIC Christmas Festival \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival"
+          },
+          {
+            "title": "Inspired by Nature \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/inspired-by-nature-frickley/"
+          },
+          {
+            "title": "Pontefract Ghost Walk \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/pontefract-ghost-walk/"
+          },
+          {
+            "title": "Pontefract Castle Explorer Tours \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/pontefract-castle-explorer-tours/"
+          },
+          {
+            "title": "Makers Wonderland \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/makers-wonderland/"
+          },
+          {
+            "title": "Villagers: Sculpting the Community \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/villagers-sculpting-the-community/"
+          },
+          {
+            "title": "Olivia Bax: Double Take \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/olivia-bax-double-take/"
+          },
+          {
+            "title": "Hold to this Earth: Works by Contemporary Indigenous North American Artists from Tia Collection \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/hold-to-this-earth/"
+          },
+          {
+            "title": "Plastic Fantastic? \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/plastic-fantastic/"
+          },
+          {
+            "title": "Damien Hirst \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/damien-hirst/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-6",
+    "label": "Food & coffee",
+    "turns": [
+      {
+        "question": "Where can I get good food or coffee in Wakefield?",
+        "status": 200,
+        "seconds": 10.2,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[KRA:FT Wakefield](https://maps.google.com/?cid=16028907495929564211) (14 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[Wired Whippet Coffee](https://maps.google.com/?cid=13134901753707743454) (53a The Grn, Ossett WF5 0AL) lists coffee.\n\n[Caffe Capri - Horbury](https://maps.google.com/?cid=15133674457134902985) (8 Cluntergate, Horbury, Wakefield WF4 5AG) lists coffee and food.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Costa Coffee](https://maps.google.com/?cid=17612261411877474420) (Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "KRA:FT Wakefield - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=16028907495929564211"
+          },
+          {
+            "title": "Wired Whippet Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=13134901753707743454"
+          },
+          {
+            "title": "Caffe Capri - Horbury - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=15133674457134902985"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Costa Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17612261411877474420"
+          }
+        ],
+        "followups": null,
+        "verification": "coffee-discovery-v1",
+        "generatedFollowups": [
+          "What are KRA:FT Wakefield's opening hours?",
+          "Does Wired Whippet have WiFi available?",
+          "Are there vegetarian options at these places?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-7",
+    "label": "Sports & fitness",
+    "turns": [
+      {
+        "question": "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?",
+        "status": 200,
+        "seconds": 20.8,
+        "reply": "Wakefield has a solid range of gyms, sports facilities and organised clubs. Here's what's on offer across the district.\n\nLeisure centres and council facilities\n\nNormanton Leisure has a spacious 6-lane, 25m pool and functional training gym, plus more than 40 classes a week.\n \nFeatherstone Sports Complex in Pontefract has a 4-lane 25m pool, 4G football pitch, taekwondo sessions, 28-station fitness suite and studio gym.\n \nThornes Park Stadium hosts Wakefield District Harriers athletics, Denby Dale Athletics Club, Savvy Park Runrz running club, a cycling Learn to Ride scheme, and Thornes Park Run.\n These are part of the Aspire membership scheme, aspire.org.uk or 01924 367 300.\n\nPrivate gyms and pools\n\nNuffield Health Wakefield offers a swimming pool, Zumba, Yoga, Pilates and unlimited fitness classes with membership.\n \nCedar Court Wakefield's Leisure Club has a heated swimming pool, sauna, jacuzzi, steam room and full-service gym with personal training plans included.\n\nRunning clubs\n\nWakefield District Harriers & AC is an athletics club catering for all athletics disciplines and all ages and abilities, from under 11s to senior internationals.\n \nClub training sessions run at 19:00 for age 11 and over.\n \nSavvy Park Runrz is a running club for all, whether a snail, strider or setting out on couch to 5km.\n \nRodillian Runners is based at Stanley Rodillian Rugby Union Club in Stanley and caters for all standards.\n\nOther sports\n\nNormanton Leisure is home to City of Wakefield Amateur Swimming Club and the Wakefield Water Polo Club.\n \nThornes Park Stadium has a ten-lane all-weather running track and athletic facilities for hammer, shotput, long jump, high jump, pole vault and steeplechase.\n\nFor exact current hours and activity schedules, contact the individual venues directly, centres often update their class timetables seasonally.",
+        "sources": [
+          {
+            "title": "Normanton Leisure",
+            "url": "https://experiencewakefield.co.uk/venue/normanton-leisure/"
+          },
+          {
+            "title": "Featherstone Sports Complex - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities/featherstone-sports-complex"
+          },
+          {
+            "title": "Athletics offer at Thornes Park Stadium - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities/athletics-offer-at-thornes-park-stadium"
+          },
+          {
+            "title": "Gym in Wakefield, Fitness & Wellbeing",
+            "url": "https://www.nuffieldhealth.com/gyms/wakefield"
+          },
+          {
+            "title": "Fitness & Leisure at Cedar Court Wakefield",
+            "url": "https://www.cedarcourthotels.co.uk/hotels/wakefield/fitness/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary",
+        "generatedFollowups": [
+          "What classes are offered at Normanton Leisure?",
+          "Does Featherstone Sports Complex have a pool?",
+          "Are there running clubs in Wakefield?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-5",
+    "label": "Families",
+    "turns": [
+      {
+        "question": "What free or low-cost things can families do in Wakefield this week?",
+        "status": 200,
+        "seconds": 21.2,
+        "reply": "This week (15-21 November) there's quite a bit on, though the big headline event has just wrapped.\n\nLight Up Wakefield runs Friday 13\u2013Saturday 14 November from 5pm\u20139pm in the city centre and is free. \nThe parade happens Saturday 14 at 5:30pm, so if you're reading this today (Sunday 15th), you've just missed the main weekend, but it's worth knowing for next year.\n\nFree activities still happening this week:\n\nMy Eco Baby CIC Christmas Festival is on today (Sunday 15 November) from 10am\u20133pm and is free.\n\nEarly Years Stay & Play happens at 9:30am\u201311am on weekdays, free for little ones with coffee and chat for grown-ups, check the library events for exact locations and dates.\n\nFeatherstone Library runs a Family Board Games and Chess Club on Wednesdays and Thursdays 1\u20133pm, free with no booking needed. \nStanley Library has a free BUILD club using LEGO, K'nex and marble runs on Fridays 3:30\u20135pm.\n\nThe Hepworth Wakefield has a free Family Workshop: Printing on Sunday 15 November, 11am\u20134pm (drop-in), included with an exhibition ticket), that's a paid gallery entry but the workshop itself is included.\n\nFree outdoor spaces: \nNewmillerdam Country Park has woodland trails, adventure trails and bird spotting. \nPugneys Country Park has a Pirates Cove play area.\n\nIf you're after something specific, an age group, a particular activity type, or an area of the district, I can narrow it down further.",
+        "sources": [
+          {
+            "title": "Light Up Wakefield",
+            "url": "https://experiencewakefield.co.uk/event/light-up-wakefield/"
+          },
+          {
+            "title": "Free",
+            "url": "https://www.wxwakefield.co.uk/Whats-On/Free"
+          },
+          {
+            "title": "Family",
+            "url": "https://wxwakefield.co.uk/Whats-On/Family"
+          },
+          {
+            "title": "Library events - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/libraries-and-local-history/library-information/library-events/?venue=South+Elmsall+Library"
+          },
+          {
+            "title": "The Hepworth Wakefield is closed on Friday 25 September",
+            "url": "https://hepworthwakefield.org/whats-on/categories/families/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary",
+        "generatedFollowups": [
+          "What events happen after November 21st?",
+          "Are there free activities for children?",
+          "Where exactly is Light Up Wakefield located?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-8",
+    "label": "Clubs & community",
+    "turns": [
+      {
+        "question": "What local clubs, walking groups and community groups can I join in Wakefield?",
+        "status": 200,
+        "seconds": 14.6,
+        "reply": "Wakefield has plenty of community and activity groups to join. Here are some main types and where to find them:\n\nRunning and athletics: Wakefield District Harriers is the traditional running club in the area. Wakefield Thornes parkrun runs a free Saturday-morning session at Thornes Park (Horbury Road, WF2 8TY), though that's a weekly timed event rather than a club with ongoing membership. Verify current training days and times for the Harriers from their official site, as these can shift seasonally.\n\nWalking and outdoor groups: Wakefield has walking clubs and rambling groups, though I'd suggest checking Ramblers UK for local sections and the Wakefield Council parks pages for guided walk programmes, as these schedules change regularly.\n\nCommunity and family groups: Wakefield Mumbler (wakefield.mumbler.co.uk) is an active parenting and family community that lists baby groups, toddler classes, playgroups and family days out. It's a useful hub if you've got younger children or want to meet other families.\n\nArts, culture and social: The Art House (the-arthouse.org.uk) and Create Cafe Wakefield run community arts and cafe sessions. The Hepworth Wakefield and Yorkshire Sculpture Park both host talks, workshops and volunteer opportunities if you're interested in arts or heritage.\n\nFitness and leisure: Aspire (aspire.org.uk, 01924 367 300) runs leisure centres across the district, they offer classes, swim sessions and sports groups. Phone or visit their sites to see what's running locally.\n\nFor a fuller directory of clubs and groups in your interest area, I'd recommend checking Wakefield Council's community pages (wakefield.gov.uk) or searching meetup.com for local groups. What kind of activity or community are you most interested in joining?",
+        "sources": [],
+        "followups": null,
+        "verification": "primary",
+        "generatedFollowups": [
+          "What activities does Wakefield District Harriers offer?",
+          "Where exactly is Thornes Park located?",
+          "Are there other free community activities available?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-9",
+    "label": "Local services",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking or transport.",
+        "status": 200,
+        "seconds": 14.3,
+        "reply": "I could not verify the current property-specific council information from the official lookup just now, so I do not want to guess a collection date. Please use Wakefield Council Where I Live with the full postcode or house number and street.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*",
+        "sources": [],
+        "followups": null,
+        "verification": null,
+        "generatedFollowups": [
+          "How do I access Wakefield Council Where I Live?",
+          "What information do I need for bin collection?",
+          "Where can I find parking regulations in Wakefield?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-10",
+    "label": "Events & culture What's On Events, exhibitions, gigs, festivals and things happening this week. Ask about what's on \u2192",
+    "turns": [
+      {
+        "question": "What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.",
+        "status": 200,
+        "seconds": 18.6,
+        "reply": "This week's highlights focus on the festive season kicking off. Here's what's happening:\n\nThis weekend (Sat 14 & Sun 15 Nov)\n\nLight Up Wakefield runs Friday 13 to Saturday 14 November from 5pm to 9pm, with\na Light Switch-On on Friday 13 at 5:30pm in the Cathedral Precinct with live entertainment.\nOn Saturday 14 November from 5:30pm, the illuminated 'Nature's Return' parade celebrates wildlife returning to Wakefield's rivers, meadows, moors and gardens.\n\nExplore light installations across the city centre, from interactive artworks and striking projections to illuminated experiences. It's free and family-friendly.\n\nComing up this week\n\nOver 60s Rhubarb Textile Workshop on Thursday 19 November, 1-3pm, a, hands-on textile workshop celebrating Wakefield's rhubarb heritage.\n\nKT's Rhythm and Blues Festival on Friday 20 November, 7-10:30pm, the opening night of Wakefield Music Collective's annual Blues Festival.\n\nAn Evening with Bill Nelson on Saturday 21 November, 7-10:30pm, with the legendary Wakefield musician and founder of Be Bop Deluxe.\n\nMarkets & craft fairs\n\nThe Hepworth Wakefield Festive Market runs Friday 20 November 7-10pm, then Saturday 21, Sunday 22, Saturday 28 and Sunday 29 November 10am-4pm (advance/on the day, for Members and under 18s).",
+        "sources": [
+          {
+            "title": "What's On",
+            "url": "https://wxwakefield.co.uk/whats-on"
+          },
+          {
+            "title": "Experience Wakefield \u2014 What's On",
+            "url": "https://experiencewakefield.co.uk/whats-on/"
+          },
+          {
+            "title": "Wakefield Cathedral \u2014 Events",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "Light Up Wakefield",
+            "url": "https://experiencewakefield.co.uk/event/light-up-wakefield/"
+          },
+          {
+            "title": "Light Up Wakefield Light Trail",
+            "url": "https://experiencewakefield.co.uk/event/light-up-trail/"
+          },
+          {
+            "title": "Festive Market",
+            "url": "https://hepworthwakefield.org/whats-on/festive-market-2026/"
+          }
+        ],
+        "followups": null,
+        "verification": "primary",
+        "generatedFollowups": [
+          "What time does Light Up Wakefield start?",
+          "Are there family activities this weekend?",
+          "Which venues host live music events?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-11",
+    "label": "Eat & drink Food & Coffee Restaurants, caf\u00e9s, coffee spots, pubs and local favourites for different occasions. Find somewhere \u2192",
+    "turns": [
+      {
+        "question": "Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.",
+        "status": 200,
+        "seconds": 10.7,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[Bakes By VANILLA BEAN](https://maps.google.com/?cid=11404958215076635949) (28 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[Wired Whippet Coffee](https://maps.google.com/?cid=13134901753707743454) (53a The Grn, Ossett WF5 0AL) lists coffee.\n\n[The Workhouse](https://maps.google.com/?cid=7205274976850552703) (37 Queen St, Horbury, Wakefield WF4 6LP) lists coffee.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Starbucks Coffee](https://maps.google.com/?cid=17278803304797261811) (Colorado Way, Castleford WF10 4SB) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "Bakes By VANILLA BEAN - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11404958215076635949"
+          },
+          {
+            "title": "Wired Whippet Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=13134901753707743454"
+          },
+          {
+            "title": "The Workhouse - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=7205274976850552703"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Starbucks Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17278803304797261811"
+          }
+        ],
+        "followups": null,
+        "verification": "coffee-discovery-v1",
+        "generatedFollowups": [
+          "What's the best budget option in Wakefield?",
+          "Do these places have vegetarian options?",
+          "Which caf\u00e9 is best for meetings?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "starter-12",
+    "label": "Practical Wakefield Local Services Bins, parking, transport, roads, council information, libraries and useful official links. Ask a local-service question \u2192",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.",
+        "status": 200,
+        "seconds": 11.6,
+        "reply": "I could not verify the current property-specific council information from the official lookup just now, so I do not want to guess a collection date. Please use Wakefield Council Where I Live with the full postcode or house number and street.\n\n*For official and up-to-date information, visit wakefield.gov.uk or call 0345 8 506 506.*",
+        "sources": [],
+        "followups": null,
+        "verification": null,
+        "generatedFollowups": [
+          "How do I access Wakefield Council Where I Live?",
+          "What information does Where I Live provide?",
+          "How can I find my council tax band?"
+        ]
+      }
+    ]
+  }
+]

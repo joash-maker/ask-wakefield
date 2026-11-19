@@ -36,7 +36,10 @@
     footer{border-top:1px solid var(--line);padding:28px 0 46px;color:#777;font-size:11px;line-height:1.6}.footer-in{display:flex;justify-content:space-between;gap:24px}.mono{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em}
     @media(max-width:900px){.filters{grid-template-columns:1fr 1fr}.field:first-child{grid-column:1/-1}.cards{grid-template-columns:1fr}.directory-cta{align-items:flex-start;flex-direction:column}}
     @media(max-width:600px){.wrap{width:min(100% - 24px,1180px)}.brand-sub{display:none}.top-actions .btn:not(.primary){display:none}.hero{padding:52px 0 34px}h1{font-size:56px}.hero p{font-size:15px}.filters{grid-template-columns:1fr}.field:first-child{grid-column:auto}.results-bar{align-items:flex-start;flex-direction:column}.card{padding:20px;min-height:0}.directory-cta{padding:24px}.footer-in{flex-direction:column}}
-  </style>
+
+@media(max-width:768px){input:not([type="checkbox"]):not([type="hidden"]),select,textarea{font-size:16px}}
+@media(max-width:768px){.filters .field select,.filters .field input{font-size:16px}.field label{font-size:12px}.verified{font-size:10px}.summary{font-size:14px}.source,.ask{min-height:44px;align-items:center}.intro{line-height:1.6;margin-bottom:20px}}
+</style>
 
 <!-- Vercel Web Analytics -->
 <script>
@@ -67,7 +70,7 @@
       <div class="eyebrow">Activities · clubs · sport · community</div>
       <h1>Find something to do in Wakefield.</h1>
       <p>Start with source-linked local options for children, adults and families. Filter by activity, age, area, day and cost, then follow the provider's own source for the latest availability. Listed schedules, eligibility and prices need reconfirming before you travel.</p>
-      <div class="hero-note"><span>Starter directory</span><span>Sources checked 15 Sep 2026</span><span>More listings coming</span></div>
+      <div class="hero-note"><span>Starter directory</span><span>Sources reviewed 19 Nov 2026</span><span>More listings coming</span></div>
     </div>
   </header>
 
@@ -84,167 +87,167 @@
   <main class="main">
     <div class="wrap">
       <div class="results-bar"><div><div class="eyebrow">Browse activities</div><h2>Source-linked starting points</h2></div><div class="count" id="count"></div></div>
-      <p class="intro">These source snapshots were checked on 15 September 2026. Timetables, prices, eligibility and waiting lists may have changed. Confirm the details with the provider before making plans.</p>
+      <p class="intro">Provider pages were reviewed on 19 November 2026. These are published programme details, not live availability. Confirm the session date, eligibility, price and any waiting list with the provider before booking or travelling.</p>
       <div class="cards" id="cards">
 
-        <article class="card" data-category="swimming after-school" data-age="under5 5-11 12-17 adult" data-day="varies" data-price="paid" data-area="district wide wakefield aspire swimming">
-          <div class="card-top"><div class="category">Swimming</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+        <article class="card" data-category="swimming after-school" data-age="under5 5-11 12-17 adult" data-day="varies" data-price="varies" data-area="district wide wakefield aspire swimming">
+          <div class="card-top"><div class="category">Swimming</div><div class="verified">Wakefield Council · reviewed 19 Nov</div></div>
           <h3>Aspire swimming lessons</h3>
-          <p class="summary">Lessons from age 1 through to adults, including adult beginner and improver classes. Junior SEND swimming is available for children aged 5+ with a parent or responsible adult in the water.</p>
+          <p class="summary">Swimming lessons from age 1 through to adults. Toddler and preschool lessons require an accompanying adult in the water. Junior SEND lessons are for ages 5+ and also require an adult in the water. Check centre-specific lessons, fees and places.</p>
           <div class="meta"><span class="tag">Age 1+ to adults</span><span class="tag">Beginners welcome</span><span class="tag">SEND 5+</span><span class="tag">District-wide</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons">Official source ↗</a><a class="ask" href="/?ask=Help%20me%20find%20the%20right%20swimming%20lesson%20in%20Wakefield#assistant">Ask about swimming</a></div>
         </article>
 
-        <article class="card" data-category="fitness swimming" data-age="5-11 12-17 adult" data-day="varies" data-price="paid" data-area="district wide wakefield aspire gym swim fitness">
-          <div class="card-top"><div class="category">Gym · swim · classes</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+        <article class="card" data-category="fitness swimming" data-age="5-11 12-17 adult" data-day="varies" data-price="varies" data-area="district wide wakefield aspire gym swim fitness">
+          <div class="card-top"><div class="category">Gym · swim · classes</div><div class="verified">Wakefield Council · reviewed 19 Nov</div></div>
           <h3>Aspire Pay & Play</h3>
-          <p class="summary">Use Aspire gyms, public swimming, lane swimming and fitness classes without taking out a membership. Adult, junior and family swim prices are available, along with junior gym sessions.</p>
+          <p class="summary">Pay for gym, swimming and exercise classes without an Aspire membership. The Council publishes 2026–27 prices, including adult swimming at £6.20 and junior swimming at £3.80. Check the chosen centre, session and admission rules.</p>
           <div class="meta"><span class="tag">Adults & juniors</span><span class="tag">No membership needed</span><span class="tag">Pay per visit</span><span class="tag">Multiple centres</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities">Official source ↗</a><a class="ask" href="/?ask=Which%20Aspire%20gym%20or%20swimming%20facility%20is%20best%20for%20me%20in%20Wakefield%3F#assistant">Ask Wakefield</a></div>
         </article>
 
         <article class="card" data-category="running after-school" data-age="5-11" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
-          <div class="card-top"><div class="category">Junior athletics</div><div class="verified">Wakefield Harriers · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Junior athletics</div><div class="verified">Wakefield Harriers · reviewed 19 Nov</div></div>
           <h3>Wakefield Harriers Junior Jets</h3>
-          <p class="summary">Athletics for children aged 8–10 at Thornes Park Stadium. Training runs Tuesdays and Thursdays, 5:45–6:45pm. The September source reported a waiting list for new Junior Jets.</p>
-          <div class="meta"><span class="tag">Ages 8–10</span><span class="tag">Tue & Thu</span><span class="tag">£3/session</span><span class="tag alert">September waiting list</span><span class="tag">WF2 8TY</span></div>
+          <p class="summary">Athletics for ages 8–10 at Thornes Park Stadium. The club lists Tuesday and Thursday training, 17:45–18:45, at £3 per session. A waiting list applies. Club membership is required after four weeks, with a published annual fee of £25.</p>
+          <div class="meta"><span class="tag">Ages 8–10</span><span class="tag">Tue & Thu</span><span class="tag">£3/session</span><span class="tag alert">Waiting list published</span><span class="tag">WF2 8TY</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldharriers.co.uk/junior-jets/">Club source ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Wakefield%20Harriers%20Junior%20Jets%20and%20other%20athletics%20options%20for%20children#assistant">Ask about athletics</a></div>
         </article>
 
         <article class="card" data-category="running after-school" data-age="12-17" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
-          <div class="card-top"><div class="category">Youth athletics</div><div class="verified">Wakefield Harriers · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Youth athletics</div><div class="verified">Wakefield Harriers · reviewed 19 Nov</div></div>
           <h3>Wakefield Harriers YARDS</h3>
-          <p class="summary">Development athletics for U13, U15 and U17 athletes at Thornes Park Stadium. Sessions are Tuesdays and Thursdays, 7–8pm. The September source reported a waiting list.</p>
-          <div class="meta"><span class="tag">U13–U17</span><span class="tag">Tue & Thu</span><span class="tag">£3/session</span><span class="tag alert">September waiting list</span><span class="tag">WF2 8TY</span></div>
+          <p class="summary">Athletics development for U13, U15 and U17 groups at Thornes Park Stadium. The club lists Tuesday and Thursday training, 19:00–20:00, at £3 per session. A waiting list applies. Membership is required after four weeks, with a published annual fee of £25.</p>
+          <div class="meta"><span class="tag">U13–U17</span><span class="tag">Tue & Thu</span><span class="tag">£3/session</span><span class="tag alert">Waiting list published</span><span class="tag">WF2 8TY</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldharriers.co.uk/yards/">Club source ↗</a><a class="ask" href="/?ask=Help%20me%20find%20athletics%20for%20a%20teenager%20in%20Wakefield#assistant">Ask about youth athletics</a></div>
         </article>
 
-        <article class="card" data-category="running" data-age="adult" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
-          <div class="card-top"><div class="category">Running</div><div class="verified">Wakefield Harriers · checked 15 Sep</div></div>
+        <article class="card" data-category="running" data-age="unknown" data-day="tuesday thursday" data-price="paid" data-area="thornes wf2 8ty wakefield thornes park stadium">
+          <div class="card-top"><div class="category">Running</div><div class="verified">Wakefield Harriers · reviewed 19 Nov</div></div>
           <h3>Wakefield Harriers Road & XC</h3>
-          <p class="summary">Road running and cross-country groups for different abilities. Training is Tuesdays and Thursdays, 7–8pm at Thornes Park Stadium, with road and track-based sessions.</p>
+          <p class="summary">Road and cross-country running groups at Thornes Park Stadium. The club lists Tuesday and Thursday training, 19:00–20:00. Published session fees are £1 for road training and £3 for track training. Annual membership is £52 after the introductory four weeks.</p>
           <div class="meta"><span class="tag">Adults</span><span class="tag">Different abilities</span><span class="tag">Tue & Thu</span><span class="tag">£1 road / £3 track</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldharriers.co.uk/road-xc/">Club source ↗</a><a class="ask" href="/?ask=Find%20me%20a%20running%20club%20in%20Wakefield%20that%20suits%20my%20ability#assistant">Ask about running</a></div>
         </article>
 
-        <article class="card" data-category="walking community" data-age="adult" data-day="varies" data-price="free varies" data-area="district wide wakefield horbury normanton nostell walton eastmoor kettlethorpe hemsworth stanley">
-          <div class="card-top"><div class="category">Walking</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+        <article class="card" data-category="walking community" data-age="adult" data-day="varies" data-price="varies" data-area="district wide wakefield horbury normanton nostell walton eastmoor kettlethorpe hemsworth stanley">
+          <div class="card-top"><div class="category">Walking</div><div class="verified">Wakefield Council · reviewed 19 Nov</div></div>
           <h3>Wakefield Health Walks</h3>
-          <p class="summary">Led local walks across the district, including gentle health walks and longer routes. Current listings include Wakefield, Horbury, Nostell, Walton, Normanton, Hemsworth and other areas.</p>
-          <div class="meta"><span class="tag">Mostly adults</span><span class="tag">Various days</span><span class="tag">Many free</span><span class="tag">Different abilities</span></div>
+          <p class="summary">The Council publishes dated health walks and Nordic walks across the district. Cost, difficulty, meeting point and eligibility vary by session. Select the actual date and walk in the timetable before planning a visit.</p>
+          <div class="meta"><span class="tag">Dated timetable</span><span class="tag">Check difficulty</span><span class="tag">Check session cost</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable">Current timetable ↗</a><a class="ask" href="/?ask=Find%20a%20walking%20group%20near%20me%20in%20Wakefield#assistant">Ask about walks</a></div>
         </article>
 
-        <article class="card" data-category="walking" data-age="adult" data-day="varies saturday sunday" data-price="varies" data-area="district wide wakefield ramblers hiking hikes">
-          <div class="card-top"><div class="category">Walking & hiking</div><div class="verified">Ramblers Yorkshire · checked 15 Sep</div></div>
+        <article class="card" data-category="walking" data-age="unknown" data-day="varies saturday sunday" data-price="varies" data-area="district wide wakefield ramblers hiking hikes">
+          <div class="card-top"><div class="category">Walking & hiking</div><div class="verified">Ramblers Yorkshire · reviewed 19 Nov</div></div>
           <h3>Wakefield & District Ramblers</h3>
-          <p class="summary">A local Ramblers group offering regular led walks throughout the year, typically around 4–10 miles. A good option if you want something more substantial than a short health walk.</p>
+          <p class="summary">The local Ramblers group aims to offer at least one walk each week, typically between 4 and 10 miles. Use its programme and contact details to check the next route, joining arrangements and suitability.</p>
           <div class="meta"><span class="tag">Longer walks</span><span class="tag">Usually weekly</span><span class="tag">4–10 miles</span><span class="tag">Check programme</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://ramblersyorkshire.org/area-groups/wakefield-and-district.html">Walk programme ↗</a><a class="ask" href="/?ask=Find%20me%20a%20proper%20hiking%20or%20longer%20walking%20group%20around%20Wakefield#assistant">Ask about hiking</a></div>
         </article>
 
         <article class="card" data-category="padel" data-age="12-17 adult" data-day="monday tuesday wednesday thursday friday saturday sunday" data-price="paid" data-area="wakefield sports club padel wakefield">
-          <div class="card-top"><div class="category">Padel</div><div class="verified">Wakefield Sports Club · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Padel</div><div class="verified">Wakefield Sports Club · reviewed 19 Nov</div></div>
           <h3>Wakefield Sports Club Padel</h3>
-          <p class="summary">Padel courts bookable online through Playtomic. The club lists adult and junior memberships, equipment hire and opening hours of 8am–10pm.</p>
+          <p class="summary">Four outdoor floodlit padel courts, bookable through Playtomic by members and non-members. The club lists court hours of 08:00–22:00 daily. Court charges vary. Check parking validation instructions before playing.</p>
           <div class="meta"><span class="tag">Adults & juniors</span><span class="tag">Daily</span><span class="tag">8am–10pm</span><span class="tag">Booking required</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://wakefieldsportsclub.com/padel/">Club source ↗</a><a class="ask" href="/?ask=Where%20can%20I%20play%20padel%20near%20Wakefield%3F#assistant">Ask about padel</a></div>
         </article>
 
-        <article class="card" data-category="cricket after-school" data-age="5-11 12-17 adult" data-day="varies" data-price="varies" data-area="calder grove wakefield denby dale road wf4 3dp cricket juniors women senior">
-          <div class="card-top"><div class="category">Cricket</div><div class="verified">Calder Grove CC · checked 15 Sep</div></div>
+        <article class="card" data-category="cricket after-school" data-age="unknown" data-day="varies" data-price="varies" data-area="calder grove wakefield cricket">
+          <div class="card-top"><div class="category">Cricket</div><div class="verified">Calder Grove CC · reviewed 19 Nov</div></div>
           <h3>Calder Grove Cricket Club</h3>
-          <p class="summary">A community cricket club on Denby Dale Road in Calder Grove, with senior cricket, junior sessions and growing women’s cricket activity. The club competes in the Pontefract &amp; District Cricket League and has a strong record of community involvement.</p>
-          <div class="meta"><span class="tag">Senior cricket</span><span class="tag">Junior sessions</span><span class="tag">Women’s cricket</span><span class="tag">WF4 3DP</span></div>
+          <p class="summary">Calder Grove Cricket Club’s official page provides team results and a contact route for joining. Ask the club which teams and age groups are recruiting, and confirm training times and fees before attending.</p>
+          <div class="meta"><span class="tag">Club contact</span><span class="tag">Check teams</span><span class="tag">Check training</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://caldergrove.play-cricket.com/home">Fixtures &amp; club contact ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Calder%20Grove%20Cricket%20Club%20and%20how%20to%20get%20involved#assistant">Ask about Calder Grove</a></div>
           <div class="card-actions" style="margin-top:10px"><a class="source" target="_blank" rel="noopener" href="https://www.facebook.com/caldergrovecc/?locale=en_GB">Facebook ↗</a><a class="source" target="_blank" rel="noopener" href="https://www.instagram.com/caldergrovecc/">Instagram ↗</a></div>
         </article>
 
         <article class="card" data-category="football after-school" data-age="5-11 12-17" data-day="varies" data-price="varies" data-area="wakefield junior football wakefield afc">
-          <div class="card-top"><div class="category">Junior football</div><div class="verified">Wakefield AFC Juniors · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Junior football</div><div class="verified">Wakefield AFC Juniors · reviewed 19 Nov</div></div>
           <h3>Wakefield AFC Juniors</h3>
-          <p class="summary">The September source listed teams across multiple age groups from U9 through U16. Use the club's current team page to find the right age group and make contact.</p>
+          <p class="summary">The club’s team page lists age groups from U9 through U16. Contact the club about the appropriate team, current places, training times and fees.</p>
           <div class="meta"><span class="tag">U9–U16</span><span class="tag">Multiple teams</span><span class="tag">Check training details</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefieldafcjuniors.co.uk/teams">Club teams ↗</a><a class="ask" href="/?ask=Find%20a%20junior%20football%20club%20in%20Wakefield%20for%20my%20child#assistant">Ask about football</a></div>
         </article>
 
 
         <article class="card" data-category="performing-arts after-school" data-age="5-11 12-17" data-day="saturday" data-price="paid varies" data-area="wakefield wf1 2te theatre royal capa drama dance singing acting performance academy">
-          <div class="card-top"><div class="category">Drama & performing arts</div><div class="verified">Theatre Royal Wakefield · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Drama & performing arts</div><div class="verified">Theatre Royal Wakefield · reviewed 19 Nov</div></div>
           <h3>Performance Academy & PA Kids</h3>
-          <p class="summary">Saturday term-time musical-theatre training in acting, singing and dancing. PA Kids is for ages 5–6, while Performance Academy covers ages 7–18. The September source said the Wakefield academy is waiting-list only.</p>
-          <div class="meta"><span class="tag">Ages 5–18</span><span class="tag">Saturdays</span><span class="tag">Term time</span><span class="tag alert">September waiting list</span></div>
+          <p class="summary">Saturday term-time training in acting, singing and dance. PA Kids covers ages 5–6 and Performance Academy ages 7–18. The Wakefield programme is listed as waiting-list only. Venues and times depend on the group.</p>
+          <div class="meta"><span class="tag">Ages 5–18</span><span class="tag">Saturdays</span><span class="tag">Term time</span><span class="tag">Waiting list published</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.theatreroyalwakefield.co.uk/take-part/performance-academy">Programme source ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Theatre%20Royal%20Wakefield%20Performance%20Academy%20for%20children#assistant">Ask about theatre</a></div>
         </article>
 
-        <article class="card" data-category="coding after-school" data-age="5-11 12-17" data-day="thursday" data-price="free" data-area="wakefield one library museum wf1 coding code club scratch python html children">
-          <div class="card-top"><div class="category">Coding & STEM</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+        <article class="card" data-category="coding after-school" data-age="unknown" data-day="varies" data-price="free" data-area="wakefield one library museum wf1 coding code club scratch python html children">
+          <div class="card-top"><div class="category">Coding & STEM</div><div class="verified">Wakefield Council · reviewed 19 Nov</div></div>
           <h3>Code Club — Wakefield Library</h3>
-          <p class="summary">A free term-time coding club at Wakefield One for children who want to learn with Scratch, Python and HTML. The September Council listing showed Thursday sessions from 4–5pm and says booking is required.</p>
-          <div class="meta"><span class="tag">Children</span><span class="tag">Thu 4–5pm</span><span class="tag">Free</span><span class="tag">Booking required</span></div>
+          <p class="summary">The Council lists Code Club at Wakefield One for children interested in Scratch, Python and HTML. The dated 19 November listing is 16:00–17:00, free, term-time only and requires booking. Check later session dates and exact age suitability.</p>
+          <div class="meta"><span class="tag">Children: check ages</span><span class="tag">19 Nov, 4–5pm</span><span class="tag">Free listed session</span><span class="tag">Booking required</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/libraries-and-local-history/library-information/library-events/">Council events ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Code%20Club%20at%20Wakefield%20Library#assistant">Ask about coding</a></div>
         </article>
 
         <article class="card" data-category="scouts after-school community" data-age="5-11 12-17" data-day="monday tuesday wednesday thursday friday varies" data-price="varies" data-area="wakefield scouts squirrels beavers cubs explorers crofton horbury ossett thornes newmillerdam outwood stanley sandal wrenthorpe alverthorpe durkar ryhill havercroft">
-          <div class="card-top"><div class="category">Scouts & youth groups</div><div class="verified">Wakefield Scouts · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Scouts & youth groups</div><div class="verified">Wakefield Scouts · reviewed 19 Nov</div></div>
           <h3>Wakefield Scouts local groups</h3>
-          <p class="summary">Wakefield Scouts lists local Squirrel, Beaver, Cub, Scout and Explorer groups across the district, including Crofton, Horbury Bridge, Ossett, Thornes, Newmillerdam, Outwood, Stanley, Sandal, Wrenthorpe and more.</p>
+          <p class="summary">Wakefield Scouts lists local Squirrel, Beaver, Cub, Scout and Explorer groups across the district. Meeting days vary by group and section. Contact the chosen group about age eligibility, fees and available places.</p>
           <div class="meta"><span class="tag">Children & teens</span><span class="tag">Multiple areas</span><span class="tag">Weekday evenings</span><span class="tag">Check spaces</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefieldscouts.org.uk/local-groups/">Local groups ↗</a><a class="ask" href="/?ask=Find%20a%20Scout%2C%20Cub%2C%20Beaver%20or%20Squirrel%20group%20near%20me%20in%20Wakefield#assistant">Ask about Scouts</a></div>
         </article>
 
         <article class="card" data-category="dance after-school performing-arts" data-age="under5 5-11 12-17" data-day="varies saturday" data-price="paid varies" data-area="wakefield thornes park wf2 8qz dance ballet musical theatre junior dance academy ellite studios">
-          <div class="card-top"><div class="category">Dance</div><div class="verified">ElliTe Studios · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Dance</div><div class="verified">ElliTe Studios · reviewed 19 Nov</div></div>
           <h3>ElliTe Studios Junior Dance Academy</h3>
-          <p class="summary">Extra-curricular dance training for young people at Thornes Park. The Junior Dance Academy covers ages 3–18 in a range of styles, with a specialist under-6 programme and ISTD pathways.</p>
+          <p class="summary">Dance training for ages 3–18 at ElliTe Studios. The provider describes a range of styles and ISTD examinations. Check its class timetable and ask about the appropriate group, fees and available places.</p>
           <div class="meta"><span class="tag">Ages 3–18</span><span class="tag">Thornes Park</span><span class="tag">Multiple styles</span><span class="tag">Check timetable</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.ellitestudios.co.uk/junior-dance-academy">Dance academy ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20dance%20classes%20for%20children%20at%20ElliTe%20Studios%20Wakefield#assistant">Ask about dance</a></div>
         </article>
 
-        <article class="card" data-category="dance after-school performing-arts" data-age="5-11 12-17 adult" data-day="monday tuesday wednesday thursday friday saturday varies" data-price="paid varies" data-area="wakefield city centre wf1 1ha bull ring central buildings dance performance musical theatre ballet contemporary commercial street heels acting singing verge house performance">
-          <div class="card-top"><div class="category">Dance &amp; performance</div><div class="verified">The Verge · checked 15 Sep</div></div>
+        <article class="card" data-category="dance after-school performing-arts" data-age="5-11 12-17" data-day="monday tuesday wednesday thursday friday saturday varies" data-price="paid varies" data-area="wakefield city centre wf1 1ha bull ring central buildings dance performance musical theatre ballet contemporary commercial street heels acting singing verge house performance">
+          <div class="card-top"><div class="category">Dance &amp; performance</div><div class="verified">The Verge · reviewed 19 Nov</div></div>
           <h3>The Verge | House of Performance</h3>
-          <p class="summary">City-centre performance training from age 5 through to adults. The Verge offers Foundations for ages 5–8 plus Stage, Technique and Industry tracks covering musical theatre, ballet, contemporary, commercial and street-based training, with regular performance opportunities.</p>
-          <div class="meta"><span class="tag">Age 5+ to adults</span><span class="tag">Wakefield city centre</span><span class="tag">Multiple performance tracks</span><span class="tag">Check current places</span></div>
+          <p class="summary">Performance training in Wakefield with Stage, Foundations, Technique and Industry tracks. The provider describes training for young performers. Ask about the appropriate track, exact age range, timetable, fees and available places.</p>
+          <div class="meta"><span class="tag">Performance tracks</span><span class="tag">Check age range</span><span class="tag">Check timetable</span><span class="tag">Check places</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.thevergehouse.com/">Official website ↗</a><a class="source" target="_blank" rel="noopener" href="https://www.instagram.com/thevergedanceunit/">Instagram ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20The%20Verge%20House%20of%20Performance%20in%20Wakefield%20and%20which%20dance%20or%20performance%20track%20might%20suit%20my%20child#assistant">Ask about The Verge</a></div>
         </article>
 
         <article class="card" data-category="martial-arts after-school fitness" data-age="5-11 12-17 adult" data-day="monday wednesday saturday" data-price="paid" data-area="featherstone sports complex wf7 5aj taekwondo martial arts juniors adults beginners">
-          <div class="card-top"><div class="category">Martial arts</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Martial arts</div><div class="verified">Wakefield Council · reviewed 19 Nov</div></div>
           <h3>Taekwondo at Featherstone Sports Complex</h3>
-          <p class="summary">Beginner-friendly Taekwondo for ages 6+ with junior and adult pricing. The September Council listing described sessions on Monday and Wednesday evenings plus Saturday afternoon, with no booking required.</p>
+          <p class="summary">Taekwondo at Featherstone Sports Complex for ages 6+, including beginners. The Council lists Monday and Wednesday, 19:30–21:00, and Saturday, 14:00–15:30. Published prices are £7.80 for adults and £5.30 for juniors, with no advance booking required.</p>
           <div class="meta"><span class="tag">Age 6+</span><span class="tag">Beginners welcome</span><span class="tag">Mon · Wed · Sat</span><span class="tag">Junior £5.30</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities/taekwondo">Council source ↗</a><a class="ask" href="/?ask=Find%20martial%20arts%20or%20Taekwondo%20for%20a%20child%20in%20Wakefield#assistant">Ask about martial arts</a></div>
         </article>
 
-        <article class="card" data-category="fitness after-school" data-age="12-17" data-day="varies" data-price="paid varies" data-area="wakefield aspire junior gym 11 15 fitness leisure centre">
-          <div class="card-top"><div class="category">Junior fitness</div><div class="verified">Wakefield Council · checked 15 Sep</div></div>
+        <article class="card" data-category="fitness after-school" data-age="5-11 12-17" data-day="varies" data-price="paid varies" data-area="wakefield aspire junior gym 11 15 fitness leisure centre">
+          <div class="card-top"><div class="category">Junior fitness</div><div class="verified">Wakefield Council · reviewed 19 Nov</div></div>
           <h3>Aspire Junior Gym</h3>
-          <p class="summary">Aspire Junior Gym gives 11–15-year-olds access to gym facilities. Staff-led Junior Gym sessions can be attended without an adult, while general gym access outside those sessions requires supervision and an induction.</p>
+          <p class="summary">Aspire Junior Gym covers ages 11–15. Staff-led sessions require advance booking and do not require a supervising adult. Outside those sessions, induction and supervision rules apply. Check the chosen centre’s timetable.</p>
           <div class="meta"><span class="tag">Ages 11–15</span><span class="tag">Staff-led sessions</span><span class="tag">Booking required</span><span class="tag">Multiple Aspire centres</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/junior-gym/">Council source ↗</a><a class="ask" href="/?ask=Where%20can%20an%2011%20to%2015-year-old%20use%20a%20gym%20in%20Wakefield#assistant">Ask about junior gym</a></div>
         </article>
 
-        <article class="card" data-category="tutoring after-school" data-age="5-11 12-17" data-day="monday tuesday wednesday thursday saturday" data-price="paid varies" data-area="wakefield west wf1 2qp bond street kip mcgrath tutoring maths english sats gcse a level 11 plus">
-          <div class="card-top"><div class="category">Tutoring</div><div class="verified">Kip McGrath Wakefield West · checked 15 Sep</div></div>
+        <article class="card" data-category="tutoring after-school" data-age="5-11 12-17" data-day="monday tuesday wednesday thursday saturday" data-price="varies" data-area="wakefield west wf1 2qp bond street kip mcgrath tutoring maths english sats gcse a level 11 plus">
+          <div class="card-top"><div class="category">Tutoring</div><div class="verified">Kip McGrath Wakefield West · reviewed 19 Nov</div></div>
           <h3>Kip McGrath Wakefield West</h3>
-          <p class="summary">English and maths tutoring from Reception through Year 13, including SATs, GCSE, A-Level and 11+ preparation. The centre lists after-school sessions Monday–Thursday plus Saturday mornings.</p>
-          <div class="meta"><span class="tag">Reception–Y13</span><span class="tag">Maths & English</span><span class="tag">Mon–Thu after school</span><span class="tag">Free assessment</span></div>
+          <p class="summary">English and maths tutoring from Reception to Year 13, including exam preparation. The centre lists Monday–Thursday, 16:00–19:20, and Saturday, 09:00–13:50. It advertises a free assessment. Ask for tuition fees separately.</p>
+          <div class="meta"><span class="tag">Reception–Y13</span><span class="tag">Mon–Thu and Sat</span><span class="tag">Free assessment</span><span class="tag">Tuition fees: check</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.kipmcgrath.co.uk/wakefield-west">Centre source ↗</a><a class="ask" href="/?ask=Find%20English%20or%20maths%20tutoring%20for%20a%20child%20in%20Wakefield#assistant">Ask about tutoring</a></div>
         </article>
 
         <article class="card" data-category="music after-school" data-age="5-11 12-17 adult" data-day="varies" data-price="varies" data-area="wakefield district music services instrumental tuition lessons schools academies music centre violin guitar brass flute strings">
-          <div class="card-top"><div class="category">Music</div><div class="verified">Wakefield Music Services · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Music</div><div class="verified">Wakefield Music Services · reviewed 19 Nov</div></div>
           <h3>Wakefield Music Services tuition</h3>
-          <p class="summary">Instrumental tuition across a wide range of instruments, delivered in schools and academies across the district, with direct tuition and some adult options also available. Availability and cost depend on instrument and setting.</p>
+          <p class="summary">Instrumental tuition through schools, academies and direct enrolment across the district, with some adult lessons. Instruments, availability and costs depend on the setting. Ask the school or service about the appropriate option.</p>
           <div class="meta"><span class="tag">Children & adults</span><span class="tag">Many instruments</span><span class="tag">District-wide</span><span class="tag">Check availability</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/">Music service ↗</a><a class="ask" href="/?ask=Help%20me%20find%20music%20lessons%20for%20a%20child%20in%20Wakefield#assistant">Ask about music</a></div>
         </article>
 
         <article class="card" data-category="community after-school" data-age="under5 adult" data-day="varies" data-price="varies" data-area="wakefield district dads dad matters parents parenting">
-          <div class="card-top"><div class="category">Dads & parent support</div><div class="verified">Dad Matters Yorkshire · checked 15 Sep</div></div>
+          <div class="card-top"><div class="category">Dads & parent support</div><div class="verified">Dad Matters Yorkshire · reviewed 19 Nov</div></div>
           <h3>Dad Matters Wakefield & District</h3>
-          <p class="summary">Peer support for dads and secondary carers, including one-to-one support, hospital outreach and Walk & Talk drop-ins where dads can come along with babies and children.</p>
+          <p class="summary">Peer support for dads, including one-to-one help, hospital outreach and drop-in sessions. The provider publishes Walk &amp; Talk and Stay &amp; Play options, depending on the weather. Check its current announcements for dates, venues and joining details.</p>
           <div class="meta"><span class="tag">Dads & male carers</span><span class="tag">Pre-birth to early years</span><span class="tag">Walk & Talk</span><span class="tag">Peer support</span></div>
           <div class="card-actions"><a class="source" target="_blank" rel="noopener" href="https://dadmattersyorkshire.uk/wakefield/">Service page ↗</a><a class="ask" href="/?ask=Tell%20me%20about%20Dad%20Matters%20and%20other%20parent%20support%20groups%20in%20Wakefield#assistant">Ask about support</a></div>
         </article>

@@ -9,7 +9,7 @@ import collectorHandler from '../api/event-collector.js';
 import catalogueHandler from '../api/event-catalogue.js';
 const source=getSource('museums'),url=source.url+'session/';
 const date='2026-10-26T10:00:00.000Z';
-assert.equal(EVENT_SOURCES.length,15);
+assert.equal(EVENT_SOURCES.length,17);
 assert.equal(allowedUrl('https://127.0.0.1/secrets',source),null);
 assert.equal(allowedUrl('https://museumsandcastles.wakefield.gov.uk@evil.test/x',source),null);
 assert.equal(allowedUrl('/whats-on/session/?utm_source=x',source),url);

@@ -14,6 +14,7 @@ import { programmeConversation, parkingConversation } from '../lib/event-convers
 import { extractEventDetailSections, eventDetailOperation } from '../lib/event-detail-sections.js';
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
+import {fetchCouncilSeasonalContext,COUNCIL_CHRISTMAS_URL} from '../lib/events/council-seasonal.js';
 import { eventDiscoveryWindow, confirmedDayCards, musicEventRequest, weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
@@ -500,7 +501,7 @@ function compactStateCard(card) {
     source: card?.source || null,
     sourceTier: card?.sourceTier || null,
     dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
-    occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
+    occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.slice(0, 30) : [],
     sessionTimes: cleanSessionTimes(card?.sessionTimes),
     startDate: card?.startDate || null,
     endDate: card?.endDate || null,
@@ -597,7 +598,7 @@ function normaliseClientState(raw) {
     sourceTier: typeof card?.sourceTier === 'string' ? card.sourceTier.slice(0, 60) : null,
     date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
     dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
-    occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 14) : [],
+    occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 30) : [],
     sessionTimes: cleanSessionTimes(card?.sessionTimes),
     startDate: typeof card?.startDate === 'string' ? card.startDate.slice(0, 20) : null,
     endDate: typeof card?.endDate === 'string' ? card.endDate.slice(0, 20) : null,
@@ -2825,7 +2826,7 @@ function canonicaliseEventCardV16(card) {
     availability: card.availability === 'sold-out' ? 'sold-out' : 'unknown',
     priceStatus: ['free','paid','variable','conditional','conflict','unknown'].includes(card.priceStatus) ? card.priceStatus : 'unknown',
     priceRaw: card.priceRaw || null,
-    occurrenceDates: Array.isArray(card.occurrenceDates) ? card.occurrenceDates.slice(0, 14) : [],
+    occurrenceDates: Array.isArray(card.occurrenceDates) ? card.occurrenceDates.slice(0, 30) : [],
     sessionTimes: cleanSessionTimes(card?.sessionTimes),
     dates: Array.isArray(card.dates) ? card.dates.slice(0, 3) : []
   };
@@ -3477,7 +3478,8 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
       if (evidence.parkingLinks.length) reply += '\n' + evidence.parkingLinks.map(l => `[${l.title}](${l.url})`).join('\n');
     } else reply = `I still have ${card.title}${card.venue ? ' at ' + card.venue : ''}, but ${context ? 'its event page does not give parking details I can confirm' : 'I couldn’t read its parking guidance just now'}. I haven’t confirmed a suitable car park.`;
   } else if (ops.showTime) {
-    reply = card.start ? `${card.title} starts at ${card.start}${dateText ? ' on ' + dateText : ''}${card.venue ? ', at ' + card.venue : ''}.${card.end ? ' It runs until ' + card.end + '.' : ''}`
+    const sessions=cleanSessionTimes(card.sessionTimes).filter(s=>(card.dates?.length?card.dates:card.occurrenceDates||[card.startDate]).includes(s.date));
+    reply = !card.start && sessions.length ? `${card.title}${card.venue ? ' at '+card.venue : ''}:\n`+sessions.map(s=>`${dateLabel(s.date)}: ${s.start}–${s.end}`).join('\n') : card.start ? `${card.title} starts at ${card.start}${dateText ? ' on ' + dateText : ''}${card.venue ? ', at ' + card.venue : ''}.${card.end ? ' It runs until ' + card.end + '.' : ''}`
       : `I still have ${card.title}, but I couldn’t confirm its start time from its event page.`;
   } else {
     const days = dateText || 'the published dates';
@@ -3655,7 +3657,7 @@ function isSpecificExperienceEventUrl(url) {
 }
 
 function isSpecificEventDetailUrl(url) {
-  return isSpecificExperienceEventUrl(url) || isSpecificWxEventUrl(url);
+  return url===COUNCIL_CHRISTMAS_URL || isSpecificExperienceEventUrl(url) || isSpecificWxEventUrl(url);
 }
 
 async function fetchEventDetailContextsForFollowUp(messages, experienceEventsContext, wxContext, sessionState = null) {
@@ -3819,6 +3821,13 @@ async function fetchWxEventDetailContext(url, expectedTitle, timeoutMs = 5_500) 
 }
 
 async function fetchEventDetailContextByUrl(url, expectedTitle, timeoutMs = 5_500) {
+  if(url===COUNCIL_CHRISTMAS_URL && expectedTitle==='Wakefield Christmas Market'){
+    const context=await fetchCouncilSeasonalContext();
+    const card=context?.eventCards[0];
+    if(!card)return null;
+    const closure=card.description.match(/(?:Please note that )?Wood Street will be closed to traffic from 10 to 14 December\./)?.[0];
+    return {eventDetailCard:card,eventSections:{programme:[card.description],parking:closure?[closure+' I have not confirmed a suitable car park.']:[],parkingLinks:[]},structured:{eventCards:[card]},text:card.description};
+  }
   if (isSpecificWxEventUrl(url)) return fetchWxEventDetailContext(url, expectedTitle, timeoutMs);
   if (isSpecificExperienceEventUrl(url)) return fetchExperienceEventDetailContext(url, expectedTitle, timeoutMs);
   return null;
@@ -5627,6 +5636,8 @@ export default async function handler(req, res) {
   let wxContext = null;
   let experienceEventsContext = null;
   let cathedralContext = null;
+  let councilSeasonalContext = null;
+  let tileyardSeasonalContext = null;
   const dailyDiscovery = dayWindow?.kind === 'day' && (isCurrentEventsQuery(messages) || clientState.lastIntent?.startsWith('events.'));
   const catalogueWindow = (isCurrentEventsQuery(messages) || dailyDiscovery) && !isNamedEventDetailQuery(messages) ? dayWindow : null;
   const catalogueCards = catalogueWindow ? await loadCatalogueWeek(catalogueWindow) : null;
@@ -5634,10 +5645,12 @@ export default async function handler(req, res) {
     // Fetch strong first-party/current event sources in parallel. This avoids
     // a broad search while still covering the district aggregator, WX and the
     // Cathedral's own dated events.
-    [experienceEventsContext, wxContext, cathedralContext] = await Promise.all([
+    [experienceEventsContext, wxContext, cathedralContext, councilSeasonalContext, tileyardSeasonalContext] = await Promise.all([
       fetchExperienceWakefieldEventsContext(),
       fetchWxWhatsOnContext(),
-      fetchDatedFirstPartyContext('https://www.wakefieldcathedral.org.uk/whats-happening/events/', 'Wakefield Cathedral — Events')
+      fetchDatedFirstPartyContext('https://www.wakefieldcathedral.org.uk/whats-happening/events/', 'Wakefield Cathedral — Events'),
+      fetchCouncilSeasonalContext(),
+      fetchExperienceEventDetailContext('https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/', 'Tileyard North Christmas Market')
     ]);
   } else if (!catalogueCards && isWxCurrentEventsQuery(messages)) {
     wxContext = await fetchWxWhatsOnContext();
@@ -5647,9 +5660,12 @@ export default async function handler(req, res) {
   const weekWindow = (isCurrentEventsQuery(messages) || dailyDiscovery) && !isNamedEventDetailQuery(messages)
     ? dayWindow : null;
   if (weekWindow) {
-    const raw = mergeExactEventCardsV16(catalogueCards || [
+    const raw = mergeExactEventCardsV16([...(catalogueCards || [
       ...(wxContext?.eventCards || []),
       ...(experienceEventsContext?.listingEventCards || [])
+    ]),
+      ...(councilSeasonalContext?.eventCards || []),
+      ...(tileyardSeasonalContext?.eventDetailCard ? [tileyardSeasonalContext.eventDetailCard] : []),
     ]);
     const ops = eventOpsFromText(currentText);
     const cityArea = wakefieldCityScope(currentText) || (weekWindow.kind === 'day' ? clientState.constraints?.eventWeek?.filters?.area : null);
@@ -5693,7 +5709,7 @@ export default async function handler(req, res) {
     && !isWeekendPerformanceQuery(messages);
   if (weekendListRequest) {
     const supplement = await verifiedOctoberWeekendSupplementV16(eventDateState());
-    const collected = await collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...supplement] }, wxContext);
+    const collected = await collectWeekendEventCardsV16({ ...experienceEventsContext, listingEventCards: [...(experienceEventsContext?.listingEventCards || []), ...(councilSeasonalContext?.eventCards || []), ...(tileyardSeasonalContext?.eventDetailCard ? [tileyardSeasonalContext.eventDetailCard] : []), ...supplement] }, wxContext);
     if (!collected.cards.length) {
       return res.status(200).json({
         reply: 'I could not verify a reliable weekend event set from the current official listings just now.',

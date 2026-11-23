@@ -1,0 +1,4397 @@
+[
+  {
+    "id": "pill-3",
+    "turns": [
+      {
+        "question": "Help me find official parking information for Wakefield city centre.",
+        "status": 200,
+        "seconds": 1.2,
+        "reply": "Use [Wakefield Council\u2019s car-park guide](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/) for the city-centre locations, hours, charges and restrictions. Choose the individual car park and check its signs before leaving your vehicle. Shopping-centre and privately operated car parks have their own terms.\n\nWhere in the city centre are you heading? I haven\u2019t checked live spaces or a particular car park\u2019s current tariff.",
+        "sources": [
+          {
+            "title": "Wakefield Council car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.parking",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": false,
+            "indoorGuide": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-1",
+    "turns": [
+      {
+        "question": "What free things can we do in Wakefield this weekend?",
+        "status": 200,
+        "seconds": 9.11,
+        "reply": "For a free outing this weekend (Saturday, 28 November and Sunday, 29 November), I\u2019d look at these options:\n\n- Forever After Christmas Gift & Craft Fair, Saturday and Sunday, 11:00\u201315:30, Nostell, National Trust\n- Family Rhubarb Textile Workshop, Saturday, 28 November, 13:00\u201315:00, WX Wakefield Exchange\n- Tileyard North Christmas Market, Saturday and Sunday, time not published, Tileyard North\n- Tufting Open Day, Sunday, 29 November, 10:00\u201317:00, WX Wakefield Exchange",
+        "sources": [
+          {
+            "title": "Forever After Christmas Gift & Craft Fair \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/forever-after-christmas-market/"
+          },
+          {
+            "title": "Family Rhubarb Textile Workshop \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov"
+          },
+          {
+            "title": "Tileyard North Christmas Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          },
+          {
+            "title": "Tufting Open Day \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+          }
+        ],
+        "followups": [
+          "What time do they start?",
+          "Which ones are on Sunday?",
+          "Show the full list again"
+        ],
+        "verification": "cards-first-v17",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": null,
+          "resultCards": [
+            {
+              "id": "experience:forever-after-christmas-market:2026-11-28",
+              "sourceId": "experience:forever-after-christmas-market:2026-11-28",
+              "canonId": "experience:forever-after-christmas-market:2026-11-28",
+              "entityType": "event",
+              "title": "Forever After Christmas Gift & Craft Fair",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/forever-after-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/forever-after-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "11:00",
+              "end": "15:30",
+              "startTime": "11:00",
+              "endTime": "15:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "11:00",
+                  "end": "15:30"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "11:00",
+                  "end": "15:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+              "sourceId": "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+              "canonId": "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+              "entityType": "event",
+              "title": "Family Rhubarb Textile Workshop",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "canonId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "entityType": "event",
+              "title": "Tileyard North Christmas Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-26",
+              "endDate": "2026-12-20",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "16:00",
+              "end": "19:00",
+              "startTime": "16:00",
+              "endTime": "19:00",
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29",
+                "2026-12-03",
+                "2026-12-04",
+                "2026-12-05",
+                "2026-12-06",
+                "2026-12-10",
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13",
+                "2026-12-17",
+                "2026-12-18",
+                "2026-12-19",
+                "2026-12-20"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-26",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-03",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-04",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-05",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-06",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-10",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-11",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-17",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-18",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-19",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-20",
+                  "start": "12:00",
+                  "end": "19:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "wx:comedy-night-november:2026-11-28",
+              "sourceId": "wx:comedy-night-november:2026-11-28",
+              "canonId": "wx:comedy-night-november:2026-11-28",
+              "entityType": "event",
+              "title": "Comedy Night: November",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=comedy-night-november",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=comedy-night-november",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "18:30",
+              "end": "22:00",
+              "startTime": "18:30",
+              "endTime": "22:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "paid",
+              "priceRaw": "\u00a38",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "wx:tufting-open-day:2026-11-29",
+              "sourceId": "wx:tufting-open-day:2026-11-29",
+              "canonId": "wx:tufting-open-day:2026-11-29",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "wx:winter-con-wakefield-freeze-over:2026-11-29",
+              "sourceId": "wx:winter-con-wakefield-freeze-over:2026-11-29",
+              "canonId": "wx:winter-con-wakefield-freeze-over:2026-11-29",
+              "entityType": "event",
+              "title": "Winter Con: Wakefield Freeze Over",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "16:00",
+              "startTime": "10:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "paid",
+              "priceRaw": "\u00a34.34 - \u00a310.84",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            }
+          ],
+          "viewIds": [
+            "experience:forever-after-christmas-market:2026-11-28",
+            "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+            "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+            "wx:tufting-open-day:2026-11-29"
+          ],
+          "lastFilter": "price:free"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-2",
+    "turns": [
+      {
+        "question": "Suggest indoor activities for a rainy day with children in the Wakefield district.",
+        "status": 200,
+        "seconds": 3.83,
+        "reply": "For a rainy day, you could start with a museum or gallery:\n\n[The Hepworth Wakefield](https://hepworthwakefield.org/your-visit/) \u00b7 Art gallery.\n\n[Wakefield Museum](https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/) \u00b7 Museum.\n\n[Castleford Museum](https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/) \u00b7 Museum.\n\nThese are indoor ideas rather than confirmed sessions for your visit. Check the official pages for opening days, admission and booking requirements. What day are you visiting, and how old are the children?",
+        "sources": [
+          {
+            "title": "The Hepworth Wakefield - official visit page",
+            "url": "https://hepworthwakefield.org/your-visit/"
+          },
+          {
+            "title": "Wakefield Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/"
+          },
+          {
+            "title": "Castleford Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/"
+          }
+        ],
+        "followups": [
+          "What free things can we do in Wakefield this weekend?",
+          "Help me find an activity in Wakefield"
+        ],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.indoor",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": false,
+            "indoorGuide": true,
+            "indoorArea": null,
+            "indoorParking": false,
+            "indoorChildren": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-4",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 4.39,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Tuesday 24 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 25 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 26 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 27 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 28 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Saturday 28 November 2026 10:00\u201316:00 and Sunday 29 November 2026 10:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 29 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f9613821391ec934b33b652",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "a9291b5a42351b69dba6d749",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "dde2267cd5121739e0b5d9aa",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "c97f1dd11972335240078daf",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8c6d98d67e065cef0893d96a",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8ec3e4bec3401804eafbf9d4",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs ",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09",
+            "4f9613821391ec934b33b652",
+            "a9291b5a42351b69dba6d749",
+            "dde2267cd5121739e0b5d9aa",
+            "c97f1dd11972335240078daf",
+            "8c6d98d67e065cef0893d96a",
+            "8ec3e4bec3401804eafbf9d4",
+            "89e39f62d07cc5827a34c96e",
+            "f43213dcdfab589a461befac"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-5",
+    "turns": [
+      {
+        "question": "What free or low-cost things can families do in Wakefield this week?",
+        "status": 200,
+        "seconds": 9.94,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nFamily Rhubarb Textile Workshop\nWX Wakefield Exchange \u00b7 Saturday 28 November 2026 \u00b7 13:00\u201315:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese entries have published family or children\u2019s suitability. Check the event pages for age limits, accompanying-adult rules and booking.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Family Rhubarb Textile Workshop \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "family": true,
+                "price": "free"
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "a1fd234fd5642d588f4813d5",
+              "sourceId": "ncm",
+              "canonId": "ncm",
+              "entityType": "event",
+              "title": "Wacky Wednesdays (Under 5s)",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/wacky-wednesday/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:58:55.142Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "bf4aa18cafad361a7b8439ad",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Comedy Night: November",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=comedy-night-november",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=comedy-night-november",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "18:30",
+              "end": "22:00",
+              "startTime": "18:30",
+              "endTime": "22:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "paid",
+              "priceRaw": "\u00a38",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "b2b3329ba2503a1b0feb058d",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Family Rhubarb Textile Workshop",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "23211ccb6a8241ca024e957b",
+              "sourceId": "museums",
+              "canonId": "museums",
+              "entityType": "event",
+              "title": "Object handling",
+              "kind": "run",
+              "url": "https://museumsandcastles.wakefield.gov.uk/whats-on/object-handling-wm/",
+              "sourceUrl": "https://museumsandcastles.wakefield.gov.uk/whats-on/object-handling-wm/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-09-09",
+              "endDate": "2026-12-09",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:36:52.170Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wakefield Museum",
+              "venueId": "venue:wakefield-museum",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "74209c506fd885c0d3cc3768",
+              "sourceId": "museums",
+              "canonId": "museums",
+              "entityType": "event",
+              "title": "Pontefract Art Club",
+              "kind": "run",
+              "url": "https://museumsandcastles.wakefield.gov.uk/whats-on/pontefract-art-club/",
+              "sourceUrl": "https://museumsandcastles.wakefield.gov.uk/whats-on/pontefract-art-club/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-10-19",
+              "endDate": "2026-12-12",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:36:52.170Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Pontefract Museum",
+              "venueId": "venue:pontefract-museum",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs Welcome Baby Changing Fa",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            }
+          ],
+          "viewIds": [
+            "b2b3329ba2503a1b0feb058d"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-6",
+    "turns": [
+      {
+        "question": "Where can I get good food or coffee in Wakefield?",
+        "status": 200,
+        "seconds": 3.77,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[Bakes By VANILLA BEAN](https://maps.google.com/?cid=11404958215076635949) (28 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[CAFE VIE the bistro](https://maps.google.com/?cid=4994640386600994448) (Thompson's Yard, New St, Ossett WF5 8BH) lists coffee and food.\n\n[Caffe Capri - Horbury](https://maps.google.com/?cid=15133674457134902985) (8 Cluntergate, Horbury, Wakefield WF4 5AG) lists coffee and food.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Costa Coffee](https://maps.google.com/?cid=17612261411877474420) (Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "Bakes By VANILLA BEAN - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11404958215076635949"
+          },
+          {
+            "title": "CAFE VIE the bistro - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=4994640386600994448"
+          },
+          {
+            "title": "Caffe Capri - Horbury - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=15133674457134902985"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Costa Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17612261411877474420"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": null,
+          "resultCards": [
+            {
+              "id": "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+              "entityType": "place",
+              "title": "Bakes By VANILLA BEAN",
+              "name": "Bakes By VANILLA BEAN",
+              "address": "28 Wood St, Wakefield WF1 2ED",
+              "url": "https://maps.google.com/?cid=11404958215076635949"
+            },
+            {
+              "id": "ChIJO18M2OVheUgRkAYsCPiGUEU",
+              "entityType": "place",
+              "title": "CAFE VIE the bistro",
+              "name": "CAFE VIE the bistro",
+              "address": "Thompson's Yard, New St, Ossett WF5 8BH",
+              "url": "https://maps.google.com/?cid=4994640386600994448"
+            },
+            {
+              "id": "ChIJV_Q_BklheUgRya7ts7ycBdI",
+              "entityType": "place",
+              "title": "Caffe Capri - Horbury",
+              "name": "Caffe Capri - Horbury",
+              "address": "8 Cluntergate, Horbury, Wakefield WF4 5AG",
+              "url": "https://maps.google.com/?cid=15133674457134902985"
+            },
+            {
+              "id": "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+              "entityType": "place",
+              "title": "Lush bakery and co cafe",
+              "name": "Lush bakery and co cafe",
+              "address": "198 Castleford Rd, Normanton WF6 1PY",
+              "url": "https://maps.google.com/?cid=17932692079788129530"
+            },
+            {
+              "id": "ChIJPXrD_fVpeUgRdNBGunBSa_Q",
+              "entityType": "place",
+              "title": "Costa Coffee",
+              "name": "Costa Coffee",
+              "address": "Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB",
+              "url": "https://maps.google.com/?cid=17612261411877474420"
+            }
+          ],
+          "viewIds": [
+            "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+            "ChIJO18M2OVheUgRkAYsCPiGUEU",
+            "ChIJV_Q_BklheUgRya7ts7ycBdI",
+            "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+            "ChIJPXrD_fVpeUgRdNBGunBSa_Q"
+          ],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": null,
+              "foodOrCoffee": true,
+              "foodAndCoffee": false,
+              "hotChocolate": false,
+              "shownIds": [
+                "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+                "ChIJO18M2OVheUgRkAYsCPiGUEU",
+                "ChIJV_Q_BklheUgRya7ts7ycBdI",
+                "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+                "ChIJPXrD_fVpeUgRdNBGunBSa_Q"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-7",
+    "turns": [
+      {
+        "question": "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?",
+        "status": 200,
+        "seconds": 3.75,
+        "reply": "Here are some starting points from our activities directory:\n\n[Aspire swimming lessons](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons) \u00b7 Swimming\n\n[Aspire Pay & Play](https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities) \u00b7 Gym \u00b7 swim \u00b7 classes\n\n[Wakefield Harriers Road & XC](https://wakefieldharriers.co.uk/road-xc/) \u00b7 Running\n\n[Wakefield Sports Club Padel](https://wakefieldsportsclub.com/padel/) \u00b7 Padel\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Aspire swimming lessons - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons"
+          },
+          {
+            "title": "Aspire Pay & Play - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities"
+          },
+          {
+            "title": "Wakefield Harriers Road & XC - programme source",
+            "url": "https://wakefieldharriers.co.uk/road-xc/"
+          },
+          {
+            "title": "Wakefield Sports Club Padel - programme source",
+            "url": "https://wakefieldsportsclub.com/padel/"
+          }
+        ],
+        "followups": [
+          "Find a running club in Wakefield",
+          "Help me find the right swimming lesson in Wakefield",
+          "Where can I play padel near Wakefield?"
+        ],
+        "verification": "activity-directory-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "activity.discovery",
+          "area": null,
+          "resultCards": [],
+          "constraints": {
+            "activitySearch": {
+              "ids": [
+                "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons",
+                "https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities",
+                "https://wakefieldharriers.co.uk/road-xc/",
+                "https://wakefieldsportsclub.com/padel/"
+              ],
+              "kind": "swimming",
+              "area": null,
+              "ages": []
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-8",
+    "turns": [
+      {
+        "question": "What local clubs, walking groups and community groups can I join in Wakefield?",
+        "status": 200,
+        "seconds": 3.65,
+        "reply": "Here are some starting points from our activities directory:\n\n[Wakefield Health Walks](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable) \u00b7 Walking\n\n[Wakefield & District Ramblers](https://ramblersyorkshire.org/area-groups/wakefield-and-district.html) \u00b7 Walking & hiking\n\n[Wakefield Scouts local groups](https://www.wakefieldscouts.org.uk/local-groups/) \u00b7 Scouts & youth groups\n\n[Dad Matters Wakefield & District](https://dadmattersyorkshire.uk/wakefield/) \u00b7 Dads & parent support\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Health Walks - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable"
+          },
+          {
+            "title": "Wakefield & District Ramblers - programme source",
+            "url": "https://ramblersyorkshire.org/area-groups/wakefield-and-district.html"
+          },
+          {
+            "title": "Wakefield Scouts local groups - programme source",
+            "url": "https://www.wakefieldscouts.org.uk/local-groups/"
+          },
+          {
+            "title": "Dad Matters Wakefield & District - programme source",
+            "url": "https://dadmattersyorkshire.uk/wakefield/"
+          }
+        ],
+        "followups": [
+          "Find a walking group near me in Wakefield",
+          "Find me a proper hiking or longer walking group around Wakefield",
+          "Tell me about Dad Matters and other parent support groups in Wakefield"
+        ],
+        "verification": "activity-directory-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "activity.discovery",
+          "area": null,
+          "resultCards": [],
+          "constraints": {
+            "activitySearch": {
+              "ids": [
+                "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable",
+                "https://ramblersyorkshire.org/area-groups/wakefield-and-district.html",
+                "https://www.wakefieldscouts.org.uk/local-groups/",
+                "https://dadmattersyorkshire.uk/wakefield/"
+              ],
+              "kind": "walking",
+              "area": null,
+              "ages": []
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-9",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking or transport.",
+        "status": 200,
+        "seconds": 4.03,
+        "reply": "What do you need help with: bin collections, parking, a journey, or another council service? For bins, the answer depends on your property. For transport, I\u2019ll need your start, destination and travel time.",
+        "sources": [
+          {
+            "title": "Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/"
+          },
+          {
+            "title": "Bin collection lookup",
+            "url": "https://www.wakefield.gov.uk/bincollections"
+          },
+          {
+            "title": "Wakefield car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [
+          "Help me find my bin collection day",
+          "Help me find official parking information for Wakefield city centre",
+          "Help me plan a journey in Wakefield"
+        ],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.services",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": true,
+            "indoorGuide": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-11",
+    "turns": [
+      {
+        "question": "Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.",
+        "status": 200,
+        "seconds": 3.87,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[Bakes By VANILLA BEAN](https://maps.google.com/?cid=11404958215076635949) (28 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[CAFE VIE the bistro](https://maps.google.com/?cid=4994640386600994448) (Thompson's Yard, New St, Ossett WF5 8BH) lists coffee and food.\n\n[Caffe Capri - Horbury](https://maps.google.com/?cid=15133674457134902985) (8 Cluntergate, Horbury, Wakefield WF4 5AG) lists coffee and food.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Costa Coffee](https://maps.google.com/?cid=17612261411877474420) (Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "Bakes By VANILLA BEAN - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11404958215076635949"
+          },
+          {
+            "title": "CAFE VIE the bistro - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=4994640386600994448"
+          },
+          {
+            "title": "Caffe Capri - Horbury - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=15133674457134902985"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Costa Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17612261411877474420"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": null,
+          "resultCards": [
+            {
+              "id": "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+              "entityType": "place",
+              "title": "Bakes By VANILLA BEAN",
+              "name": "Bakes By VANILLA BEAN",
+              "address": "28 Wood St, Wakefield WF1 2ED",
+              "url": "https://maps.google.com/?cid=11404958215076635949"
+            },
+            {
+              "id": "ChIJO18M2OVheUgRkAYsCPiGUEU",
+              "entityType": "place",
+              "title": "CAFE VIE the bistro",
+              "name": "CAFE VIE the bistro",
+              "address": "Thompson's Yard, New St, Ossett WF5 8BH",
+              "url": "https://maps.google.com/?cid=4994640386600994448"
+            },
+            {
+              "id": "ChIJV_Q_BklheUgRya7ts7ycBdI",
+              "entityType": "place",
+              "title": "Caffe Capri - Horbury",
+              "name": "Caffe Capri - Horbury",
+              "address": "8 Cluntergate, Horbury, Wakefield WF4 5AG",
+              "url": "https://maps.google.com/?cid=15133674457134902985"
+            },
+            {
+              "id": "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+              "entityType": "place",
+              "title": "Lush bakery and co cafe",
+              "name": "Lush bakery and co cafe",
+              "address": "198 Castleford Rd, Normanton WF6 1PY",
+              "url": "https://maps.google.com/?cid=17932692079788129530"
+            },
+            {
+              "id": "ChIJPXrD_fVpeUgRdNBGunBSa_Q",
+              "entityType": "place",
+              "title": "Costa Coffee",
+              "name": "Costa Coffee",
+              "address": "Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB",
+              "url": "https://maps.google.com/?cid=17612261411877474420"
+            }
+          ],
+          "viewIds": [
+            "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+            "ChIJO18M2OVheUgRkAYsCPiGUEU",
+            "ChIJV_Q_BklheUgRya7ts7ycBdI",
+            "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+            "ChIJPXrD_fVpeUgRdNBGunBSa_Q"
+          ],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": null,
+              "foodOrCoffee": false,
+              "foodAndCoffee": true,
+              "hotChocolate": false,
+              "shownIds": [
+                "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+                "ChIJO18M2OVheUgRkAYsCPiGUEU",
+                "ChIJV_Q_BklheUgRya7ts7ycBdI",
+                "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+                "ChIJPXrD_fVpeUgRdNBGunBSa_Q"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-10",
+    "turns": [
+      {
+        "question": "What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.",
+        "status": 200,
+        "seconds": 6.68,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Tuesday 24 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 25 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 26 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 27 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 28 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Saturday 28 November 2026 10:00\u201316:00 and Sunday 29 November 2026 10:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 29 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f9613821391ec934b33b652",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "a9291b5a42351b69dba6d749",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "dde2267cd5121739e0b5d9aa",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "c97f1dd11972335240078daf",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8c6d98d67e065cef0893d96a",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8ec3e4bec3401804eafbf9d4",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs ",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09",
+            "4f9613821391ec934b33b652",
+            "a9291b5a42351b69dba6d749",
+            "dde2267cd5121739e0b5d9aa",
+            "c97f1dd11972335240078daf",
+            "8c6d98d67e065cef0893d96a",
+            "8ec3e4bec3401804eafbf9d4",
+            "89e39f62d07cc5827a34c96e",
+            "f43213dcdfab589a461befac"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-12",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.",
+        "status": 200,
+        "seconds": 3.59,
+        "reply": "What do you need help with: bin collections, parking, a journey, or another council service? For bins, the answer depends on your property. For transport, I\u2019ll need your start, destination and travel time.",
+        "sources": [
+          {
+            "title": "Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/"
+          },
+          {
+            "title": "Bin collection lookup",
+            "url": "https://www.wakefield.gov.uk/bincollections"
+          },
+          {
+            "title": "Wakefield car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [
+          "Help me find my bin collection day",
+          "Help me find official parking information for Wakefield city centre",
+          "Help me plan a journey in Wakefield"
+        ],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.services",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": true,
+            "indoorGuide": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "rain-parking",
+    "turns": [
+      {
+        "question": "What can I do on a rainy day in Wakefield?",
+        "status": 200,
+        "seconds": 3.91,
+        "reply": "For a rainy day, you could start with a museum or gallery:\n\n[The Hepworth Wakefield](https://hepworthwakefield.org/your-visit/) \u00b7 Art gallery.\n\n[Wakefield Museum](https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/) \u00b7 Museum.\n\n[Castleford Museum](https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/) \u00b7 Museum.\n\nThese are indoor ideas rather than confirmed sessions for your visit. Check the official pages for opening days, admission and booking requirements. What day and roughly what time are you visiting?",
+        "sources": [
+          {
+            "title": "The Hepworth Wakefield - official visit page",
+            "url": "https://hepworthwakefield.org/your-visit/"
+          },
+          {
+            "title": "Wakefield Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/"
+          },
+          {
+            "title": "Castleford Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/"
+          }
+        ],
+        "followups": [
+          "What free things can we do in Wakefield this weekend?",
+          "Help me find an activity in Wakefield"
+        ],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.indoor",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": false,
+            "indoorGuide": true,
+            "indoorArea": null,
+            "indoorParking": false,
+            "indoorChildren": false
+          }
+        }
+      },
+      {
+        "question": "Anything in the Wakefield city centre to do with ample parking, too.",
+        "status": 200,
+        "seconds": 3.85,
+        "reply": "For a rainy day in Wakefield city centre, start with Wakefield Museum and Wakefield Library, both at Wakefield One on Burton Street:\n\n[Wakefield Library](https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library) \u00b7 Public library.\n\n[Wakefield Museum](https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/) \u00b7 Museum.\n\nFor parking, the museum\u2019s visit guide names Merchant Gate as the nearest car park. [Check the Council\u2019s Merchant Gate details](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/merchant-gate-car-park) for its current terms. I haven\u2019t checked live spaces, so availability is not guaranteed.\n\nThese are indoor ideas rather than confirmed sessions for your visit. Check the official pages for opening days, admission and booking requirements. What day and roughly what time are you visiting?",
+        "sources": [
+          {
+            "title": "Wakefield Library - official visit page",
+            "url": "https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library"
+          },
+          {
+            "title": "Wakefield Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/"
+          },
+          {
+            "title": "Merchant Gate car park - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/merchant-gate-car-park"
+          }
+        ],
+        "followups": [
+          "What free things can we do in Wakefield this weekend?",
+          "Help me find an activity in Wakefield"
+        ],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.indoor",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": false,
+            "indoorGuide": true,
+            "indoorArea": "Wakefield city centre",
+            "indoorParking": true,
+            "indoorChildren": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "session-times",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 6.15,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Tuesday 24 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 25 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 26 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 27 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 28 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Saturday 28 November 2026 10:00\u201316:00 and Sunday 29 November 2026 10:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 29 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f9613821391ec934b33b652",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "a9291b5a42351b69dba6d749",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "dde2267cd5121739e0b5d9aa",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "c97f1dd11972335240078daf",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8c6d98d67e065cef0893d96a",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8ec3e4bec3401804eafbf9d4",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs ",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09",
+            "4f9613821391ec934b33b652",
+            "a9291b5a42351b69dba6d749",
+            "dde2267cd5121739e0b5d9aa",
+            "c97f1dd11972335240078daf",
+            "8c6d98d67e065cef0893d96a",
+            "8ec3e4bec3401804eafbf9d4",
+            "89e39f62d07cc5827a34c96e",
+            "f43213dcdfab589a461befac"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What about Friday?",
+        "status": 200,
+        "seconds": 1.43,
+        "reply": "For Friday 27 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nPooch Passport Challenge\nNostell \u00b7 Friday 27 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-followup-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "day": "friday"
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-23",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-23",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "unknown:the-christmas-orchestra:2026-11-23",
+              "canonId": "unknown:the-christmas-orchestra:2026-11-23",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f9613821391ec934b33b652",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-24",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-24",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "a9291b5a42351b69dba6d749",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-25",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-25",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "dde2267cd5121739e0b5d9aa",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-26",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-26",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "c97f1dd11972335240078daf",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-27",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-27",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8c6d98d67e065cef0893d96a",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-28",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-28",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8ec3e4bec3401804eafbf9d4",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-29",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-29",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience:the-hepworth-wakefield-festive-market:2026-11-20",
+              "canonId": "experience:the-hepworth-wakefield-festive-market:2026-11-20",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience:nostell-ghost-walks:2026-11-21",
+              "canonId": "experience:nostell-ghost-walks:2026-11-21",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            }
+          ],
+          "viewIds": [
+            "c97f1dd11972335240078daf"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What time does The Hepworth Wakefield Festive Market start?",
+        "status": 200,
+        "seconds": 3.57,
+        "reply": "I couldn't verify a Festive Market event at The Hepworth Wakefield from current sources. The Hepworth's main offerings are its exhibitions, cafe, sculpture garden and shop.\n\nCan you tell me a bit more? Are you looking for a Christmas market in Wakefield more broadly, or is there a specific event you've heard about at The Hepworth? That'll help me point you toward what's actually on.",
+        "sources": [],
+        "verification": "primary",
+        "state": {
+          "version": 1,
+          "lastIntent": "other",
+          "area": null,
+          "constraints": {
+            "time": null
+          },
+          "resultCards": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "coffee-haus",
+    "turns": [
+      {
+        "question": "Where can I get coffee in Wakefield city centre?",
+        "status": 200,
+        "seconds": 4.04,
+        "reply": "Here are some checked listings in Wakefield city centre:\n\n[Muffin Break](https://maps.google.com/?cid=11031049509611050436) (5 Teall Way, Wakefield WF1 1QL) lists coffee and food.\n\n[Caff\u00e9 Nero](https://maps.google.com/?cid=1791576903444015398) (Trinity Walk, Wakefield WF1 1QS) lists coffee and food.\n\n[Breakfast Wakefield](https://maps.google.com/?cid=9305433822055472508) (9 Westmorland St, Wakefield WF1 1PJ) lists coffee and food.\n\n[Neptune Diner](https://maps.google.com/?cid=1151485251956132804) (5-7 Westmorland St, Wakefield WF1 1PN) lists coffee and food.\n\n[Bob & Berts Wakefield](https://maps.google.com/?cid=6315806315118672009) (Unit 29, Trinity Walk Shopping Centre, Wakefield WF1 1QU) lists coffee and food.",
+        "sources": [
+          {
+            "title": "Muffin Break - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11031049509611050436"
+          },
+          {
+            "title": "Caff\u00e9 Nero - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=1791576903444015398"
+          },
+          {
+            "title": "Breakfast Wakefield - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=9305433822055472508"
+          },
+          {
+            "title": "Neptune Diner - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=1151485251956132804"
+          },
+          {
+            "title": "Bob & Berts Wakefield - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=6315806315118672009"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": "Wakefield city centre",
+          "resultCards": [
+            {
+              "id": "ChIJmfqRd2VneUgRxBUdgBUpFpk",
+              "entityType": "place",
+              "title": "Muffin Break",
+              "name": "Muffin Break",
+              "address": "5 Teall Way, Wakefield WF1 1QL",
+              "url": "https://maps.google.com/?cid=11031049509611050436"
+            },
+            {
+              "id": "ChIJj8TwxSBneUgRJimTlbP13Bg",
+              "entityType": "place",
+              "title": "Caff\u00e9 Nero",
+              "name": "Caff\u00e9 Nero",
+              "address": "Trinity Walk, Wakefield WF1 1QS",
+              "url": "https://maps.google.com/?cid=1791576903444015398"
+            },
+            {
+              "id": "ChIJy4oackVneUgRfJ2FRMKKI4E",
+              "entityType": "place",
+              "title": "Breakfast Wakefield",
+              "name": "Breakfast Wakefield",
+              "address": "9 Westmorland St, Wakefield WF1 1PJ",
+              "url": "https://maps.google.com/?cid=9305433822055472508"
+            },
+            {
+              "id": "ChIJrVw8Jf5meUgRxEvyXrzl-g8",
+              "entityType": "place",
+              "title": "Neptune Diner",
+              "name": "Neptune Diner",
+              "address": "5-7 Westmorland St, Wakefield WF1 1PN",
+              "url": "https://maps.google.com/?cid=1151485251956132804"
+            },
+            {
+              "id": "ChIJleobVWdneUgRiTjRimFAplc",
+              "entityType": "place",
+              "title": "Bob & Berts Wakefield",
+              "name": "Bob & Berts Wakefield",
+              "address": "Unit 29, Trinity Walk Shopping Centre, Wakefield WF1 1QU",
+              "url": "https://maps.google.com/?cid=6315806315118672009"
+            }
+          ],
+          "viewIds": [
+            "ChIJmfqRd2VneUgRxBUdgBUpFpk",
+            "ChIJj8TwxSBneUgRJimTlbP13Bg",
+            "ChIJy4oackVneUgRfJ2FRMKKI4E",
+            "ChIJrVw8Jf5meUgRxEvyXrzl-g8",
+            "ChIJleobVWdneUgRiTjRimFAplc"
+          ],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": "Wakefield city centre",
+              "foodOrCoffee": false,
+              "foodAndCoffee": false,
+              "hotChocolate": false,
+              "shownIds": [
+                "ChIJmfqRd2VneUgRxBUdgBUpFpk",
+                "ChIJj8TwxSBneUgRJimTlbP13Bg",
+                "ChIJy4oackVneUgRfJ2FRMKKI4E",
+                "ChIJrVw8Jf5meUgRxEvyXrzl-g8",
+                "ChIJleobVWdneUgRiTjRimFAplc"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "question": "I'm sure there are more coffee shops around Wakefield city",
+        "status": 200,
+        "seconds": 6.04,
+        "reply": "Here are some more checked listings in Wakefield city centre:\n\n[Starbucks](https://maps.google.com/?cid=10317375240288585044) (Trinity Walk, Wakefield WF1 1QW) lists coffee and food.\n\n[The Tea Tree Cafe](https://maps.google.com/?cid=2455422706967758963) (Northgate, Wakefield WF1 1HG) lists coffee.\n\n[Grind Coffee Lounge & Kitchen](https://maps.google.com/?cid=16246282161212525632) (18 Northgate, Wakefield WF1 1HE) lists coffee and food.\n\n[Little Lotus Wakefield](https://maps.google.com/?cid=7096299394968890583) (U37, Trinity Walk Shopping Centre, Market Walk, Wakefield WF1 1QS) lists coffee and food.\n\n[Costa Coffee](https://maps.google.com/?cid=7812808874385425797) (15 Northgate, Wakefield WF1 1HD) lists coffee and food.",
+        "sources": [
+          {
+            "title": "Starbucks - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=10317375240288585044"
+          },
+          {
+            "title": "The Tea Tree Cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=2455422706967758963"
+          },
+          {
+            "title": "Grind Coffee Lounge & Kitchen - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=16246282161212525632"
+          },
+          {
+            "title": "Little Lotus Wakefield - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=7096299394968890583"
+          },
+          {
+            "title": "Costa Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=7812808874385425797"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": "Wakefield city centre",
+          "resultCards": [
+            {
+              "id": "ChIJGaW10wFneUgRVMXPAx6uLo8",
+              "entityType": "place",
+              "title": "Starbucks",
+              "name": "Starbucks",
+              "address": "Trinity Walk, Wakefield WF1 1QW",
+              "url": "https://maps.google.com/?cid=10317375240288585044"
+            },
+            {
+              "id": "ChIJ__l0TeRneUgRc8g9TvFpEyI",
+              "entityType": "place",
+              "title": "The Tea Tree Cafe",
+              "name": "The Tea Tree Cafe",
+              "address": "Northgate, Wakefield WF1 1HG",
+              "url": "https://maps.google.com/?cid=2455422706967758963"
+            },
+            {
+              "id": "ChIJWz-fGP5meUgRQIzWk4xjduE",
+              "entityType": "place",
+              "title": "Grind Coffee Lounge & Kitchen",
+              "name": "Grind Coffee Lounge & Kitchen",
+              "address": "18 Northgate, Wakefield WF1 1HE",
+              "url": "https://maps.google.com/?cid=16246282161212525632"
+            },
+            {
+              "id": "ChIJ4zT79RJneUgR16zwsLMee2I",
+              "entityType": "place",
+              "title": "Little Lotus Wakefield",
+              "name": "Little Lotus Wakefield",
+              "address": "U37, Trinity Walk Shopping Centre, Market Walk, Wakefield WF1 1QS",
+              "url": "https://maps.google.com/?cid=7096299394968890583"
+            },
+            {
+              "id": "ChIJhQyGPf5meUgRhUXD90asbGw",
+              "entityType": "place",
+              "title": "Costa Coffee",
+              "name": "Costa Coffee",
+              "address": "15 Northgate, Wakefield WF1 1HD",
+              "url": "https://maps.google.com/?cid=7812808874385425797"
+            }
+          ],
+          "viewIds": [
+            "ChIJGaW10wFneUgRVMXPAx6uLo8",
+            "ChIJ__l0TeRneUgRc8g9TvFpEyI",
+            "ChIJWz-fGP5meUgRQIzWk4xjduE",
+            "ChIJ4zT79RJneUgR16zwsLMee2I",
+            "ChIJhQyGPf5meUgRhUXD90asbGw"
+          ],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": "Wakefield city centre",
+              "foodOrCoffee": false,
+              "foodAndCoffee": false,
+              "hotChocolate": false,
+              "shownIds": [
+                "ChIJmfqRd2VneUgRxBUdgBUpFpk",
+                "ChIJj8TwxSBneUgRJimTlbP13Bg",
+                "ChIJy4oackVneUgRfJ2FRMKKI4E",
+                "ChIJrVw8Jf5meUgRxEvyXrzl-g8",
+                "ChIJleobVWdneUgRiTjRimFAplc",
+                "ChIJGaW10wFneUgRVMXPAx6uLo8",
+                "ChIJ__l0TeRneUgRc8g9TvFpEyI",
+                "ChIJWz-fGP5meUgRQIzWk4xjduE",
+                "ChIJ4zT79RJneUgR16zwsLMee2I",
+                "ChIJhQyGPf5meUgRhUXD90asbGw"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "question": "Haus?",
+        "status": 200,
+        "seconds": 3.63,
+        "reply": "[Haus Coffee & Plants](https://experiencewakefield.co.uk/venue/haus/) is listed at 45 Northgate, Wakefield, WF1 3BH.\n\nIt is a named coffee-shop record in the local directory. Opening hours, today\u2019s service and availability need checking for your visit.",
+        "sources": [
+          {
+            "title": "Haus Coffee & Plants - venue listing",
+            "url": "https://experiencewakefield.co.uk/venue/haus/"
+          }
+        ],
+        "followups": [
+          "What time does it close today?"
+        ],
+        "verification": "named-local-place-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.venue_reference",
+          "area": "Wakefield city centre",
+          "resultCards": [
+            {
+              "id": "AW-032",
+              "title": "Haus Coffee & Plants",
+              "entityType": "place",
+              "url": "https://experiencewakefield.co.uk/venue/haus/"
+            }
+          ],
+          "constraints": {
+            "namedLocalPlace": "AW-032"
+          }
+        }
+      },
+      {
+        "question": "What time does it close today?",
+        "status": 200,
+        "seconds": 4.41,
+        "reply": "[Haus Coffee & Plants](https://experiencewakefield.co.uk/venue/haus/) is listed at 45 Northgate, Wakefield, WF1 3BH.\n\nThe current linked directory lists Monday: 8:00 am - 3:00 pm. These are listed branch hours, not a guarantee of service at a particular time.",
+        "sources": [
+          {
+            "title": "Haus Coffee & Plants - venue listing",
+            "url": "https://experiencewakefield.co.uk/venue/haus/"
+          }
+        ],
+        "followups": [],
+        "verification": "named-local-place-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.venue_reference",
+          "area": "Wakefield city centre",
+          "resultCards": [
+            {
+              "id": "AW-032",
+              "title": "Haus Coffee & Plants",
+              "entityType": "place",
+              "url": "https://experiencewakefield.co.uk/venue/haus/"
+            }
+          ],
+          "constraints": {
+            "namedLocalPlace": "AW-032"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "coffee-chocolate",
+    "turns": [
+      {
+        "question": "Where can I get coffee and hot chocolate in Wakefield city centre?",
+        "status": 200,
+        "seconds": 4.83,
+        "reply": "I couldn\u2019t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.",
+        "sources": [],
+        "followups": [],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": "Wakefield city centre",
+          "resultCards": [],
+          "viewIds": [],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": "Wakefield city centre",
+              "foodOrCoffee": false,
+              "foodAndCoffee": false,
+              "hotChocolate": true,
+              "shownIds": []
+            }
+          }
+        }
+      },
+      {
+        "question": "Which are open now?",
+        "status": 200,
+        "seconds": 3.62,
+        "reply": "I couldn\u2019t verify suitable places serving both coffee and hot chocolate in Wakefield city centre open now from this check. There may be others.",
+        "sources": [],
+        "followups": [],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": "Wakefield city centre",
+          "resultCards": [],
+          "viewIds": [],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": "Wakefield city centre",
+              "foodOrCoffee": false,
+              "foodAndCoffee": false,
+              "hotChocolate": true,
+              "shownIds": []
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "library-escape",
+    "turns": [
+      {
+        "question": "Where can I get good food or coffee in Wakefield?",
+        "status": 200,
+        "seconds": 4.16,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[Bakes By VANILLA BEAN](https://maps.google.com/?cid=11404958215076635949) (28 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[CAFE VIE the bistro](https://maps.google.com/?cid=4994640386600994448) (Thompson's Yard, New St, Ossett WF5 8BH) lists coffee and food.\n\n[Caffe Capri - Horbury](https://maps.google.com/?cid=15133674457134902985) (8 Cluntergate, Horbury, Wakefield WF4 5AG) lists coffee and food.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Costa Coffee](https://maps.google.com/?cid=17612261411877474420) (Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "Bakes By VANILLA BEAN - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11404958215076635949"
+          },
+          {
+            "title": "CAFE VIE the bistro - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=4994640386600994448"
+          },
+          {
+            "title": "Caffe Capri - Horbury - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=15133674457134902985"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Costa Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17612261411877474420"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": null,
+          "resultCards": [
+            {
+              "id": "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+              "entityType": "place",
+              "title": "Bakes By VANILLA BEAN",
+              "name": "Bakes By VANILLA BEAN",
+              "address": "28 Wood St, Wakefield WF1 2ED",
+              "url": "https://maps.google.com/?cid=11404958215076635949"
+            },
+            {
+              "id": "ChIJO18M2OVheUgRkAYsCPiGUEU",
+              "entityType": "place",
+              "title": "CAFE VIE the bistro",
+              "name": "CAFE VIE the bistro",
+              "address": "Thompson's Yard, New St, Ossett WF5 8BH",
+              "url": "https://maps.google.com/?cid=4994640386600994448"
+            },
+            {
+              "id": "ChIJV_Q_BklheUgRya7ts7ycBdI",
+              "entityType": "place",
+              "title": "Caffe Capri - Horbury",
+              "name": "Caffe Capri - Horbury",
+              "address": "8 Cluntergate, Horbury, Wakefield WF4 5AG",
+              "url": "https://maps.google.com/?cid=15133674457134902985"
+            },
+            {
+              "id": "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+              "entityType": "place",
+              "title": "Lush bakery and co cafe",
+              "name": "Lush bakery and co cafe",
+              "address": "198 Castleford Rd, Normanton WF6 1PY",
+              "url": "https://maps.google.com/?cid=17932692079788129530"
+            },
+            {
+              "id": "ChIJPXrD_fVpeUgRdNBGunBSa_Q",
+              "entityType": "place",
+              "title": "Costa Coffee",
+              "name": "Costa Coffee",
+              "address": "Unit G10-11A, Junction 32 Factory Outlet Centre, Castleford WF10 4SB",
+              "url": "https://maps.google.com/?cid=17612261411877474420"
+            }
+          ],
+          "viewIds": [
+            "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+            "ChIJO18M2OVheUgRkAYsCPiGUEU",
+            "ChIJV_Q_BklheUgRya7ts7ycBdI",
+            "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+            "ChIJPXrD_fVpeUgRdNBGunBSa_Q"
+          ],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": null,
+              "foodOrCoffee": true,
+              "foodAndCoffee": false,
+              "hotChocolate": false,
+              "shownIds": [
+                "ChIJt8m8BIdneUgRLeXQDxKNRp4",
+                "ChIJO18M2OVheUgRkAYsCPiGUEU",
+                "ChIJV_Q_BklheUgRya7ts7ycBdI",
+                "ChIJWwJZE4NreUgR-nw7Ym-43fg",
+                "ChIJPXrD_fVpeUgRdNBGunBSa_Q"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "question": "How do I report a pothole?",
+        "status": 200,
+        "seconds": 3.11,
+        "reply": "Use [Wakefield Council\u2019s road reporting service](https://www.wakefield.gov.uk/roads-and-travel/) to find the current pothole reporting form. Give the road and location, and add a photo if the form offers that option. I haven\u2019t submitted a report for you.",
+        "sources": [
+          {
+            "title": "Wakefield Council roads and travel",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/"
+          }
+        ],
+        "followups": [],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.roads",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": false,
+            "indoorGuide": false
+          }
+        }
+      },
+      {
+        "question": "Where is Wakefield Library?",
+        "status": 200,
+        "seconds": 3.52,
+        "reply": "Wakefield Library is at Wakefield One, Burton Street, Wakefield, WF1 2DD. [Use the Council\u2019s library page](https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library) for current opening hours, events and contact details.",
+        "sources": [
+          {
+            "title": "Wakefield Library - Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library"
+          }
+        ],
+        "followups": [],
+        "verification": "local-navigation-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "navigation.library",
+          "resultCards": [],
+          "constraints": {
+            "serviceMenu": false,
+            "indoorGuide": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "directory-handoff",
+    "turns": [
+      {
+        "question": "Help me find an activity in Wakefield. Activity: Music. Age: Under 5. Day: Monday. Cost: Free. Keep these as requirements and verify a match.",
+        "status": 200,
+        "seconds": 3.36,
+        "reply": "I\u2019ve kept your requirements: music in wakefield, under 5, monday, free.\n\nThe directory did not have an exact match for those filters. I haven\u2019t confirmed a current session that meets them.\n\nThese programme pages are starting points to check, rather than confirmed matches:\n\n[Wakefield Music Services tuition](https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/)",
+        "sources": [
+          {
+            "title": "Wakefield Music Services tuition - programme source",
+            "url": "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-handoff-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "activity.discovery",
+          "area": "wakefield",
+          "resultCards": [],
+          "constraints": {
+            "activitySearch": {
+              "ids": [
+                "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+              ],
+              "handoff": {
+                "area": "wakefield",
+                "activity": "music",
+                "age": "under 5",
+                "day": "monday",
+                "cost": "free"
+              }
+            }
+          }
+        }
+      },
+      {
+        "question": "Any more?",
+        "status": 200,
+        "seconds": 5.11,
+        "reply": "I still have your requirements: wakefield, music, under 5, monday, free. I haven\u2019t verified another session that meets all of them. The programme links are starting points, not confirmed free or age/day matches.",
+        "sources": [
+          {
+            "title": "Wakefield Music Services tuition - programme source",
+            "url": "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-handoff-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "activity.discovery",
+          "resultCards": [],
+          "viewIds": [],
+          "lastFilter": null,
+          "constraints": {
+            "activitySearch": {
+              "ids": [
+                "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+              ],
+              "handoff": {
+                "area": "wakefield",
+                "activity": "music",
+                "age": "under 5",
+                "day": "monday",
+                "cost": "free"
+              }
+            }
+          },
+          "area": "wakefield"
+        }
+      }
+    ]
+  },
+  {
+    "id": "day-music",
+    "turns": [
+      {
+        "question": "What's on today?",
+        "status": 200,
+        "seconds": 6.89,
+        "reply": "For Monday 23 November 2026:\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-23",
+              "end": "2026-11-23",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": false
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "Anything for Monday?",
+        "status": 200,
+        "seconds": 3.09,
+        "reply": "For Monday 23 November 2026:\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-23",
+              "end": "2026-11-23",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": false
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "Any music events?",
+        "status": 200,
+        "seconds": 7.96,
+        "reply": "For Monday 23 November 2026:\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-23",
+              "end": "2026-11-23",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": true
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            }
+          ],
+          "viewIds": [
+            "995e9113eb79ed5bd7d87f09"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "allergy",
+    "turns": [
+      {
+        "question": "Where can I get coffee and hot chocolate in Wakefield city centre?",
+        "status": 200,
+        "seconds": 3.84,
+        "reply": "I couldn\u2019t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.",
+        "sources": [],
+        "followups": [],
+        "verification": "coffee-discovery-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.discovery",
+          "area": "Wakefield city centre",
+          "resultCards": [],
+          "viewIds": [],
+          "constraints": {
+            "coffeeDiscovery": {
+              "area": "Wakefield city centre",
+              "foodOrCoffee": false,
+              "foodAndCoffee": false,
+              "hotChocolate": true,
+              "shownIds": []
+            }
+          }
+        }
+      },
+      {
+        "question": "One child has a severe nut allergy. Can you guarantee the hot chocolate is safe?",
+        "status": 200,
+        "seconds": 4.02,
+        "reply": "I haven\u2019t verified a food or drink option suitable for the allergy you described. A vegan label or plant-based milk option does not establish allergy-safe preparation. Ask the venue about the specific ingredients and cross-contact controls before ordering.\n\n[Official information about allergens when eating out](https://www.gov.uk/food-allergies)",
+        "sources": [
+          {
+            "title": "GOV.UK - eating out with a food allergy",
+            "url": "https://www.gov.uk/food-allergies"
+          }
+        ],
+        "followups": [],
+        "verification": "food-requirements-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "food.requirements",
+          "resultCards": [],
+          "constraints": {
+            "foodRequirements": {
+              "allergy": true
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "tileyard-detail",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 6.42,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Tuesday 24 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Wednesday 25 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Thursday 26 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Friday 27 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nPooch Passport Challenge\nNostell \u00b7 Saturday 28 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Saturday 28 November 2026 10:00\u201316:00 and Sunday 29 November 2026 10:00\u201316:00\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 29 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "4f9613821391ec934b33b652",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "a9291b5a42351b69dba6d749",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "dde2267cd5121739e0b5d9aa",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "c97f1dd11972335240078daf",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8c6d98d67e065cef0893d96a",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "8ec3e4bec3401804eafbf9d4",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs ",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09",
+            "4f9613821391ec934b33b652",
+            "a9291b5a42351b69dba6d749",
+            "dde2267cd5121739e0b5d9aa",
+            "c97f1dd11972335240078daf",
+            "8c6d98d67e065cef0893d96a",
+            "8ec3e4bec3401804eafbf9d4",
+            "89e39f62d07cc5827a34c96e",
+            "f43213dcdfab589a461befac"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "Tell me more about Tileyard North Christmas Market",
+        "status": 200,
+        "seconds": 7.55,
+        "reply": "The Hepworth Wakefield Festive Market is running at Tileyard North on Saturday 28 November and Sunday 29 November 2026, from 10:00 to 16:00 both days.\n\nI can see it's a festive market linked to The Hepworth Wakefield, but I don't have the detailed current programme, such as exact stallholders, food vendors, entertainment schedule or whether entry is free. For the full details, your best bet is to check Experience Wakefield's event page or contact The Hepworth directly at hepworthwakefield.org.\n\nIs there anything else about Wakefield's weekend events or the city centre that would help?",
+        "sources": [],
+        "verification": "primary",
+        "state": {
+          "version": 1,
+          "lastIntent": "other",
+          "area": "Tileyard North Wakefield",
+          "constraints": {
+            "time": null
+          },
+          "resultCards": []
+        }
+      },
+      {
+        "question": "What time does it start?",
+        "status": 200,
+        "seconds": 4.19,
+        "reply": "The Hepworth Wakefield Festive Market starts at 10:00 on both Saturday 28 November and Sunday 29 November 2026.",
+        "sources": [],
+        "verification": "primary",
+        "state": {
+          "version": 1,
+          "lastIntent": "other",
+          "area": "Tileyard North Wakefield",
+          "constraints": {
+            "time": null
+          },
+          "resultCards": []
+        }
+      },
+      {
+        "question": "What about Sunday?",
+        "status": 200,
+        "seconds": 6.17,
+        "reply": "For Sunday 29 November 2026:\n\nPooch Passport Challenge\nNostell \u00b7 Sunday 29 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nTufting Open Day\nWX Wakefield Exchange \u00b7 Sunday 29 November 2026 \u00b7 10:00\u201317:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day)\n\nWinter Con: Wakefield Freeze Over\nWX Wakefield Exchange \u00b7 Sunday 29 November 2026 \u00b7 10:00\u201316:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over)\n\nForever After Collective: Christmas Market at Nostell\nNostell \u00b7 Sunday 29 November 2026 \u00b7 10:30\u201315:30\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5abf2e11-d882-4f16-8308-fa90b1d2be61)\n\nThe Hepworth Wakefield Festive Market\nTileyard North \u00b7 Sunday 29 November 2026\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Forever After Collective: Christmas Market at Nostell \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5abf2e11-d882-4f16-8308-fa90b1d2be61"
+          },
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          },
+          {
+            "title": "Tufting Open Day \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+          },
+          {
+            "title": "Winter Con: Wakefield Freeze Over \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": "Tileyard North Wakefield",
+          "constraints": {
+            "time": null,
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-29",
+              "end": "2026-11-29",
+              "from": "2026-11-29",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": false
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "624b3d179b495378020b1b76",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Forever After Collective: Christmas Market at Nostell",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5abf2e11-d882-4f16-8308-fa90b1d2be61",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5abf2e11-d882-4f16-8308-fa90b1d2be61",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "10:30",
+              "end": "15:30",
+              "startTime": "10:30",
+              "endTime": "15:30",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-29"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "8ec3e4bec3401804eafbf9d4",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-29"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "89e39f62d07cc5827a34c96e",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": true,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "ive Market. \u00a32.50 in advance / \u00a33.50 on the day / FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs ",
+              "occurrenceDates": [
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": [
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "d48268dd230cb01d0882ab1c",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-29"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "fefdd1a3eacb328505406a06",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Winter Con: Wakefield Freeze Over",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "16:00",
+              "startTime": "10:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-29"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            }
+          ],
+          "viewIds": [
+            "624b3d179b495378020b1b76",
+            "8ec3e4bec3401804eafbf9d4",
+            "89e39f62d07cc5827a34c96e",
+            "d48268dd230cb01d0882ab1c",
+            "fefdd1a3eacb328505406a06"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "wood-street-detail",
+    "turns": [
+      {
+        "question": "Tell me about Wakefield Christmas Market on Wood Street in December",
+        "status": 200,
+        "seconds": 6.94,
+        "reply": "I haven't been able to verify current details about a Wakefield Christmas Market on Wood Street in December 2026. Christmas markets can move, change format or run on different dates year to year, so I'd want to check the official source rather than guess.\n\nYour best bets for current confirmed details are:\n\n- Experience Wakefield (experiencewakefield.co.uk), the official tourism guide, which lists major seasonal events\n- WX Wakefield Exchange (wxwakefield.co.uk/whats-on), the city-centre hub that often hosts or knows about festive events\n- Wakefield Council or the city-centre business improvement district, they usually promote major Christmas activities\n\nIf the market is running this year, those sources should have the exact dates, times, stall details and any parking or access information. Wood Street is in the city centre, so checking those sites first will save you a trip.\n\nIs there anything else about Christmas activities or festive shopping in Wakefield I can help with?",
+        "sources": [],
+        "verification": "primary",
+        "state": {
+          "version": 1,
+          "lastIntent": "other",
+          "area": "Wood Street Wakefield",
+          "constraints": {
+            "time": null
+          },
+          "resultCards": []
+        }
+      },
+      {
+        "question": "What time does it close on Sunday?",
+        "status": 200,
+        "seconds": 6.29,
+        "reply": "I don't have verified details about the Wakefield Christmas Market's opening or closing times, including Sunday's closure time. As I mentioned, I wasn't able to confirm the current market details from a reliable source.\n\nTo find out what time it closes on Sunday, check:\n\n- Experience Wakefield (experiencewakefield.co.uk), the official tourism guide\n- WX Wakefield Exchange (wxwakefield.co.uk/whats-on), the city-centre hub\n- Wakefield Council, may have event details on wakefield.gov.uk\n\nThey'll have the exact Sunday closing time and any other details about the market's dates and hours.",
+        "sources": [],
+        "verification": "primary",
+        "state": {
+          "version": 1,
+          "lastIntent": "other",
+          "area": "Wood Street Wakefield",
+          "constraints": {
+            "time": null
+          },
+          "resultCards": []
+        }
+      },
+      {
+        "question": "What's parking like?",
+        "status": 200,
+        "seconds": 5.69,
+        "reply": "I couldn\u2019t verify the current terms for a particular car park. Check [Wakefield Council\u2019s car-park guide](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/) and the signs at your chosen car park for hours, charges and ticket requirements. I haven\u2019t checked live spaces.",
+        "sources": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,3706 @@
+[
+  {
+    "id": "pill-1",
+    "turns": [
+      {
+        "question": "What free things can we do in Wakefield this weekend?",
+        "status": 200,
+        "seconds": 8.4,
+        "reply": "For a free outing this weekend (Saturday, 28 November and Sunday, 29 November), I\u2019d look at these options:\n\n- Forever After Christmas Gift & Craft Fair, Saturday and Sunday, 11:00\u201315:30, Nostell, National Trust\n- Family Rhubarb Textile Workshop, Saturday, 28 November, 13:00\u201315:00, WX Wakefield Exchange\n- Tileyard North Christmas Market, Saturday 28 November 2026 12:00\u201322:00; Sunday 29 November 2026 12:00\u201319:00, Tileyard North\n- Tufting Open Day, Sunday, 29 November, 10:00\u201317:00, WX Wakefield Exchange",
+        "sources": [
+          {
+            "title": "Forever After Christmas Gift & Craft Fair \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/forever-after-christmas-market/"
+          },
+          {
+            "title": "Family Rhubarb Textile Workshop \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov"
+          },
+          {
+            "title": "Tileyard North Christmas Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          },
+          {
+            "title": "Tufting Open Day \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+          }
+        ],
+        "followups": [
+          "What time do they start?",
+          "Which ones are on Sunday?",
+          "Show the full list again"
+        ],
+        "verification": "cards-first-v17",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": null,
+          "resultCards": [
+            {
+              "id": "experience:forever-after-christmas-market:2026-11-28",
+              "sourceId": "experience:forever-after-christmas-market:2026-11-28",
+              "canonId": "experience:forever-after-christmas-market:2026-11-28",
+              "entityType": "event",
+              "title": "Forever After Christmas Gift & Craft Fair",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/forever-after-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/forever-after-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "11:00",
+              "end": "15:30",
+              "startTime": "11:00",
+              "endTime": "15:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "11:00",
+                  "end": "15:30"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "11:00",
+                  "end": "15:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+              "sourceId": "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+              "canonId": "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+              "entityType": "event",
+              "title": "Family Rhubarb Textile Workshop",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "canonId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "entityType": "event",
+              "title": "Tileyard North Christmas Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-26",
+              "endDate": "2026-12-20",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "16:00",
+              "end": "19:00",
+              "startTime": "16:00",
+              "endTime": "19:00",
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29",
+                "2026-12-03",
+                "2026-12-04",
+                "2026-12-05",
+                "2026-12-06",
+                "2026-12-10",
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13",
+                "2026-12-17",
+                "2026-12-18",
+                "2026-12-19",
+                "2026-12-20"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-26",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-03",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-04",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-05",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-06",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-10",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-11",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-17",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-18",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-19",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-20",
+                  "start": "12:00",
+                  "end": "19:00"
+                }
+              ],
+              "dates": [
+                "2026-11-28",
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "wx:comedy-night-november:2026-11-28",
+              "sourceId": "wx:comedy-night-november:2026-11-28",
+              "canonId": "wx:comedy-night-november:2026-11-28",
+              "entityType": "event",
+              "title": "Comedy Night: November",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=comedy-night-november",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=comedy-night-november",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "18:30",
+              "end": "22:00",
+              "startTime": "18:30",
+              "endTime": "22:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "paid",
+              "priceRaw": "\u00a38",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "wx:tufting-open-day:2026-11-29",
+              "sourceId": "wx:tufting-open-day:2026-11-29",
+              "canonId": "wx:tufting-open-day:2026-11-29",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            },
+            {
+              "id": "wx:winter-con-wakefield-freeze-over:2026-11-29",
+              "sourceId": "wx:winter-con-wakefield-freeze-over:2026-11-29",
+              "canonId": "wx:winter-con-wakefield-freeze-over:2026-11-29",
+              "entityType": "event",
+              "title": "Winter Con: Wakefield Freeze Over",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over",
+              "source": "wx",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "16:00",
+              "startTime": "10:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "paid",
+              "priceRaw": "\u00a34.34 - \u00a310.84",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-29"
+              ]
+            }
+          ],
+          "viewIds": [
+            "experience:forever-after-christmas-market:2026-11-28",
+            "wx:family-rhubarb-textile-workshop-Nov:2026-11-28",
+            "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+            "wx:tufting-open-day:2026-11-29"
+          ],
+          "lastFilter": "price:free"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pill-4",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 5.57,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 09:00\u201316:00 and Tuesday 24 November 2026 09:00\u201316:00 and Wednesday 25 November 2026 09:00\u201316:00 and Thursday 26 November 2026 09:00\u201316:00 and Friday 27 November 2026 09:00\u201316:00 and Saturday 28 November 2026 09:00\u201316:00 and Sunday 29 November 2026 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nCathedral Crafts - Education Room\nWakefield Cathedral \u00b7 Tuesday 24 November 2026 \u00b7 13:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nLunchtime Concert - the Singing Foster Carers\nWakefield Cathedral \u00b7 Tuesday 24 November 2026 \u00b7 13:00\u201313:45\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nCreative Careers Fair\nWX Wakefield Exchange \u00b7 Wednesday 25 November 2026 \u00b7 15:30\u201318:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair)\n\nGrow and Create: Allotment Session\nNational Coal Mining Museum \u00b7 Thursday 26 November 2026\n[Event details](https://www.ncm.org.uk/whats-on/grow-and-create/)\n\nToddler Disco\nWX Wakefield Exchange \u00b7 Friday 27 November 2026 \u00b7 10:00\u201312:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026)\n\nAutumn Craft Fair - Free Entry!\nWakefield Cathedral \u00b7 Saturday 28 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nTufting Open Day\nWX Wakefield Exchange \u00b7 Sunday 29 November 2026 \u00b7 10:00\u201317:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "Creative Careers Fair \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair"
+          },
+          {
+            "title": "Grow and Create: Allotment Session \u2014 official event page",
+            "url": "https://www.ncm.org.uk/whats-on/grow-and-create/"
+          },
+          {
+            "title": "Toddler Disco \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026"
+          },
+          {
+            "title": "Tufting Open Day \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          },
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f950c9ee88562347729425c4",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Cathedral Crafts - Education Room",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "fbd27710ff8edcf18b53774c",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Lunchtime Concert - the Singing Foster Carers",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "13:45",
+              "startTime": "13:00",
+              "endTime": "13:45",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "2a74615ee1b256006b40524a",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Creative Careers Fair",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "15:30",
+              "end": "18:00",
+              "startTime": "15:30",
+              "endTime": "18:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "bf6d6c94566a367223fae19c",
+              "sourceId": "ncm",
+              "canonId": "ncm",
+              "entityType": "event",
+              "title": "Grow and Create: Allotment Session",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:58:55.142Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "755208e17a425a0c675289be",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Toddler Disco",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "12:00",
+              "startTime": "10:00",
+              "endTime": "12:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "6cb85a2011996c594dd7b184",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Autumn Craft Fair - Free Entry!",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "10:00",
+              "end": "15:00",
+              "startTime": "10:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "d48268dd230cb01d0882ab1c",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23",
+                "2026-11-24",
+                "2026-11-25",
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-23",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-24",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-25",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-26",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "09:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "995e9113eb79ed5bd7d87f09",
+            "f950c9ee88562347729425c4",
+            "fbd27710ff8edcf18b53774c",
+            "2a74615ee1b256006b40524a",
+            "bf6d6c94566a367223fae19c",
+            "755208e17a425a0c675289be",
+            "6cb85a2011996c594dd7b184",
+            "d48268dd230cb01d0882ab1c",
+            "f43213dcdfab589a461befac",
+            "8968ff63aa281e53752a7df0"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "session-times",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 7.12,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 09:00\u201316:00 and Tuesday 24 November 2026 09:00\u201316:00 and Wednesday 25 November 2026 09:00\u201316:00 and Thursday 26 November 2026 09:00\u201316:00 and Friday 27 November 2026 09:00\u201316:00 and Saturday 28 November 2026 09:00\u201316:00 and Sunday 29 November 2026 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nCathedral Crafts - Education Room\nWakefield Cathedral \u00b7 Tuesday 24 November 2026 \u00b7 13:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nLunchtime Concert - the Singing Foster Carers\nWakefield Cathedral \u00b7 Tuesday 24 November 2026 \u00b7 13:00\u201313:45\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nCreative Careers Fair\nWX Wakefield Exchange \u00b7 Wednesday 25 November 2026 \u00b7 15:30\u201318:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair)\n\nGrow and Create: Allotment Session\nNational Coal Mining Museum \u00b7 Thursday 26 November 2026\n[Event details](https://www.ncm.org.uk/whats-on/grow-and-create/)\n\nToddler Disco\nWX Wakefield Exchange \u00b7 Friday 27 November 2026 \u00b7 10:00\u201312:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026)\n\nAutumn Craft Fair - Free Entry!\nWakefield Cathedral \u00b7 Saturday 28 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nTufting Open Day\nWX Wakefield Exchange \u00b7 Sunday 29 November 2026 \u00b7 10:00\u201317:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "Creative Careers Fair \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair"
+          },
+          {
+            "title": "Grow and Create: Allotment Session \u2014 official event page",
+            "url": "https://www.ncm.org.uk/whats-on/grow-and-create/"
+          },
+          {
+            "title": "Toddler Disco \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026"
+          },
+          {
+            "title": "Tufting Open Day \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          },
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f950c9ee88562347729425c4",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Cathedral Crafts - Education Room",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "fbd27710ff8edcf18b53774c",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Lunchtime Concert - the Singing Foster Carers",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "13:45",
+              "startTime": "13:00",
+              "endTime": "13:45",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "2a74615ee1b256006b40524a",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Creative Careers Fair",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "15:30",
+              "end": "18:00",
+              "startTime": "15:30",
+              "endTime": "18:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "bf6d6c94566a367223fae19c",
+              "sourceId": "ncm",
+              "canonId": "ncm",
+              "entityType": "event",
+              "title": "Grow and Create: Allotment Session",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:58:55.142Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "755208e17a425a0c675289be",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Toddler Disco",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "12:00",
+              "startTime": "10:00",
+              "endTime": "12:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "6cb85a2011996c594dd7b184",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Autumn Craft Fair - Free Entry!",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "10:00",
+              "end": "15:00",
+              "startTime": "10:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "d48268dd230cb01d0882ab1c",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23",
+                "2026-11-24",
+                "2026-11-25",
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-23",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-24",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-25",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-26",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "09:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "995e9113eb79ed5bd7d87f09",
+            "f950c9ee88562347729425c4",
+            "fbd27710ff8edcf18b53774c",
+            "2a74615ee1b256006b40524a",
+            "bf6d6c94566a367223fae19c",
+            "755208e17a425a0c675289be",
+            "6cb85a2011996c594dd7b184",
+            "d48268dd230cb01d0882ab1c",
+            "f43213dcdfab589a461befac",
+            "8968ff63aa281e53752a7df0"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What about Friday?",
+        "status": 200,
+        "seconds": 3.45,
+        "reply": "For Friday 27 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nPooch Passport Challenge\nNostell \u00b7 Friday 27 November 2026 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nToddler Disco\nWX Wakefield Exchange \u00b7 Friday 27 November 2026 \u00b7 10:00\u201312:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+        "sources": [
+          {
+            "title": "Toddler Disco \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026"
+          },
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-followup-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "day": "friday"
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "unknown:the-christmas-orchestra:2026-11-23",
+              "canonId": "unknown:the-christmas-orchestra:2026-11-23",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f950c9ee88562347729425c4",
+              "sourceId": "unknown:cathedral-crafts-education-room:2026-11-24",
+              "canonId": "unknown:cathedral-crafts-education-room:2026-11-24",
+              "entityType": "event",
+              "title": "Cathedral Crafts - Education Room",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "fbd27710ff8edcf18b53774c",
+              "sourceId": "unknown:lunchtime-concert-the-singing-foster-carers:2026-11-24",
+              "canonId": "unknown:lunchtime-concert-the-singing-foster-carers:2026-11-24",
+              "entityType": "event",
+              "title": "Lunchtime Concert - the Singing Foster Carers",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "13:45",
+              "startTime": "13:00",
+              "endTime": "13:45",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "2a74615ee1b256006b40524a",
+              "sourceId": "wx:creative-careers-fair:2026-11-25",
+              "canonId": "wx:creative-careers-fair:2026-11-25",
+              "entityType": "event",
+              "title": "Creative Careers Fair",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "15:30",
+              "end": "18:00",
+              "startTime": "15:30",
+              "endTime": "18:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "bf6d6c94566a367223fae19c",
+              "sourceId": "unknown:grow-and-create-allotment-session:2026-11-26",
+              "canonId": "unknown:grow-and-create-allotment-session:2026-11-26",
+              "entityType": "event",
+              "title": "Grow and Create: Allotment Session",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:58:55.142Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "755208e17a425a0c675289be",
+              "sourceId": "wx:toddler-disco-2026:2026-11-27",
+              "canonId": "wx:toddler-disco-2026:2026-11-27",
+              "entityType": "event",
+              "title": "Toddler Disco",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "12:00",
+              "startTime": "10:00",
+              "endTime": "12:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "6cb85a2011996c594dd7b184",
+              "sourceId": "unknown:autumn-craft-fair-free-entry:2026-11-28",
+              "canonId": "unknown:autumn-craft-fair-free-entry:2026-11-28",
+              "entityType": "event",
+              "title": "Autumn Craft Fair - Free Entry!",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "10:00",
+              "end": "15:00",
+              "startTime": "10:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "d48268dd230cb01d0882ab1c",
+              "sourceId": "wx:tufting-open-day:2026-11-29",
+              "canonId": "wx:tufting-open-day:2026-11-29",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience:nostell-ghost-walks:2026-11-21",
+              "canonId": "experience:nostell-ghost-walks:2026-11-21",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "unknown:pooch-passport-challenge:2026-11-23",
+              "canonId": "unknown:pooch-passport-challenge:2026-11-23",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "run",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23",
+                "2026-11-24",
+                "2026-11-25",
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-23",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-24",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-25",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-26",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "09:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "755208e17a425a0c675289be",
+            "8968ff63aa281e53752a7df0"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What time does The Hepworth Wakefield Festive Market start?",
+        "status": 200,
+        "seconds": 5.37,
+        "reply": "The Hepworth Wakefield Festive Market starts at 10:00 on Saturday 28 November 2026 and Sunday 29 November 2026. It runs until 16:00.\n\n[Event details](https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/)",
+        "sources": [
+          {
+            "title": "The Hepworth Wakefield Festive Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "selected-event-discovery-v2",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "resultCards": [
+            {
+              "id": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceId": "experience:the-hepworth-wakefield-festive-market:2026-11-20",
+              "canonId": "experience:the-hepworth-wakefield-festive-market:2026-11-20",
+              "entityType": "event",
+              "title": "The Hepworth Wakefield Festive Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-20",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "16:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": null,
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "conditional",
+              "priceRaw": "FREE for members and under 18s Access facilities Accessible Car Parking Accessible Toilet Assistance Dogs Welcome Baby Changing Fa",
+              "occurrenceDates": [
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "10:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "10:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": []
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "name": null,
+              "kind": null,
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "f950c9ee88562347729425c4",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Cathedral Crafts - Education Room",
+              "name": null,
+              "kind": null,
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "fbd27710ff8edcf18b53774c",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Lunchtime Concert - the Singing Foster Carers",
+              "name": null,
+              "kind": null,
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "13:45",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "2a74615ee1b256006b40524a",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Creative Careers Fair",
+              "name": null,
+              "kind": null,
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "sourceUrl": null,
+              "source": "wx",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "15:30",
+              "end": "18:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "bf6d6c94566a367223fae19c",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Grow and Create: Allotment Session",
+              "name": null,
+              "kind": null,
+              "url": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:58:55.142Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "755208e17a425a0c675289be",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Toddler Disco",
+              "name": null,
+              "kind": null,
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "sourceUrl": null,
+              "source": "wx",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "12:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "6cb85a2011996c594dd7b184",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Autumn Craft Fair - Free Entry!",
+              "name": null,
+              "kind": null,
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "10:00",
+              "end": "15:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "d48268dd230cb01d0882ab1c",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "name": null,
+              "kind": null,
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": null,
+              "source": "wx",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "name": null,
+              "kind": null,
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": null,
+              "source": "experience",
+              "sourceTier": null,
+              "date": null,
+              "dates": [
+                "2026-11-28"
+              ],
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            },
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "name": null,
+              "kind": null,
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": null,
+              "date": null,
+              "dates": [],
+              "occurrenceDates": [
+                "2026-11-23",
+                "2026-11-24",
+                "2026-11-25",
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-23",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-24",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-25",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-26",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "09:00",
+                  "end": "16:00"
+                }
+              ],
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            }
+          ],
+          "viewIds": [
+            "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/"
+          ],
+          "lastFilter": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/",
+              "checkedAt": "2026-11-23T15:51:17.569Z",
+              "sections": {
+                "programme": [
+                  "Make a day of it with art activities for kids, live music, pop-up portraits, printmaking with YUK FUN and the Marc Chagall: The Circus exhibition.",
+                  "Buy an exhibition ticket and get FREE entry to the Festive Market."
+                ],
+                "parking": [],
+                "parkingLinks": []
+              }
+            },
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "day": "friday"
+              }
+            }
+          },
+          "area": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "day-music",
+    "turns": [
+      {
+        "question": "What's on today?",
+        "status": 200,
+        "seconds": 5.47,
+        "reply": "For Monday 23 November 2026:\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-23",
+              "end": "2026-11-23",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": false
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "Anything for Monday?",
+        "status": 200,
+        "seconds": 7.26,
+        "reply": "For Monday 23 November 2026:\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 \u00b7 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          },
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-23",
+              "end": "2026-11-23",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": false
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": "09:00",
+              "end": "16:00",
+              "startTime": "09:00",
+              "endTime": "16:00",
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            },
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            }
+          ],
+          "viewIds": [
+            "8968ff63aa281e53752a7df0",
+            "995e9113eb79ed5bd7d87f09"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "Any music events?",
+        "status": 200,
+        "seconds": 3.36,
+        "reply": "For Monday 23 November 2026:\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "day",
+              "start": "2026-11-23",
+              "end": "2026-11-23",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "musicOnly": true
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-23"
+              ],
+              "sessionTimes": [],
+              "dates": [
+                "2026-11-23"
+              ]
+            }
+          ],
+          "viewIds": [
+            "995e9113eb79ed5bd7d87f09"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "tileyard-detail",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 5.27,
+        "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nIf you fancy an evening out, I\u2019d start with The Christmas Orchestra. Here\u2019s what else is coming up.\n\nThe Christmas Orchestra\nWakefield Cathedral \u00b7 Monday 23 November 2026 \u00b7 18:00\u201322:30\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nPooch Passport Challenge\nNostell \u00b7 Monday 23 November 2026 09:00\u201316:00 and Tuesday 24 November 2026 09:00\u201316:00 and Wednesday 25 November 2026 09:00\u201316:00 and Thursday 26 November 2026 09:00\u201316:00 and Friday 27 November 2026 09:00\u201316:00 and Saturday 28 November 2026 09:00\u201316:00 and Sunday 29 November 2026 09:00\u201316:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nCathedral Crafts - Education Room\nWakefield Cathedral \u00b7 Tuesday 24 November 2026 \u00b7 13:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nLunchtime Concert - the Singing Foster Carers\nWakefield Cathedral \u00b7 Tuesday 24 November 2026 \u00b7 13:00\u201313:45\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nCreative Careers Fair\nWX Wakefield Exchange \u00b7 Wednesday 25 November 2026 \u00b7 15:30\u201318:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair)\n\nGrow and Create: Allotment Session\nNational Coal Mining Museum \u00b7 Thursday 26 November 2026\n[Event details](https://www.ncm.org.uk/whats-on/grow-and-create/)\n\nToddler Disco\nWX Wakefield Exchange \u00b7 Friday 27 November 2026 \u00b7 10:00\u201312:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026)\n\nAutumn Craft Fair - Free Entry!\nWakefield Cathedral \u00b7 Saturday 28 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nNostell Ghost Walks\nNostell, National Trust \u00b7 Saturday 28 November 2026 17:30\u201319:30\n[Event details](https://experiencewakefield.co.uk/event/nostell-ghost-walks/)\n\nTufting Open Day\nWX Wakefield Exchange \u00b7 Sunday 29 November 2026 \u00b7 10:00\u201317:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nThese listings come from collected source pages checked within the last 48 hours. Booking availability can change. This is a partial district calendar.",
+        "sources": [
+          {
+            "title": "The Christmas Orchestra \u2014 official event page",
+            "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+          },
+          {
+            "title": "Creative Careers Fair \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair"
+          },
+          {
+            "title": "Grow and Create: Allotment Session \u2014 official event page",
+            "url": "https://www.ncm.org.uk/whats-on/grow-and-create/"
+          },
+          {
+            "title": "Toddler Disco \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026"
+          },
+          {
+            "title": "Tufting Open Day \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+          },
+          {
+            "title": "Nostell Ghost Walks \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/"
+          },
+          {
+            "title": "Pooch Passport Challenge \u2014 official event page",
+            "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-catalogue-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.whats_on",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "995e9113eb79ed5bd7d87f09",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "The Christmas Orchestra",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-23",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "18:00",
+              "end": "22:30",
+              "startTime": "18:00",
+              "endTime": "22:30",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f950c9ee88562347729425c4",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Cathedral Crafts - Education Room",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "15:00",
+              "startTime": "13:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "fbd27710ff8edcf18b53774c",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Lunchtime Concert - the Singing Foster Carers",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-24",
+              "endDate": "2026-11-24",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "13:00",
+              "end": "13:45",
+              "startTime": "13:00",
+              "endTime": "13:45",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "2a74615ee1b256006b40524a",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Creative Careers Fair",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=creative-careers-fair",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-25",
+              "endDate": "2026-11-25",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "15:30",
+              "end": "18:00",
+              "startTime": "15:30",
+              "endTime": "18:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "bf6d6c94566a367223fae19c",
+              "sourceId": "ncm",
+              "canonId": "ncm",
+              "entityType": "event",
+              "title": "Grow and Create: Allotment Session",
+              "kind": "scheduled",
+              "url": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "sourceUrl": "https://www.ncm.org.uk/whats-on/grow-and-create/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-26",
+              "endDate": "2026-11-26",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:58:55.142Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "National Coal Mining Museum",
+              "venueId": "venue:national-coal-mining-museum",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "755208e17a425a0c675289be",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Toddler Disco",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-27",
+              "endDate": "2026-11-27",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "12:00",
+              "startTime": "10:00",
+              "endTime": "12:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "6cb85a2011996c594dd7b184",
+              "sourceId": "cathedral",
+              "canonId": "cathedral",
+              "entityType": "event",
+              "title": "Autumn Craft Fair - Free Entry!",
+              "kind": "scheduled",
+              "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "sourceUrl": "https://www.wakefieldcathedral.org.uk/whats-happening/events/",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-28",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:52:48.153Z",
+              "start": "10:00",
+              "end": "15:00",
+              "startTime": "10:00",
+              "endTime": "15:00",
+              "performanceStart": null,
+              "venue": "Wakefield Cathedral",
+              "venueId": "venue:wakefield-cathedral",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "d48268dd230cb01d0882ab1c",
+              "sourceId": "wx",
+              "canonId": "wx",
+              "entityType": "event",
+              "title": "Tufting Open Day",
+              "kind": "scheduled",
+              "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "sourceUrl": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day",
+              "source": "wx",
+              "sourceTier": null,
+              "startDate": "2026-11-29",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T06:00:46.421Z",
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": "10:00",
+              "endTime": "17:00",
+              "performanceStart": null,
+              "venue": "WX Wakefield Exchange",
+              "venueId": "venue:wx-wakefield-exchange",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [],
+              "sessionTimes": [],
+              "dates": []
+            },
+            {
+              "id": "f43213dcdfab589a461befac",
+              "sourceId": "experience",
+              "canonId": "experience",
+              "entityType": "event",
+              "title": "Nostell Ghost Walks",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/nostell-ghost-walks/",
+              "source": "experience",
+              "sourceTier": null,
+              "startDate": "2026-11-21",
+              "endDate": "2026-11-28",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:43:12.180Z",
+              "start": "17:30",
+              "end": "19:30",
+              "startTime": "17:30",
+              "endTime": "19:30",
+              "performanceStart": null,
+              "venue": "Nostell, National Trust",
+              "venueId": "venue:nostell-national-trust",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-11-28"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-28",
+                  "start": "17:30",
+                  "end": "19:30"
+                }
+              ],
+              "dates": [
+                "2026-11-28"
+              ]
+            },
+            {
+              "id": "8968ff63aa281e53752a7df0",
+              "sourceId": "nostell",
+              "canonId": "nostell",
+              "entityType": "event",
+              "title": "Pooch Passport Challenge",
+              "kind": "scheduled",
+              "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "sourceUrl": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c",
+              "source": "unknown",
+              "sourceTier": null,
+              "startDate": "2026-11-23",
+              "endDate": "2026-11-29",
+              "ongoing": false,
+              "catalogueVerified": true,
+              "familyVerified": false,
+              "checkedAt": "2026-11-23T05:31:23.914Z",
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Nostell",
+              "venueId": "venue:nostell",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-23",
+                "2026-11-24",
+                "2026-11-25",
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-23",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-24",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-25",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-26",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "09:00",
+                  "end": "16:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "09:00",
+                  "end": "16:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "995e9113eb79ed5bd7d87f09",
+            "f950c9ee88562347729425c4",
+            "fbd27710ff8edcf18b53774c",
+            "2a74615ee1b256006b40524a",
+            "bf6d6c94566a367223fae19c",
+            "755208e17a425a0c675289be",
+            "6cb85a2011996c594dd7b184",
+            "d48268dd230cb01d0882ab1c",
+            "f43213dcdfab589a461befac",
+            "8968ff63aa281e53752a7df0"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "Tell me more about Tileyard North Christmas Market",
+        "status": 200,
+        "seconds": 8.03,
+        "reply": "Tileyard North Christmas Market runs on Thursday 26 November 2026 and Friday 27 November 2026 and Saturday 28 November 2026 and Sunday 29 November 2026 and Thursday 3 December 2026 and Friday 4 December 2026 and Saturday 5 December 2026 and Sunday 6 December 2026 and Thursday 10 December 2026 and Friday 11 December 2026 and Saturday 12 December 2026 and Sunday 13 December 2026 and Thursday 17 December 2026 and Friday 18 December 2026 and Saturday 19 December 2026 and Sunday 20 December 2026, at Tileyard North. It\u2019s free to attend.\n\nI could confirm the event details above, but couldn\u2019t extract further programme details.\n\n[Event details](https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/)",
+        "sources": [
+          {
+            "title": "Tileyard North Christmas Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "named-market-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "checkedAt": "2026-11-23T15:51:32.571Z",
+              "sections": {
+                "programme": [],
+                "parking": [],
+                "parkingLinks": []
+              }
+            },
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "canonId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "entityType": "event",
+              "title": "Tileyard North Christmas Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-26",
+              "endDate": "2026-12-20",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": null,
+              "end": null,
+              "startTime": "16:00",
+              "endTime": "19:00",
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29",
+                "2026-12-03",
+                "2026-12-04",
+                "2026-12-05",
+                "2026-12-06",
+                "2026-12-10",
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13",
+                "2026-12-17",
+                "2026-12-18",
+                "2026-12-19",
+                "2026-12-20"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-26",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-03",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-04",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-05",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-06",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-10",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-11",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-17",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-18",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-19",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-20",
+                  "start": "12:00",
+                  "end": "19:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What time does it start?",
+        "status": 200,
+        "seconds": 10.51,
+        "reply": "Tileyard North Christmas Market at Tileyard North:\nThursday 26 November 2026: 16:00\u201322:00\nFriday 27 November 2026: 16:00\u201322:00\nSaturday 28 November 2026: 12:00\u201322:00\nSunday 29 November 2026: 12:00\u201319:00\nThursday 3 December 2026: 16:00\u201322:00\nFriday 4 December 2026: 16:00\u201322:00\nSaturday 5 December 2026: 12:00\u201322:00\nSunday 6 December 2026: 12:00\u201319:00\nThursday 10 December 2026: 16:00\u201322:00\nFriday 11 December 2026: 16:00\u201322:00\nSaturday 12 December 2026: 12:00\u201322:00\nSunday 13 December 2026: 12:00\u201319:00\nThursday 17 December 2026: 16:00\u201322:00\nFriday 18 December 2026: 16:00\u201322:00\nSaturday 19 December 2026: 12:00\u201322:00\nSunday 20 December 2026: 12:00\u201319:00\n\n[Event details](https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/)",
+        "sources": [
+          {
+            "title": "Tileyard North Christmas Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "named-market-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "checkedAt": "2026-11-23T15:51:47.350Z",
+              "sections": {
+                "programme": [],
+                "parking": [],
+                "parkingLinks": []
+              }
+            },
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {}
+            }
+          },
+          "resultCards": [
+            {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "canonId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "entityType": "event",
+              "title": "Tileyard North Christmas Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-26",
+              "endDate": "2026-12-20",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": null,
+              "end": null,
+              "startTime": "16:00",
+              "endTime": "19:00",
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29",
+                "2026-12-03",
+                "2026-12-04",
+                "2026-12-05",
+                "2026-12-06",
+                "2026-12-10",
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13",
+                "2026-12-17",
+                "2026-12-18",
+                "2026-12-19",
+                "2026-12-20"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-26",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-03",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-04",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-05",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-06",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-10",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-11",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-17",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-18",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-19",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-20",
+                  "start": "12:00",
+                  "end": "19:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What about Sunday?",
+        "status": 200,
+        "seconds": 2.5,
+        "reply": "For Sunday 29 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here\u2019s what\u2019s coming up from Monday 23 November 2026.\n\nTileyard North Christmas Market\nTileyard North \u00b7 Sunday 29 November 2026 12:00\u201319:00\n[Event details](https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+        "sources": [
+          {
+            "title": "Tileyard North Christmas Market \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-followup-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": null,
+            "eventWeek": {
+              "kind": "this-week",
+              "start": "2026-11-23",
+              "end": "2026-11-29",
+              "from": "2026-11-23",
+              "today": "2026-11-23",
+              "filters": {
+                "day": "sunday"
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "canonId": "experience:tileyard-north-christmas-market:2026-11-26",
+              "entityType": "event",
+              "title": "Tileyard North Christmas Market",
+              "kind": "run",
+              "url": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "sourceUrl": "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/",
+              "source": "experience",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-11-26",
+              "endDate": "2026-12-20",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "16:00",
+              "end": "19:00",
+              "startTime": "16:00",
+              "endTime": "19:00",
+              "performanceStart": null,
+              "venue": "Tileyard North",
+              "venueId": "venue:tileyard-north",
+              "availability": "unknown",
+              "priceStatus": "free",
+              "priceRaw": "Free",
+              "occurrenceDates": [
+                "2026-11-26",
+                "2026-11-27",
+                "2026-11-28",
+                "2026-11-29",
+                "2026-12-03",
+                "2026-12-04",
+                "2026-12-05",
+                "2026-12-06",
+                "2026-12-10",
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13",
+                "2026-12-17",
+                "2026-12-18",
+                "2026-12-19",
+                "2026-12-20"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-11-26",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-27",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-28",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-11-29",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-03",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-04",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-05",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-06",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-10",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-11",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "12:00",
+                  "end": "19:00"
+                },
+                {
+                  "date": "2026-12-17",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-18",
+                  "start": "16:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-19",
+                  "start": "12:00",
+                  "end": "22:00"
+                },
+                {
+                  "date": "2026-12-20",
+                  "start": "12:00",
+                  "end": "19:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/"
+          ],
+          "lastFilter": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "wood-street-detail",
+    "turns": [
+      {
+        "question": "Tell me about Wakefield Christmas Market on Wood Street in December",
+        "status": 200,
+        "seconds": 5.38,
+        "reply": "Wakefield Christmas Market runs on Friday 11 December 2026 and Saturday 12 December 2026 and Sunday 13 December 2026, at Wood Street, Wakefield city centre.\n\nWood Street will become a festive Christmas market from 11 to 13 December. Browse Christmas gifts, decorations and festive products from a range of traders. You can also enjoy food and drink from local businesses. Please note that Wood Street will be closed to traffic from 10 to 14 December. Dates: 11 to 13 December Times: Friday and Saturday: 10am - 6pm, Sunday: 10am - 5pm Wakefield Council is working with Market Place to host this event. Local traders interested in taking part in the market can apply.\n\n[Event details](https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district)",
+        "sources": [
+          {
+            "title": "Wakefield Christmas Market \u2014 official event page",
+            "url": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district"
+          }
+        ],
+        "followups": [],
+        "verification": "named-market-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "unknown:wakefield-christmas-market:2026-12-11",
+              "checkedAt": "2026-11-23T15:51:38.078Z",
+              "sections": {
+                "programme": [
+                  "Wood Street will become a festive Christmas market from 11 to 13 December. Browse Christmas gifts, decorations and festive products from a range of traders. You can also enjoy food and drink from local businesses. Please note that Wood Street will be closed to traffic from 10 to 14 December. Dates: 11 to 13 December Times: Friday and Saturday: 10am - 6pm, Sunday: 10am - 5pm Wakefield Council is working with Market Place to host this event. Local traders interested in taking part in the market can apply."
+                ],
+                "parking": [
+                  "Please note that Wood Street will be closed to traffic from 10 to 14 December. I have not confirmed a suitable car park."
+                ],
+                "parkingLinks": []
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "unknown:wakefield-christmas-market:2026-12-11",
+              "sourceId": "unknown:wakefield-christmas-market:2026-12-11",
+              "canonId": "unknown:wakefield-christmas-market:2026-12-11",
+              "entityType": "event",
+              "title": "Wakefield Christmas Market",
+              "kind": "run",
+              "url": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district",
+              "sourceUrl": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district",
+              "source": "unknown",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-12-11",
+              "endDate": "2026-12-13",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": null,
+              "end": null,
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wood Street, Wakefield city centre",
+              "venueId": "venue:wood-street-wakefield-city-centre",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-12-11",
+                  "start": "10:00",
+                  "end": "18:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "10:00",
+                  "end": "18:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "10:00",
+                  "end": "17:00"
+                }
+              ],
+              "dates": []
+            }
+          ],
+          "viewIds": [
+            "unknown:wakefield-christmas-market:2026-12-11"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What time does it close on Sunday?",
+        "status": 200,
+        "seconds": 4.33,
+        "reply": "Wakefield Christmas Market starts at 10:00 on Sunday 13 December 2026, at Wood Street, Wakefield city centre. It runs until 17:00.\n\n[Event details](https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district)",
+        "sources": [
+          {
+            "title": "Wakefield Christmas Market \u2014 official event page",
+            "url": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district"
+          }
+        ],
+        "followups": [],
+        "verification": "named-market-v1",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "area": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "unknown:wakefield-christmas-market:2026-12-11",
+              "checkedAt": "2026-11-23T15:51:45.270Z",
+              "sections": {
+                "programme": [
+                  "Wood Street will become a festive Christmas market from 11 to 13 December. Browse Christmas gifts, decorations and festive products from a range of traders. You can also enjoy food and drink from local businesses. Please note that Wood Street will be closed to traffic from 10 to 14 December. Dates: 11 to 13 December Times: Friday and Saturday: 10am - 6pm, Sunday: 10am - 5pm Wakefield Council is working with Market Place to host this event. Local traders interested in taking part in the market can apply."
+                ],
+                "parking": [
+                  "Please note that Wood Street will be closed to traffic from 10 to 14 December. I have not confirmed a suitable car park."
+                ],
+                "parkingLinks": []
+              }
+            }
+          },
+          "resultCards": [
+            {
+              "id": "unknown:wakefield-christmas-market:2026-12-11",
+              "sourceId": "unknown:wakefield-christmas-market:2026-12-11",
+              "canonId": "unknown:wakefield-christmas-market:2026-12-11",
+              "entityType": "event",
+              "title": "Wakefield Christmas Market",
+              "kind": "run",
+              "url": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district",
+              "sourceUrl": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district",
+              "source": "unknown",
+              "sourceTier": "first-party-detail",
+              "startDate": "2026-12-11",
+              "endDate": "2026-12-13",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wood Street, Wakefield city centre",
+              "venueId": "venue:wood-street-wakefield-city-centre",
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "occurrenceDates": [
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-12-11",
+                  "start": "10:00",
+                  "end": "18:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "10:00",
+                  "end": "18:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "10:00",
+                  "end": "17:00"
+                }
+              ],
+              "dates": [
+                "2026-12-13"
+              ]
+            }
+          ],
+          "viewIds": [
+            "unknown:wakefield-christmas-market:2026-12-11"
+          ],
+          "lastFilter": null
+        }
+      },
+      {
+        "question": "What's parking like?",
+        "status": 200,
+        "seconds": 7.18,
+        "reply": "that Wood Street will be closed to traffic from 10 to 14 December. I have not confirmed a suitable car park.\n\nI haven\u2019t checked live spaces or evening closing times.\n\n[Event details](https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district)",
+        "sources": [
+          {
+            "title": "Wakefield Christmas Market \u2014 official event page",
+            "url": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district"
+          }
+        ],
+        "followups": [],
+        "verification": "cards-first-v17",
+        "state": {
+          "version": 2,
+          "lastIntent": "events.filter_existing",
+          "resultCards": [
+            {
+              "id": "unknown:wakefield-christmas-market:2026-12-11",
+              "sourceId": null,
+              "canonId": null,
+              "entityType": "event",
+              "title": "Wakefield Christmas Market",
+              "name": null,
+              "kind": null,
+              "url": "https://www.wakefield.gov.uk/wakefield-events/christmas-in-the-wakefield-district",
+              "sourceUrl": null,
+              "source": "unknown",
+              "sourceTier": "first-party-detail",
+              "date": null,
+              "dates": [
+                "2026-12-13"
+              ],
+              "occurrenceDates": [
+                "2026-12-11",
+                "2026-12-12",
+                "2026-12-13"
+              ],
+              "sessionTimes": [
+                {
+                  "date": "2026-12-11",
+                  "start": "10:00",
+                  "end": "18:00"
+                },
+                {
+                  "date": "2026-12-12",
+                  "start": "10:00",
+                  "end": "18:00"
+                },
+                {
+                  "date": "2026-12-13",
+                  "start": "10:00",
+                  "end": "17:00"
+                }
+              ],
+              "startDate": "2026-12-11",
+              "endDate": "2026-12-13",
+              "ongoing": false,
+              "catalogueVerified": false,
+              "familyVerified": false,
+              "checkedAt": null,
+              "start": "10:00",
+              "end": "17:00",
+              "startTime": null,
+              "endTime": null,
+              "performanceStart": null,
+              "venue": "Wood Street, Wakefield city centre",
+              "venueId": null,
+              "availability": "unknown",
+              "priceStatus": "unknown",
+              "priceRaw": null,
+              "address": null,
+              "serviceVerified": null,
+              "timeMatch": null
+            }
+          ],
+          "viewIds": [
+            "unknown:wakefield-christmas-market:2026-12-11"
+          ],
+          "lastFilter": null,
+          "constraints": {
+            "eventFocus": {
+              "id": "unknown:wakefield-christmas-market:2026-12-11",
+              "checkedAt": "2026-11-23T15:51:52.450Z",
+              "sections": {
+                "programme": [
+                  "Wood Street will become a festive Christmas market from 11 to 13 December. Browse Christmas gifts, decorations and festive products from a range of traders. You can also enjoy food and drink from local businesses. Please note that Wood Street will be closed to traffic from 10 to 14 December. Dates: 11 to 13 December Times: Friday and Saturday: 10am - 6pm, Sunday: 10am - 5pm Wakefield Council is working with Market Place to host this event. Local traders interested in taking part in the market can apply."
+                ],
+                "parking": [
+                  "Please note that Wood Street will be closed to traffic from 10 to 14 December. I have not confirmed a suitable car park."
+                ],
+                "parkingLinks": []
+              }
+            },
+            "outing": {
+              "eventId": "unknown:wakefield-christmas-market:2026-12-11",
+              "party": {
+                "children": false,
+                "ages": []
+              },
+              "requirements": [],
+              "activeTopic": "event"
+            }
+          },
+          "area": null
+        }
+      }
+    ]
+  }
+]

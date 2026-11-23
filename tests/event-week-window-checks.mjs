@@ -14,6 +14,12 @@ const card=(title,date,endDate=date)=>({title,startDate:date,endDate,venue:'WX',
 const selected=selectWeekCards([card('Beer Festival','2026-10-23','2026-10-25'),card('Concert','2026-10-27'),card('MOOsicals','2026-10-30'),card('Expired','2026-10-18'),card('Invalid','2026-02-30'),{...card('No source','2026-10-24'),sourceUrl:null}],window);
 assert.deepEqual(selected.map(c=>c.title),['Beer Festival']);
 const answer=formatWeekCards(selected,window);assert.match(answer,/Monday 19 October 2026 to Sunday 25 October 2026/);assert.match(answer,/\[Event details\]\(https/);assert.doesNotMatch(answer,/Concert|MOOsicals|\(\s*\)|from —/);
+const repeated=Array.from({length:7},(_,i)=>({...card('Daily trail',`2026-10-${19+i}`),startTime:'09:00',endTime:'16:00'}));
+const alternatives=Array.from({length:6},(_,i)=>card('Different event '+i,'2026-10-24'));
+const diverse=selectWeekCards([...repeated,...alternatives],window,fri);
+assert.equal(diverse.filter(c=>c.title==='Daily trail').length,1,'One daily event must not occupy the weekly shortlist repeatedly');
+assert.equal(diverse.filter(c=>c.title.startsWith('Different event')).length,6);
+assert.equal(diverse.find(c=>c.title==='Daily trail').occurrenceDates.length,7,'Keep each explicitly published session for weekday follow-ups');
 assert.match(formatWeekCards([],window),/does not mean there are no events/);
 assert.equal(cleanMissingEventFields('Concert 13:00–13:45 (). Disco (2–4pm, ). Show, from — a showcase.'),'Concert 13:00–13:45. Disco (2–4pm). Show — a showcase.');
 // Replay the actual request handler with dated first-party fixtures. No model calls.

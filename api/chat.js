@@ -2987,6 +2987,7 @@ async function verifiedOctoberWeekendSupplementV16(weekend) {
 }
 
 function eventTimeLabelV16(card) {
+  if(cleanSessionTimes(card?.sessionTimes).length)return datedSessionTimeLabel(card);
   if (card?.start && card?.end && card.end < card.start) return 'session times not verified';
   if (card?.start && card?.end) return `${card.start}–${card.end}`;
   return card?.start || card?.end || null;
@@ -3234,11 +3235,19 @@ function eventPriceLabelV17(card) {
 }
 
 function eventTimeLabelV17(card) {
+  if(cleanSessionTimes(card?.sessionTimes).length)return datedSessionTimeLabel(card)||'time not published';
   const times=timesForCard(card);card={...card,...times};
   if (card?.start && card?.end && card.end < card.start) return 'session times not verified';
   if (card?.start && card?.end) return `${card.start}–${card.end}`;
   if (card?.start) return `from ${card.start}`;
   return 'time not published';
+}
+
+function datedSessionTimeLabel(card){
+  const shared=timesForCard(card);
+  if(shared.start)return shared.start+(shared.end?'–'+shared.end:'');
+  const dates=card.dates?.length?card.dates:card.occurrenceDates||[card.startDate];
+  return cleanSessionTimes(card.sessionTimes).filter(s=>dates.includes(s.date)).map(s=>`${dateLabel(s.date)} ${s.start}–${s.end}`).join('; ')||null;
 }
 
 function eventDateLabelV17(card, iso) {
@@ -3365,9 +3374,11 @@ async function renderEventViewV17(allCards, filters, ops = {}, { firstAnswer = f
   const showPrice = Boolean(ops.showPrice) || filters.price === 'paid';
   const lines = view.map(card => {
     const dates=dayIso?[dayIso]:card.dates;card={...card,dates,...timesForCard({...card,dates})};
+    const sessions=cleanSessionTimes(card.sessionTimes).filter(s=>dates?.includes(s.date));
+    const variedTimes=!card.start && sessions.length ? sessions.map(s=>`${dateLabel(s.date)} ${s.start}–${s.end}`).join('; ') : null;
     const meta = [
-      filters.day ? null : eventDateLabelV17(card),
-      ops.showTime ? (card.start ? `starts at ${card.start}` : 'start time not verified') : eventTimeLabelV17(card),
+      filters.day || variedTimes ? null : eventDateLabelV17(card),
+      variedTimes || (ops.showTime ? (card.start ? `starts at ${card.start}` : 'start time not verified') : eventTimeLabelV17(card)),
       ops.showTime && card.performanceStart && card.performanceStart !== card.start ? `performance at ${card.performanceStart}` : null,
       card.venue,
       showPrice ? eventPriceLabelV17(card) : null
@@ -3468,6 +3479,11 @@ async function answerSelectedEventDetail(state, selected, ops, verifiedContext =
   const week=state.constraints?.eventWeek;
   const selectedDay=week?.filters?.day ? weekdayInWindow(week.filters.day,week) : null;
   if(selectedDay && (card.occurrenceDates?.includes(selectedDay) || card.startDate===selectedDay))card={...card,dates:[selectedDay]};
+  else if(['saturday','sunday'].includes(ops.day)){
+    const weekday=ops.day==='saturday'?6:0;
+    const dates=(card.occurrenceDates||[card.startDate]).filter(d=>new Date(d+'T12:00:00Z').getUTCDay()===weekday);
+    if(dates.length)card={...card,dates};
+  }
   card = {...card,...timesForCard(card)};
   const dateText = (card.dates?.length ? card.dates : card.occurrenceDates?.length ? card.occurrenceDates : [card.startDate].filter(Boolean)).map(dateLabel).join(' and ');
 
@@ -5405,6 +5421,25 @@ export default async function handler(req, res) {
   if(requirement){
     attachStateCookie(res,requirement.state);
     return res.status(200).json(requirement);
+  }
+  // These similarly named markets must resolve by exact venue identity, even
+  // when the stored weekly catalogue has not collected the new source yet.
+  const marketQuestion=lastUserText(messages);
+  const focusedMarket=storedEventCards(conversationState).find(c=>c.id===conversationState?.constraints?.eventFocus?.id);
+  const implicitMarket=/^(?:what time|when|how late)\b.*\b(?:it|this market|that market)\b/i.test(marketQuestion)&&!/\b(?:today|tomorrow|next|instead|other)\b/i.test(marketQuestion)?focusedMarket?.title:null;
+  const tileyardMarket=/\btileyard(?: north)?\b/i.test(marketQuestion)&&/\bchristmas\b/i.test(marketQuestion)||implicitMarket==='Tileyard North Christmas Market';
+  const woodMarket=/\bwakefield christmas market\b|\bwood street\b.*\bchristmas\b|\bchristmas\b.*\bwood street\b/i.test(marketQuestion)||implicitMarket==='Wakefield Christmas Market';
+  const hepworthMarket=/\bhepworth wakefield festive market\b/i.test(marketQuestion)||implicitMarket==='The Hepworth Wakefield Festive Market';
+  if((tileyardMarket||woodMarket||hepworthMarket)&&!(/\bwood street\b/i.test(marketQuestion)&&tileyardMarket)){
+    const title=tileyardMarket?'Tileyard North Christmas Market':hepworthMarket?'The Hepworth Wakefield Festive Market':'Wakefield Christmas Market';
+    const context=await fetchEventDetailContextByUrl(tileyardMarket?'https://experiencewakefield.co.uk/event/tileyard-north-christmas-market/':hepworthMarket?'https://experiencewakefield.co.uk/event/the-hepworth-wakefield-festive-market/':COUNCIL_CHRISTMAS_URL,title);
+    const card=canonicaliseEventCardV16(context?.eventDetailCard);
+    if(card){
+      const state=buildEventStateV16([card],conversationState,[card.id]);
+      const answer=await answerSelectedEventDetail(state,[card],{details:true,...eventOpsFromText(marketQuestion)},context);
+      attachStateCookie(res,answer.state);
+      return res.status(200).json({...answer,reply:finaliseUserFacingReply(answer.reply),live:true,verification:'named-market-v1'});
+    }
   }
   const namedPlace=await namedLocalPlace(lastUserText(messages),conversationState,messages);
   if(namedPlace){attachStateCookie(res,namedPlace.state);return res.status(200).json(namedPlace);}

@@ -86,5 +86,6 @@ const woodSunday=await ask('What time does it close on Sunday?',standaloneWood);
 assert.match(woodSunday.reply,/17:00/);assert.doesNotMatch(woodSunday.reply,/18:00|22:00/);
 const standaloneTileyard=await ask('Tell me more about Tileyard North Christmas Market',week);
 assert.equal(standaloneTileyard.verification,'named-market-v1');assert.match(standaloneTileyard.reply,/Tileyard North/);
+assert.match(standaloneTileyard.reply,/traders|street food/i);
 assert.doesNotMatch(standaloneTileyard.reply,/Hepworth Wakefield Festive Market/);
 console.log('Christmas market checks passed: separate venues, 19 exact sessions, Sunday clocks, closed weekdays, travel dates, reviewed-year expiry, collector and multi-turn handler.');

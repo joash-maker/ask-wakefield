@@ -3841,7 +3841,7 @@ async function fetchEventDetailContextByUrl(url, expectedTitle, timeoutMs = 5_50
     const context=await fetchCouncilSeasonalContext();
     const card=context?.eventCards[0];
     if(!card)return null;
-    const closure=card.description.match(/(?:Please note that )?Wood Street will be closed to traffic from 10 to 14 December\./)?.[0];
+    const closure=card.description.match(/(?:Please note that )?Wood Street will be closed to traffic from 10 to 14 December\./)?.[0]?.replace(/^Please note that /,'');
     return {eventDetailCard:card,eventSections:{programme:[card.description],parking:closure?[closure+' I have not confirmed a suitable car park.']:[],parkingLinks:[]},structured:{eventCards:[card]},text:card.description};
   }
   if (isSpecificWxEventUrl(url)) return fetchWxEventDetailContext(url, expectedTitle, timeoutMs);

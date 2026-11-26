@@ -43,7 +43,7 @@ A provider can return different kinds of records, such as events, venues, offici
 
 Run `npm ci --include=dev`, `npm run typecheck`, and `npm test` with Node 24.
 
-The full command retains all 35 legacy test files, adds `tests/unified-pipeline-checks.mjs` and `tests/chat-package-checks.mjs`, and runs the 20-case audit. A successful runner reports **39 scripts passed, 0 failed**. The twenty audit results and the two successful operator-name joins are recorded in `acceptance-results.json`. All external providers in these acceptance tests are mocked. They are not a claim that real venues were checked during this run.
+The full command retains all 35 legacy test files, adds `tests/unified-pipeline-checks.mjs`, `tests/chat-package-checks.mjs` and `tests/chat-state-size-checks.mjs`, and runs the 20-case audit. A successful runner reports **39 scripts passed, 0 failed**. The twenty audit results and the two successful operator-name joins are recorded in `acceptance-results.json`. All external providers in these acceptance tests are mocked. They are not a claim that real venues were checked during this run.
 
 The new gate tests inject an unknown record ID, a filtered-out ID, forged hours and URL on a valid ID, duplicate IDs, malformed selections, stale raw time fields and an empty hours object. Additional cases cover canonical aliases, conflicting postcodes and event times, persisted date clearing, positive evening matching and music exclusions after a selected event.
 
@@ -83,3 +83,10 @@ The deployment-input check also tests `.vercelignore`: the existing `scripts/` r
 
 
 The live package check then caught an oversized signed-state payload with real event records. Transport now encodes an explicit fact whitelist and omits bulky source-page bodies. `tests/chat-state-size-checks.mjs` verifies that ten records with large source text retain all ten IDs, dates, times, categories and evidence in a signed token within the cookie budget. The full response records remain unchanged.
+
+
+## Live verification after the fixes
+
+The replacement preview at `https://ask-wakefield-j7whs90q7-joash-1034s-projects.vercel.app`, code commit `7117e02f62a96efbdac42856672995c48a96d37f`, passed eight real HTTPS chat requests. The original weekly-events question returned HTTP 200 in 7,167 ms. Signed Saturday, music, evening and exclusion follow-ups passed, followed by rainy-day, city-centre parking and nearby coffee/hot-chocolate requests. Missing matches remained explicit rather than becoming invented options.
+
+`live-preview-results.json` records the responses, sources, durations and retained requirements. Temporary preview access was revoked immediately after testing. The runtime error/fatal scan for this deployment through 16:26 UTC found no matching logs. Both hosted CI runs passed on the tested code commit. This evidence records API replay and startup, not physical phone/Safari or full-site sign-off. The follow-up evidence commit changes documentation only.

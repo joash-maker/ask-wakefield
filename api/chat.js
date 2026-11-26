@@ -15,7 +15,7 @@ import { extractEventDetailSections, eventDetailOperation } from '../lib/event-d
 import { isLeisureDiscovery, conditionalAdmission, londonCalendar } from '../lib/event-request-policy.js';
 import { loadCatalogueWeek } from '../lib/events/catalogue.js';
 import {fetchCouncilSeasonalContext,COUNCIL_CHRISTMAS_URL} from '../lib/events/council-seasonal.js';
-import { eventDiscoveryWindow, confirmedDayCards, musicEventRequest, weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
+import { eventDiscoveryWindow, confirmedDayCards, musicEventRequest, musicEventCard, weeklyNextWeekPrompt, eventWeekWindow, selectWeekCards, reconcileWeekCards, formatWeekCards, cleanMissingEventFields, weeklyFollowUp, wakefieldCityScope, eventInWakefieldCity, weekdayInWindow, dateLabel } from '../lib/event-week-window.js';
 import { scopeConversation, isRequestRefinement } from '../lib/conversation-scope.js';
 import { buildTrustedPlacesContext, familyDistrictStarter, familyPlanFollowUp, undatedCityCentreArtsPlan, cityItineraryFollowUp, publishedFoodRecommendation, foodSpecificFollowUp, nightlifeRecommendation, namedDiningFollowUp, namedDiningThaliFollowUp, namedDiningServiceFollowUp, districtThaliDiscovery } from '../lib/askwakefield-places.js';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
@@ -492,6 +492,8 @@ function signStatePayload(payload) {
   return createHmac('sha256', stateSigningKey()).update(payload).digest('base64url').slice(0, 32);
 }
 
+function cleanEventCategories(value){return Array.isArray(value)?value.filter(v=>typeof v==='string'&&/^[a-z][a-z -]{0,30}$/i.test(v)).slice(0,12):[];}
+
 function compactStateCard(card) {
   return {
     id: card?.id || null,
@@ -500,6 +502,7 @@ function compactStateCard(card) {
     url: card?.sourceUrl || card?.url || null,
     source: card?.source || null,
     sourceTier: card?.sourceTier || null,
+    categories: cleanEventCategories(card?.categories),
     dates: Array.isArray(card?.dates) ? card.dates.slice(0, 2) : [],
     occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.slice(0, 30) : [],
     sessionTimes: cleanSessionTimes(card?.sessionTimes),
@@ -596,6 +599,7 @@ function normaliseClientState(raw) {
     sourceUrl: safeUrl(card?.sourceUrl),
     source: typeof card?.source === 'string' ? card.source.slice(0, 40) : null,
     sourceTier: typeof card?.sourceTier === 'string' ? card.sourceTier.slice(0, 60) : null,
+    categories: cleanEventCategories(card?.categories),
     date: typeof card?.date === 'string' ? card.date.slice(0, 80) : null,
     dates: Array.isArray(card?.dates) ? card.dates.filter(v => typeof v === 'string').slice(0, 3).map(v => v.slice(0, 20)) : [],
     occurrenceDates: Array.isArray(card?.occurrenceDates) ? card.occurrenceDates.filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v)).slice(0, 30) : [],
@@ -1304,7 +1308,7 @@ async function fetchWakefieldDistrictPlacesContext(messages, coffeeState = null)
     messages=messages.map((m,i)=>i===messages.length-1?{...m,content:m.content+' coffee'}:m);
   }
   const service = buildDistrictPlacesServiceQuery(messages);
-  const area = detectWakefieldArea(messages) || coffeeState?.constraints?.coffeeDiscovery?.area || null;
+  const area = detectWakefieldArea(messages) || coffeeState?.constraints?.coffeeDiscovery?.area || coffeeState?.constraints?.indoorArea || null;
   const constraint = requestedPlaceTimeConstraint(messages);
   const openNow = constraint?.mode === 'now';
   const specs = buildDistrictPlacesSearchSpecs(messages);
@@ -2810,6 +2814,7 @@ function canonicaliseEventCardV16(card) {
     sourceUrl,
     source,
     sourceTier: card.sourceTier || null,
+    categories: cleanEventCategories(card.categories),
     startDate: card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
     endDate: card.endDate || card.startDate || (typeof card.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(card.date) ? card.date : null),
     ongoing: card.ongoing === true,
@@ -5453,7 +5458,7 @@ export default async function handler(req, res) {
   // A new request never inherits a previous list, itinerary or cookie-only chat.
   const savedState = conversationState;
   const dayRefinement = savedState?.constraints?.eventWeek?.kind === 'day' && eventDiscoveryWindow(lastUserText(messages),savedState.constraints.eventWeek);
-  const cityWeekRefinement = dayRefinement || savedState?.constraints?.eventWeek && weeklyFollowUp(lastUserText(messages))?.area;
+  const cityWeekRefinement = dayRefinement || savedState?.constraints?.eventWeek && (weeklyFollowUp(lastUserText(messages))?.area || weeklyFollowUp(lastUserText(messages))?.musicOnly);
   const clientState = scoped.newRequest && !cityWeekRefinement ? normaliseClientState(null) : (savedState || normaliseClientState(null));
   const route = classifyRequest(messages, clientState);
   const currentText = lastUserText(messages);
@@ -5552,6 +5557,7 @@ export default async function handler(req, res) {
     if (weekOps.price) filters.price = weekOps.price;
     if (weekOps.showPrice) delete filters.price;
     if (weekOps.day) filters.day = weekOps.day;
+    if (weekOps.musicOnly) filters.musicOnly = true;
     let cards = filters.area ? original.filter(eventInWakefieldCity) : original;
     if (weekOps.price || weekOps.showPrice || filters.price) cards = await refreshEventCardsForPriceV16(cards);
     // Recheck dates after detail refresh, without introducing new event IDs.
@@ -5569,12 +5575,13 @@ export default async function handler(req, res) {
     }
     if (filters.price) view = view.filter(card => filters.price === 'free'
       ? card.priceStatus === 'free' : ['paid','variable'].includes(card.priceStatus));
-    const unsupported = weekOps.unsupported || weeklyExtraConstraints(currentText).length > 0;
+    if (filters.musicOnly) view = view.filter(musicEventCard);
+    const unsupported = weekOps.unsupported || weeklyExtraConstraints(currentText).filter(label=>!(filters.musicOnly&&label==='match a type of event')).length > 0;
     const body = unsupported
       ? 'I cannot verify that extra requirement from the saved weekly records. Please check the original event pages. The original date range has not changed.'
       : view.length
-        ? formatWeekCards(view, storedWeek, { showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17 })
-        : filters.family ? weeklyFamilyEmpty(cards) : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
+        ? formatWeekCards(view, storedWeek, { musicOnly:Boolean(filters.musicOnly), showPrice: weekOps.showPrice || filters.price === 'paid', priceLabel: eventPriceLabelV17 })
+        : filters.family ? weeklyFamilyEmpty(cards) : filters.musicOnly ? `I could not verify matching music events${dayIso?' on '+dateLabel(dayIso):''} from the original weekly list. I have kept your date and other requirements.` : 'I could not verify matching individual events from the original weekly list. A published multi-day run does not establish a session on a particular weekday, and a missing price does not mean free.';
     const state = buildEventStateV16(cards, clientState, unsupported ? clientState.viewIds : view.map(card => card.id));
     state.constraints = { ...clientState.constraints, eventFocus:null, eventWeek: { ...storedWeek, filters } };
     if (filters.area) state.area = filters.area;

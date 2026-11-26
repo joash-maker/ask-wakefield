@@ -1,0 +1,43 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> ask-wakefield@1.0.0 test
+> node scripts/run-tests.mjs
+
+PASS tests/activity-source-refresh-checks.mjs
+PASS tests/chat-requirements-checks.mjs
+PASS tests/chat-surface-checks.mjs
+PASS tests/christmas-market-checks.mjs
+PASS tests/city-outing-continuity-checks.mjs
+PASS tests/coffee-discovery-checks.mjs
+PASS tests/conversation-harness.mjs
+PASS tests/conversation-scope-checks.mjs
+PASS tests/copy-links-checks.mjs
+PASS tests/core-request-tests.mjs
+PASS tests/day-event-continuity-checks.mjs
+PASS tests/event-catalogue-handler-checks.mjs
+PASS tests/event-coffee-context-checks.mjs
+PASS tests/event-collector-checks.mjs
+PASS tests/event-detail-followup-checks.mjs
+PASS tests/event-listing-parser-checks.mjs
+PASS tests/event-week-window-checks.mjs
+PASS tests/free-weekend-continuity-checks.mjs
+PASS tests/natural-outing-checks.mjs
+PASS tests/november-followup-regressions.mjs
+PASS tests/ongoing-handler-checks.mjs
+PASS tests/outing-catalogue-production-checks.mjs
+PASS tests/outing-companion-checks.mjs
+PASS tests/outing-handler-v2-checks.mjs
+PASS tests/outing-places-v2-checks.mjs
+PASS tests/outing-planner-v2-checks.mjs
+PASS tests/pwa-focused-checks.mjs
+PASS tests/pwa-integration-checks.mjs
+PASS tests/rainy-parking-continuity-checks.mjs
+PASS tests/scrutiny-content-checks.mjs
+PASS tests/scrutiny-live-regressions.mjs
+PASS tests/scrutiny-submission-checks.mjs
+PASS tests/scrutiny-surface-checks.mjs
+PASS tests/station-outing-checks.mjs
+PASS tests/unified-pipeline-checks.mjs
+PASS tests/weekly-family-checks.mjs
+PASS scripts/audit-chat-contracts.mjs
+37 passed; 0 failed.

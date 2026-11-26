@@ -1,0 +1,300 @@
+{
+  "identityCheck": {
+    "scope": "Controlled same-provider-name variation, not a real menu check",
+    "googleStyleNameVerified": true,
+    "curatedStyleNameVerified": true,
+    "operatorFetches": 2
+  },
+  "scope": "Offline fault injection against the real handler; external requests mocked; injected model claims are not real provider/model observations",
+  "buildHeader": "unified-v1-2026-11-26",
+  "total": 20,
+  "passed": 20,
+  "failed": 0,
+  "results": [
+    {
+      "group": "coffee-paraphrase",
+      "question": "Somewhere for coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Can we get coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Where could we get coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Coffee and a hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Something for coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Hot chocolate and coffee nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Is there anywhere for coffee and hot chocolate near there?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Any good places for coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Coffee and hot chocolate around here?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nWhat time are you thinking of going?",
+      "sources": []
+    },
+    {
+      "group": "music-followup",
+      "question": "Any music events?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Is there any live music?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Any gigs?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "What about live bands?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Anything musical?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Could we see some live music?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Any music on that day?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Is there a concert?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Performer - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "What about music in the evening?",
+      "need": "evening",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": false,
+      "passed": true,
+      "reply": "I could not verify matching music events on Saturday 28 November 2026 in the evening. I’ve kept your original dates and requirements.\n\nWould you like to try another date or type of activity?",
+      "sources": []
+    },
+    {
+      "group": "music-followup",
+      "question": "No music, what else?",
+      "need": "exclude-music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": false,
+      "passed": true,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Art Workshop\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=art)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Saturday Art Workshop - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=art"
+        }
+      ]
+    }
+  ]
+}

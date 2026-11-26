@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-11-26T14:21:05.421214+00:00",
+  "node": "v24.22.3",
+  "typecheck": "passed",
+  "legacyScripts": 35,
+  "additionalGateScripts": 1,
+  "auditCases": 20,
+  "auditPassed": 20,
+  "auditFailed": 0,
+  "baselineCommit": "4c6b02a8c363b81cafd522dcff80534328d5a764",
+  "productionChanged": false,
+  "scope": "Offline fixtures against the real handler and direct adversarial verification boundary. No deployed runtime or mobile/Safari sign-off."
+}

@@ -38,5 +38,5 @@ const next=await ask('Anything for Monday?');
 assert.match(next.reply,/Monday 16 November 2026/);assert.match(next.reply,/Monday Makers/);assert.doesNotMatch(next.reply,/Jazz|Friday Blues|Christmas Festival/);
 assert.equal(next.state.constraints.eventWeek.start,'2026-11-16');
 const music=await ask('Any music events?');
-assert.equal(music.verification,'weekly-cards-v1');assert.match(music.reply,/Monday 16 November 2026/);assert.match(music.reply,/couldn't verify any matching music event listings/i);assert.doesNotMatch(music.reply,/Jazz|Friday Blues|Monday Makers|Christmas Festival/);assert.equal(music.state.constraints.eventWeek.start,'2026-11-16');assert.equal(modelCalls,0);
+assert.equal(music.pipelineVersion,'unified-v1');assert.match(music.reply,/Monday 16 November 2026/);assert.match(music.reply,/could(?: not|n['’]t) verify matching music events/i);assert.doesNotMatch(music.reply,/Jazz|Friday Blues|Monday Makers|Christmas Festival/);assert.equal(music.state.constraints.eventWeek.start,'2026-11-16');assert.equal(modelCalls,0);
 console.log('Day event checks passed: today → Monday → music, exact occurrence evidence, no silent widening, no model generation.');

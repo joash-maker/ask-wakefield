@@ -46,7 +46,7 @@ assert(city.state.resultCards.every(p=>!first.state.resultCards.some(old=>old.id
 const next=await ask('Any more?',city);assert.equal(next.state.area,'Wakefield city centre');
 assert(next.state.resultCards.every(p=>!city.state.constraints.coffeeDiscovery.shownIds.includes(p.id)));
 const now=await ask('Which coffee shops are open now in Wakefield city centre?',city);
-assert.match(now.reply,/listed open now/);assert(now.state.resultCards.every(p=>+p.id.split('-').at(-1)%2===0));
+assert.match(now.reply,/listed open now/);assert(now.state.resultCards.every(p=>+p.providerIds[0].split('-').at(-1)%2===0));
 const hours=await ask('What are their Sunday opening hours?',city);
 assert.match(hours.reply,/Sunday: 09:00–15:00/);assert.doesNotMatch(hours.reply,/Monday:/);assert.deepEqual(hours.state.resultCards.map(p=>p.id),city.state.resultCards.map(p=>p.id),'Their hours must keep the previously displayed branches');
 unknownServices=true;

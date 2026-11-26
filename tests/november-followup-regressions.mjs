@@ -56,7 +56,7 @@ assert.equal(coffee.verification,'coffee-discovery-v1');assert.equal(coffee.stat
 assert.match(coffee.reply,/RECENT Coffee Roasters/);assert.match(coffee.reply,/hot chocolate and coffee/);
 assert.match(coffee.reply,/haven’t checked walking distances from Wakefield One or Merchant Gate/);
 assert.doesNotMatch(coffee.reply,/Unverified Drink Cafe|comfortable|straightforward|open until|Monday|Sunday|Starbucks/);
-assert.equal(coffee.sources.length,2);assert(coffee.sources.some(s=>s.url==='https://recent.coffee/'));
+assert.equal(coffee.sources.length,3);assert(coffee.sources.some(s=>s.url==='https://maps.google.com/?cid=11'));assert(coffee.sources.some(s=>s.url==='https://recent.coffee/'));
 assert(coffee.sources.every(s=>s.title.startsWith('RECENT Coffee Roasters')),'Source chips must describe the places actually named');
 menu=false;
 const noMenu=await ask('Somewhere for coffee and hot chocolate nearby?',parking);

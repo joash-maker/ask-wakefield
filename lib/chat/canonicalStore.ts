@@ -470,10 +470,24 @@ async function events(
         ...r,
         dates: r.dates?.length ? r.dates : r.occurrenceDates,
       });
-      return (
-        clock.start &&
-        +clock.start.split(":")[0] >= s.timeWindow!.startHour &&
-        +clock.start.split(":")[0] < s.timeWindow!.endHour
+      // A drop-in market or fair can be visited after its published start.
+      // Keep fixed-start performances on the existing start-time rule.
+      const window = s.timeWindow!;
+      const minutes = (value: string) => {
+        const [hours, mins] = value.split(":").map(Number);
+        return hours * 60 + mins;
+      };
+      if (!clock.start) return false;
+      const start = minutes(clock.start);
+      const startsInWindow =
+        start >= window.startHour * 60 && start < window.endHour * 60;
+      const dropIn =
+        /\b(?:christmas market|festive market|craft fair|gift fair)\b/i.test(r.title) &&
+        !r.fields.performanceStart;
+      return startsInWindow || Boolean(
+        dropIn && clock.end &&
+        start < window.endHour * 60 &&
+        minutes(clock.end) > window.startHour * 60
       );
     });
   if (s.freeOnly) selected = selected.filter((r) => r.priceStatus === "free");

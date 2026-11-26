@@ -192,5 +192,6 @@
       ]
     }
   ],
-  "buildCommand": "npm run build:chat"
+  "buildCommand": "npm run build:chat",
+  "outputDirectory": "."
 }

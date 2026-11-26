@@ -57,6 +57,7 @@ try {
   );
   const config = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
   assert.equal(config.buildCommand, "npm run build:chat");
+  assert.equal(config.outputDirectory,".");
   assert.equal(
     config.functions["api/chat.js"].includeFiles,
     "lib/chat/runtime.js",

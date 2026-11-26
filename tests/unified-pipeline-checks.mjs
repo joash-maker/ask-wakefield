@@ -228,6 +228,22 @@ const noMusic = await queryAndFilterCanonicalRecords(
 );
 assert.deepEqual(noMusic.candidateIds, [corpus[3].id]);
 
+// Drop-in events overlap the evening even when they open earlier.
+const market = fixture("market", "Christmas Market", "16:00", ["market"]);
+const closedMarket = fixture("closed-market", "Christmas Gift Fair", "12:00", ["market"]);
+closedMarket.end = "16:00";
+closedMarket.fields.end = "16:00";
+closedMarket.fields.endTime = "16:00";
+closedMarket.sessionTimes = [{ date: "2026-11-28", start: "12:00", end: "16:00" }];
+const eveningMarkets = await queryAndFilterCanonicalRecords(
+  { ...evening, includeCategories: [], operation: "filter", resultCards: [...corpus, market, closedMarket] },
+  { question: "evening", operation: "filter" },
+  [],
+);
+assert(eveningMarkets.candidateIds.includes(market.id), "Drop-in market remains open in evening");
+assert(!eveningMarkets.candidateIds.includes(closedMarket.id), "Closed market is excluded");
+assert(!eveningMarkets.candidateIds.includes(corpus[0].id), "Fixed-start performance is not treated as drop-in");
+
 const hausVariants = [
   canonicalise(
     { name: "Haus", sourceUrl: "https://maps.google.com/?cid=77" },

@@ -16,6 +16,7 @@ Built self-contained JavaScript chat runtime.
 PASS tests/activity-source-refresh-checks.mjs
 PASS tests/chat-package-checks.mjs
 PASS tests/chat-requirements-checks.mjs
+PASS tests/chat-state-size-checks.mjs
 PASS tests/chat-surface-checks.mjs
 PASS tests/christmas-market-checks.mjs
 PASS tests/city-outing-continuity-checks.mjs
@@ -51,4 +52,4 @@ PASS tests/station-outing-checks.mjs
 PASS tests/unified-pipeline-checks.mjs
 PASS tests/weekly-family-checks.mjs
 PASS scripts/audit-chat-contracts.mjs
-38 passed; 0 failed.
+39 passed; 0 failed.

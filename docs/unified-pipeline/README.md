@@ -43,7 +43,7 @@ A provider can return different kinds of records, such as events, venues, offici
 
 Run `npm ci --include=dev`, `npm run typecheck`, and `npm test` with Node 24.
 
-The full command retains all 35 legacy test files, adds `tests/unified-pipeline-checks.mjs` and `tests/chat-package-checks.mjs`, and runs the 20-case audit. A successful runner reports **38 scripts passed, 0 failed**. The twenty audit results and the two successful operator-name joins are recorded in `acceptance-results.json`. All external providers in these acceptance tests are mocked. They are not a claim that real venues were checked during this run.
+The full command retains all 35 legacy test files, adds `tests/unified-pipeline-checks.mjs` and `tests/chat-package-checks.mjs`, and runs the 20-case audit. A successful runner reports **39 scripts passed, 0 failed**. The twenty audit results and the two successful operator-name joins are recorded in `acceptance-results.json`. All external providers in these acceptance tests are mocked. They are not a claim that real venues were checked during this run.
 
 The new gate tests inject an unknown record ID, a filtered-out ID, forged hours and URL on a valid ID, duplicate IDs, malformed selections, stale raw time fields and an empty hours object. Additional cases cover canonical aliases, conflicting postcodes and event times, persisted date clearing, positive evening matching and music exclusions after a selected event.
 
@@ -80,3 +80,6 @@ The HTTP entry now imports generated `lib/chat/runtime.js`. `scripts/build-chat.
 `tests/chat-package-checks.mjs` copies only the HTTP entry and generated runtime into an isolated directory. It starts an HTTP server with type stripping disabled and no TypeScript source present. It verifies the reported weekly-events request, a signed Saturday follow-up, HTTP method rejection and malformed payload handling. This closes the source-import-only gap. The test uses offline provider fixtures. Live verification of the replacement preview is recorded separately in the PR.
 
 The deployment-input check also tests `.vercelignore`: the existing `scripts/` rule excluded the new build script. The exception now exposes only `scripts/build-chat.mjs`, while other scripts, docs and tests remain excluded from the deployment upload.
+
+
+The live package check then caught an oversized signed-state payload with real event records. Transport now encodes an explicit fact whitelist and omits bulky source-page bodies. `tests/chat-state-size-checks.mjs` verifies that ten records with large source text retain all ten IDs, dates, times, categories and evidence in a signed token within the cookie budget. The full response records remain unchanged.

@@ -13,6 +13,30 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 const root = fileURLToPath(new URL("../", import.meta.url));
+// Verify that Vercel receives the build inputs, not just that they exist in
+// the checkout. The previous scripts/ exclusion hid the build entry.
+const inputs = [
+  "api/chat.js",
+  "scripts/build-chat.mjs",
+  "lib/chat/runtime-entry.ts",
+  "lib/chat/pipeline.ts",
+];
+const ignored = spawnSync(
+  "git",
+  [
+    "-c",
+    "core.excludesFile=" + join(root, ".vercelignore"),
+    "check-ignore",
+    "--no-index",
+    "--stdin",
+  ],
+  { cwd: root, encoding: "utf8", input: inputs.join("\n") + "\n" },
+);
+assert.equal(
+  ignored.status,
+  1,
+  "Deployment input excluded: " + ignored.stdout + ignored.stderr,
+);
 const isolated = mkdtempSync(join(tmpdir(), "aw-package-"));
 try {
   mkdirSync(join(isolated, "api"));

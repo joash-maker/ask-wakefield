@@ -73,3 +73,90 @@ assert.equal(
 console.log(
   "Signed-state size checks passed: ten real-sized source records retain their dates, IDs, times, categories and evidence without copying page bodies into the cookie.",
 );
+
+// Real-world record sizes may exceed a cookie even after page text is removed.
+// Preserve the entire result set in the response token, rather than silently
+// keeping the first four rows and destroying later Saturday matches.
+const { canonicalise } = await import("../lib/chat/canonicalStore.ts");
+const { runChatPipeline } = await import("../lib/chat/pipeline.ts");
+const RealDate = Date;
+globalThis.Date = class extends RealDate {
+  constructor(...a) {
+    super(...(a.length ? a : ["2026-11-26T19:00:00Z"]));
+  }
+  static now() {
+    return RealDate.parse("2026-11-26T19:00:00Z");
+  }
+};
+const specs = [
+  ["Grow and Create", "2026-11-26", "10:00"],
+  ["Toddler Disco", "2026-11-27", "10:00"],
+  ["Rodeo Night", "2026-11-27", "19:00"],
+  ["Autumn Craft Fair", "2026-11-28", "10:00"],
+  ["Family Rhubarb Textile Workshop", "2026-11-28", "13:00"],
+  ["Nostell Ghost Walks", "2026-11-28", "17:30"],
+  ["Pooch Passport Challenge", "2026-11-28", "09:00"],
+  ["Tufting Open Day", "2026-11-29", "10:00"],
+  ["Winter Con", "2026-11-29", "10:00"],
+];
+const large = specs.map(([title, date, start], i) =>
+  canonicalise({
+    id: "large-" + i,
+    title,
+    venue: i === 5 ? "Nostell" : "WX Wakefield Exchange",
+    startDate: date,
+    endDate: date,
+    start,
+    end: i === 5 ? "19:30" : "16:00",
+    categories: i === 2 ? ["music"] : ["arts"],
+    sourceUrl: "https://official.example/" + randomBytes(700).toString("hex"),
+    catalogueVerified: true,
+    checkedAt: new Date().toISOString(),
+  }),
+);
+const complete = {
+  ...state,
+  resultCards: large,
+  viewIds: large.map((r) => r.id),
+  weekday: null,
+};
+const fullToken = attachState(
+  {
+    setHeader(k, v) {
+      headers[k] = v;
+    },
+  },
+  complete,
+);
+assert(fullToken.length > 3600);
+assert.match(headers["Set-Cookie"], /Max-Age=0/);
+const decoded = decodeState(fullToken);
+assert.equal(decoded.resultCards.length, 9);
+assert.deepEqual(decoded.viewIds, complete.viewIds);
+globalThis.fetch = async () => new Response("Unavailable", { status: 503 });
+const saturday = await runChatPipeline(
+  [{ role: "user", content: "What about Saturday?" }],
+  decoded,
+);
+assert.equal(saturday.state.viewIds.length, 4);
+assert.match(saturday.reply, /^For Saturday 28 November 2026:/);
+assert.doesNotMatch(saturday.reply, /coming up from Thursday/);
+const bands = await runChatPipeline(
+  [{ role: "user", content: "Live bands?" }],
+  decodeState(attachState({ setHeader() {} }, saturday.state)),
+);
+const evening = await runChatPipeline(
+  [{ role: "user", content: "Anything in the evening?" }],
+  decodeState(attachState({ setHeader() {} }, bands.state)),
+);
+const other = await runChatPipeline(
+  [{ role: "user", content: "No music, what else?" }],
+  decodeState(attachState({ setHeader() {} }, evening.state)),
+);
+assert.equal(other.state.weekday, "saturday");
+assert.equal(other.state.timeWindow.startHour, 17);
+assert.equal(other.state.viewIds.length, 1);
+assert.match(other.reply, /Nostell Ghost Walks/);
+console.log(
+  "Large signed-state replay passed: all Saturday events and the non-music evening option survive the complete user sequence.",
+);

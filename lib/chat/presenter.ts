@@ -122,7 +122,15 @@ export function renderResponse(payload: VerifiedPayload) {
     reply = state.dateRange
       ? formatWeekCards(
           records.map((r) => ({ ...r.fields, ...r })),
-          state.dateRange,
+          state.weekday
+            ? {
+                ...state.dateRange,
+                kind: "day",
+                start: dayInRange(state),
+                end: dayInRange(state),
+                from: dayInRange(state),
+              }
+            : state.dateRange,
           { musicOnly: state.includeCategories.includes("music") },
         )
       : "What day would you like to go?";

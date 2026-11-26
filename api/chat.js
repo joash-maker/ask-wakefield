@@ -1,11 +1,11 @@
-import { runChatPipeline } from "../lib/chat/pipeline.ts";
+import { runChatPipeline } from "../lib/chat/runtime.js";
 import {
   attachState,
   readConversationState,
   requestStatus,
   sanitiseMessages,
   cors,
-} from "../lib/chat/transport.js";
+} from "../lib/chat/runtime.js";
 // Compatibility exports for public parser/service contracts. These functions
 // read data only and cannot dispatch a chat response.
 export {
@@ -15,7 +15,7 @@ export {
   parseLooseExperienceDateRange,
   extractExperienceListingEventCards,
   stripInternalProcessLeakage,
-} from "../lib/chat/providers/sourceReaders.js";
+} from "../lib/chat/runtime.js";
 export default async function handler(req, res) {
   cors(req, res);
   res.setHeader("Cache-Control", "no-store");

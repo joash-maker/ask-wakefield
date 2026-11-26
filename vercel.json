@@ -113,7 +113,8 @@
       "maxDuration": 300
     },
     "api/chat.js": {
-      "maxDuration": 120
+      "maxDuration": 120,
+      "includeFiles": "lib/chat/runtime.js"
     },
     "api/submit-event.js": {
       "maxDuration": 60
@@ -190,5 +191,6 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "npm run build:chat"
 }

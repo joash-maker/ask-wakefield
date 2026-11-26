@@ -43,7 +43,7 @@ A provider can return different kinds of records, such as events, venues, offici
 
 Run `npm ci --include=dev`, `npm run typecheck`, and `npm test` with Node 24.
 
-The full command retains all 35 legacy test files, adds `tests/unified-pipeline-checks.mjs`, and runs the 20-case audit. A successful runner reports **37 scripts passed, 0 failed**. The twenty audit results and the two successful operator-name joins are recorded in `acceptance-results.json`. All external providers in these acceptance tests are mocked. They are not a claim that real venues were checked during this run.
+The full command retains all 35 legacy test files, adds `tests/unified-pipeline-checks.mjs` and `tests/chat-package-checks.mjs`, and runs the 20-case audit. A successful runner reports **38 scripts passed, 0 failed**. The twenty audit results and the two successful operator-name joins are recorded in `acceptance-results.json`. All external providers in these acceptance tests are mocked. They are not a claim that real venues were checked during this run.
 
 The new gate tests inject an unknown record ID, a filtered-out ID, forged hours and URL on a valid ID, duplicate IDs, malformed selections, stale raw time fields and an empty hours object. Additional cases cover canonical aliases, conflicting postcodes and event times, persisted date clearing, positive evening matching and music exclusions after a selected event.
 
@@ -69,3 +69,12 @@ No legacy test file or factual exclusion was removed. A few assertions depended 
 This is backend contract validation. It does not replace a deployed preview replay, current-source availability checks or physical phone/Safari testing. Earlier desktop viewport checks and submission email confirmation remain separate evidence. Physical mobile/Safari keyboard and scrolling, screen-reader testing and other open site scrutiny items have not gained a pass from this refactor.
 
 Do not infer production readiness from the offline pass or a successful Vercel build alone. Keep PR 13 unmerged for Joash's review.
+
+
+## Deployment packaging incident and fix
+
+The first unified preview, commit `06dd356`, built successfully but crashed on invocation. Runtime logs for deployment `dpl_3z4jWv2e6mxJHigMfx4zodLS2q9M` at 15:18–15:19 on 26 November show `ERR_MODULE_NOT_FOUND` for `/var/task/lib/chat/pipeline.ts`. The source-level tests did not establish that the deployed function could load those source paths.
+
+The HTTP entry now imports generated `lib/chat/runtime.js`. `scripts/build-chat.mjs` bundles all local chat modules as Node-compatible JavaScript, leaving runtime packages and Node built-ins external. Vercel explicitly builds and includes that file. The generated file is ignored by Git and recreated from the typed source. `npm test` builds it before running any handler tests, so the legacy HTTP suites also exercise the deployable runtime.
+
+`tests/chat-package-checks.mjs` copies only the HTTP entry and generated runtime into an isolated directory. It starts an HTTP server with type stripping disabled and no TypeScript source present. It verifies the reported weekly-events request, a signed Saturday follow-up, HTTP method rejection and malformed payload handling. This closes the source-import-only gap. The test uses offline provider fixtures. Live verification of the replacement preview is recorded separately in the PR.

@@ -1,0 +1,315 @@
+{
+  "identityCheck": {
+    "scope": "Controlled same-provider-name variation, not a real menu check",
+    "googleStyleNameVerified": false,
+    "curatedStyleNameVerified": true,
+    "operatorFetches": 1
+  },
+  "scope": "Offline fault injection against the real handler; external requests mocked; injected model claims are not real provider/model observations",
+  "buildHeader": "v18-core-2026-10-01.1",
+  "total": 20,
+  "passed": 12,
+  "failed": 8,
+  "results": [
+    {
+      "group": "coffee-paraphrase",
+      "question": "Somewhere for coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI’ve kept this in Wakefield city centre, following your Wakefield One visit. I haven’t checked walking distances from Wakefield One or Merchant Gate.",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Can we get coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "primary",
+      "modelCalls": 1,
+      "unsupportedClaimReleased": true,
+      "passed": false,
+      "reply": "Unlisted Fixture Cafe is open until 23:00 and serves hot chocolate.",
+      "sources": [
+        {
+          "title": "Known Fixture Coffee Shop — Google Places",
+          "url": "https://maps.google.com/?cid=123"
+        }
+      ]
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Where could we get coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "primary",
+      "modelCalls": 1,
+      "unsupportedClaimReleased": true,
+      "passed": false,
+      "reply": "Unlisted Fixture Cafe is open until 23:00 and serves hot chocolate.",
+      "sources": [
+        {
+          "title": "Known Fixture Coffee Shop — Google Places",
+          "url": "https://maps.google.com/?cid=123"
+        }
+      ]
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI’ve kept this in Wakefield city centre, following your Wakefield One visit. I haven’t checked walking distances from Wakefield One or Merchant Gate.",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Coffee and a hot chocolate nearby?",
+      "status": 200,
+      "verification": "primary",
+      "modelCalls": 1,
+      "unsupportedClaimReleased": true,
+      "passed": false,
+      "reply": "Unlisted Fixture Cafe is open until 23:00 and serves hot chocolate.",
+      "sources": [
+        {
+          "title": "Known Fixture Coffee Shop — Google Places",
+          "url": "https://maps.google.com/?cid=123"
+        }
+      ]
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Something for coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "primary",
+      "modelCalls": 1,
+      "unsupportedClaimReleased": true,
+      "passed": false,
+      "reply": "Unlisted Fixture Cafe is open until 23:00 and serves hot chocolate.",
+      "sources": [
+        {
+          "title": "Known Fixture Coffee Shop — Google Places",
+          "url": "https://maps.google.com/?cid=123"
+        }
+      ]
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Hot chocolate and coffee nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI’ve kept this in Wakefield city centre, following your Wakefield One visit. I haven’t checked walking distances from Wakefield One or Merchant Gate.",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Is there anywhere for coffee and hot chocolate near there?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Any good places for coffee and hot chocolate nearby?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI’ve kept this in Wakefield city centre, following your Wakefield One visit. I haven’t checked walking distances from Wakefield One or Merchant Gate.",
+      "sources": []
+    },
+    {
+      "group": "coffee-paraphrase",
+      "question": "Coffee and hot chocolate around here?",
+      "status": 200,
+      "verification": "coffee-discovery-v1",
+      "modelCalls": 0,
+      "unsupportedClaimReleased": false,
+      "passed": true,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in the Wakefield district from this check. There may be others.",
+      "sources": []
+    },
+    {
+      "group": "music-followup",
+      "question": "Any music events?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Is there any live music?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Any gigs?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "What about live bands?",
+      "need": "music",
+      "status": 200,
+      "verification": null,
+      "modelCalls": 1,
+      "preservedSaturday": false,
+      "visibleAfternoonMusic": false,
+      "passed": false,
+      "reply": "I could not verify enough current event listings from trusted Wakefield sources just now, so I do not want to invent something that may not be running. Please check Experience Wakefield's What's On page or the relevant venue's current listing.",
+      "sources": []
+    },
+    {
+      "group": "music-followup",
+      "question": "Anything musical?",
+      "need": "music",
+      "status": 200,
+      "verification": "primary",
+      "modelCalls": 1,
+      "preservedSaturday": false,
+      "visibleAfternoonMusic": false,
+      "passed": false,
+      "reply": "Unlisted Fixture Cafe is open until 23:00 and serves hot chocolate.",
+      "sources": []
+    },
+    {
+      "group": "music-followup",
+      "question": "Could we see some live music?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Any music on that day?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "Is there a concert?",
+      "need": "music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": true,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "What about music in the evening?",
+      "need": "evening",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": false,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    },
+    {
+      "group": "music-followup",
+      "question": "No music, what else?",
+      "need": "exclude-music",
+      "status": 200,
+      "verification": "weekly-followup-v1",
+      "modelCalls": 0,
+      "preservedSaturday": true,
+      "visibleAfternoonMusic": true,
+      "passed": false,
+      "reply": "For Saturday 28 November 2026 within the original list:\n\nThis week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nSaturday Performer\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=sat)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+      "sources": [
+        {
+          "title": "Saturday Performer — official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=sat"
+        }
+      ]
+    }
+  ]
+}

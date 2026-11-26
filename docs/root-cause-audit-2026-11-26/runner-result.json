@@ -1,0 +1,152 @@
+{
+  "command": "npm test",
+  "exitCode": 1,
+  "regressionScriptsPassed": 35,
+  "acceptanceAuditPassed": false,
+  "scripts": [
+    {
+      "script": "tests/activity-source-refresh-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/chat-requirements-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/chat-surface-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/christmas-market-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/city-outing-continuity-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/coffee-discovery-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/conversation-harness.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/conversation-scope-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/copy-links-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/core-request-tests.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/day-event-continuity-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/event-catalogue-handler-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/event-coffee-context-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/event-collector-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/event-detail-followup-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/event-listing-parser-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/event-week-window-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/free-weekend-continuity-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/natural-outing-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/november-followup-regressions.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/ongoing-handler-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/outing-catalogue-production-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/outing-companion-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/outing-handler-v2-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/outing-places-v2-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/outing-planner-v2-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/pwa-focused-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/pwa-integration-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/rainy-parking-continuity-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/scrutiny-content-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/scrutiny-live-regressions.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/scrutiny-submission-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/scrutiny-surface-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/station-outing-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "tests/weekly-family-checks.mjs",
+      "passed": true
+    },
+    {
+      "script": "scripts/audit-chat-contracts.mjs",
+      "passed": false
+    }
+  ]
+}

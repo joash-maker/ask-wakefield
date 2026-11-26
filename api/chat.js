@@ -5301,6 +5301,7 @@ function deterministicallySanitiseComplexPlan(reply, messages) {
 
 export default async function handler(req, res) {
   res.setHeader('X-AskWakefield-Build', 'v18-core-2026-10-01.1');
+  res.setHeader('X-AskWakefield-Commit', /^[a-f0-9]{7,40}$/i.test(process.env.VERCEL_GIT_COMMIT_SHA||process.env.AW_BUILD_SHA||'') ? process.env.VERCEL_GIT_COMMIT_SHA||process.env.AW_BUILD_SHA : 'local');
   applyCors(req, res);
   res.setHeader('Cache-Control', 'no-store');
 

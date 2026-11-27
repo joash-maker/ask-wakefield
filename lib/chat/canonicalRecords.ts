@@ -63,7 +63,9 @@ export function canonicalise(
       : `event:${slug(title)}:${slug(venue)}:${raw.startDate || "ongoing"}:${raw.endDate || raw.startDate || ""}`;
   const start = Object.hasOwn(raw, "start") ? raw.start : raw.startTime || null,
     end = Object.hasOwn(raw, "end") ? raw.end : raw.endTime || null;
-  const categories = Array.isArray(raw.categories) ? raw.categories : [];
+  const categories = Array.isArray(raw.categories) ? [...raw.categories] : [];
+  if (kind === "event" && /\b(?:christmas|festive)\s+markets?\b/i.test(title) && !categories.includes("christmas-market"))
+    categories.push("christmas-market");
   if (musicEventCard(raw) && !categories.includes("music"))
     categories.push("music");
   return {

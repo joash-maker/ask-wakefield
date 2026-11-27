@@ -99,7 +99,9 @@ export async function extractIntentAndDelta(
     )
   )
     needs.push("food");
+  const christmasMarkets = /\b(?:christmas|festive)\s+markets?\b/i.test(q);
   const isEvent =
+    christmasMarkets ||
     /\b(?:what(?:'|’)s on|what is on|events?|happening|festivals?|weekend|exhibition|parade|light up)\b/i.test(
       q,
     ) ||
@@ -155,7 +157,7 @@ export async function extractIntentAndDelta(
         (" " + n + " ").includes(" " + norm(c.title) + " "),
     )
     .sort((a, b) => b.title.length - a.title.length)[0];
-  if (namedEvent && !needs.length) {
+  if (namedEvent && (!needs.length || /\bparking\b/i.test(q))) {
     topic = "events";
     delta.selectedId = namedEvent.id;
     delta.selectedName = namedEvent.title;
@@ -257,6 +259,17 @@ export async function extractIntentAndDelta(
     base.setUTCDate(base.getUTCDate() + ((target - base.getUTCDay() + 7) % 7));
     const d = base.toISOString().slice(0, 10);
     range = { kind: "day", start: d, end: d, from: d, today: cal.today };
+  }
+  if (christmasMarkets && !/tileyard|hepworth|wood street|light up/i.test(q) && !needs.length && !/parking/i.test(q)) {
+    delta.includeCategories = ["christmas-market"];
+    if (!range && !weekday) {
+      const end = new Date(cal.today + "T12:00:00Z");
+      end.setUTCDate(end.getUTCDate() + 30);
+      range = { kind: "seasonal", start: cal.today, from: cal.today, end: end.toISOString().slice(0, 10), today: cal.today };
+      delta.timeWindow = null;
+      delta.resetFilters = true;
+      delta.operation = "discover";
+    }
   }
   if (range) {
     delta.dateRange = range;

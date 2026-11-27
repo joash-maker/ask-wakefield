@@ -226,7 +226,11 @@ export async function extractIntentAndDelta(
       /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
     )?.[1]
     ?.toLowerCase();
+  // Tonight is a London-local calendar date, not a request for clarification.
+  // Apply only to event discovery, not a café's opening-hours enquiry.
   let range = eventWeekWindow(q);
+  if (!range && topic === "events" && /\b(?:tonight|this evening)\b/i.test(q) && !weekday)
+    range = eventWeekWindow("today");
   if (!range && /\bweekend\b/i.test(q))
     range = {
       kind: "weekend",

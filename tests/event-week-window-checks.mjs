@@ -14,6 +14,12 @@ const card=(title,date,endDate=date)=>({title,startDate:date,endDate,venue:'WX',
 const selected=selectWeekCards([card('Beer Festival','2026-10-23','2026-10-25'),card('Concert','2026-10-27'),card('MOOsicals','2026-10-30'),card('Expired','2026-10-18'),card('Invalid','2026-02-30'),{...card('No source','2026-10-24'),sourceUrl:null}],window);
 assert.deepEqual(selected.map(c=>c.title),['Beer Festival']);
 const answer=formatWeekCards(selected,window);assert.match(answer,/Monday 19 October 2026 to Sunday 25 October 2026/);assert.match(answer,/\[Event details\]\(https/);assert.doesNotMatch(answer,/Concert|MOOsicals|\(\s*\)|from —/);
+const repeated=Array.from({length:7},(_,i)=>({...card('Daily trail',`2026-10-${19+i}`),startTime:'09:00',endTime:'16:00'}));
+const alternatives=Array.from({length:6},(_,i)=>card('Different event '+i,'2026-10-24'));
+const diverse=selectWeekCards([...repeated,...alternatives],window,fri);
+assert.equal(diverse.filter(c=>c.title==='Daily trail').length,1,'One daily event must not occupy the weekly shortlist repeatedly');
+assert.equal(diverse.filter(c=>c.title.startsWith('Different event')).length,6);
+assert.equal(diverse.find(c=>c.title==='Daily trail').occurrenceDates.length,7,'Keep each explicitly published session for weekday follow-ups');
 assert.match(formatWeekCards([],window),/does not mean there are no events/);
 assert.equal(cleanMissingEventFields('Concert 13:00–13:45 (). Disco (2–4pm, ). Show, from — a showcase.'),'Concert 13:00–13:45. Disco (2–4pm). Show — a showcase.');
 // Replay the actual request handler with dated first-party fixtures. No model calls.
@@ -66,3 +72,42 @@ const unsupported=await askWithState('Are those wheelchair accessible?',next);
 assert.equal(unsupported.verification,'weekly-followup-v1');assert.match(unsupported.reply,/cannot verify/);
 assert.equal(modelCalls,0);
 console.log('Weekly follow-up replay passed: signed state, next-week Thursday, cumulative free/day filters, reset, times and unsupported constraints.');
+
+const broad=await askWithState("What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.");
+assert.equal(broad.verification,'weekly-cards-v1');
+assert.equal(broad.state.constraints.eventWeek.kind,'this-week');
+
+assert.deepEqual(eventWeekWindow('What about next Saturday?',new Date('2026-11-15T13:00:00Z')),{kind:'day',start:'2026-11-21',end:'2026-11-21',from:'2026-11-21',today:'2026-11-15'});
+
+// Sunday at/after closing: a still-published card must not become an upcoming event.
+const sundayWindow=eventWeekWindow('this week',new NativeDate('2026-11-15T15:05:00Z'));
+const festival={...card('Christmas Festival','2026-11-15'),startTime:'10:00',endTime:'15:00'};
+assert.equal(selectWeekCards([festival],sundayWindow,new NativeDate('2026-11-15T14:59:00Z')).length,1);
+assert.equal(selectWeekCards([festival],sundayWindow,new NativeDate('2026-11-15T15:00:00Z')).length,0);
+assert.equal(selectWeekCards([{...festival,endTime:null}],sundayWindow,new NativeDate('2026-11-15T16:00:00Z')).length,1,'Missing finish is not an inferred closing time');
+assert.equal(selectWeekCards([{...festival,startTime:'22:00',endTime:'02:00'}],sundayWindow,new NativeDate('2026-11-15T23:00:00Z')).length,1,'Ambiguous overnight clocks stay conservative');
+const summerWindow=eventWeekWindow('this week',new NativeDate('2026-06-28T14:00:00Z'));
+assert.equal(selectWeekCards([{...festival,startDate:'2026-06-28',endDate:'2026-06-28'}],summerWindow,new NativeDate('2026-06-28T14:00:00Z')).length,0,'Cutoff uses London BST, not UTC');
+const longRuns=Array.from({length:9},(_,i)=>({...ongoing,title:'Exhibition '+i,venue:'Gallery '+i,sourceUrl:'https://example.org/event/'+i,endDate:'2027-01-0'+(i+1)}));
+const sundayShortlist=selectWeekCards([festival,...longRuns],sundayWindow,new NativeDate('2026-11-15T15:05:00Z'));
+assert.equal(sundayShortlist.length,3,'Do not pad a thin Sunday list with nine long runs');
+const sundayReply=formatWeekCards(sundayShortlist,sundayWindow);
+assert.doesNotMatch(sundayReply,/Christmas Festival/);
+assert.match(sundayReply,/couldn’t verify any remaining one-day events/);
+assert.match(sundayReply,/Opening days and individual sessions are not confirmed/);
+console.log('Sunday checks passed: end-clock cutoff, London BST, missing and overnight clocks, concise runs and explicit visit uncertainty.');
+
+const offer='Would you like me to check what’s on next week?';
+assert(formatWeekCards([festival],sundayWindow).endsWith(offer));
+assert(formatWeekCards([],sundayWindow).endsWith(offer));
+assert(!formatWeekCards([],eventWeekWindow('this week',fri)).includes(offer));
+assert(!formatWeekCards([],eventWeekWindow('next week',new NativeDate('2026-11-15T12:00:00Z'))).includes(offer));
+globalThis.Date=class extends NativeDate {constructor(...args){super(...(args.length?args:['2026-11-15T12:00:00Z']))} static now(){return NativeDate.parse('2026-11-15T12:00:00Z')}};
+const sundayFirst=await askWithState("What's on this week in Wakefield?");
+assert(sundayFirst.reply.includes(offer));
+const yesResult={headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};
+await handler({method:'POST',headers:{origin:'https://www.askwakefield.co.uk','x-forwarded-for':'weekly-sunday-yes'},socket:{},body:{messages:[{role:'user',content:"What's on this week in Wakefield?"},{role:'assistant',content:sundayFirst.reply},{role:'user',content:'Yes please'}],stateToken:sundayFirst.stateToken}},yesResult);
+assert.equal(yesResult.statusCode,200);
+assert.equal(yesResult.body.state.constraints.eventWeek.kind,'next-week');
+assert(!yesResult.body.reply.includes(offer),'Do not repeat the offer in a next-week answer');
+console.log('Sunday offer checks passed: populated and empty lists, weekday/next-week exclusion, signed-state Yes acceptance.');

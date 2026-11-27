@@ -1,0 +1,12 @@
+[
+  {
+    "url": "https://www.askwakefield.co.uk/widget.js",
+    "status": 200,
+    "allowOrigin": "*",
+    "bytes": 13784
+  },
+  {
+    "url": "https://wakefield-demo.mediahubink.com/api/chat",
+    "error": "HTTP Error 503: Service Unavailable"
+  }
+]

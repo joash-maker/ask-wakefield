@@ -1,0 +1,34 @@
+[
+  {
+    "id": "sunday-week",
+    "label": "sunday-week",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 10.5,
+        "reply": "This week runs from Monday 9 November 2026 to Sunday 15 November 2026. Here\u2019s what\u2019s coming up from Sunday 15 November 2026.\n\nMy Eco Baby CIC Christmas Festival\nWX Wakefield Exchange \u00b7 Sunday 15 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival)\n\nLonger-running listings\nThese published runs overlap the period. Opening days and individual sessions are not confirmed, so check before planning a visit.\n\nInspired by Nature\nFrickley Country Park \u00b7 Ongoing until Wednesday 18 November 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/inspired-by-nature-frickley/)\n\nPontefract Ghost Walk\nThe Counting House Pontefract \u00b7 Ongoing until Thursday 17 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/pontefract-ghost-walk/)\n\nPontefract Castle Explorer Tours\nPontefract Castle \u00b7 Ongoing until Sunday 20 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/pontefract-castle-explorer-tours/)\n\nThis is a shortlist from the published listings I could check, so there may be others.",
+        "sources": [
+          {
+            "title": "My Eco Baby CIC Christmas Festival \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival"
+          },
+          {
+            "title": "Inspired by Nature \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/inspired-by-nature-frickley/"
+          },
+          {
+            "title": "Pontefract Ghost Walk \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/pontefract-ghost-walk/"
+          },
+          {
+            "title": "Pontefract Castle Explorer Tours \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/pontefract-castle-explorer-tours/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      }
+    ]
+  }
+]

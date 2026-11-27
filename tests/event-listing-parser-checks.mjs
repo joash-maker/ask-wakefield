@@ -13,7 +13,7 @@ assert.equal(parsed.length,3);assert.equal(parsed[0].startDate,'2026-10-27');ass
 const window=eventWeekWindow('next week',new Date('2026-10-23T12:00:00Z'));
 const runs=Array.from({length:12},(_,i)=>({...copleys,title:'Ongoing '+i,venue:'Venue '+i}));
 const chosen=selectWeekCards([...runs,...parsed],window);
-assert(!chosen.some(card=>card.title==='Cowboy Nerf Shootout'),'Sold-out sessions must not appear as available suggestions');assert(chosen.some(card=>card.title==='A Night at the MOOsicals'));assert.equal(chosen.length,10);
+assert(!chosen.some(card=>card.title==='Cowboy Nerf Shootout'),'Sold-out sessions must not appear as available suggestions');assert(chosen.some(card=>card.title==='A Night at the MOOsicals'));assert.equal(chosen.length,4);assert.equal(chosen.filter(card=>card.ongoing || card.startDate!==card.endDate).length,3,'Long runs must not pad a short dated list');
 const answer=formatWeekCards(chosen,window);assert.doesNotMatch(answer,/Listed as sold out|Cowboy Nerf Shootout/);assert.match(answer,/Published run/);assert.match(answer,/Ongoing until Sunday 1 November 2026/);assert.doesNotMatch(answer,/Friday 23 October 2026 to Sunday 1 November 2026/);
 // Follow-up must keep the unknown start rather than inventing today.
 const stored={...copleys,ongoing:true,startDate:null};

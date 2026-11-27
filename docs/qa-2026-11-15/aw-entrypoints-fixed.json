@@ -1,0 +1,804 @@
+[
+  {
+    "id": "starter-3",
+    "label": "starter-3",
+    "turns": [
+      {
+        "question": "Help me find official parking information for Wakefield city centre.",
+        "status": 200,
+        "seconds": 6.0,
+        "reply": "Use [Wakefield Council\u2019s car-park guide](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/) for the city-centre locations, hours, charges and restrictions. Choose the individual car park and check its signs before leaving your vehicle. Shopping-centre and privately operated car parks have their own terms.\n\nWhere in the city centre are you heading? I haven\u2019t checked live spaces or a particular car park\u2019s current tariff.",
+        "sources": [
+          {
+            "title": "Wakefield Council car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [],
+        "verification": "local-navigation-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-1",
+    "label": "starter-1",
+    "turns": [
+      {
+        "question": "What free things can we do in Wakefield this weekend?",
+        "status": 200,
+        "seconds": 12.6,
+        "reply": "For a free outing this weekend (Saturday, 14 November and Sunday, 15 November), I\u2019d look at this option:\n\n- My Eco Baby CIC Christmas Festival, Sunday, 15 November, 10:00\u201315:00, WX Wakefield Exchange",
+        "sources": [
+          {
+            "title": "My Eco Baby CIC Christmas Festival \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival"
+          }
+        ],
+        "followups": [
+          "What time do they start?",
+          "Which ones are on Sunday?",
+          "Show the full list again"
+        ],
+        "verification": "cards-first-v17"
+      }
+    ]
+  },
+  {
+    "id": "starter-2",
+    "label": "starter-2",
+    "turns": [
+      {
+        "question": "Suggest indoor activities for a rainy day with children in the Wakefield district.",
+        "status": 200,
+        "seconds": 6.7,
+        "reply": "For a rainy day, you could start with a museum or gallery:\n\n[The Hepworth Wakefield](https://hepworthwakefield.org/your-visit/) \u00b7 Art gallery.\n\n[Wakefield Museum](https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/) \u00b7 Museum.\n\n[Castleford Museum](https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/) \u00b7 Museum.\n\nThese are indoor ideas rather than confirmed sessions for your visit. Check the official visit pages for opening days, admission and any children\u2019s activity or booking requirements. How old are the children, and which part of the district suits you?",
+        "sources": [
+          {
+            "title": "The Hepworth Wakefield - official visit page",
+            "url": "https://hepworthwakefield.org/your-visit/"
+          },
+          {
+            "title": "Wakefield Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/"
+          },
+          {
+            "title": "Castleford Museum - official visit page",
+            "url": "https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/"
+          }
+        ],
+        "followups": [
+          "What free things can we do in Wakefield this weekend?",
+          "Help me find an activity in Wakefield"
+        ],
+        "verification": "local-navigation-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-4",
+    "label": "starter-4",
+    "turns": [
+      {
+        "question": "What's on this week in Wakefield?",
+        "status": 200,
+        "seconds": 10.1,
+        "reply": "This week runs from Monday 9 November 2026 to Sunday 15 November 2026. Here\u2019s what\u2019s coming up from Sunday 15 November 2026.\n\nMy Eco Baby CIC Christmas Festival\nWX Wakefield Exchange \u00b7 Sunday 15 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival)\n\nLonger-running listings\n\nInspired by Nature\nFrickley Country Park \u00b7 Ongoing until Wednesday 18 November 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/inspired-by-nature-frickley/)\n\nPontefract Ghost Walk\nThe Counting House Pontefract \u00b7 Ongoing until Thursday 17 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/pontefract-ghost-walk/)\n\nPontefract Castle Explorer Tours\nPontefract Castle \u00b7 Ongoing until Sunday 20 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/pontefract-castle-explorer-tours/)\n\nMakers Wonderland\nThe Art House \u00b7 Ongoing until Wednesday 23 December 2026. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/makers-wonderland/)\n\nVillagers: Sculpting the Community\nNational Coal Mining Museum \u00b7 Ongoing until Sunday 24 January 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/villagers-sculpting-the-community/)\n\nOlivia Bax: Double Take\nYorkshire Sculpture Park \u00b7 Ongoing until Sunday 14 March 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/olivia-bax-double-take/)\n\nHold to this Earth: Works by Contemporary Indigenous North American Artists from Tia Collection\nYorkshire Sculpture Park \u00b7 Ongoing until Sunday 18 April 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/hold-to-this-earth/)\n\nPlastic Fantastic?\nWakefield Museum \u00b7 Ongoing until Sunday 27 June 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/plastic-fantastic/)\n\nDamien Hirst\nYorkshire Sculpture Park \u00b7 Ongoing until Wednesday 1 September 2027. Check the event page for individual session dates and times.\n[Event details](https://experiencewakefield.co.uk/event/damien-hirst/)\n\nThese are the listings I could verify, so there may be others.",
+        "sources": [
+          {
+            "title": "My Eco Baby CIC Christmas Festival \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival"
+          },
+          {
+            "title": "Inspired by Nature \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/inspired-by-nature-frickley/"
+          },
+          {
+            "title": "Pontefract Ghost Walk \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/pontefract-ghost-walk/"
+          },
+          {
+            "title": "Pontefract Castle Explorer Tours \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/pontefract-castle-explorer-tours/"
+          },
+          {
+            "title": "Makers Wonderland \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/makers-wonderland/"
+          },
+          {
+            "title": "Villagers: Sculpting the Community \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/villagers-sculpting-the-community/"
+          },
+          {
+            "title": "Olivia Bax: Double Take \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/olivia-bax-double-take/"
+          },
+          {
+            "title": "Hold to this Earth: Works by Contemporary Indigenous North American Artists from Tia Collection \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/hold-to-this-earth/"
+          },
+          {
+            "title": "Plastic Fantastic? \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/plastic-fantastic/"
+          },
+          {
+            "title": "Damien Hirst \u2014 official event page",
+            "url": "https://experiencewakefield.co.uk/event/damien-hirst/"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-6",
+    "label": "starter-6",
+    "turns": [
+      {
+        "question": "Where can I get good food or coffee in Wakefield?",
+        "status": 200,
+        "seconds": 6.7,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[Bakes By VANILLA BEAN](https://maps.google.com/?cid=11404958215076635949) (28 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[Wired Whippet Coffee](https://maps.google.com/?cid=13134901753707743454) (53a The Grn, Ossett WF5 0AL) lists coffee.\n\n[The Workhouse](https://maps.google.com/?cid=7205274976850552703) (37 Queen St, Horbury, Wakefield WF4 6LP) lists coffee.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Starbucks Coffee](https://maps.google.com/?cid=17278803304797261811) (Colorado Way, Castleford WF10 4SB) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "Bakes By VANILLA BEAN - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11404958215076635949"
+          },
+          {
+            "title": "Wired Whippet Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=13134901753707743454"
+          },
+          {
+            "title": "The Workhouse - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=7205274976850552703"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Starbucks Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17278803304797261811"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-7",
+    "label": "starter-7",
+    "turns": [
+      {
+        "question": "What sports, gyms, running clubs, swimming and fitness activities are available in Wakefield?",
+        "status": 200,
+        "seconds": 7.9,
+        "reply": "Here are some starting points from our activities directory:\n\n[Aspire swimming lessons](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons) \u00b7 Swimming\n\n[Aspire Pay & Play](https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities) \u00b7 Gym \u00b7 swim \u00b7 classes\n\n[Wakefield Harriers Road & XC](https://wakefieldharriers.co.uk/road-xc/) \u00b7 Running\n\n[Wakefield Sports Club Padel](https://wakefieldsportsclub.com/padel/) \u00b7 Padel\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Aspire swimming lessons - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons"
+          },
+          {
+            "title": "Aspire Pay & Play - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities"
+          },
+          {
+            "title": "Wakefield Harriers Road & XC - programme source",
+            "url": "https://wakefieldharriers.co.uk/road-xc/"
+          },
+          {
+            "title": "Wakefield Sports Club Padel - programme source",
+            "url": "https://wakefieldsportsclub.com/padel/"
+          }
+        ],
+        "followups": [
+          "Find a running club in Wakefield",
+          "Help me find the right swimming lesson in Wakefield",
+          "Where can I play padel near Wakefield?"
+        ],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-5",
+    "label": "starter-5",
+    "turns": [
+      {
+        "question": "What free or low-cost things can families do in Wakefield this week?",
+        "status": 200,
+        "seconds": 19.8,
+        "reply": "This week runs from Monday 9 November 2026 to Sunday 15 November 2026. Here\u2019s what\u2019s coming up from Sunday 15 November 2026.\n\nMy Eco Baby CIC Christmas Festival\nWX Wakefield Exchange \u00b7 Sunday 15 November 2026 \u00b7 10:00\u201315:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival)\n\nThese are the listings I could verify, so there may be others.\n\nThese entries have published family or children\u2019s suitability. Check the event pages for age limits, accompanying-adult rules and booking.",
+        "sources": [
+          {
+            "title": "My Eco Baby CIC Christmas Festival \u2014 official event page",
+            "url": "https://wxwakefield.co.uk/Whats-On/Details?event=eco-baby-christmas-festival"
+          }
+        ],
+        "followups": [],
+        "verification": "weekly-cards-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-8",
+    "label": "starter-8",
+    "turns": [
+      {
+        "question": "What local clubs, walking groups and community groups can I join in Wakefield?",
+        "status": 200,
+        "seconds": 9.5,
+        "reply": "Here are some starting points from our activities directory:\n\n[Wakefield Health Walks](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable) \u00b7 Walking\n\n[Wakefield & District Ramblers](https://ramblersyorkshire.org/area-groups/wakefield-and-district.html) \u00b7 Walking & hiking\n\n[Wakefield Scouts local groups](https://www.wakefieldscouts.org.uk/local-groups/) \u00b7 Scouts & youth groups\n\n[Dad Matters Wakefield & District](https://dadmattersyorkshire.uk/wakefield/) \u00b7 Dads & parent support\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Health Walks - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable"
+          },
+          {
+            "title": "Wakefield & District Ramblers - programme source",
+            "url": "https://ramblersyorkshire.org/area-groups/wakefield-and-district.html"
+          },
+          {
+            "title": "Wakefield Scouts local groups - programme source",
+            "url": "https://www.wakefieldscouts.org.uk/local-groups/"
+          },
+          {
+            "title": "Dad Matters Wakefield & District - programme source",
+            "url": "https://dadmattersyorkshire.uk/wakefield/"
+          }
+        ],
+        "followups": [
+          "Find a walking group near me in Wakefield",
+          "Find me a proper hiking or longer walking group around Wakefield",
+          "Tell me about Dad Matters and other parent support groups in Wakefield"
+        ],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-9",
+    "label": "starter-9",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking or transport.",
+        "status": 200,
+        "seconds": 10.4,
+        "reply": "What do you need help with: bin collections, parking, a journey, or another council service? For bins, the answer depends on your property. For transport, I\u2019ll need your start, destination and travel time.",
+        "sources": [
+          {
+            "title": "Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/"
+          },
+          {
+            "title": "Bin collection lookup",
+            "url": "https://www.wakefield.gov.uk/bincollections"
+          },
+          {
+            "title": "Wakefield car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [
+          "Help me find my bin collection day",
+          "Help me find official parking information for Wakefield city centre",
+          "Help me plan a journey in Wakefield"
+        ],
+        "verification": "local-navigation-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-11",
+    "label": "starter-11",
+    "turns": [
+      {
+        "question": "Recommend food and coffee in Wakefield. I can tell you the area, budget, occasion or type of food I want.",
+        "status": 200,
+        "seconds": 7.2,
+        "reply": "Here are some checked listings in the Wakefield district:\n\n[Bakes By VANILLA BEAN](https://maps.google.com/?cid=11404958215076635949) (28 Wood St, Wakefield WF1 2ED) lists coffee and food.\n\n[Lush bakery and co cafe](https://maps.google.com/?cid=17932692079788129530) (198 Castleford Rd, Normanton WF6 1PY) lists coffee and food.\n\n[Starbucks Coffee](https://maps.google.com/?cid=17278803304797261811) (Colorado Way, Castleford WF10 4SB) lists coffee and food.\n\n[Blondies Brewhouse & Bakes](https://maps.google.com/?cid=8488366213878531370) (20 Beastfair, Pontefract WF8 1AW) lists coffee and food.\n\n[The Hidden Tearoom](https://maps.google.com/?cid=16071594031958338958) (Brears Farm Nurseries, Stocking Ln, Kellingley Rd, Knottingley WF11 8DL) lists coffee and food.\n\nThese cover the district. I can narrow this to Wakefield city centre or another town.",
+        "sources": [
+          {
+            "title": "Bakes By VANILLA BEAN - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=11404958215076635949"
+          },
+          {
+            "title": "Lush bakery and co cafe - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17932692079788129530"
+          },
+          {
+            "title": "Starbucks Coffee - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=17278803304797261811"
+          },
+          {
+            "title": "Blondies Brewhouse & Bakes - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=8488366213878531370"
+          },
+          {
+            "title": "The Hidden Tearoom - Google Places branch listing",
+            "url": "https://maps.google.com/?cid=16071594031958338958"
+          }
+        ],
+        "followups": [
+          "Any more?",
+          "Which are open now?",
+          "What are their opening hours?"
+        ],
+        "verification": "coffee-discovery-v1"
+      }
+    ]
+  },
+  {
+    "id": "starter-10",
+    "label": "starter-10",
+    "turns": [
+      {
+        "question": "What's on in Wakefield this week? Include events, exhibitions, live music and things happening this weekend.",
+        "status": 200,
+        "seconds": 7.3,
+        "reply": "This week runs from Monday 9 November 2026 to Sunday 15 November 2026. Here\u2019s what\u2019s coming up from Sunday 15 November 2026.\n\nI cannot yet verify a weekly shortlist against all of your extra requirements. Please narrow this to a specific date or event so I can check those requirements without guessing.",
+        "sources": [],
+        "followups": null,
+        "verification": "weekly-constraints-unverified",
+        "generatedFollowups": []
+      }
+    ]
+  },
+  {
+    "id": "starter-12",
+    "label": "starter-12",
+    "turns": [
+      {
+        "question": "Help me with a Wakefield local service such as bins, parking, transport, council tax, roads, libraries or finding an official source.",
+        "status": 200,
+        "seconds": 8.0,
+        "reply": "What do you need help with: bin collections, parking, a journey, or another council service? For bins, the answer depends on your property. For transport, I\u2019ll need your start, destination and travel time.",
+        "sources": [
+          {
+            "title": "Wakefield Council",
+            "url": "https://www.wakefield.gov.uk/"
+          },
+          {
+            "title": "Bin collection lookup",
+            "url": "https://www.wakefield.gov.uk/bincollections"
+          },
+          {
+            "title": "Wakefield car parks",
+            "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/car-parks-in-wakefield/"
+          }
+        ],
+        "followups": [
+          "Help me find my bin collection day",
+          "Help me find official parking information for Wakefield city centre",
+          "Help me plan a journey in Wakefield"
+        ],
+        "verification": "local-navigation-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-1",
+    "label": "activity-1",
+    "turns": [
+      {
+        "question": "Help me find an activity in Wakefield",
+        "status": 200,
+        "seconds": 8.4,
+        "reply": "What kind of activity would you enjoy, and which part of the district suits you? If it\u2019s for a child, tell me their age too. You can start with swimming, running, walking, performing arts or a community group.",
+        "sources": [],
+        "followups": [
+          "Help me find the right swimming lesson in Wakefield",
+          "Find a running club in Wakefield",
+          "Find a walking group near me in Wakefield"
+        ],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-2",
+    "label": "activity-2",
+    "turns": [
+      {
+        "question": "Help me find the right swimming lesson in Wakefield",
+        "status": 200,
+        "seconds": 10.2,
+        "reply": "For swimming, our activities directory points to:\n\n[Aspire swimming lessons](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons)\n\nThe programme page says: \u201cFor all sessions, a parent or responsible adult is required to be in the water at all times.\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Aspire swimming lessons - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/swimming/swimming-lessons"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-3",
+    "label": "activity-3",
+    "turns": [
+      {
+        "question": "Which Aspire gym or swimming facility is best for me in Wakefield?",
+        "status": 200,
+        "seconds": 10.6,
+        "reply": "For gym \u00b7 swim \u00b7 classes, our activities directory points to:\n\n[Aspire Pay & Play](https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities)\n\nThe programme page says: \u201cWith Pay and Play, you can pay for activities (gym, swim and exercise classes) as and when you need them.\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Aspire Pay & Play - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/aspire-memberships-and-prices/pay-and-play-at-aspire-facilities"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-4",
+    "label": "activity-4",
+    "turns": [
+      {
+        "question": "Tell me about Wakefield Harriers Junior Jets and other athletics options for children",
+        "status": 200,
+        "seconds": 7.5,
+        "reply": "For junior athletics, our activities directory points to:\n\n[Wakefield Harriers Junior Jets](https://wakefieldharriers.co.uk/junior-jets/)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Harriers Junior Jets - programme source",
+            "url": "https://wakefieldharriers.co.uk/junior-jets/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-5",
+    "label": "activity-5",
+    "turns": [
+      {
+        "question": "Help me find athletics for a teenager in Wakefield",
+        "status": 200,
+        "seconds": 7.9,
+        "reply": "For youth athletics, our activities directory points to:\n\n[Wakefield Harriers YARDS](https://wakefieldharriers.co.uk/yards/)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Harriers YARDS - programme source",
+            "url": "https://wakefieldharriers.co.uk/yards/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-6",
+    "label": "activity-6",
+    "turns": [
+      {
+        "question": "Find me a running club in Wakefield that suits my ability",
+        "status": 200,
+        "seconds": 8.6,
+        "reply": "For running, our activities directory points to:\n\n[Wakefield Harriers Road & XC](https://wakefieldharriers.co.uk/road-xc/)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Harriers Road & XC - programme source",
+            "url": "https://wakefieldharriers.co.uk/road-xc/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-7",
+    "label": "activity-7",
+    "turns": [
+      {
+        "question": "Find a walking group near me in Wakefield",
+        "status": 200,
+        "seconds": 9.1,
+        "reply": "For walking, our activities directory points to:\n\n[Wakefield Health Walks](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable)\n\nThe programme page says: \u201cNordic walking poles are provided and the walks are suitable for all ages and abilities - all you need is sensible footwear and outdoor clothing.\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Health Walks - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/walking/walking-groups-timetable"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-8",
+    "label": "activity-8",
+    "turns": [
+      {
+        "question": "Find me a proper hiking or longer walking group around Wakefield",
+        "status": 200,
+        "seconds": 6.9,
+        "reply": "For walking & hiking, our activities directory points to:\n\n[Wakefield & District Ramblers](https://ramblersyorkshire.org/area-groups/wakefield-and-district.html)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield & District Ramblers - programme source",
+            "url": "https://ramblersyorkshire.org/area-groups/wakefield-and-district.html"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-9",
+    "label": "activity-9",
+    "turns": [
+      {
+        "question": "Where can I play padel near Wakefield?",
+        "status": 200,
+        "seconds": 5.7,
+        "reply": "For padel, our activities directory points to:\n\n[Wakefield Sports Club Padel](https://wakefieldsportsclub.com/padel/)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Sports Club Padel - programme source",
+            "url": "https://wakefieldsportsclub.com/padel/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-10",
+    "label": "activity-10",
+    "turns": [
+      {
+        "question": "Tell me about Calder Grove Cricket Club and how to get involved",
+        "status": 200,
+        "seconds": 6.0,
+        "reply": "For cricket, our activities directory points to:\n\n[Calder Grove Cricket Club](https://caldergrove.play-cricket.com/home)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Calder Grove Cricket Club - programme source",
+            "url": "https://caldergrove.play-cricket.com/home"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-11",
+    "label": "activity-11",
+    "turns": [
+      {
+        "question": "Find a junior football club in Wakefield for my child",
+        "status": 200,
+        "seconds": 8.9,
+        "reply": "For junior football, our activities directory points to:\n\n[Wakefield AFC Juniors](https://www.wakefieldafcjuniors.co.uk/teams)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield AFC Juniors - programme source",
+            "url": "https://www.wakefieldafcjuniors.co.uk/teams"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-12",
+    "label": "activity-12",
+    "turns": [
+      {
+        "question": "Tell me about Theatre Royal Wakefield Performance Academy for children",
+        "status": 200,
+        "seconds": 10.1,
+        "reply": "For drama & performing arts, our activities directory points to:\n\n[Performance Academy & PA Kids](https://www.theatreroyalwakefield.co.uk/take-part/performance-academy)\n\nThe programme page says: \u201cPerformance Academy Pontefract will have limited taster sessions for our younger groups from September 2026.\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Performance Academy & PA Kids - programme source",
+            "url": "https://www.theatreroyalwakefield.co.uk/take-part/performance-academy"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-14",
+    "label": "activity-14",
+    "turns": [
+      {
+        "question": "Find a Scout, Cub, Beaver or Squirrel group near me in Wakefield",
+        "status": 200,
+        "seconds": 6.6,
+        "reply": "For scouts & youth groups, our activities directory points to:\n\n[Wakefield Scouts local groups](https://www.wakefieldscouts.org.uk/local-groups/)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Scouts local groups - programme source",
+            "url": "https://www.wakefieldscouts.org.uk/local-groups/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-13",
+    "label": "activity-13",
+    "turns": [
+      {
+        "question": "Tell me about Code Club at Wakefield Library",
+        "status": 200,
+        "seconds": 11.3,
+        "reply": "For coding & stem, our activities directory points to:\n\n[Code Club, Wakefield Library](https://www.wakefield.gov.uk/libraries-and-local-history/library-information/library-events/)\n\nThe programme page says: \u201cWe have a whole host of events running at our libraries across the Wakefield district. Find the latest events happening at your local library.\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Code Club \u2014 Wakefield Library - programme source",
+            "url": "https://www.wakefield.gov.uk/libraries-and-local-history/library-information/library-events/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-15",
+    "label": "activity-15",
+    "turns": [
+      {
+        "question": "Tell me about dance classes for children at ElliTe Studios Wakefield",
+        "status": 200,
+        "seconds": 9.4,
+        "reply": "For dance, our activities directory points to:\n\n[ElliTe Studios Junior Dance Academy](https://www.ellitestudios.co.uk/junior-dance-academy)\n\nThe programme page says: \u201cElliTe Studios Junior Dance Academy aims to offer the highest standard of dance training\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "ElliTe Studios Junior Dance Academy - programme source",
+            "url": "https://www.ellitestudios.co.uk/junior-dance-academy"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-16",
+    "label": "activity-16",
+    "turns": [
+      {
+        "question": "Tell me about The Verge House of Performance in Wakefield and which dance or performance track might suit my child",
+        "status": 200,
+        "seconds": 8.4,
+        "reply": "For dance & performance, our activities directory points to:\n\n[The Verge | House of Performance](https://www.thevergehouse.com/)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "The Verge | House of Performance - programme source",
+            "url": "https://www.thevergehouse.com/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-17",
+    "label": "activity-17",
+    "turns": [
+      {
+        "question": "Find martial arts or Taekwondo for a child in Wakefield",
+        "status": 200,
+        "seconds": 8.6,
+        "reply": "For martial arts, our activities directory points to:\n\n[Taekwondo at Featherstone Sports Complex](https://www.wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities/taekwondo)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Taekwondo at Featherstone Sports Complex - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/leisure-centres-and-facilities/taekwondo"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-18",
+    "label": "activity-18",
+    "turns": [
+      {
+        "question": "Where can an 11 to 15-year-old use a gym in Wakefield",
+        "status": 200,
+        "seconds": 9.1,
+        "reply": "For junior fitness, our activities directory points to:\n\n[Aspire Junior Gym](https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/junior-gym/)\n\nThe programme page says: \u201cOur Junior Gym programme allows 11 to 15-year-olds access to our Aspire gym floors. Allowing the use of both strength, functional, and cardio equipment.\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Aspire Junior Gym - programme source",
+            "url": "https://www.wakefield.gov.uk/sport-and-leisure/sport-activities-and-classes/junior-gym/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-19",
+    "label": "activity-19",
+    "turns": [
+      {
+        "question": "Find English or maths tutoring for a child in Wakefield",
+        "status": 200,
+        "seconds": 5.4,
+        "reply": "For tutoring, our activities directory points to:\n\n[Kip McGrath Wakefield West](https://www.kipmcgrath.co.uk/wakefield-west)\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Kip McGrath Wakefield West - programme source",
+            "url": "https://www.kipmcgrath.co.uk/wakefield-west"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-20",
+    "label": "activity-20",
+    "turns": [
+      {
+        "question": "Help me find music lessons for a child in Wakefield",
+        "status": 200,
+        "seconds": 6.0,
+        "reply": "For music, our activities directory points to:\n\n[Wakefield Music Services tuition](https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/)\n\nThe programme page says: \u201cWakefield Music Services gives tuition on a vast range of instruments. If there\u2019s an instrument you want to learn then we probably teach it!\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Wakefield Music Services tuition - programme source",
+            "url": "https://www.wakefieldmusicservices.org/site/tuition/instrumental-tuition/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  },
+  {
+    "id": "activity-21",
+    "label": "activity-21",
+    "turns": [
+      {
+        "question": "Tell me about Dad Matters and other parent support groups in Wakefield",
+        "status": 200,
+        "seconds": 7.3,
+        "reply": "For dads & parent support, our activities directory points to:\n\n[Dad Matters Wakefield & District](https://dadmattersyorkshire.uk/wakefield/)\n\nThe programme page says: \u201cWe Believe Both Parents Matter\u2026 Too many children grow up knowing only one parent. HELPLINE: 0300 0300 363 Support Guidance & Advocacy\u201d\n\nCheck the programme page for current age groups, fees, session dates and how to join. I haven\u2019t confirmed a place or a session that meets your requirements.",
+        "sources": [
+          {
+            "title": "Dad Matters Wakefield & District - programme source",
+            "url": "https://dadmattersyorkshire.uk/wakefield/"
+          }
+        ],
+        "followups": [],
+        "verification": "activity-directory-v1"
+      }
+    ]
+  }
+]

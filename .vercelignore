@@ -1,4 +1,5 @@
 docs/
 tests/
-scripts/
+scripts/*
+!scripts/build-chat.mjs
 README-MERGED-DEMO.txt

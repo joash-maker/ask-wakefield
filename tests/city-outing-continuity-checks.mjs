@@ -110,7 +110,7 @@ const friday=await ask('Friday in Wakefield City?',city);
 assert.equal(friday.state.constraints.eventWeek.filters.day,'friday');
 assert.match(friday.reply,/Wakefield city on Friday 13 November 2026/);assert.doesNotMatch(friday.reply,/Museum Art Session/);
 const directCity=await ask("What's on this week in Wakefield City?");
-assert.equal(directCity.state.constraints.eventWeek.filters.area,'Wakefield city');assert.doesNotMatch(directCity.reply,/Castleford Craft/);
+assert.equal(directCity.state.constraints.eventWeek.filters.area,'Wakefield city centre');assert.doesNotMatch(directCity.reply,/Castleford Craft/);
 const nextWeek=await ask("What's on next week in Wakefield City?",city);
 assert.equal(nextWeek.state.constraints.eventWeek.start,'2026-11-16');assert.match(nextWeek.reply,/Next Week City Walk/);assert.doesNotMatch(nextWeek.reply,/Museum Art Session|Castleford Craft/);
 // Replay a correctly signed legacy token whose selected event lost dates

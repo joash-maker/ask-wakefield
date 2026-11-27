@@ -1,0 +1,204 @@
+{
+  "commit": "7117e02f62a96efbdac42856672995c48a96d37f",
+  "host": "ask-wakefield-j7whs90q7-joash-1034s-projects.vercel.app",
+  "checkedAt": "2026-11-26T16:25:00.134Z",
+  "startupStatus": 405,
+  "turns": [
+    {
+      "question": "What's on this week in Wakefield?",
+      "status": 200,
+      "durationMs": 7167,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nIf you fancy an evening out, I’d start with Rodeo Night. Here’s what else is coming up.\n\nGrow and Create: Allotment Session\nNational Coal Mining Museum · Thursday 26 November 2026\n[Event details](https://www.ncm.org.uk/whats-on/grow-and-create/)\n\nToddler Disco\nWX Wakefield Exchange · Friday 27 November 2026 · 10:00–12:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026)\n\nRodeo Night\nWX Wakefield Exchange · Friday 27 November 2026 · 19:00–22:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=rodeo-nights)\n\nPooch Passport Challenge\nNostell · Friday 27 November 2026 09:00–16:00 and Saturday 28 November 2026 09:00–16:00 and Sunday 29 November 2026 09:00–16:00\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5c82e4ee-e744-4a72-8c60-43104c223f9c)\n\nAutumn Craft Fair - Free Entry!\nWakefield Cathedral · Saturday 28 November 2026 · 10:00–15:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nFamily Rhubarb Textile Workshop\nWX Wakefield Exchange · Saturday 28 November 2026 · 13:00–15:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov)\n\nNostell Ghost Walks\nNostell · Saturday 28 November 2026 · 17:30–19:30\n[Event details](https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5a6cbac2-2d25-46da-9edc-c0ba47135a65)\n\nTufting Open Day\nWX Wakefield Exchange · Sunday 29 November 2026 · 10:00–17:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day)\n\nWinter Con: Wakefield Freeze Over\nWX Wakefield Exchange · Sunday 29 November 2026 · 10:00–16:00\n[Event details](https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nIs there a particular day or type of event you’re after?",
+      "sources": [
+        {
+          "title": "Grow and Create: Allotment Session - official event page",
+          "url": "https://www.ncm.org.uk/whats-on/grow-and-create/"
+        },
+        {
+          "title": "Rodeo Night - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=rodeo-nights"
+        },
+        {
+          "title": "Toddler Disco - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=toddler-disco-2026"
+        },
+        {
+          "title": "Autumn Craft Fair - Free Entry! - official event page",
+          "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+        },
+        {
+          "title": "Family Rhubarb Textile Workshop - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=family-rhubarb-textile-workshop-Nov"
+        },
+        {
+          "title": "Nostell Ghost Walks - official event page",
+          "url": "https://www.nationaltrust.org.uk/visit/yorkshire/nostell/events/5a6cbac2-2d25-46da-9edc-c0ba47135a65"
+        },
+        {
+          "title": "Tufting Open Day - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=tufting-open-day"
+        },
+        {
+          "title": "Winter Con: Wakefield Freeze Over - official event page",
+          "url": "https://wxwakefield.co.uk/Whats-On/Details?event=winter-con-wakefield-freeze-over"
+        }
+      ],
+      "weekday": null,
+      "dateRange": {
+        "kind": "this-week",
+        "start": "2026-11-23",
+        "end": "2026-11-29",
+        "from": "2026-11-26",
+        "today": "2026-11-26"
+      },
+      "includeCategories": [],
+      "excludeCategories": []
+    },
+    {
+      "question": "What about Saturday?",
+      "status": 200,
+      "durationMs": 3793,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nAutumn Craft Fair - Free Entry!\nWakefield Cathedral · Saturday 28 November 2026 · 10:00–15:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Autumn Craft Fair - Free Entry! - official event page",
+          "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+        }
+      ],
+      "weekday": "saturday",
+      "dateRange": {
+        "kind": "this-week",
+        "start": "2026-11-23",
+        "end": "2026-11-29",
+        "from": "2026-11-26",
+        "today": "2026-11-26"
+      },
+      "includeCategories": [],
+      "excludeCategories": []
+    },
+    {
+      "question": "Live bands?",
+      "status": 200,
+      "durationMs": 227,
+      "reply": "I could not verify matching music events on Saturday 28 November 2026. I’ve kept your original dates and requirements.\n\nWould you like to try another date or type of activity?",
+      "sources": [],
+      "weekday": "saturday",
+      "dateRange": {
+        "kind": "this-week",
+        "start": "2026-11-23",
+        "end": "2026-11-29",
+        "from": "2026-11-26",
+        "today": "2026-11-26"
+      },
+      "includeCategories": [
+        "music"
+      ],
+      "excludeCategories": []
+    },
+    {
+      "question": "Anything in the evening?",
+      "status": 200,
+      "durationMs": 163,
+      "reply": "I could not verify matching music events on Saturday 28 November 2026 in the evening. I’ve kept your original dates and requirements.\n\nWould you like to try another date or type of activity?",
+      "sources": [],
+      "weekday": "saturday",
+      "dateRange": {
+        "kind": "this-week",
+        "start": "2026-11-23",
+        "end": "2026-11-29",
+        "from": "2026-11-26",
+        "today": "2026-11-26"
+      },
+      "includeCategories": [
+        "music"
+      ],
+      "excludeCategories": []
+    },
+    {
+      "question": "No music, what else?",
+      "status": 200,
+      "durationMs": 153,
+      "reply": "This week runs from Monday 23 November 2026 to Sunday 29 November 2026. Here’s what’s coming up from Thursday 26 November 2026.\n\nAutumn Craft Fair - Free Entry!\nWakefield Cathedral · Saturday 28 November 2026 · 10:00–15:00\n[Event details](https://www.wakefieldcathedral.org.uk/whats-happening/events/)\n\nThis is a shortlist from the published listings I could check, so there may be others.\n\nWould you like a closer look at one of these events?",
+      "sources": [
+        {
+          "title": "Autumn Craft Fair - Free Entry! - official event page",
+          "url": "https://www.wakefieldcathedral.org.uk/whats-happening/events/"
+        }
+      ],
+      "weekday": "saturday",
+      "dateRange": {
+        "kind": "this-week",
+        "start": "2026-11-23",
+        "end": "2026-11-29",
+        "from": "2026-11-26",
+        "today": "2026-11-26"
+      },
+      "includeCategories": [],
+      "excludeCategories": [
+        "music"
+      ]
+    },
+    {
+      "question": "What can I do on a rainy day in Wakefield?",
+      "status": 200,
+      "durationMs": 104,
+      "reply": "For a rainy day, you could start with a museum or gallery:\n\n[The Hepworth Wakefield](https://hepworthwakefield.org/your-visit/) · Art gallery.\n\n[Wakefield Museum](https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/) · Museum.\n\n[Castleford Museum](https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/) · Museum.\n\nCheck the official pages for opening days, admission and booking requirements.\n\nWhat day and roughly what time are you visiting?",
+      "sources": [
+        {
+          "title": "The Hepworth Wakefield - official visit page",
+          "url": "https://hepworthwakefield.org/your-visit/"
+        },
+        {
+          "title": "Wakefield Museum - official visit page",
+          "url": "https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/"
+        },
+        {
+          "title": "Castleford Museum - official visit page",
+          "url": "https://museumsandcastles.wakefield.gov.uk/visit/castleford-museum/plan-your-visit-to-castleford-museum/"
+        }
+      ],
+      "weekday": null,
+      "dateRange": null,
+      "includeCategories": [],
+      "excludeCategories": []
+    },
+    {
+      "question": "Anything in the city centre with parking?",
+      "status": 200,
+      "durationMs": 104,
+      "reply": "For a rainy day in Wakefield city centre, start with Wakefield Museum and Wakefield Library, both at Wakefield One on Burton Street:\n\n[Wakefield Library](https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library) · Public library.\n\n[Wakefield Museum](https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/) · Museum.\n\nFor parking, the museum’s visit guide names Merchant Gate as the nearest car park. [Check the Council’s Merchant Gate details](https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/merchant-gate-car-park) for its current terms. I haven’t checked live spaces, so availability is not guaranteed.\n\nCheck the official pages for opening days, admission and booking requirements.\n\nWhat day and roughly what time are you visiting?",
+      "sources": [
+        {
+          "title": "Wakefield Library - official visit page",
+          "url": "https://www.wakefield.gov.uk/libraries-and-local-history/your-local-library/wakefield-library"
+        },
+        {
+          "title": "Wakefield Museum - official visit page",
+          "url": "https://museumsandcastles.wakefield.gov.uk/visit/wakefield-museum/plan-your-visit-to-wakefield-museum/"
+        },
+        {
+          "title": "Merchant Gate car park - Wakefield Council",
+          "url": "https://www.wakefield.gov.uk/roads-and-travel/parking/car-parks-across-the-district/merchant-gate-car-park"
+        }
+      ],
+      "weekday": null,
+      "dateRange": null,
+      "includeCategories": [],
+      "excludeCategories": []
+    },
+    {
+      "question": "Can we get coffee and hot chocolate nearby?",
+      "status": 200,
+      "durationMs": 895,
+      "reply": "I couldn’t verify suitable places serving both coffee and hot chocolate in Wakefield city centre from this check. There may be others.\n\nI haven’t checked walking distances from Wakefield One or Merchant Gate.\n\nWhat time are you thinking of going?",
+      "sources": [],
+      "weekday": null,
+      "dateRange": null,
+      "includeCategories": [],
+      "excludeCategories": []
+    }
+  ],
+  "passed": true,
+  "temporaryAccessRevoked": true,
+  "scope": "Live HTTPS requests against the deployed preview, using real configured providers. This is API replay evidence, not physical mobile/Safari testing."
+}

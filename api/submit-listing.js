@@ -1,3 +1,4 @@
+import {submissionFetch,submissionAllowed,submissionOnce,submissionKey,notificationSummary} from '../lib/submission-guard.js';
 const SHEET_NAME = 'Listings';
 const HEADERS = [
   'Timestamp','Listing Name','Listing Type','Category','Audience','Venue / Address','Area / Postcode','Days & Times','Cost','Description',
@@ -11,6 +12,8 @@ export default async function handler(req,res){
   if(req.method==='OPTIONS') return res.status(200).end();
   if(req.method!=='POST') return res.status(405).json({error:'Method not allowed'});
 
+  res.setHeader('Cache-Control','no-store');
+  if(!submissionAllowed(req)){res.setHeader('Retry-After','60');return res.status(429).json({error:'Please wait a minute before submitting again'});}
   const data=sanitiseSubmission(req.body);
   if(!data) return res.status(400).json({error:'Invalid or missing required fields'});
   if(data.middleName) return res.status(200).json({ok:true}); // honeypot: silently accept bots
@@ -21,6 +24,7 @@ export default async function handler(req,res){
       console.error('Listing submission: missing Google Sheets environment variables');
       return res.status(503).json({error:'Submission service unavailable'});
     }
+    const result=await submissionOnce('listing:'+submissionKey(data),async()=>{
     const serviceAccount=JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
     const sheetId=process.env.EVENTS_SHEET_ID;
     const token=await getAccessToken(serviceAccount);
@@ -28,30 +32,45 @@ export default async function handler(req,res){
 
     await ensureListingsSheet(sheetId,token);
 
+    const key=submissionKey(data),root=`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/`;
+    const metadata=await submissionFetch(root+encodeURIComponent('Listings!X1:Z1')+'?valueInputOption=RAW',{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[['Submission ID','Submitter notification','Operator notification']]})});
+    if(!metadata.ok)throw new Error('Could not record receipt metadata');
+    const prior=await submissionFetch(root+encodeURIComponent('Listings!A2:Z'),{headers:{Authorization:`Bearer ${token}`}});
+    if(!prior.ok)throw new Error('Could not check receipts');
+    const existing=((await prior.json()).values||[]).find(row=>row[23]===key && Date.now()-Date.parse(row[0])>=0 && Date.now()-Date.parse(row[0])<900000);
+    if(existing)return {ok:true,duplicate:true,notification:{submitter:existing[24]||'pending',operator:existing[25]||'pending'}};
     const row=[
       data.timestamp,data.listingName,data.listingType,data.category,data.audience,data.venue,data.areaPostcode,data.daysTimes,data.cost,data.description,
       data.website||'Not provided',data.instagram||'Not provided',data.facebook||'Not provided',data.tiktok||'Not provided',data.publicEmail||'Not provided',data.publicPhone||'Not provided',
-      data.submitterName,data.submitterEmail,data.relationship,data.featuredInterest,data.consent,'New',data.source
+      data.submitterName,data.submitterEmail,data.relationship,data.featuredInterest,data.consent,'New',data.source,key,'pending','pending'
     ].map(sheetSafe);
 
-    const range=encodeURIComponent(`${SHEET_NAME}!A:W`);
-    const response=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED`,{
+    const range=encodeURIComponent(`${SHEET_NAME}!A:Z`);
+    const response=await submissionFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{
       method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[row]})
     });
-    if(!response.ok){console.error('Listings sheet append error:',await response.text());return res.status(500).json({error:'Failed to save listing'});}
+    if(!response.ok)throw new Error('Could not save listing');
+    const receipt=await response.json();
 
-    await sendEmails(data);
-    return res.status(200).json({ok:true});
+    const notification=await sendEmails(data);
+    const savedRow=receipt.updates?.updatedRange?.match(/!(?:\$)?A(?:\$)?(\d+)/)?.[1];
+    if(savedRow){try{const saved=await submissionFetch(root+encodeURIComponent(`Listings!Y${savedRow}:Z${savedRow}`)+'?valueInputOption=RAW',{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[notification.submitter,notification.operator]]})});if(!saved.ok)console.error('Listing notification status not recorded');}catch{console.error('Listing notification status not recorded');}}
+    return {ok:true,notification};
+    });
+    return res.status(200).json(result);
   }catch(error){console.error('Submit listing error:',error);return res.status(500).json({error:'Server error'});}
 }
 
 function cleanText(value,max=1000){return String(value??'').replace(/[\u0000-\u001F\u007F]/g,' ').trim().slice(0,max);}
 function validEmail(value){return !value || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)&&value.length<=254);}
 function safeHttpUrl(value){const raw=cleanText(value,500);if(!raw)return'';try{const u=new URL(raw);return(u.protocol==='https:'||u.protocol==='http:')?u.toString():'';}catch{return'';}}
-function sanitiseSubmission(input){
-  if(!input||typeof input!=='object')return null;
+export function sanitiseSubmission(input){
+  if(!input||typeof input!=='object'||Array.isArray(input))return null;
+  if(['listingName','listingType','category','description','venue','areaPostcode','submitterName','submitterEmail','relationship'].some(k=>typeof input[k]!=='string'))return null;
+  const limits={listingName:160,listingType:80,category:100,audience:220,description:1800,venue:220,areaPostcode:100,daysTimes:220,cost:120,website:500,instagram:500,facebook:500,tiktok:500,publicEmail:254,publicPhone:60,submitterName:120,submitterEmail:254,relationship:100};
+  if(Object.entries(limits).some(([key,max])=>input[key]!=null&&(typeof input[key]!=='string'||input[key].length>max)))return null;
   const out={
-    timestamp:cleanText(input.timestamp,60)||new Date().toISOString(),listingName:cleanText(input.listingName,160),listingType:cleanText(input.listingType,80),category:cleanText(input.category,100),audience:cleanText(input.audience,220)||'Not specified',description:cleanText(input.description,1800),venue:cleanText(input.venue,220),areaPostcode:cleanText(input.areaPostcode,100),daysTimes:cleanText(input.daysTimes,220)||'Varies / not specified',cost:cleanText(input.cost,120)||'Not specified',website:safeHttpUrl(input.website),instagram:safeHttpUrl(input.instagram),facebook:safeHttpUrl(input.facebook),tiktok:safeHttpUrl(input.tiktok),publicEmail:cleanText(input.publicEmail,254).toLowerCase(),publicPhone:cleanText(input.publicPhone,60),submitterName:cleanText(input.submitterName,120),submitterEmail:cleanText(input.submitterEmail,254).toLowerCase(),relationship:cleanText(input.relationship,100),featuredInterest:cleanText(input.featuredInterest,10)==='Yes'?'Yes':'No',consent:cleanText(input.consent,10)==='Yes'?'Yes':'No',middleName:cleanText(input.middleName,120),source:cleanText(input.source,120)||'askwakefield.co.uk/submit-listing'
+    timestamp:new Date().toISOString(),listingName:cleanText(input.listingName,160),listingType:cleanText(input.listingType,80),category:cleanText(input.category,100),audience:cleanText(input.audience,220)||'Not specified',description:cleanText(input.description,1800),venue:cleanText(input.venue,220),areaPostcode:cleanText(input.areaPostcode,100),daysTimes:cleanText(input.daysTimes,220)||'Varies / not specified',cost:cleanText(input.cost,120)||'Not specified',website:safeHttpUrl(input.website),instagram:safeHttpUrl(input.instagram),facebook:safeHttpUrl(input.facebook),tiktok:safeHttpUrl(input.tiktok),publicEmail:cleanText(input.publicEmail,254).toLowerCase(),publicPhone:cleanText(input.publicPhone,60),submitterName:cleanText(input.submitterName,120),submitterEmail:cleanText(input.submitterEmail,254).toLowerCase(),relationship:cleanText(input.relationship,100),featuredInterest:cleanText(input.featuredInterest,10)==='Yes'?'Yes':'No',consent:cleanText(input.consent,10)==='Yes'?'Yes':'No',middleName:cleanText(input.middleName,120),source:cleanText(input.source,120)||'askwakefield.co.uk/submit-listing'
   };
   if(!out.listingName||!out.listingType||!out.category||!out.description||!out.venue||!out.areaPostcode||!out.submitterName||!out.submitterEmail||!validEmail(out.submitterEmail)||!validEmail(out.publicEmail)||!out.relationship||out.consent!=='Yes')return null;
   return out;
@@ -60,25 +79,25 @@ function escapeHtml(value){return String(value??'').replace(/&/g,'&amp;').replac
 function sheetSafe(value){const text=String(value??'');return /^[=+\-@]/.test(text)?`'${text}`:text;}
 
 async function ensureListingsSheet(sheetId,token){
-  const meta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`,{headers:{Authorization:`Bearer ${token}`}});
+  const meta=await submissionFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`,{headers:{Authorization:`Bearer ${token}`}});
   if(!meta.ok) throw new Error(`Sheet metadata failed: ${await meta.text()}`);
   const metaData=await meta.json();
   const exists=(metaData.sheets||[]).some(s=>s.properties&&s.properties.title===SHEET_NAME);
   if(!exists){
-    const create=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({requests:[{addSheet:{properties:{title:SHEET_NAME}}}]})});
+    const create=await submissionFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({requests:[{addSheet:{properties:{title:SHEET_NAME}}}]})});
     if(!create.ok){const body=await create.text();if(!body.includes('already exists')) throw new Error(`Could not create Listings sheet: ${body}`);}
   }
   const headerRange=encodeURIComponent(`${SHEET_NAME}!A1:W1`);
-  const current=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${headerRange}`,{headers:{Authorization:`Bearer ${token}`}});
+  const current=await submissionFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${headerRange}`,{headers:{Authorization:`Bearer ${token}`}});
   const currentData=current.ok?await current.json():{};
   if(!(currentData.values&&currentData.values[0]&&currentData.values[0].length)){
-    const write=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${headerRange}?valueInputOption=RAW`,{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[HEADERS]})});
+    const write=await submissionFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${headerRange}?valueInputOption=RAW`,{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({values:[HEADERS]})});
     if(!write.ok) throw new Error(`Could not write Listings headers: ${await write.text()}`);
   }
 }
 
-async function sendEmails(data){
-  const key=process.env.RESEND_API_KEY;if(!key)return;
+export async function sendEmails(data){
+  const key=process.env.RESEND_API_KEY;if(!key)return notificationSummary([]);
   const e=Object.fromEntries(Object.entries(data).map(([k,v])=>[k,escapeHtml(v)]));
   const links=[['Website',data.website],['Instagram',data.instagram],['Facebook',data.facebook],['TikTok',data.tiktok]].filter(([,u])=>u);
   const linksHtml=links.map(([label,url])=>`<a href="${escapeHtml(url)}" style="color:#e61c5d;margin-right:10px;">${label}</a>`).join('');
@@ -88,7 +107,9 @@ async function sendEmails(data){
     {from:'Ask Wakefield <hello@mediahubink.com>',to:data.submitterEmail,subject:`Listing received: ${data.listingName}`,html:confirmationHtml},
     {from:'Ask Wakefield <hello@mediahubink.com>',to:'hello@mediahubink.com',subject:`New listing submission: ${data.listingName}${data.featuredInterest==='Yes'?' · Partner interest':''}`,html:notificationHtml}
   ];
-  for(const email of emails){try{const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify(email)});if(!r.ok)console.error('Listing email send error:',await r.text());}catch(err){console.error('Listing email send error:',err);}}
+  const outcomes=[];
+  for(const email of emails){try{const r=await submissionFetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify(email)});outcomes.push(r.ok?'accepted':'failed');if(!r.ok)console.error('Listing notification provider rejected request:',r.status);}catch(err){outcomes.push('failed');console.error('Listing notification request failed');}}
+  return notificationSummary(outcomes);
 }
 
 async function getAccessToken(serviceAccount){
@@ -102,6 +123,6 @@ async function getAccessToken(serviceAccount){
   const signatureBuffer=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',cryptoKey,new TextEncoder().encode(unsigned));
   const signature=btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
   const jwt=`${unsigned}.${signature}`;
-  const tokenResponse=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`});
+  const tokenResponse=await submissionFetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`});
   const tokenData=await tokenResponse.json();if(!tokenResponse.ok)throw new Error(tokenData.error_description||'Google token request failed');return tokenData.access_token;
 }

@@ -1,0 +1,42 @@
+[
+  {
+    "check": "Every corrected request succeeded",
+    "passed": true
+  },
+  {
+    "check": "Weekly daily trail appears once",
+    "passed": true
+  },
+  {
+    "check": "Weekly alternatives restored",
+    "passed": true
+  },
+  {
+    "check": "Weekend Tileyard clocks are date-specific",
+    "passed": true
+  },
+  {
+    "check": "Tileyard named detail retains identity",
+    "passed": true
+  },
+  {
+    "check": "Tileyard Sunday follow-up ends at 19:00",
+    "passed": true
+  },
+  {
+    "check": "Standalone Wood Street resolves",
+    "passed": true
+  },
+  {
+    "check": "Wood Street Sunday closes at 17:00",
+    "passed": true
+  },
+  {
+    "check": "Road closure remains travel-only",
+    "passed": true
+  },
+  {
+    "check": "Hepworth event start question resolves",
+    "passed": true
+  }
+]

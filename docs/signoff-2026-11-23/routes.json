@@ -1,0 +1,265 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/submit-event",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/for-organisations",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/activities",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/submit-listing",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/admin/listings",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/privacy",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/terms",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/cookies",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/accessibility",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/corrections",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/admin/events",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/offline.html",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/html; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/robots.txt",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "text/plain; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/xml",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/manifest.json",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/sw.js",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/javascript; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/favicon.svg",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/svg+xml",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/icons/icon-192.png",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/png",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/icons/icon-512.png",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/png",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/icons/apple-touch-icon.png",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/png",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/api/status",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/api/public-listings",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/api/event-catalogue",
+    "status": 405,
+    "expectedStatus": 405,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/api/admin-listings",
+    "status": 401,
+    "expectedStatus": 401,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/_vercel/insights/script.js",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "path": "/_vercel/speed-insights/script.js",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "path": "/images/card-family.webp",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/webp",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/images/card-restaurants.webp",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/webp",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/images/card-whats-on.webp",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "image/webp",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/widget.js",
+    "status": 200,
+    "expectedStatus": 200,
+    "passed": true,
+    "contentType": "application/javascript; charset=utf-8",
+    "matchesReviewedSource": true
+  },
+  {
+    "path": "/api/submit-event",
+    "status": 400,
+    "expectedStatus": 400,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/api/submit-listing",
+    "status": 400,
+    "expectedStatus": 400,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/api/admin-listings",
+    "status": 401,
+    "expectedStatus": 401,
+    "passed": true,
+    "contentType": "application/json; charset=utf-8"
+  }
+]

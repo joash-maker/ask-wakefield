@@ -1,0 +1,24 @@
+{
+  "testName": "AW QA TEST DO NOT PUBLISH 20261117T161156Z",
+  "submittedAt": "2026-11-17T16:14:46.368393+00:00",
+  "recipient": "Designated test address supplied by Joash",
+  "status": 200,
+  "response": {
+    "ok": true,
+    "notification": {
+      "submitter": "accepted",
+      "operator": "accepted"
+    }
+  },
+  "inboxDelivery": "not yet verified",
+  "redirectHandling": "Initial access redirects did not reach the application. The successful attempt preserved POST across same-origin Vercel redirects.",
+  "persistedReceiptVerified": true,
+  "matchingRecordCount": 1,
+  "sheetRow": 6,
+  "persistedConsent": "Yes",
+  "persistedNotification": {
+    "submitter": "accepted",
+    "operator": "accepted"
+  },
+  "reviewStatus": "QA test - do not publish"
+}

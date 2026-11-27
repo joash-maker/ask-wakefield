@@ -365,6 +365,38 @@ async function events(
     });
   if (s.selectedId || s.selectedName) {
     const detail = await eventDetail(s, messages);
+    if (s.operation === "parking" && /\b(?:coffee|caf[eé]s?|hot chocolate|hot drinks?)\b/i.test(s.question)) {
+      const event = detail.records.find((r) => r.entityType === "event");
+      if (event && detail.context) {
+        const needs = /hot chocolate/i.test(s.question) ? ["hot_chocolate"] : ["coffee"];
+        const working = {
+          ...s,
+          question: needs.includes("hot_chocolate") ? "Hot chocolate nearby" : "Coffee nearby",
+          resultCards: detail.context.allRecords,
+          constraints: {
+            ...s.constraints,
+            eventFocus: detail.context.eventFocus,
+            outing: {
+              ...detail.context.outing,
+              plan: { intent: "food_drink", needs, timing: "during" },
+            },
+          },
+        };
+        const food = await outingFood(working, messages).catch(() => null);
+        return {
+          ...detail,
+          mode: "event-parking-food",
+          records: [...detail.records, ...(food?.records || [])],
+          candidateIds: [...detail.candidateIds, ...(food?.candidateIds || [])],
+          context: {
+            ...detail.context,
+            foodContext: food?.context || null,
+            outing: food?.context?.outing || detail.context.outing,
+            allRecords: food?.context?.allRecords || detail.context.allRecords,
+          },
+        };
+      }
+    }
     return s.constraints.eveningPlan
       ? eveningRecords(s, messages, detail)
       : detail;

@@ -260,7 +260,7 @@ export async function extractIntentAndDelta(
     const d = base.toISOString().slice(0, 10);
     range = { kind: "day", start: d, end: d, from: d, today: cal.today };
   }
-  if (christmasMarkets && !/tileyard|hepworth|wood street|light up/i.test(q) && !needs.length && !/parking/i.test(q)) {
+  if (christmasMarkets && !namedEvent && !/tileyard|hepworth|wood street|light up|wakefield christmas market\b|tell me|what time|when|start|close/i.test(q) && !needs.length && !/parking/i.test(q)) {
     delta.includeCategories = ["christmas-market"];
     if (!range && !weekday) {
       const end = new Date(cal.today + "T12:00:00Z");
@@ -359,6 +359,7 @@ export async function extractIntentAndDelta(
     delta.selectedId = previous.selectedId;
     delta.selectedName = previous.selectedName || undefined;
   }
+  if (namedEvent && /what time|when.*(?:start|begin|finish|close)|hours/i.test(q)) delta.operation = "hours";
   // Structured interpretation belongs to this stage. A planner may supply
   // intent fields, never record facts, prose or URLs.
   const station =

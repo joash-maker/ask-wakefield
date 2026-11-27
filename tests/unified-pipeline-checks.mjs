@@ -15,6 +15,18 @@ globalThis.Date = class extends NativeDate {
     return NativeDate.parse("2026-11-26T10:00:00Z");
   }
 };
+// Ordinary local enquiries must not require the visitor to repeat the date.
+for (const question of ["What's on tonight?", "What's on this evening?", "What's on tonight in Wakefield?"]) {
+  const delta = await extractIntentAndDelta(question, initialState());
+  const state = mergeConversationState(initialState(), delta);
+  assert.equal(state.topic, "events");
+  assert.equal(state.operation, "discover");
+  assert.equal(state.dateRange?.kind, "day");
+  assert.equal(state.dateRange?.start, "2026-11-26");
+  assert.equal(state.dateRange?.end, "2026-11-26");
+  assert.equal(state.timeWindow?.label, "evening");
+}
+
 const range = {
   start: "2026-11-23",
   end: "2026-11-29",

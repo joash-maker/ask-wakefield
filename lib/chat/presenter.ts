@@ -180,7 +180,7 @@ export function renderResponse(payload: VerifiedPayload) {
           ? "Would you like a closer look at one of these events?"
           : "Would you like to try another date or type of activity?"
         : "Is there a particular day or type of event you’re after?";
-  } else if (/^event-(?:detail|time|parking|plan)$/.test(mode)) {
+  } else if (/^event-(?:detail|time|parking|parking-food|plan)$/.test(mode)) {
     const r = records.find((r) => r.entityType === "event");
     if (!r) reply = "I couldn’t refresh that event’s details just now.";
     else {
@@ -197,7 +197,7 @@ export function renderResponse(payload: VerifiedPayload) {
             : [r.startDate].filter(Boolean),
         dateText = dates.map(dateLabel).join(" and "),
         time = timesForCard({ ...r, dates });
-      if (mode === "event-parking")
+      if (mode === "event-parking" || mode === "event-parking-food")
         reply = sections.parking?.length
           ? parkingConversation(r.title, sections.parking)
           : `I still have ${r.title}${r.venue ? " at " + r.venue : ""}, but I couldn’t confirm a suitable car park from its event page.`;
@@ -241,6 +241,19 @@ export function renderResponse(payload: VerifiedPayload) {
               { needs: ["coffee", "snack"] },
             );
         }
+      }
+      if (mode === "event-parking-food") {
+        const food = ctx.foodContext || {};
+        const plan = food.plan || { needs: /hot chocolate/i.test(state.question) ? ["hot_chocolate"] : ["coffee"] };
+        const picks = records.filter(p => p.entityType === "place" && p.fields.disposition === "suitable");
+        reply = "If you’re heading to " + r.title + ", here’s how I’d plan the visit.\n\nParking\n" + reply;
+        reply += "\n\nCoffee and hot drinks\n" + (picks.length
+          ? picks.map(p => renderFoodOption({ ...p.fields, name: p.title, sourceUrl: p.sourceUrl }, plan)).join("\n\n")
+          : "I haven’t confirmed a suitable drink stop for your visit yet.");
+        if (food.chocolateUnknown && picks.length)
+          reply += "\n\nCoffee is listed, but I haven’t confirmed hot chocolate on the current menus.";
+        if (picks.some(p => p.fields.sourceKind === "branch-listing"))
+          reply += "\n\nListed branch hours do not guarantee drink service right up to closing.";
       }
       if (mode === "event-plan") {
         if (sections.parking?.length)
@@ -292,7 +305,7 @@ export function renderResponse(payload: VerifiedPayload) {
       if (fields.refreshFailed)
         reply +=
           "\n\nThese details were checked earlier in this chat. I couldn’t refresh the page just now.";
-      if (mode === "event-parking" && sections.parkingLinks?.length) {
+      if ((mode === "event-parking" || mode === "event-parking-food") && sections.parkingLinks?.length) {
         for (const p of sections.parkingLinks)
           reply += `\n[${p.title}](${p.url})`;
         sources.push(...sections.parkingLinks);
@@ -300,7 +313,7 @@ export function renderResponse(payload: VerifiedPayload) {
       if (r.sourceUrl) reply += `\n\n[Event details](${r.sourceUrl})`;
     }
     question =
-      mode === "event-parking"
+      mode === "event-parking-food" ? "" : mode === "event-parking"
         ? "Are you planning another stop nearby?"
         : "Would you like help with parking or booking?";
   } else if (mode === "place-detail" || mode === "place-hours") {
